@@ -66,5 +66,3 @@ class TestCSV:
 
         expected_df = spark.read.option("header", True).csv(csv_path).to_pandas_on_spark()
         assert_dataframes_equals(df, expected_df)
-
-
