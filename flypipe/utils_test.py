@@ -1,10 +1,14 @@
 import pandas as pd
 import pytest
 
-from flypipe import DataframesSchemasDoNotMatch, \
-    DataframesDifferentData, DataframesNotEquals, DataFrameTypeNotSupported
+from flypipe.exceptions import (
+    ErrorDataframesSchemasDoNotMatch,
+    ErrorDataframesDifferentData,
+    ErrorErrorDataframesSchemasDoNotMatch,
+    DataFrameTypeNotSupported
+)
 
-from flypipe import assert_dataframes_equals, DataFrameType, dataframe_type
+from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
 
 
 @pytest.fixture
@@ -21,18 +25,18 @@ class TestUtils:
         assert_dataframes_equals(df1, df2)
 
         df2 = spark.createDataFrame(pd.DataFrame(data={"col1": [1, 2], "col2": [1, 2]}))
-        with pytest.raises(DataframesSchemasDoNotMatch):
+        with pytest.raises(ErrorDataframesSchemasDoNotMatch):
             assert_dataframes_equals(df1, df2)
 
         df2 = spark.createDataFrame(pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"]}))
-        with pytest.raises(DataframesDifferentData):
+        with pytest.raises(ErrorDataframesDifferentData):
             assert_dataframes_equals(df1, df2)
 
         df2 = spark.createDataFrame(pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"], "col3": [1,2,3]}))
-        with pytest.raises(DataframesSchemasDoNotMatch):
+        with pytest.raises(ErrorDataframesSchemasDoNotMatch):
             assert_dataframes_equals(df1, df2)
 
-        with pytest.raises(DataframesNotEquals):
+        with pytest.raises(ErrorErrorDataframesSchemasDoNotMatch):
             assert_dataframes_equals(df1, df2)
 
         with pytest.raises(DataFrameTypeNotSupported):

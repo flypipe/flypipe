@@ -1,13 +1,13 @@
 from typing import List
 
-from flypipe import Mode
+from flypipe.mode import Mode
 
 
 class ErrorTimeTravel(Exception):
     pass
 
 
-class SparkSessionNotProvided(Exception):
+class ErrorErrorDataFrameTypeNotSupported(Exception):
     pass
 
 
@@ -15,19 +15,19 @@ class DataFrameTypeNotSupported(Exception):
     pass
 
 
-class DataframesNotEquals(Exception):
+class ErrorErrorDataframesSchemasDoNotMatch(Exception):
     pass
 
 
-class DataframesSchemasDoNotMatch(DataframesNotEquals):
+class ErrorDataframesSchemasDoNotMatch(ErrorErrorDataframesSchemasDoNotMatch):
     pass
 
 
-class DataframesDifferentData(DataframesNotEquals):
+class ErrorDataframesDifferentData(ErrorErrorDataframesSchemasDoNotMatch):
     pass
 
 
-class ModeNotSupported(Exception):
+class ErrorModeNotSupported(Exception):
     """Exception raised if mode is not supported
 
     Attributes:

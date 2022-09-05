@@ -1,9 +1,9 @@
 from typing import List
 from flypipe.datasource.datasource import DataSource
-from flypipe import ModeNotSupported, SparkSessionNotProvided
+from flypipe.exceptions import ErrorModeNotSupported, ErrorErrorDataFrameTypeNotSupported
 
-from flypipe import Mode
-from flypipe.converter import Schema
+from flypipe.mode import Mode
+from flypipe.converter.schema import Schema
 
 
 class CSV(DataSource):
@@ -31,18 +31,18 @@ class CSV(DataSource):
 
         Raises
         ------
-        SparkSessionNotProvided
+        ErrorErrorDataFrameTypeNotSupported
             if mode is spark, pandas_on_spark and self.spark is None
 
-        ModeNotSupported
+        ErrorModeNotSupported
             if mode is not pandas, spark, or pandas_on_spark
         """
 
         if mode == Mode.SPARK_SQL:
-            raise ModeNotSupported(mode, [Mode.PYSPARK, Mode.PANDAS_ON_SPARK])
+            raise ErrorModeNotSupported(mode, [Mode.PYSPARK, Mode.PANDAS_ON_SPARK])
 
         if mode in [Mode.PYSPARK, Mode.PANDAS_ON_SPARK] and spark is None:
-            raise SparkSessionNotProvided()
+            raise ErrorErrorDataFrameTypeNotSupported()
 
         if mode == Mode.PANDAS:
             import pandas as pd

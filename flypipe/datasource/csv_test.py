@@ -2,9 +2,9 @@ import pandas as pd
 import pytest
 import os
 
-from flypipe.datasource.csv import CSV, ModeNotSupported, SparkSessionNotProvided
-from flypipe import Mode
-from flypipe import assert_dataframes_equals
+from flypipe.datasource.csv import CSV, ErrorModeNotSupported, ErrorErrorDataFrameTypeNotSupported
+from flypipe.mode import Mode
+from flypipe.utils import assert_dataframes_equals
 
 
 @pytest.fixture
@@ -30,16 +30,16 @@ def spark():
 class TestCSV:
 
     def test_exception_mode_not_supported(self, csv_path):
-        with pytest.raises(ModeNotSupported):
+        with pytest.raises(ErrorModeNotSupported):
             CSV.load(csv_path,
                      mode=Mode.SPARK_SQL)
 
     def test_exception_spark_session_not_provided(self, csv_path):
-        with pytest.raises(SparkSessionNotProvided):
+        with pytest.raises(ErrorErrorDataFrameTypeNotSupported):
             CSV.load(csv_path,
                      mode=Mode.PYSPARK)
 
-        with pytest.raises(SparkSessionNotProvided):
+        with pytest.raises(ErrorErrorDataFrameTypeNotSupported):
             CSV.load(csv_path,
                      mode=Mode.PANDAS_ON_SPARK)
 

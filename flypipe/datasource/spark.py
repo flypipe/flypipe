@@ -2,7 +2,7 @@ from typing import List
 from flypipe.datasource.datasource import DataSource
 import pyspark.sql.functions as F
 
-from flypipe import ErrorTimeTravel
+from flypipe.exceptions import ErrorTimeTravel
 
 
 class Spark(DataSource):

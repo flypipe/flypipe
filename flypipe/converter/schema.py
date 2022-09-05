@@ -1,4 +1,4 @@
-from flypipe import DataFrameType
+from flypipe.utils import DataFrameType
 
 
 class Schema:

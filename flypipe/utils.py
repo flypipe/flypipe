@@ -2,7 +2,7 @@ from enum import Enum
 
 from pandas.testing import assert_frame_equal
 
-from flypipe import DataframesDifferentData, DataframesSchemasDoNotMatch, \
+from flypipe.exceptions import ErrorDataframesDifferentData, ErrorDataframesSchemasDoNotMatch, \
     DataFrameTypeNotSupported
 
 
@@ -15,14 +15,14 @@ class DataFrameType(Enum):
 def assert_schemas_are_equals(df1, df2):
     if dataframe_type(df1) == DataFrameType.PANDAS:
         if not df1.dtypes.equals(df2.dtypes):
-            raise DataframesSchemasDoNotMatch(f"Schema of df1 {df1.dtypes} != schema df2 {df2.dtypes}")
+            raise ErrorDataframesSchemasDoNotMatch(f"Schema of df1 {df1.dtypes} != schema df2 {df2.dtypes}")
 
     elif dataframe_type(df1) in [DataFrameType.PYSPARK, DataFrameType.PANDAS_ON_SPARK]:
         import json
         schema_df1 = json.dumps(sorted(df1.dtypes, key=lambda t: t[0]))
         schema_df2 = json.dumps(sorted(df2.dtypes, key=lambda t: t[0]))
         if schema_df1 != schema_df2:
-            raise DataframesSchemasDoNotMatch(f"Schema of df1 {schema_df1} != schema df2 {schema_df2}")
+            raise ErrorDataframesSchemasDoNotMatch(f"Schema of df1 {schema_df1} != schema df2 {schema_df2}")
 
 
 def assert_dataframes_equals(df1, df2):
@@ -40,7 +40,7 @@ def assert_dataframes_equals(df1, df2):
         assert_schemas_are_equals(df1, df2)
 
         if df1.exceptAll(df2).count() != df2.exceptAll(df1).count():
-            raise DataframesDifferentData()
+            raise ErrorDataframesDifferentData()
 
 
 def dataframe_type(df):

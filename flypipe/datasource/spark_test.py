@@ -1,7 +1,8 @@
 import pytest
 from pandas._testing import assert_frame_equal
 
-from flypipe import Spark, ErrorTimeTravel
+from flypipe.datasource.spark import Spark
+from flypipe.exceptions import ErrorTimeTravel
 from tests.utils.spark import spark
 from datetime import datetime
 from pyspark.sql.types import StructType, StructField, StringType, DateType
