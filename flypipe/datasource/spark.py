@@ -24,7 +24,7 @@ class Spark(DataSource):
         Parameters
         ----------
         df: pyspark dataframe
-            datframe to be filtered
+            dataframe to be filtered
         time_travel_column: str, default None
             column from the data that will be used to filter data using
             start_time_travel or end_time_travel

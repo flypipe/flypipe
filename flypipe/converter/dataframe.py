@@ -2,11 +2,34 @@ from flypipe.utils import DataFrameType, dataframe_type
 
 
 class DataFrameConverter:
+    """
+    Converts a dataframe between pandas, pandas on spark and pyspark
+
+    Attributes
+    ----------
+    spark : spark Session, default None
+    """
 
     def __init__(self, spark=None):
         self.spark = spark
 
     def _strategy(self, from_type: DataFrameType, to_type: DataFrameType):
+        """
+        Defines the strategy to convert and the function to be applied in this conversion
+
+        Parameters
+        ----------
+        from_type: DataFrameType
+            from dataframe type
+        to_type: DataFrameType
+            dataframe type to be converted
+
+        Returns
+        -------
+        lambda function
+            the function to do the conversion
+        """
+
         pandas_to_spark = lambda df: self.spark.createDataFrame(df)
         pandas_to_pandas_on_spark = lambda df: self.spark.createDataFrame(df).to_pandas_on_spark()
 
@@ -34,6 +57,22 @@ class DataFrameConverter:
         }[from_type.value][to_type.value]
 
     def convert(self, df, to_type: DataFrameType):
+        """
+        Do the conversion of the given dataframe to the desired type
+
+        Parameters
+        ----------
+        df: DataFrame
+            dataframe to be converted
+        to_type: DataFrameType
+            dataframe type to be converted
+
+        Returns
+        -------
+        dataframe
+            converted dataframe
+        """
+
         from_type = dataframe_type(df)
 
         if from_type == to_type:
