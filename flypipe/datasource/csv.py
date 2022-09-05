@@ -1,16 +1,17 @@
 from typing import List
+
+from flypipe.converter.schema import SchemaConverter
 from flypipe.datasource.datasource import DataSource
 from flypipe.exceptions import ErrorModeNotSupported, ErrorErrorDataFrameTypeNotSupported
 
 from flypipe.mode import Mode
-from flypipe.converter.schema import Schema
 
 
 class CSV(DataSource):
     """Retrieves a csv file as dataframe"""
 
     @staticmethod
-    def load(path: str, schema: List[Schema] = None, mode: Mode = Mode.PANDAS, spark=None):
+    def load(path: str, schema: List[SchemaConverter] = [], mode: Mode = Mode.PANDAS, spark=None):
         """
         Loads dataframe from csv file
 

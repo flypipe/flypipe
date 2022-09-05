@@ -23,7 +23,6 @@ def csv_path():
 @pytest.fixture
 def spark():
     from tests.utils.spark import spark
-    print("loading_spark")
     return spark
 
 
