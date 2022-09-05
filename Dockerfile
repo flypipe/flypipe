@@ -3,7 +3,7 @@ FROM python:3.8.10
 RUN apt-get update && apt-get install -y apt-utils default-jdk curl -y
 RUN pip install --upgrade pip
 COPY ./notebooks ./notebooks
-COPY ./src ./flypipe
+COPY ./flypipe ./flypipe
 COPY ./flypipe_dev ./flypipe_dev
 COPY ./wait-for-it.sh .
 COPY ./requirements.txt .
