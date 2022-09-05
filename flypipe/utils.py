@@ -55,5 +55,5 @@ def dataframe_type(df):
             import pyspark.sql.dataframe as sql
             if isinstance(df, sql.DataFrame):
                 return DataFrameType.PYSPARK
-    print(type(df))
+
     raise DataFrameTypeNotSupported
