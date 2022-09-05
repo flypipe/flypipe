@@ -12,7 +12,7 @@ class DataFrameType(Enum):
     PYSPARK = "pyspark"
 
 
-def assert_schemas_are_equals(df1, df2):
+def assert_schemas_are_equals(df1, df2) -> None:
     if dataframe_type(df1) == DataFrameType.PANDAS:
         if not df1.dtypes.equals(df2.dtypes):
             raise ErrorDataframesSchemasDoNotMatch(f"Schema of df1 {df1.dtypes} != schema df2 {df2.dtypes}")
@@ -25,7 +25,7 @@ def assert_schemas_are_equals(df1, df2):
             raise ErrorDataframesSchemasDoNotMatch(f"Schema of df1 {schema_df1} != schema df2 {schema_df2}")
 
 
-def assert_dataframes_equals(df1, df2):
+def assert_dataframes_equals(df1, df2) -> None:
     df1_type = dataframe_type(df1)
     assert df1_type == dataframe_type(df2), f"Error: df1 {type(df1)} != {type(df2)}"
 
@@ -43,7 +43,7 @@ def assert_dataframes_equals(df1, df2):
             raise ErrorDataframesDifferentData()
 
 
-def dataframe_type(df):
+def dataframe_type(df) -> DataFrameType:
     import pandas as pd
     if isinstance(df, pd.DataFrame):
         return DataFrameType.PANDAS
