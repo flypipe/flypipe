@@ -40,21 +40,21 @@ class DataFrameConverter:
         spark_to_pandas_on_spark = lambda df: df.to_pandas_on_spark()
 
         return {
-            DataFrameType.PANDAS.value: {
-                DataFrameType.PYSPARK.value: pandas_to_spark,
-                DataFrameType.PANDAS_ON_SPARK.value: pandas_to_pandas_on_spark
+            DataFrameType.PANDAS: {
+                DataFrameType.PYSPARK: pandas_to_spark,
+                DataFrameType.PANDAS_ON_SPARK: pandas_to_pandas_on_spark
             },
 
-            DataFrameType.PANDAS_ON_SPARK.value: {
-                DataFrameType.PANDAS.value: pandas_on_spark_to_pandas,
-                DataFrameType.PYSPARK.value: pandas_on_spark_to_spark
+            DataFrameType.PANDAS_ON_SPARK: {
+                DataFrameType.PANDAS: pandas_on_spark_to_pandas,
+                DataFrameType.PYSPARK: pandas_on_spark_to_spark
             },
 
-            DataFrameType.PYSPARK.value: {
-                DataFrameType.PANDAS.value: spark_to_pandas,
-                DataFrameType.PANDAS_ON_SPARK.value: spark_to_pandas_on_spark
+            DataFrameType.PYSPARK: {
+                DataFrameType.PANDAS: spark_to_pandas,
+                DataFrameType.PANDAS_ON_SPARK: spark_to_pandas_on_spark
             }
-        }[from_type.value][to_type.value]
+        }[from_type][to_type]
 
     def convert(self, df, to_type: DataFrameType):
         """
