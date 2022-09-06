@@ -8,6 +8,7 @@ from flypipe.exceptions import (
     DataFrameTypeNotSupported,
 )
 
+# TODO: document
 
 class DataFrameType(Enum):
     PANDAS = "pandas"
@@ -69,7 +70,7 @@ def dataframe_type(df) -> DataFrameType:
 
     raise DataFrameTypeNotSupported
 
-
+# TODO: add tests to get_schema
 def get_schema(df, columns: list = []):
     if dataframe_type(df) == DataFrameType.PYSPARK:
         return {

@@ -28,6 +28,7 @@ from pyspark.sql.types import (
     TimestampType,
 )
 
+# TODO: document
 
 class Type:
     def __init__(self):
