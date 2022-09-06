@@ -17,7 +17,9 @@ class Spark(DataSource):
     def __init__(self, spark):
         self.spark = spark
 
-    def _filter_time_travel(self, df, time_travel_column, start_time_travel, end_time_travel):
+    def _filter_time_travel(
+        self, df, time_travel_column, start_time_travel, end_time_travel
+    ):
         """
         Filter data from the queried dataframe
 
@@ -46,7 +48,7 @@ class Spark(DataSource):
         """
 
         if not time_travel_column and (start_time_travel or end_time_travel):
-            raise ErrorTimeTravel('time_travel_column not specified')
+            raise ErrorTimeTravel("time_travel_column not specified")
 
         if start_time_travel:
             df = df.filter(F.col(time_travel_column) >= F.lit(start_time_travel))
@@ -56,10 +58,14 @@ class Spark(DataSource):
 
         return df
 
-    def load(self, table: str, columns: List[str] = None,
-             time_travel_column: str = None,
-             start_time_travel: object = None,
-             end_time_travel: object = None):
+    def load(
+        self,
+        table: str,
+        columns: List[str] = None,
+        time_travel_column: str = None,
+        start_time_travel: object = None,
+        end_time_travel: object = None,
+    ):
         """
         Loads data from a spark data source.
 
@@ -92,7 +98,9 @@ class Spark(DataSource):
         """
 
         df = self.spark.table(f"{table}")
-        df = self._filter_time_travel(df, time_travel_column, start_time_travel, end_time_travel)
+        df = self._filter_time_travel(
+            df, time_travel_column, start_time_travel, end_time_travel
+        )
 
         if columns:
             return df.select(columns)

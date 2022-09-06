@@ -2,7 +2,7 @@ from typing import List
 
 from flypipe.converter.schema import SchemaConverter
 from flypipe.datasource.datasource import DataSource
-from flypipe.exceptions import ErrorModeNotSupported, ErrorErrorDataFrameTypeNotSupported
+from flypipe.exceptions import ErrorModeNotSupported, ErrorDataFrameTypeNotSupported
 
 from flypipe.mode import Mode
 
@@ -11,7 +11,12 @@ class CSV(DataSource):
     """Retrieves a csv file as dataframe"""
 
     @staticmethod
-    def load(path: str, schema: List[SchemaConverter] = [], mode: Mode = Mode.PANDAS, spark=None):
+    def load(
+        path: str,
+        schema: List[SchemaConverter] = [],
+        mode: Mode = Mode.PANDAS,
+        spark=None,
+    ):
         """
         Loads dataframe from csv file
 
@@ -32,7 +37,7 @@ class CSV(DataSource):
 
         Raises
         ------
-        ErrorErrorDataFrameTypeNotSupported
+        ErrorDataFrameTypeNotSupported
             if mode is spark, pandas_on_spark and self.spark is None
 
         ErrorModeNotSupported
@@ -43,18 +48,18 @@ class CSV(DataSource):
             raise ErrorModeNotSupported(mode, [Mode.PYSPARK, Mode.PANDAS_ON_SPARK])
 
         if mode in [Mode.PYSPARK, Mode.PANDAS_ON_SPARK] and spark is None:
-            raise ErrorErrorDataFrameTypeNotSupported()
+            raise ErrorDataFrameTypeNotSupported()
 
         if mode == Mode.PANDAS:
             import pandas as pd
+
             return pd.read_csv(path)
 
         if mode in [Mode.PANDAS_ON_SPARK, Mode.PYSPARK]:
             from tests.utils.spark import spark
+
             df = spark.read.option("header", True).csv(path)
             if mode == Mode.PANDAS_ON_SPARK:
                 df = df.to_pandas_on_spark()
 
             return df
-
-

@@ -5,21 +5,20 @@ from matplotlib import pyplot as plt
 
 import functools
 
+
 def node(*args_decorator, **kwargs_decorator):
-
     def decorator_repeat(func):
-
         @functools.wraps(func)
         def wrapper_repeat(*args, **kwargs):
 
-            if 'graph' in kwargs:
-                graph = kwargs['graph']
+            if "graph" in kwargs:
+                graph = kwargs["graph"]
 
                 if func.__name__ not in graph:
                     graph.add_node(func.__name__, func=func)
 
-                if 'inputs' in kwargs_decorator:
-                    for f in kwargs_decorator['inputs']:
+                if "inputs" in kwargs_decorator:
+                    for f in kwargs_decorator["inputs"]:
                         if f.__name__ not in graph:
                             graph.add_node(f.__name__, func=f)
                         graph.add_edge(f.__name__, func.__name__)
@@ -30,9 +29,10 @@ def node(*args_decorator, **kwargs_decorator):
 
             value = func(*args, **kwargs)
             return value
-        return wrapper_repeat
-    return decorator_repeat
 
+        return wrapper_repeat
+
+    return decorator_repeat
 
 
 @node(mode="pyspark")
@@ -40,43 +40,39 @@ def t1():
     return 1
 
 
-@node(mode="pyspark",
-      inputs=[t1])
+@node(mode="pyspark", inputs=[t1])
 def t2(t1):
     return t1 + 1
 
 
-@node(mode="pandas",
-      inputs=[t2, t1])
+@node(mode="pandas", inputs=[t2, t1])
 def t3(t2, t1):
     return t2 + t1
 
 
-@node(mode="pandas",
-      inputs=[t3, t1])
+@node(mode="pandas", inputs=[t3, t1])
 def t4(t3, t1):
     return t3 + t1
 
-@node(mode="pandas",
-      inputs=[t3])
+
+@node(mode="pandas", inputs=[t3])
 def t5(t3):
     return t3 + 1
 
-@node(mode="pandas",
-      inputs=[t2, t4, t5])
+
+@node(mode="pandas", inputs=[t2, t4, t5])
 def t6(t2, t4, t5):
     return t2 + t4 + t5
 
 
 class FlyPipe:
-
     def run(self, node_parent):
 
         # Build Graph
         graph = node_parent(graph=nx.DiGraph())
 
         # Print Graph
-        nx.draw(graph, with_labels=True, font_weight='bold')
+        nx.draw(graph, with_labels=True, font_weight="bold")
         plt.show()
 
         nodes_funcs = nx.get_node_attributes(graph, "func")

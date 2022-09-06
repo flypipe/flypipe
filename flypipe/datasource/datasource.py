@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 
 class DataSource(ABC):
-
     @staticmethod
     @abstractmethod
     def load(*args, **kwargs):

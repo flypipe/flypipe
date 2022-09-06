@@ -31,7 +31,9 @@ class DataFrameConverter:
         """
 
         pandas_to_spark = lambda df: self.spark.createDataFrame(df)
-        pandas_to_pandas_on_spark = lambda df: self.spark.createDataFrame(df).to_pandas_on_spark()
+        pandas_to_pandas_on_spark = lambda df: self.spark.createDataFrame(
+            df
+        ).to_pandas_on_spark()
 
         pandas_on_spark_to_pandas = lambda df: df.to_pandas()
         pandas_on_spark_to_spark = lambda df: df.to_spark()
@@ -42,18 +44,16 @@ class DataFrameConverter:
         return {
             DataFrameType.PANDAS: {
                 DataFrameType.PYSPARK: pandas_to_spark,
-                DataFrameType.PANDAS_ON_SPARK: pandas_to_pandas_on_spark
+                DataFrameType.PANDAS_ON_SPARK: pandas_to_pandas_on_spark,
             },
-
             DataFrameType.PANDAS_ON_SPARK: {
                 DataFrameType.PANDAS: pandas_on_spark_to_pandas,
-                DataFrameType.PYSPARK: pandas_on_spark_to_spark
+                DataFrameType.PYSPARK: pandas_on_spark_to_spark,
             },
-
             DataFrameType.PYSPARK: {
                 DataFrameType.PANDAS: spark_to_pandas,
-                DataFrameType.PANDAS_ON_SPARK: spark_to_pandas_on_spark
-            }
+                DataFrameType.PANDAS_ON_SPARK: spark_to_pandas_on_spark,
+            },
         }[from_type][to_type]
 
     def convert(self, df, to_type: DataFrameType):

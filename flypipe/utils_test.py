@@ -5,7 +5,7 @@ from flypipe.exceptions import (
     ErrorDataframesSchemasDoNotMatch,
     ErrorDataframesDifferentData,
     ErrorErrorDataframesSchemasDoNotMatch,
-    DataFrameTypeNotSupported
+    DataFrameTypeNotSupported,
 )
 
 from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
@@ -14,25 +14,35 @@ from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_typ
 @pytest.fixture
 def spark():
     from tests.utils.spark import spark
+
     return spark
 
 
 class TestUtils:
-
     def test_assert_dataframes_equals(self, spark):
-        df1 = spark.createDataFrame(pd.DataFrame(data={"col1": [1, 2], "col2": ["1a", "2a"]}))
-        df2 = spark.createDataFrame(pd.DataFrame(data={"col1": [1, 2], "col2": ["1a", "2a"]}))
+        df1 = spark.createDataFrame(
+            pd.DataFrame(data={"col1": [1, 2], "col2": ["1a", "2a"]})
+        )
+        df2 = spark.createDataFrame(
+            pd.DataFrame(data={"col1": [1, 2], "col2": ["1a", "2a"]})
+        )
         assert_dataframes_equals(df1, df2)
 
         df2 = spark.createDataFrame(pd.DataFrame(data={"col1": [1, 2], "col2": [1, 2]}))
         with pytest.raises(ErrorDataframesSchemasDoNotMatch):
             assert_dataframes_equals(df1, df2)
 
-        df2 = spark.createDataFrame(pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"]}))
+        df2 = spark.createDataFrame(
+            pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"]})
+        )
         with pytest.raises(ErrorDataframesDifferentData):
             assert_dataframes_equals(df1, df2)
 
-        df2 = spark.createDataFrame(pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"], "col3": [1,2,3]}))
+        df2 = spark.createDataFrame(
+            pd.DataFrame(
+                data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"], "col3": [1, 2, 3]}
+            )
+        )
         with pytest.raises(ErrorDataframesSchemasDoNotMatch):
             assert_dataframes_equals(df1, df2)
 

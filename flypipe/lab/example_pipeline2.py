@@ -4,16 +4,19 @@ from matplotlib import pyplot as plt
 
 
 class node:
-
     def __init__(self, *args, **kwargs):
-        self.inputs = kwargs['inputs'] if 'inputs' in kwargs else []
+        self.inputs = kwargs["inputs"] if "inputs" in kwargs else []
 
     @property
     def name(self):
         return self.function.__name__
 
     def __call__(self, *args_function, **kwargs_function):
-        if isinstance(args_function, tuple) and len(args_function) == 1 and inspect.isfunction(args_function[0]):
+        if (
+            isinstance(args_function, tuple)
+            and len(args_function) == 1
+            and inspect.isfunction(args_function[0])
+        ):
             # mapping the function
             self.function = args_function[0]
             return self
@@ -21,11 +24,12 @@ class node:
             # calling the function by providing manually all inputs
             return self.function(*args_function, **kwargs_function)
 
-
     def get_graph(self, execution=True):
 
         graph = nx.DiGraph()
-        graph.add_node(self.name, function=self.function, inputs=[i.name for i in self.inputs])
+        graph.add_node(
+            self.name, function=self.function, inputs=[i.name for i in self.inputs]
+        )
 
         if self.inputs:
             for input in self.inputs:
@@ -74,44 +78,40 @@ def t1():
     return 1
 
 
-@node(mode="pyspark",
-      inputs=[t1])
+@node(mode="pyspark", inputs=[t1])
 def t2(t1):
     return t1 + 1
 
 
-@node(mode="pandas",
-      inputs=[t2, t1])
+@node(mode="pandas", inputs=[t2, t1])
 def t3(t2, t1):
     return t2 + t1
 
 
-@node(mode="pandas",
-      inputs=[t3, t1])
+@node(mode="pandas", inputs=[t3, t1])
 def t4(t3, t1):
     return t3 + t1
 
 
-@node(mode="pandas",
-      inputs=[t3])
+@node(mode="pandas", inputs=[t3])
 def t5(t3):
     return t3 + 1
 
 
-@node(mode="pandas",
-      inputs=[t2, t4, t5])
+@node(mode="pandas", inputs=[t2, t4, t5])
 def t6(**dfs):
-    return dfs['t2'] + dfs['t4'] + dfs['t5']
+    return dfs["t2"] + dfs["t4"] + dfs["t5"]
 
-@node(mode="pandas",
-      inputs=[t2, t4, t5])
+
+@node(mode="pandas", inputs=[t2, t4, t5])
 def t7(t2, t4, t5):
     return t2 + t4 + t5
+
 
 result = t6.run()
 print()
 print("Result t6 by invoking 'run':", result)
-print("Result t6 manual inputs as dict:", t6(**{'t2': 2, 't4': 4, 't5': 4}))
+print("Result t6 manual inputs as dict:", t6(**{"t2": 2, "t4": 4, "t5": 4}))
 print("Result t7 declared inputs:", t7(2, 4, 4))
 
 print()
@@ -126,7 +126,6 @@ g = t6.get_graph(execution=True)
 print("Execution Plan =>", g)
 nx.draw(g, with_labels=True)
 plt.show()
-
 
 
 """
