@@ -45,7 +45,7 @@ class Type:
     def cast(self, df, column: Union[str, list]):
 
         columns_to_cast = self.columns(column)
-        non_existing_columns = set(columns_to_cast) - set(df.columns)
+        non_existing_columns = list(set(columns_to_cast) - set(df.columns))
         if non_existing_columns:
             raise ErrorColumnNotInDataframe(non_existing_columns)
 
