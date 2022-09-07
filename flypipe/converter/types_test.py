@@ -1,12 +1,14 @@
+from decimal import Decimal as DecimalPy
+
 import pandas as pd
 import pytest
 from numpy import dtype
 import numpy as np
 from datetime import datetime
 
-from pyspark.sql.types import BooleanType, StringType, LongType
+from pyspark.sql.types import BooleanType, StringType, LongType, DoubleType, DecimalType
 
-from flypipe.converter.types import Boolean, DateType, Date
+from flypipe.converter.types import Boolean, DateType, Date, Decimal
 from flypipe.exceptions import ErrorColumnNotInDataframe
 from flypipe.utils import get_schema
 
@@ -26,6 +28,7 @@ def pandas_df():
             "int": [1],
             "date": [datetime(2022, 1, 1).date()],
             "date_str": ["31-01-2022"],
+            "decimal": DecimalPy('3.489')
         }
     )
 
@@ -50,6 +53,17 @@ class TestTypes:
             type_.cast(pandas_on_spark_df, columns)
 
     def test_boolean(self, pandas_df, pyspark_df, pandas_on_spark_df):
+        columns = ["bool"]
+        type_ = Boolean()
+        df_cast = type_.cast(pandas_df, columns)
+        assert {
+                   "bool": dtype("bool"),
+                   "date": dtype("O"),
+                   "date_str": dtype("O"),
+                   "int": dtype("int64"),
+                   "decimal": dtype("O"),
+               } == get_schema(df_cast)
+
         columns = ["bool", "int"]
         type_ = Boolean()
         df_cast = type_.cast(pandas_df, columns)
@@ -58,6 +72,7 @@ class TestTypes:
             "date": dtype("O"),
             "date_str": dtype("O"),
             "int": dtype("bool"),
+            "decimal": dtype("O"),
         } == get_schema(df_cast)
 
         df_cast = type_.cast(pandas_on_spark_df, columns)
@@ -66,6 +81,7 @@ class TestTypes:
             "date": dtype("O"),
             "date_str": dtype("O"),
             "int": dtype("bool"),
+            "decimal": dtype("O"),
         } == get_schema(df_cast)
 
         df_cast = type_.cast(pyspark_df, columns)
@@ -74,6 +90,7 @@ class TestTypes:
             "date": DateType(),
             "date_str": StringType(),
             "int": BooleanType(),
+            "decimal": DecimalType(4,3),
         } == get_schema(df_cast)
 
     def test_date(self, pandas_df, pyspark_df, pandas_on_spark_df):
@@ -86,9 +103,9 @@ class TestTypes:
             "date": dtype("<M8[ns]"),
             "date_str": dtype("O"),
             "int": dtype("int64"),
-        } == get_schema(df_cast) and df_cast.loc[0, "date"] == datetime(
-            2022, 1, 1
-        ).date()
+            "decimal": dtype("O"),
+        } == get_schema(df_cast)
+        assert df_cast.loc[0, "date"] == datetime(2022, 1, 1).date()
 
         df_cast = type_.cast(pandas_on_spark_df, columns)
         assert {
@@ -96,9 +113,9 @@ class TestTypes:
             "date": dtype("<M8[ns]"),
             "date_str": dtype("O"),
             "int": dtype("int64"),
-        } == get_schema(df_cast) and df_cast.loc[0, "date"] == datetime(
-            2022, 1, 1
-        ).date()
+            "decimal": dtype("O"),
+        } == get_schema(df_cast)
+        assert df_cast.loc[0, "date"] == datetime(2022, 1, 1).date()
 
         df_cast = type_.cast(pyspark_df, columns)
         assert {
@@ -106,9 +123,9 @@ class TestTypes:
             "date": DateType(),
             "date_str": StringType(),
             "int": LongType(),
-        } == get_schema(df_cast) and df_cast.toPandas().loc[0, "date"] == datetime(
-            2022, 1, 1
-        ).date()
+            "decimal": DecimalType(4,3),
+        } == get_schema(df_cast)
+        assert df_cast.toPandas().loc[0, "date"] == datetime(2022, 1, 1).date()
 
     def test_date_str(self, pandas_df, pyspark_df, pandas_on_spark_df):
         columns = ["date_str"]
@@ -120,9 +137,9 @@ class TestTypes:
             "date": dtype("O"),
             "date_str": dtype("<M8[ns]"),
             "int": dtype("int64"),
-        } == get_schema(df_cast) and df_cast.loc[0, "date_str"] == datetime(
-            2022, 1, 31
-        ).date()
+            "decimal": dtype("O"),
+        } == get_schema(df_cast)
+        assert df_cast.loc[0, "date_str"] == datetime(2022, 1, 31).date()
 
         df_cast = type_.cast(pandas_on_spark_df, columns)
         assert {
@@ -130,9 +147,9 @@ class TestTypes:
             "date": dtype("O"),
             "date_str": dtype("<M8[ns]"),
             "int": dtype("int64"),
-        } == get_schema(df_cast) and df_cast.loc[0, "date_str"] == datetime(
-            2022, 1, 31
-        ).date()
+            "decimal": dtype("O"),
+        } == get_schema(df_cast)
+        assert df_cast.loc[0, "date_str"] == datetime(2022, 1, 31).date()
 
         type_ = Date(fmt="dd-MM-yyyy")
         df_cast = type_.cast(pyspark_df, columns)
@@ -142,8 +159,41 @@ class TestTypes:
             "date": DateType(),
             "date_str": DateType(),
             "int": LongType(),
-        } == get_schema(df_cast) and df_cast.toPandas().loc[
-            0, "date_str"
-        ] == datetime(
-            2022, 1, 31
-        ).date()
+            "decimal": DecimalType(4,3),
+        } == get_schema(df_cast)
+        assert df_cast.toPandas().loc[0, "date_str"] == datetime(2022, 1, 31).date()
+
+
+    def test_decimal(self, pandas_df, pyspark_df, pandas_on_spark_df):
+        columns = ["decimal"]
+        type_ = Decimal(precision=10, scale=2)
+
+        df_cast = type_.cast(pandas_df, columns)
+        assert {
+            "bool": dtype("bool"),
+            "date": dtype("O"),
+            "date_str": dtype("O"),
+            "int": dtype("int64"),
+            "decimal": dtype("float64"),
+        } == get_schema(df_cast)
+        assert df_cast.loc[0, "decimal"] == np.round(3.489, decimals=2)
+
+        df_cast = type_.cast(pandas_on_spark_df, columns)
+        assert {
+                   "bool": dtype("bool"),
+                   "date": dtype("O"),
+                   "date_str": dtype("O"),
+                   "int": dtype("int64"),
+                   "decimal": dtype("float64"),
+               } == get_schema(df_cast)
+        assert df_cast.loc[0, "decimal"] == np.round(3.489, decimals=2)
+
+        df_cast = type_.cast(pyspark_df, columns)
+        assert {
+            "bool": BooleanType(),
+            "date": DateType(),
+            "date_str": StringType(),
+            "int": LongType(),
+            "decimal": DecimalType(precision=10, scale=2),
+        } == get_schema(df_cast)
+        assert df_cast.toPandas().loc[0, "decimal"] == DecimalPy('3.49')
