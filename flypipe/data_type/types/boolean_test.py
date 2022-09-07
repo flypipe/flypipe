@@ -1,12 +1,9 @@
-import decimal
-from datetime import datetime
-
 import pandas as pd
 import pytest
 from numpy import dtype
-from pyspark.sql.types import BooleanType, StringType, DecimalType, DateType
+from pyspark.sql.types import BooleanType
 
-from flypipe.data_type.type import Boolean
+from flypipe.data_type import Boolean
 from flypipe.exceptions import ErrorColumnNotInDataframe
 from flypipe.utils import get_schema
 

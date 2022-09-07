@@ -6,7 +6,7 @@ import pytest
 from numpy import dtype
 from pyspark.sql.types import DecimalType
 
-from flypipe.data_type.decimals import Decimals
+from flypipe.data_type import Decimals
 from flypipe.utils import get_schema
 
 

@@ -1,11 +1,11 @@
 from datetime import datetime
-import decimal
+
 import pandas as pd
 import pytest
 from numpy import dtype
-from pyspark.sql.types import BooleanType, StringType, LongType, DecimalType, DateType
+from pyspark.sql.types import StringType, DateType
 
-from flypipe.data_type.date import Date
+from flypipe.data_type import Date
 from flypipe.utils import get_schema
 
 
