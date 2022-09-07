@@ -34,10 +34,6 @@ class node:
         if self.inputs:
             for input in self.inputs:
 
-                if input.name in graph and execution:
-                    # Dependency graph has been mapped for this input, therefore skip
-                    continue
-
                 graph.add_node(input.name, function=input.function)
                 graph.add_edge(input.name, self.name)
                 graph = nx.compose(graph, input.get_graph(execution=execution))
