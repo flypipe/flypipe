@@ -28,16 +28,21 @@ from pyspark.sql.types import (
     TimestampType,
 )
 
+
 # TODO: document
 
 class Type:
     def __init__(self):
         self.pandas_type, self.spark_type = pandas_on_spark_type(
-            spark_type_to_pandas_dtype(self.SPARK_TYPE())
+            spark_type_to_pandas_dtype(self.spark_data_type())
         )
 
     def __repr__(self):
         return f"pandas_type {self.pandas_type}, spark_type: {self.spark_type}"
+
+    @property
+    def spark_data_type(self):
+        raise NotImplementedError
 
     def columns(self, column):
         return column if isinstance(column, list) else [column]
@@ -74,11 +79,11 @@ class Type:
 
 
 class Boolean(Type):
-    SPARK_TYPE = BooleanType
+    spark_data_type = BooleanType
 
 
 class Date(Type):
-    SPARK_TYPE = DateType
+    spark_data_type = DateType
 
     def __init__(self, fmt: str = "%Y-%m-%d"):
         self.fmt = fmt
@@ -87,7 +92,7 @@ class Date(Type):
 
     def cast(self, df, column: Union[str, list]):
         columns_to_cast = self.columns(column)
-        non_existing_columns = set(columns_to_cast) - set(df.columns)
+        non_existing_columns = list(set(columns_to_cast) - set(df.columns))
         if non_existing_columns:
             raise ErrorColumnNotInDataframe(non_existing_columns)
 
