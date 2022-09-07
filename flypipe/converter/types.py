@@ -99,7 +99,6 @@ class Type:
         """
         columns_to_cast = self.columns(df, column)
 
-
         schema = get_schema(df, columns_to_cast)
         if dataframe_type(df) == DataFrameType.PYSPARK:
 
@@ -259,8 +258,12 @@ class Decimal(Type):
             }
 
             for col in columns_to_cast.keys():
-                df = df.withColumn(col, F.col(col).cast(DecimalType(precision=self.precision,
-                                                                             scale=self.scale)))
+                df = df.withColumn(
+                    col,
+                    F.col(col).cast(
+                        DecimalType(precision=self.precision, scale=self.scale)
+                    ),
+                )
 
         else:
             columns_to_cast = {

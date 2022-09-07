@@ -10,6 +10,7 @@ from flypipe.exceptions import (
 
 # TODO: document
 
+
 class DataFrameType(Enum):
     PANDAS = "pandas"
     PANDAS_ON_SPARK = "pandas_on_spark"
@@ -70,6 +71,7 @@ def dataframe_type(df) -> DataFrameType:
 
     raise DataFrameTypeNotSupported
 
+
 # TODO: add tests to get_schema
 def get_schema(df, columns: list = []):
     if dataframe_type(df) == DataFrameType.PYSPARK:
@@ -81,5 +83,7 @@ def get_schema(df, columns: list = []):
 
         return {
             column: datatype
-            for column, datatype in (df.dtypes if not columns else df.dtypes[columns]).items()
+            for column, datatype in (
+                df.dtypes if not columns else df.dtypes[columns]
+            ).items()
         }

@@ -13,6 +13,3 @@ class SchemaConverter:
 
     def convert(self, fom_dtypes, df):
         to_type = dataframe_type(df)
-
-
-
