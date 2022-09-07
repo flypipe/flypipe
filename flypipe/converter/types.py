@@ -125,12 +125,6 @@ class Type:
         return df
 
 
-class Boolean(Type):
-    """Casts dataframe to boolean"""
-
-    spark_data_type = BooleanType
-
-
 class Date(Type):
     """Casts dataframe to approppriate date format in pandas and spark dataframes.
 
@@ -277,3 +271,8 @@ class Decimal(Type):
                 df[columns_to_cast] = df[columns_to_cast].round(self.scale)
 
         return df
+
+
+class Boolean(Type):
+    """Casts dataframe to boolean"""
+    spark_data_type = BooleanType
