@@ -15,4 +15,3 @@ sphinx-rtd-theme==1.0.0
 myst-parser==0.18.0
 sphinxcontrib-mermaid==0.7.1
 linkify-it-py==2.0.0
-Sphinx-Substitution-Extensions==2022.2.16
