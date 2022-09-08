@@ -8,7 +8,7 @@ from flypipe.exceptions import (
     DataFrameTypeNotSupported,
 )
 
-# TODO: document
+# TODO: document things
 
 
 class DataFrameType(Enum):
