@@ -13,9 +13,9 @@ import pyspark.sql.functions as F
 
 
 @node(mode="pyspark",
-      inputs=[Spark("raw.user_account", columns=["user_key", "address_state"])],
-      outputs=[Schema("user_id", StringType(), primary_key=True),
-               Schema("state", StringType())])
+    inputs=[Spark("raw.user_account", columns=["user_key", "address_state"])],
+    outputs=[Schema("user_id", StringType(), primary_key=True),
+             Schema("state", StringType())])
 def user_state(raw_user_account):
     df = raw_user_account
     df = df.withColumnRenamed("user_key", "user_id")

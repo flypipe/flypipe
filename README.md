@@ -71,13 +71,13 @@ import pyspark.sql.functions as F
 
 
 @node(mode="pyspark",
-      inputs=[Spark("raw.user_account", columns=["user_key", "address_state"])],
-      outputs=[Schema("user_id", StringType(), primary_key=True),
-               Schema("state", StringType())])
+  inputs=[Spark("raw.user_account", columns=["user_key", "address_state"])],
+  outputs=[Schema("user_id", StringType(), primary_key=True),
+           Schema("state", StringType())])
 def user_state(raw_user_account):
-    df = raw_user_account
-    df = df.withColumnRenamed("user_key", "user_id")
-    return df.withColumn("state", F.upper(F.col("address_state")))
+  df = raw_user_account
+  df = df.withColumnRenamed("user_key", "user_id")
+  return df.withColumn("state", F.upper(F.col("address_state")))
 ````
 
 ### Spark SQL Transformation
@@ -90,12 +90,12 @@ from flypipe.converter import Schema, StringType, IntegerType
 
 
 @node(mode="spark_sql",
-      inputs=[user_accounts],
-      cache=Cache(CacheType.DISK),
-      outputs=[Schema("state", StringType(), primary_key=True),
-               Schema("quantity", IntegerType())])
+  inputs=[user_accounts],
+  cache=Cache(CacheType.DISK),
+  outputs=[Schema("state", StringType(), primary_key=True),
+           Schema("quantity", IntegerType())])
 def number_users_per_state(user_states):
-    return f"""
+  return f"""
         SELECT
             state,
             count(user_id) as quantity            
