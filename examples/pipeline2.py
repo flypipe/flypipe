@@ -1,6 +1,10 @@
 import networkx as nx
+import logging
 from matplotlib import pyplot as plt
 from flypipe.node import node
+import flypipe.node as node_module
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 @node(mode="pyspark")
@@ -39,4 +43,5 @@ def t7(t2, t4, t5):
 
 
 result = t6.run()
-t6.plot()
+print(result)
+# t6.plot()

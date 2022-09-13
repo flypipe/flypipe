@@ -1,8 +1,8 @@
-import inspect
-import networkx as nx
-from functools import wraps
-
+import logging
+from concurrent.futures import ThreadPoolExecutor, wait
 from flypipe.node_graph import NodeGraph
+
+logger = logging.getLogger(__name__)
 
 
 class Node:
@@ -27,14 +27,26 @@ class Node:
     def run(self):
         outputs = {}
         dependency_chain = self.node_graph.get_dependency_chain()
-        for node_group in dependency_chain:
-            for node_name in node_group:
-                node = self.node_graph.get_node(node_name)
-                try:
-                    node_inputs = {node.__name__: outputs[node.__name__] for node in node.inputs}
-                except KeyError as ex:
-                    raise ValueError(f'Unable to process transformation {node.__name__}, missing input {ex.args[0]}')
-                outputs[node.__name__] = node(**node_inputs)
+
+        def process_node(node_obj, **inputs):
+            outputs[node_obj.__name__] = node_obj(**inputs)
+
+        with ThreadPoolExecutor() as executor:
+            for node_group in dependency_chain:
+                logger.debug(f'Started processing group of nodes {node_group}')
+                result_futures = []
+                for node_name in node_group:
+                    node_obj = self.node_graph.get_node(node_name)
+                    try:
+                        node_inputs = {input_node.__name__: outputs[input_node.__name__] for input_node in node_obj.inputs}
+                    except KeyError as ex:
+                        raise ValueError(f'Unable to process transformation {node_obj.__name__}, missing input {ex.args[0]}')
+
+                    logger.debug(f'Processing node {node_obj.__name__}')
+                    result_futures.append(executor.submit(process_node, node_obj, **node_inputs))
+                logger.debug('Waiting for group of nodes to finish...')
+                wait(result_futures)
+                logger.debug('Finished processing group of nodes')
         return outputs[self.transformation.__name__]
 
     def plot(self):
