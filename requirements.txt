@@ -1,7 +1,8 @@
+# Don't forget to update the install_requires list in setup.py!
+
 #Flypipe
 networkx==2.8
 pyarrow==8.0.0
-pyspark[sql,pandas_on_spark]==3.2.2
 matplotlib==3.5.3
 
 #Development
