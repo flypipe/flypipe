@@ -2,42 +2,31 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, wait
 from flypipe.node_graph import NodeGraph
 from collections import namedtuple
-
-from flypipe.spark.dataframe import SparkDataframe
+from abc import ABC, abstractmethod
 
 logger = logging.getLogger(__name__)
 
 
-NodeResult = namedtuple('NamedTuple', ['node_type', 'value'])
-
-
-class Node:
+class Node(ABC):
 
     TYPES = {}
+    TYPE = None
 
-    def __init__(self, transformation, inputs=None, type=None):
+    def __init__(self, transformation, inputs=None):
         self.transformation = transformation
         self.inputs = inputs or []
-        self._type = None
-        self.node_type = type
         self.node_graph = NodeGraph(self)
 
-    @property
-    def node_type(self):
-        return self._type
-
-    @node_type.setter
-    def node_type(self, value):
-        if value not in self.TYPES.keys():
-            raise ValueError(f'Attempted to set invalid type "{value}", type must be one of {list(self.TYPES.keys())}')
-        self._type = value
-        # if value not in self.MODES.keys():
-        #     raise ValueError(f'Attempted to set invalid mode "{value}", mode must be one of {list(self.MODES.keys())}')
-        # self._mode = value
+    @classmethod
+    def get_class(cls, node_type):
+        try:
+            return cls.TYPES[node_type]
+        except KeyError:
+            raise ValueError(f'Invalid node type {node_type} specified, provide type must be one of {cls.TYPES.keys()}')
 
     @classmethod
-    def register_type(cls, name, type_class):
-        cls.TYPES[name] = type_class
+    def register_node_type(cls, node_type_class):
+        cls.TYPES[node_type_class.TYPE] = node_type_class
 
     @property
     def __name__(self):
@@ -52,12 +41,18 @@ class Node:
     def __call__(self, *args, **kwargs):
         return self.transformation(*args, **kwargs)
 
+    @classmethod
+    @abstractmethod
+    def convert_dataframe(cls, df, destination_type):
+        # TODO- is there a better place to put this? It seems a little out of place here
+        pass
+
     def run(self):
         outputs = {}
         dependency_chain = self.node_graph.get_dependency_chain()
 
         def process_and_cache_node(node_obj, **inputs):
-            outputs[node_obj.__name__] = NodeResult(node_obj.node_type, self.process_node(node_obj, **inputs))
+            outputs[node_obj.__name__] = self.process_node(node_obj, **inputs)
 
         with ThreadPoolExecutor() as executor:
             for node_group in dependency_chain:
@@ -68,11 +63,9 @@ class Node:
                     try:
                         node_inputs = {}
                         for input_node in node_obj.inputs:
-                            # TODO type conversion needs to be a bit more sophisticated
-                            if self.node_type == 'pandas' and outputs[input_node.__name__].node_type == 'spark':
-                                input_value = SparkDataframe.to_pandas(outputs[input_node.__name__].value)
-                            else:
-                                input_value = outputs[input_node.__name__].value
+                            # We need to ensure that the result of each input is converted to the same type as the node
+                            # that's processing it.
+                            input_value = input_node.convert_dataframe(outputs[input_node.__name__], node_obj.TYPE)
                             node_inputs[input_node.__name__] = input_value
                     except KeyError as ex:
                         raise ValueError(f'Unable to process transformation {node_obj.__name__}, missing input {ex.args[0]}')
@@ -85,7 +78,7 @@ class Node:
                 # calling result()
                 [future.result() for future in result_futures]
                 logger.debug('Finished processing group of nodes')
-        return outputs[self.transformation.__name__].value
+        return outputs[self.transformation.__name__]
 
     def process_node(self, node_obj, **inputs):
         return node_obj(**inputs)
@@ -99,5 +92,9 @@ def node(*args, **kwargs):
     Decorator factory that returns the given function wrapped inside a Node class
     """
     def decorator(func):
-        return Node(func, *args, **kwargs)
+        try:
+            node_type = kwargs.pop('type')
+        except KeyError:
+            node_type = None
+        return Node.get_class(node_type)(func, *args, **kwargs)
     return decorator
