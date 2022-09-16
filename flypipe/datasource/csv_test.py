@@ -36,31 +36,31 @@ def spark():
 class TestCSV:
     def test_exception_mode_not_supported(self, csv_path):
         with pytest.raises(ErrorModeNotSupported):
-            CSV.load(csv_path, mode=Mode.SPARK_SQL)
+            CSV.load(csv_path, type=Mode.SPARK_SQL)
 
     def test_exception_spark_session_not_provided(self, csv_path):
         with pytest.raises(ErrorDataFrameTypeNotSupported):
-            CSV.load(csv_path, mode=Mode.PYSPARK)
+            CSV.load(csv_path, type=Mode.PYSPARK)
 
         with pytest.raises(ErrorDataFrameTypeNotSupported):
-            CSV.load(csv_path, mode=Mode.PANDAS_ON_SPARK)
+            CSV.load(csv_path, type=Mode.PANDAS_ON_SPARK)
 
     def test_pandas(self, csv_path):
         import pandas as pd
 
-        df = CSV.load(csv_path, mode=Mode.PANDAS)
+        df = CSV.load(csv_path, type=Mode.PANDAS)
 
         expected_df = pd.read_csv(csv_path)
         assert_dataframes_equals(expected_df, df)
 
     def test_spark(self, csv_path, spark):
-        df = CSV.load(csv_path, spark=spark, mode=Mode.PYSPARK)
+        df = CSV.load(csv_path, spark=spark, type=Mode.PYSPARK)
 
         expected_df = spark.read.option("header", True).csv(csv_path)
         assert_dataframes_equals(df, expected_df)
 
     def test_pandas_on_spark(self, csv_path, spark):
-        df = CSV.load(csv_path, spark=spark, mode=Mode.PANDAS_ON_SPARK)
+        df = CSV.load(csv_path, spark=spark, type=Mode.PANDAS_ON_SPARK)
 
         expected_df = (
             spark.read.option("header", True).csv(csv_path).to_pandas_on_spark()
