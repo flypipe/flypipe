@@ -28,6 +28,10 @@ class PandasNode(Node):
             raise ValueError(f'No mapping defined to convert a pandas node result to type "{destination_type}"')
 
     @classmethod
+    def get_column_types(cls, df):
+        return df.dtypes.to_dict()
+
+    @classmethod
     def validate_dataframe(cls, schema, df):
         selected_columns = []
         df_pandas_types = df.dtypes.to_dict()

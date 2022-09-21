@@ -62,6 +62,11 @@ class Node(ABC):
         # TODO- is there a better place to put this? It seems a little out of place here
         pass
 
+    @classmethod
+    @abstractmethod
+    def get_column_types(cls, df):
+        pass
+
     def run(self):
         outputs = {}
         dependency_chain = self.node_graph.get_dependency_chain()
@@ -109,7 +114,37 @@ class Node(ABC):
 
     @classmethod
     def validate_dataframe(cls, schema, df):
-        pass
+        """
+        Ensure the dataframe matches the given schema. There are a few actions here:
+        - If the schema requests a column which the dataframe doesn't have then throw an error.
+        - If the types of any columns in the dataframe don't match the schema type then throw an error. 
+        - If the dataframe contains any extra columns which the schema didn't request then filter those columns out.
+
+        The idea here is that we either don't have any schema requirements at all on a transformation (for brevity
+        perhaps) in which case this function doesn't get called at all. Otherwise if we are providing a schema then we
+        will be very strict with the check.
+        """
+        selected_columns = []
+        df_types = cls.get_column_types(df)
+        errors = []
+        if schema is not None:
+            for column in schema.columns:
+                if column.name not in df_types:
+                    errors.append(f'Column "{column}" missing from dataframe')
+                    continue
+                selected_columns.append(column.name)
+                column_type = df_types[column.name]
+                flypipe_type = column.type
+                if cls.TYPE_MAP[flypipe_type]!=column_type:
+                    errors.append(
+                        f'Column {column.name} is of type "{column_type}" but we are expecting type '
+                        f'"{cls.TYPE_MAP[flypipe_type]}"')
+        else:
+            selected_columns = df.columns.to_list()
+        if errors:
+            raise TypeError('\n'.join([f'- {error}' for error in errors]))
+        # Restrict dataframe to the columns that we requested in the schema
+        return df[selected_columns]
 
     def process_node(self, node_obj, **inputs):
         return node_obj(**inputs)
