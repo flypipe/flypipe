@@ -44,6 +44,8 @@ class PandasNode(Node):
                     errors.append(
                         f'Column {column.name} is of pandas type "{pandas_type}" but we are expecting type '
                         f'"{cls.TYPE_MAP[flypipe_type]}"')
+        else:
+            selected_columns = df.columns.to_list()
         if errors:
             raise TypeError('\n'.join([f'- {error}' for error in errors]))
         # Restrict dataframe to the columns that we requested in the schema

@@ -67,9 +67,9 @@ class Node(ABC):
         dependency_chain = self.node_graph.get_dependency_chain()
 
         def process_and_cache_node(node_obj, **inputs):
-            outputs[node_obj.__name__] = self.process_node(node_obj, **inputs)
+            result = self.process_node(node_obj, **inputs)
             try:
-                self.validate_dataframe(node_obj.output_schema, outputs[node_obj.__name__])
+                outputs[node_obj.__name__] = self.validate_dataframe(node_obj.output_schema, result)
             except TypeError as ex:
                 raise TypeError(
                     f'Validation failure on node {node_name} when checking output schema: \n{str(ex)}')

@@ -112,39 +112,9 @@ class TestNode:
             '- Column fruit is of pandas type "object" but we are expecting type "<class \'bool\'>"'
         )
 
-    @pytest.mark.parametrize(
-        "input_schema,is_error,expected_result",
-        [
-            (
-                Schema(
-                    [
-                        Column("name", SchemaType.STRING),
-                        Column("fruit", SchemaType.STRING),
-                        Column("age", SchemaType.INTEGER),
-                    ]
-                ),
-                True,
-                "Validation failure on node c when checking input node a: \n"
-                "- Column \"Column(name='age', type=<SchemaType.INTEGER: 3>)\" missing from dataframe",
-            ),
-            (
-                Schema(
-                    [
-                        Column("name", SchemaType.STRING),
-                    ]
-                ),
-                False,
-                pd.DataFrame({"name": ["Albert", "Bob", "Chris", "Chris"]}),
-            ),
-        ],
-    )
-    def test_run_input_validation_column_mismatch(
-        self, input_schema, is_error, expected_result
-    ):
+    def test_run_input_validation_missing_column(self):
         """
-        The output of transformation a is used as an input of b. If the input schema specified in b requests columns
-        that a doesn't pass in then throw an appropriate error. However if the input schema specifies only a subset of
-        the columns that a passes in then we just use the dataframe with that subset of columns selected.
+        Throw an error if a column is requested in the schema but not provided in the input dataframe
         """
 
         @node(type="pandas")
@@ -161,19 +131,65 @@ class TestNode:
             inputs=[
                 (
                     a,
-                    input_schema,
+                    Schema(
+                        [
+                            Column("name", SchemaType.STRING),
+                            Column("fruit", SchemaType.STRING),
+                            Column("age", SchemaType.INTEGER),
+                        ]
+                    ),
                 ),
             ],
         )
-        def c(a):
+        def b(a):
             return a
 
-        if is_error:
-            with pytest.raises(TypeError) as ex:
-                c.run()
-            assert str(ex.value) == expected_result
-        else:
-            assert_frame_equal(c.run(), expected_result)
+        with pytest.raises(TypeError) as ex:
+            b.run()
+        assert str(ex.value) == (
+            "Validation failure on node b when checking input node a: \n"
+            "- Column \"Column(name='age', type=<SchemaType.INTEGER: 3>)\" missing from "
+            "dataframe"
+        )
+
+    def test_run_input_validation_extra_column(self):
+        """
+        Exclude any columns provided in the input dataframe that aren't requested in the schema.
+        """
+
+        @node(type="pandas")
+        def a():
+            return pd.DataFrame(
+                {
+                    "name": ["Albert", "Bob", "Chris", "Chris"],
+                    "fruit": ["banana", "apple", "strawberry", "apple"],
+                }
+            )
+
+        @node(
+            type="pandas",
+            inputs=[
+                (
+                    a,
+                    Schema(
+                        [
+                            Column("name", SchemaType.STRING),
+                        ]
+                    ),
+                ),
+            ],
+        )
+        def b(a):
+            return a
+
+        assert_frame_equal(
+            b.run(),
+            pd.DataFrame(
+                {
+                    "name": ["Albert", "Bob", "Chris", "Chris"],
+                }
+            ),
+        )
 
     def test_run_output_validation_type_mismatch(self):
         """
@@ -206,37 +222,36 @@ class TestNode:
             '- Column fruit is of pandas type "object" but we are expecting type "<class \'numpy.int64\'>"'
         )
 
-    @pytest.mark.parametrize(
-        "output_dataframe,expected_error",
-        [
-            (
-                pd.DataFrame(
-                    {
-                        "name": ["Albert", "Bob", "Chris", "Chris"],
-                    }
-                ),
-                "Validation failure on node a when checking output schema: \n"
-                "- Column \"Column(name='fruit', type=<SchemaType.STRING: 1>)\" missing from dataframe",
-            ),
-            (
-                pd.DataFrame(
-                    {
-                        "name": ["Albert", "Bob", "Chris", "Chris"],
-                        "fruit": ["banana", "apple", "strawberry", "apple"],
-                        "age": [20, 25, 30, 30],
-                    }
-                ),
-                "Validation failure on node a when checking output schema: \n"
-                "- Extra column \"Column(name='age', type=<SchemaType.STRING: 1>)\" found",
-            ),
-        ],
-    )
-    def test_run_output_validation_column_mismatch(
-        self, output_dataframe, expected_error
-    ):
+    def test_run_output_validation_missing_column(self):
         """
-        If the transformation returns a dataframe with additional or missing columns from the schema then we throw an
-        error.
+        Throw an error if a column is requested in the schema but not provided in the output dataframe.
+        """
+        @node(
+            type="pandas",
+            output=Schema(
+                [
+                    Column("name", SchemaType.STRING),
+                    Column("fruit", SchemaType.STRING),
+                ]
+            ),
+        )
+        def a():
+            return pd.DataFrame(
+                    {
+                        "name": ["Albert", "Bob", "Chris", "Chris"],
+                    }
+                )
+
+        with pytest.raises(TypeError) as ex:
+            a.run()
+        assert str(ex.value) == (
+            "Validation failure on node a when checking output schema: \n"
+            "- Column \"Column(name='fruit', type=<SchemaType.STRING: 1>)\" missing from dataframe"
+        )
+
+    def test_run_output_validation_extra_column(self):
+        """
+        Exclude any columns provided in the output dataframe that aren't requested in the schema.
         """
 
         @node(
@@ -249,8 +264,20 @@ class TestNode:
             ),
         )
         def a():
-            return output_dataframe
+            return pd.DataFrame(
+                {
+                    "name": ["Albert", "Bob", "Chris", "Chris"],
+                    "fruit": ["banana", "apple", "strawberry", "apple"],
+                    "age": [20, 25, 30, 30],
+                }
+            )
 
-        with pytest.raises(TypeError) as ex:
-            a.run()
-        assert str(ex.value) == expected_error
+        assert_frame_equal(
+            a.run(),
+            pd.DataFrame(
+                {
+                    "name": ["Albert", "Bob", "Chris", "Chris"],
+                    "fruit": ["banana", "apple", "strawberry", "apple"],
+                }
+            ),
+        )
