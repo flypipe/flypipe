@@ -3,7 +3,7 @@ import pytest
 from numpy import dtype
 from pyspark.sql.types import BooleanType
 
-from flypipe.data_type import Boolean
+from flypipe.schema import Boolean
 from flypipe.exceptions import ErrorColumnNotInDataframe
 from flypipe.utils import get_schema
 

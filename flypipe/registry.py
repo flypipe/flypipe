@@ -1,6 +1,6 @@
 from flypipe.node import Node
-from flypipe.pandas.node import PandasNode
-from flypipe.spark.sql_node import SparkSQLNode
+from flypipe.pandas_node.node import PandasNode
+from flypipe.spark_node.sql_node import SparkSQLNode
 
 
 def register_types():
@@ -10,6 +10,6 @@ def register_types():
     except ModuleNotFoundError:
         pass
     else:
-        from flypipe.spark.node import SparkNode
+        from flypipe.spark_node.node import SparkNode
         Node.register_node_type(SparkNode)
         # Node.register_node_type('spark_sql', SparkSQLNode)

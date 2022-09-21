@@ -3,8 +3,12 @@ from concurrent.futures import ThreadPoolExecutor, wait
 from flypipe.node_graph import NodeGraph
 from collections import namedtuple
 from abc import ABC, abstractmethod
+from types import FunctionType
 
 logger = logging.getLogger(__name__)
+
+
+NodeInput = namedtuple('NodeInput', ['node', 'schema'])
 
 
 class Node(ABC):
@@ -12,9 +16,20 @@ class Node(ABC):
     TYPES = {}
     TYPE = None
 
-    def __init__(self, transformation, inputs=None):
+    def __init__(self, transformation, inputs=None, output=None):
         self.transformation = transformation
-        self.inputs = inputs or []
+        self.inputs = []
+        if inputs:
+            for input_def in inputs:
+                if isinstance(input_def, tuple):
+                    node, schema = input_def
+                    self.inputs.append(NodeInput(node, schema))
+                elif isinstance(input_def, Node):
+                    self.inputs.append(NodeInput(input_def, None))
+                else:
+                    raise TypeError(
+                        f'Input {input_def} is {type(input_def)} but expected it to be either a tuple or an instance/subinstance of Node')
+        self.output_schema = output
         self.node_graph = NodeGraph(self)
 
     @classmethod
@@ -53,6 +68,11 @@ class Node(ABC):
 
         def process_and_cache_node(node_obj, **inputs):
             outputs[node_obj.__name__] = self.process_node(node_obj, **inputs)
+            try:
+                self.validate_dataframe(node_obj.output_schema, outputs[node_obj.__name__])
+            except TypeError as ex:
+                raise TypeError(
+                    f'Validation failure on node {node_name} when checking output schema: \n{str(ex)}')
 
         with ThreadPoolExecutor() as executor:
             for node_group in dependency_chain:
@@ -62,10 +82,17 @@ class Node(ABC):
                     node_obj = self.node_graph.get_node(node_name)
                     try:
                         node_inputs = {}
-                        for input_node in node_obj.inputs:
+                        for input_node, input_schema in node_obj.inputs:
                             # We need to ensure that the result of each input is converted to the same type as the node
                             # that's processing it.
                             input_value = input_node.convert_dataframe(outputs[input_node.__name__], node_obj.TYPE)
+                            if input_schema:
+                                try:
+                                    input_value = self.validate_dataframe(input_schema, input_value)
+                                except TypeError as ex:
+                                    raise TypeError(
+                                        f'Validation failure on node {node_name} when checking input node '
+                                        f'{input_node.__name__}: \n{str(ex)}')
                             node_inputs[input_node.__name__] = input_value
                     except KeyError as ex:
                         raise ValueError(f'Unable to process transformation {node_obj.__name__}, missing input {ex.args[0]}')
@@ -79,6 +106,10 @@ class Node(ABC):
                 [future.result() for future in result_futures]
                 logger.debug('Finished processing group of nodes')
         return outputs[self.transformation.__name__]
+
+    @classmethod
+    def validate_dataframe(cls, schema, df):
+        pass
 
     def process_node(self, node_obj, **inputs):
         return node_obj(**inputs)

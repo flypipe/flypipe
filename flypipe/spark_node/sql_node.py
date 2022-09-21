@@ -1,5 +1,5 @@
-from flypipe.spark.node import SparkNode
-from flypipe.spark.context import get_spark_session
+from flypipe.spark_node.node import SparkNode
+from flypipe.spark_node.context import get_spark_session
 
 
 class SparkSQLNode(SparkNode):
