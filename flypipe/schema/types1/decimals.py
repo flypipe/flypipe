@@ -3,7 +3,7 @@ import numpy as np
 import pyspark.sql.functions as F
 from pyspark.sql.types import DecimalType
 from flypipe.utils import dataframe_type, DataFrameType, get_schema
-from flypipe.data_type.types.type import Type
+from flypipe.schema.types1.type import Type
 
 
 class Decimals(Type):

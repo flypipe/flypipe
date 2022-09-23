@@ -70,7 +70,7 @@ from flypipe.converter import Schema, StringType
 import pyspark.sql.functions as F
 
 
-@node(mode="pyspark",
+@node(type="pyspark",
   inputs=[Spark("raw.user_account", columns=["user_key", "address_state"])],
   outputs=[Schema("user_id", StringType(), primary_key=True),
            Schema("state", StringType())])
@@ -89,7 +89,7 @@ from my_nodes import user_state
 from flypipe.converter import Schema, StringType, IntegerType
 
 
-@node(mode="spark_sql",
+@node(type="spark_sql",
   inputs=[user_accounts],
   cache=Cache(CacheType.DISK),
   outputs=[Schema("state", StringType(), primary_key=True),

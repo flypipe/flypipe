@@ -1,7 +1,7 @@
 from typing import Union
 import numpy as np
 
-from flypipe.data_type.types.type import Type
+from flypipe.schema.types1.type import Type
 from flypipe.utils import dataframe_type, DataFrameType, get_schema
 import pyspark.sql.functions as F
 import pyspark.pandas as ps

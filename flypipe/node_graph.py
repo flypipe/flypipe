@@ -15,14 +15,14 @@ class NodeGraph:
     def _build_graph(cls, node):
         graph = nx.DiGraph()
         graph.add_node(
-            node.__name__, function=node, inputs=[i.__name__ for i in node.inputs]
+            node.__name__, function=node, inputs=[i.node.__name__ for i in node.inputs]
         )
 
         if node.inputs:
             for input in node.inputs:
-                graph.add_node(input.__name__, function=input)
-                graph.add_edge(input.__name__, node.__name__)
-                graph = nx.compose(graph, cls._build_graph(input))
+                graph.add_node(input.node.__name__, function=input)
+                graph.add_edge(input.node.__name__, node.__name__)
+                graph = nx.compose(graph, cls._build_graph(input.node))
 
         return graph
 

@@ -5,7 +5,7 @@ import pytest
 from numpy import dtype
 from pyspark.sql.types import StringType, DateType
 
-from flypipe.data_type import Date
+from flypipe.schema import Date
 from flypipe.utils import get_schema
 
 

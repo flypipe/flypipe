@@ -7,37 +7,37 @@ import flypipe.node as node_module
 logging.basicConfig(level=logging.DEBUG)
 
 
-@node(mode="pyspark")
+@node(type="spark")
 def t1():
     return 1
 
 
-@node(mode="pyspark", inputs=[t1])
+@node(type="spark", inputs=[t1])
 def t2(t1):
     return t1 + 1
 
 
-@node(mode="pandas", inputs=[t2, t1])
+@node(type="pandas", inputs=[t2, t1])
 def t3(t2, t1):
     return t2 + t1
 
 
-@node(mode="pandas", inputs=[t3, t1])
+@node(type="pandas", inputs=[t3, t1])
 def t4(t3, t1):
     return t3 + t1
 
 
-@node(mode="pandas", inputs=[t3])
+@node(type="pandas", inputs=[t3])
 def t5(t3):
     return t3 + 1
 
 
-@node(mode="pandas", inputs=[t2, t4, t5])
+@node(type="pandas", inputs=[t2, t4, t5])
 def t6(**dfs):
     return dfs["t2"] + dfs["t4"] + dfs["t5"]
 
 
-@node(mode="pandas", inputs=[t2, t4, t5])
+@node(type="pandas", inputs=[t2, t4, t5])
 def t7(t2, t4, t5):
     return t2 + t4 + t5
 

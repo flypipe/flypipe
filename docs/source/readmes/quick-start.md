@@ -12,7 +12,7 @@ from flypipe.converter import Schema, StringType
 import pyspark.sql.functions as F
 
 
-@node(mode="pyspark",
+@node(type="pyspark",
     inputs=[Spark("raw.user_account", columns=["user_key", "address_state"])],
     outputs=[Schema("user_id", StringType(), primary_key=True),
              Schema("state", StringType())])

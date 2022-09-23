@@ -35,32 +35,32 @@ def node(*args_decorator, **kwargs_decorator):
     return decorator_repeat
 
 
-@node(mode="pyspark")
+@node(type="pyspark")
 def t1():
     return 1
 
 
-@node(mode="pyspark", inputs=[t1])
+@node(type="pyspark", inputs=[t1])
 def t2(t1):
     return t1 + 1
 
 
-@node(mode="pandas", inputs=[t2, t1])
+@node(type="pandas", inputs=[t2, t1])
 def t3(t2, t1):
     return t2 + t1
 
 
-@node(mode="pandas", inputs=[t3, t1])
+@node(type="pandas", inputs=[t3, t1])
 def t4(t3, t1):
     return t3 + t1
 
 
-@node(mode="pandas", inputs=[t3])
+@node(type="pandas", inputs=[t3])
 def t5(t3):
     return t3 + 1
 
 
-@node(mode="pandas", inputs=[t2, t4, t5])
+@node(type="pandas", inputs=[t2, t4, t5])
 def t6(t2, t4, t5):
     return t2 + t4 + t5
 
