@@ -7,12 +7,12 @@ class SparkNode(Node):
 
     TYPE = 'spark'
     TYPE_MAP = {
-        SchemaType.STRING: StringType,
-        SchemaType.INTEGER: IntegerType,
-        SchemaType.DECIMAL: DecimalType,
-        SchemaType.BOOLEAN: BooleanType,
-        SchemaType.DATE: DateType,
-        SchemaType.DATETIME: DateType,
+        SchemaType.STRING: StringType(),
+        SchemaType.INTEGER: IntegerType(),
+        SchemaType.DECIMAL: DecimalType(),
+        SchemaType.BOOLEAN: BooleanType(),
+        SchemaType.DATE: DateType(),
+        SchemaType.DATETIME: DateType(),
     }
 
     @classmethod
