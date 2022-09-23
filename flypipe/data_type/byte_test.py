@@ -1,12 +1,10 @@
-import decimal
-
 import numpy as np
 import pandas as pd
 import pytest
 from numpy import dtype
-from pyspark.sql.types import DecimalType
+from pyspark.sql.types import ByteType
 
-from flypipe.schema import Decimals
+from flypipe.data_type import Byte
 from flypipe.utils import get_schema
 
 
@@ -19,11 +17,7 @@ def spark():
 
 @pytest.fixture(scope="function")
 def pandas_df():
-    return pd.DataFrame(
-        data={
-            "decimal": [decimal.Decimal("3.489")],
-        }
-    )
+    return pd.DataFrame(data={"byte": [np.byte(1)]})
 
 
 @pytest.fixture(scope="function")
@@ -36,25 +30,22 @@ def pandas_on_spark_df(pyspark_df):
     return pyspark_df.to_pandas_on_spark()
 
 
-class TestDecimals:
-    def test_decimal(self, pandas_df, pyspark_df, pandas_on_spark_df):
-        columns = ["decimal"]
-        type_ = Decimals(precision=10, scale=2)
-
+class TestByte:
+    def test_byte(self, pandas_df, pyspark_df, pandas_on_spark_df):
+        columns = ["byte"]
+        type_ = Byte()
         df_cast = type_.cast(pandas_df, columns)
+
         assert {
-            "decimal": dtype("float64"),
+            "byte": dtype("int8"),
         } == get_schema(df_cast)
-        assert df_cast.loc[0, "decimal"] == np.round(3.489, decimals=2)
 
         df_cast = type_.cast(pandas_on_spark_df, columns)
         assert {
-            "decimal": dtype("float64"),
+            "byte": dtype("int8"),
         } == get_schema(df_cast)
-        assert df_cast.loc[0, "decimal"] == np.round(3.489, decimals=2)
 
         df_cast = type_.cast(pyspark_df, columns)
         assert {
-            "decimal": DecimalType(precision=10, scale=2),
+            "byte": ByteType(),
         } == get_schema(df_cast)
-        assert df_cast.toPandas().loc[0, "decimal"] == decimal.Decimal("3.49")

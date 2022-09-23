@@ -1,7 +1,19 @@
 from typing import Union
+
+import numpy as np
 import pyspark.sql.functions as F
 from pyspark.pandas.typedef import pandas_on_spark_type, spark_type_to_pandas_dtype
-from pyspark.sql.types import BooleanType
+from pyspark.sql.types import (
+    BooleanType,
+    FloatType,
+    DoubleType,
+    IntegerType,
+    ShortType,
+    LongType,
+    ByteType,
+    BinaryType,
+    StringType,
+)
 
 from flypipe.exceptions import ErrorColumnNotInDataframe
 from flypipe.utils import dataframe_type, DataFrameType, get_schema
@@ -104,3 +116,61 @@ class Boolean(Type):
     """Casts dataframe to boolean"""
 
     spark_data_type = BooleanType
+
+
+class Byte(Type):
+    """Casts dataframe to byte"""
+
+    spark_data_type = ByteType
+
+
+class Binary(Type):
+    """Casts dataframe to binary"""
+
+    spark_data_type = BinaryType
+    pandas_type = np.bytes_
+    spark_type = BinaryType()
+
+    def __init__(self):
+        pass
+
+
+class Integer(Type):
+    """Casts dataframe to integer"""
+
+    spark_data_type = IntegerType
+
+
+class Short(Type):
+    """Casts dataframe to short"""
+
+    spark_data_type = ShortType
+
+
+class Long(Type):
+    """Casts dataframe to long"""
+
+    spark_data_type = LongType
+
+
+class Float(Type):
+    """Casts dataframe to float"""
+
+    spark_data_type = FloatType
+
+
+class Double(Type):
+    """Casts dataframe to double"""
+
+    spark_data_type = DoubleType
+
+
+class String(Type):
+    """Casts dataframe to string"""
+
+    spark_data_type = StringType
+    pandas_type = np.str
+    spark_type = StringType()
+
+    def __init__(self):
+        pass
