@@ -5,3 +5,6 @@ build-backend = "setuptools.build_meta"
 # This line makes setuptools choose the package version dynamically via setuptools_scm
 [tool.setuptools_scm]
 write_to = "version.py"
+
+[tool.pytest.ini_options]
+log_cli = 1

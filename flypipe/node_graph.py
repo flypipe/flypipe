@@ -29,20 +29,18 @@ class NodeGraph:
     def get_node(self, name):
         return self.graph.nodes[name]['function']
 
-    def get_dependency_chain(self):
-        """
-        Process the graph to get the appropriate order to execute the nodes in.
-        """
-        dependency_chain = []
-        graph = self.graph.copy()
+    def get_dependency_map(self):
+        dependencies = {}
+        for node in self.graph.nodes:
+            dependencies[node] = set()
+        for source, destination in self.graph.edges:
+            dependencies[destination].add(source)
+        return dependencies
+    #
+    # @classmethod
+    # def get_runnable_nodes(cls, execution_graph):
+    #     nodes = [node for node in execution_graph if execution_graph.in_degree(node) == 0]
 
-        while not len(graph) == 0:
-            nodes = [node for node in graph if graph.in_degree(node)==0]
-            dependency_chain.append(nodes)
-            for node in nodes:
-                graph.remove_node(node)
-
-        return dependency_chain
 
     def plot(self):
         plt.title(f'Transformation Graph')
