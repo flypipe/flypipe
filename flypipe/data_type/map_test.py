@@ -26,6 +26,7 @@ def pandas_df():
         data={
             "int_str": [{1: "my_test"}],
             "str_date": [{"date_1": datetime.datetime(2022, 1, 1).date()}],
+            "int_str_str": [{1: {"my_test": "my_test2"}}],
         }
     )
 
@@ -76,3 +77,21 @@ class TestMap:
 
         df_cast = type_.cast(pyspark_df, columns)
         assert MapType(StringType(), DateType()) == get_schema(df_cast)["str_date"]
+
+    def test_int_str_str(self, pandas_df, pyspark_df, pandas_on_spark_df):
+        columns = ["int_str_str"]
+        with pytest.warns(
+            MapContentCast,
+            match="Make sure the content of the map has been casted to the proper key and value types",
+        ):
+            type_ = Map(Integer(), Map(String(), String()))
+
+        df_cast = type_.cast(pandas_df, columns)
+
+        assert dtype("O") == get_schema(df_cast)["int_str_str"]
+
+        df_cast = type_.cast(pandas_on_spark_df, columns)
+        assert dtype("O") == get_schema(df_cast)["int_str_str"]
+
+        df_cast = type_.cast(pyspark_df, columns)
+        assert MapType(IntegerType(), MapType(StringType(), StringType())) == get_schema(df_cast)["int_str_str"]

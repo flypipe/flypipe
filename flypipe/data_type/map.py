@@ -10,7 +10,7 @@ class MapContentCast(UserWarning):
 
 
 class Map(Type):
-    """Casts dataframe to array
+    """Casts dataframe to map
 
     Attributes
     ----------
