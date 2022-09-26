@@ -29,6 +29,6 @@ class PandasNode(Node):
 
     @classmethod
     def get_column_types(cls, df):
-        return df.dtypes.to_dict()
+        return dict(df.dtypes)
 
 
