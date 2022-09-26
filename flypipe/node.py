@@ -143,12 +143,13 @@ class Node(ABC):
                 run_valid_nodes()
         return outputs[self.transformation.__name__]
 
+    # TODO- move this method elsewhere
     @classmethod
     def validate_dataframe(cls, schema, df):
         """
         Ensure the dataframe matches the given schema. There are a few actions here:
         - If the schema requests a column which the dataframe doesn't have then throw an error.
-        - If the types of any columns in the dataframe don't match the schema type then throw an error.
+        - If the types of any columns in the dataframe don't match (and aren't castable from) the schema type then throw an error.
         - If the dataframe contains any extra columns which the schema didn't request then filter those columns out.
 
         The idea here is that we either don't have any schema requirements at all on a transformation (for brevity
@@ -164,12 +165,11 @@ class Node(ABC):
                     errors.append(f'Column "{column}" missing from dataframe')
                     continue
                 selected_columns.append(column.name)
-                column_type = df_types[column.name]
                 flypipe_type = column.type
-                if cls.TYPE_MAP[flypipe_type] != column_type:
-                    errors.append(
-                        f'Column {column.name} is of type "{column_type}" which flypipe type {cls.TYPE_MAP[flypipe_type]} does not map to'
-                    )
+                try:
+                    flypipe_type.validate(df, column.name)
+                except TypeError as ex:
+                    errors.append(str(ex))
         else:
             selected_columns = df.columns.to_list()
         if errors:
