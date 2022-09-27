@@ -59,8 +59,8 @@ class TestNode:
             pd.DataFrame(
                 {
                     "name": ["Albert", "Bob", "Chris", "Chris"],
-                    "fruit": ["banana", "apple", "strawberry", "apple"],
                     "age": [30, 25, 28, 28],
+                    "fruit": ["banana", "apple", "strawberry", "apple"],
                 }
             ),
         )

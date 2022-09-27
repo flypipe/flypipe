@@ -1,5 +1,5 @@
 import logging
-from concurrent.futures import ThreadPoolExecutor, wait
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from flypipe.node_graph import NodeGraph
 from collections import namedtuple
 from abc import ABC, abstractmethod
@@ -72,7 +72,8 @@ class Node(ABC):
 
     def run(self):
         outputs = {}
-        dependency_chain = self.node_graph.get_dependency_chain()
+        dependency_map = self.node_graph.get_dependency_map()
+        result_futures = []
 
         def process_and_cache_node(node_obj, **inputs):
             result = self.process_node(node_obj, **inputs)
@@ -80,16 +81,25 @@ class Node(ABC):
                 outputs[node_obj.__name__] = self.validate_dataframe(
                     node_obj.output_schema, result
                 )
+                for dependency in dependency_map.values():
+                    try:
+                        dependency.remove(node_obj.__name__)
+                    except KeyError:
+                        pass
+                logger.debug(f'Finished processing node {node_obj.__name__}')
             except TypeError as ex:
                 raise TypeError(
-                    f"Validation failure on node {node_name} when checking output schema: \n{str(ex)}"
+                    f"Validation failure on node {node_obj.__name__} when checking output schema: \n{str(ex)}"
                 )
 
-        with ThreadPoolExecutor() as executor:
-            for node_group in dependency_chain:
-                logger.debug(f"Started processing group of nodes {node_group}")
-                result_futures = []
-                for node_name in node_group:
+        def run_valid_nodes():
+            """Run nodes with no yet-to-be run dependencies/inputs"""
+            remaining_nodes = list(dependency_map.keys())
+            for node_name in remaining_nodes:
+                dependencies = dependency_map[node_name]
+                if not dependencies:
+                    logger.debug(f"Started processing node {node_name}")
+
                     node_obj = self.node_graph.get_node(node_name)
                     try:
                         node_inputs = {}
@@ -116,23 +126,30 @@ class Node(ABC):
                         )
 
                     logger.debug(f"Processing node {node_obj.__name__}")
+                    new_task = executor.submit(process_and_cache_node, node_obj, **node_inputs)
+                    # Remove the node from the dependency map so that we don't run it again
+                    dependency_map.pop(node_obj.__name__)
                     result_futures.append(
-                        executor.submit(process_and_cache_node, node_obj, **node_inputs)
+                        new_task
                     )
-                logger.debug("Waiting for group of nodes to finish...")
-                wait(result_futures)
+
+        with ThreadPoolExecutor() as executor:
+            run_valid_nodes()
+            # As each node is completed we check if it's possible to run any new nodes
+            for task in as_completed(result_futures):
                 # This is not actually a no-op- if any exceptions occur during node processing they get re-raised when
                 # calling result()
-                [future.result() for future in result_futures]
-                logger.debug("Finished processing group of nodes")
+                task.result()
+                run_valid_nodes()
         return outputs[self.transformation.__name__]
 
+    # TODO- move this method elsewhere
     @classmethod
     def validate_dataframe(cls, schema, df):
         """
         Ensure the dataframe matches the given schema. There are a few actions here:
         - If the schema requests a column which the dataframe doesn't have then throw an error.
-        - If the types of any columns in the dataframe don't match the schema type then throw an error.
+        - If the types of any columns in the dataframe don't match (and aren't castable from) the schema type then throw an error.
         - If the dataframe contains any extra columns which the schema didn't request then filter those columns out.
 
         The idea here is that we either don't have any schema requirements at all on a transformation (for brevity
@@ -148,12 +165,11 @@ class Node(ABC):
                     errors.append(f'Column "{column}" missing from dataframe')
                     continue
                 selected_columns.append(column.name)
-                column_type = df_types[column.name]
                 flypipe_type = column.type
-                if cls.TYPE_MAP[flypipe_type] != column_type:
-                    errors.append(
-                        f'Column {column.name} is of type "{column_type}" which flypipe type {cls.TYPE_MAP[flypipe_type]} does not map to'
-                    )
+                try:
+                    flypipe_type.validate(df, column.name)
+                except TypeError as ex:
+                    errors.append(str(ex))
         else:
             selected_columns = df.columns.to_list()
         if errors:
