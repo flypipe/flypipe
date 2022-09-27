@@ -2,6 +2,7 @@ from typing import Union
 
 import numpy as np
 import pyspark.sql.functions as F
+from numpy import dtype
 from pyspark.pandas.typedef import pandas_on_spark_type, spark_type_to_pandas_dtype
 from pyspark.sql.types import (
     BooleanType,
@@ -169,7 +170,7 @@ class String(Type):
     """Casts dataframe to string"""
 
     spark_data_type = StringType
-    pandas_type = np.str
+    pandas_type = dtype("<U0")
     spark_type = StringType()
 
     def __init__(self):
