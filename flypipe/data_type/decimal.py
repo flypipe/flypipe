@@ -8,7 +8,7 @@ from flypipe.data_type.type import Type
 from flypipe.utils import dataframe_type, DataFrameType, get_schema
 
 
-class Decimals(Type):
+class Decimal(Type):
     """Casts dataframe to approppriate Decimal
     If dataframe is pyspark, casts to DecimalType(precision, scale)
     If dataframe is pandas or pandas on spark, casts to np.dtype("float64") and round to scale
