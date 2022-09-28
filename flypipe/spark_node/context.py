@@ -1,5 +1,6 @@
-from pyspark.sql import SparkSession
+"""TODO- deprecate or remove this"""
 
+from pyspark.sql import SparkSession
 
 _spark_session = None
 
@@ -16,6 +17,7 @@ def get_spark_session():
     elif _spark_session:
         spark = _spark_session
     else:
+        # TODO- throw an exception rather than creating for the user, we are worried they will forget to declare a spark object and dependingo n the circumstance would end up with a suboptimal spark setup
         spark = (
             SparkSession
                 .builder

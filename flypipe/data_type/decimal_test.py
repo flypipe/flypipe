@@ -6,7 +6,7 @@ import pytest
 from numpy import dtype
 from pyspark.sql.types import DecimalType
 
-from flypipe.data_type import Decimals
+from flypipe.data_type import Decimal
 from flypipe.utils import get_schema
 
 
@@ -36,10 +36,10 @@ def pandas_on_spark_df(pyspark_df):
     return pyspark_df.to_pandas_on_spark()
 
 
-class TestDecimals:
+class TestDecimal:
     def test_decimal(self, pandas_df, pyspark_df, pandas_on_spark_df):
         columns = ["decimal"]
-        type_ = Decimals(precision=10, scale=2)
+        type_ = Decimal(precision=10, scale=2)
 
         df_cast = type_.cast(pandas_df, columns)
         assert {
