@@ -1,0 +1,4 @@
+# Don't forget to update the install_requires list in setup.py!
+
+#Development
+jupyterlab==3.4.5

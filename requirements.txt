@@ -5,8 +5,7 @@ networkx==2.8
 pyarrow==8.0.0
 matplotlib==3.5.3
 
-#Development
-jupyterlab==3.4.5
+#CICD
 pylint==2.15.2
 pytest==7.1.3
 twine==4.0.1
