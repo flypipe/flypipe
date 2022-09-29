@@ -27,7 +27,7 @@ jobs:
 
       - name: Install requirements
         run: |
-          pip install Sphinx==5.1.1 sphinx-rtd-theme==1.0.0 myst-parser==0.18.0 sphinxcontrib-mermaid==0.7.1 linkify-it-py==2.0.0
+          pip install sphinx-rtd-theme==1.0.0 Sphinx==5.1.1 myst-parser==0.18.0 sphinxcontrib-mermaid==0.7.1 linkify-it-py==2.0.0
 
       - name: Create Documentation
         run: |
