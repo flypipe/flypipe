@@ -1,15 +1,30 @@
-from numpy import int8
-
-from flypipe.converter.dataframe import DataFrameConverter
-from flypipe.utils import DataFrameType, dataframe_type
+from flypipe.schema.schema import Schema
 
 
 class SchemaConverter:
-    def read_schema(self, df):
-        if dataframe_type(df) == DataFrameType.PYSPARK:
-            return {col: df.schema[col].dataType.__class__() for col in df.columns}
-        else:
-            return {col: type_ for col, type_ in df.dtypes.items()}
+    """Casts a dataframe using a given schema"""
 
-    def convert(self, fom_dtypes, df):
-        to_type = dataframe_type(df)
+    @staticmethod
+    def cast(df, schema: Schema):
+        """Casts a dataframe using a given schema
+
+        Parameters
+        ----------
+
+        df: pandas, pandas_on_spark or spark dataframe
+            dataframe to be casted
+        schema: Schema
+            the schema definition in which the columns of the dataframe will be casted to the defined data types
+
+        Returns
+        -------
+        df: pandas, pandas_on_spark or spark dataframe
+            dataframe casted to the given schema
+        """
+
+        for column in schema.columns:
+            df = column.type.cast(df, column.name)
+        return df
+
+
+

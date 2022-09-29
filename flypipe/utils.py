@@ -73,7 +73,10 @@ def dataframe_type(df) -> DataFrameType:
 
 
 # TODO: add tests to get_schema
-def get_schema(df, columns: list = []):
+def get_schema(df, columns=None):
+    if columns is None:
+        columns = {}
+
     if dataframe_type(df) == DataFrameType.PYSPARK:
         return {
             s.name: s.dataType

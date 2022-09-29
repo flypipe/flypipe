@@ -1,12 +1,13 @@
 from typing import Union
-import numpy as np
 
-from flypipe.schema.types1.type import Type
-from flypipe.utils import dataframe_type, DataFrameType, get_schema
-import pyspark.sql.functions as F
-import pyspark.pandas as ps
+import numpy as np
 import pandas as pd
+import pyspark.pandas as ps
+import pyspark.sql.functions as F
 from pyspark.sql.types import DateType, StringType
+
+from flypipe.data_type.type import Type
+from flypipe.utils import dataframe_type, DataFrameType, get_schema
 
 
 class Date(Type):
@@ -20,6 +21,8 @@ class Date(Type):
     """
 
     spark_data_type = DateType
+    spark_type = DateType()
+    pandas_type = np.dtype("<M8[ns]")
 
     def __init__(self, fmt: str = "%Y-%m-%d"):
         self.fmt = fmt
@@ -57,13 +60,13 @@ class Date(Type):
                 if data_type == StringType():
                     df = df.withColumn(column, F.to_date(F.col(column), self.fmt))
                 else:
-                    df = df.withColumn(column, F.col(column).cast(DateType()))
+                    df = df.withColumn(column, F.col(column).cast(self.spark_type))
 
         else:
             columns_to_cast = {
                 column: data_type
                 for column, data_type in schema.items()
-                if data_type != np.dtype("<M8[ns]") and column in columns_to_cast
+                if data_type != self.pandas_type and column in columns_to_cast
             }
 
             for column, data_type in columns_to_cast.items():
@@ -74,6 +77,6 @@ class Date(Type):
                         df[column] = pd.to_datetime(df[column], format=self.fmt)
 
             columns_to_cast = list(columns_to_cast.keys())
-            df[columns_to_cast] = df[columns_to_cast].astype(np.dtype("<M8[ns]"))
+            df[columns_to_cast] = df[columns_to_cast].astype(self.pandas_type)
 
         return df

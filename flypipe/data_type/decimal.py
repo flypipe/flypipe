@@ -1,12 +1,14 @@
 from typing import Union
+
 import numpy as np
 import pyspark.sql.functions as F
 from pyspark.sql.types import DecimalType
+
+from flypipe.data_type.type import Type
 from flypipe.utils import dataframe_type, DataFrameType, get_schema
-from flypipe.schema.types1.type import Type
 
 
-class Decimals(Type):
+class Decimal(Type):
     """Casts dataframe to approppriate Decimal
     If dataframe is pyspark, casts to DecimalType(precision, scale)
     If dataframe is pandas or pandas on spark, casts to np.dtype("float64") and round to scale
@@ -27,10 +29,12 @@ class Decimals(Type):
     """
 
     spark_data_type = DecimalType
+    pandas_type = np.dtype("<M8[ns]")
 
     def __init__(self, precision: int = None, scale: int = 2):
         self.precision = precision
         self.scale = scale
+        self.spark_type = DecimalType(precision=self.precision, scale=self.scale)
 
     def cast(self, df, column: Union[str, list]):
         """Casts dataframe to approppriate Decimal
@@ -65,9 +69,7 @@ class Decimals(Type):
             for col in columns_to_cast.keys():
                 df = df.withColumn(
                     col,
-                    F.col(col).cast(
-                        DecimalType(precision=self.precision, scale=self.scale)
-                    ),
+                    F.col(col).cast(self.spark_type),
                 )
 
         else:

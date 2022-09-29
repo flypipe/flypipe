@@ -1,6 +1,8 @@
 import networkx as nx
 import logging
 from matplotlib import pyplot as plt
+
+from flypipe.data_type import Boolean
 from flypipe.node import node
 import flypipe.node as node_module
 
