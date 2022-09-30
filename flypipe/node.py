@@ -10,7 +10,7 @@ from flypipe.utils import DataFrameType
 logger = logging.getLogger(__name__)
 
 
-class Node:
+class Transformation:
 
     TYPE_MAP = {
         'pyspark': DataFrameType.PYSPARK,
@@ -18,8 +18,8 @@ class Node:
         'pandas_on_spark': DataFrameType.PANDAS_ON_SPARK,
     }
 
-    def __init__(self, transformation, type: str, dependencies=None, output=None):
-        self.transformation = transformation
+    def __init__(self, function, type: str, dependencies=None, output=None):
+        self.function = function
         self.dependencies = dependencies or []
         try:
             self.type = self.TYPE_MAP[type]
@@ -32,12 +32,12 @@ class Node:
     @property
     def __name__(self):
         """Return the name of the wrapped transformation rather than the name of the decorator object"""
-        return self.transformation.__name__
+        return self.function.__name__
 
     @property
     def __doc__(self):
         """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
-        return self.transformation.__doc__
+        return self.function.__doc__
 
     def inputs(self, **kwargs):
         for k, v in kwargs.items():
@@ -49,30 +49,31 @@ class Node:
         self._provided_inputs = {}
 
     def __call__(self, *args):
-        return self.transformation(*args)
+        return self.function(*args)
 
     def run(self, spark=None, parallel=True):
         self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
         if parallel:
-            return self._run_parallel(node_graph, spark)
+            return self._run_parallel(spark)
         else:
-            return self._run_sequential( node_graph, spark)
+            return self._run_sequential(spark)
 
-    def _run_sequential(self, node_graph, spark=None):
+    def _run_sequential(self, spark=None):
         outputs = {k: DataframeWrapper(spark, v, schema=None) for k, v in self._provided_inputs.items()}
+        node_graph = self.node_graph.copy()
         while not node_graph.is_empty():
-            nodes_to_run = node_graph.pop_runnable_nodes()
-            for node in nodes_to_run:
-                if node.__name__ in outputs:
+            nodes = node_graph.pop_runnable_nodes()
+            for node in nodes:
+                if node['name'] in outputs:
                     continue
 
                 node_dependencies = {}
-                for input_node in node.dependencies:
-                    node_dependencies[input_node.__name__] = outputs[input_node.__name__].as_type(node.type)
+                for input_transformation in node['transformation'].dependencies:
+                    node_dependencies[input_transformation.__name__] = outputs[input_transformation.__name__].as_type(node['transformation'].type)
 
-                result = self.process_node(node, **node_dependencies)
-                outputs[node.__name__] = DataframeWrapper(spark, result, node.output_schema)
-        return outputs[self.__name__].as_type(self.type)
+                result = self.process_transformation(node['transformation'], **node_dependencies)
+                outputs[node['name']] = DataframeWrapper(spark, result, node['transformation'].output_schema)
+        return outputs[node['name']].as_type(self.type)
 
     def _run_parallel(self, node_graph, spark=None):
         # TODO- fix this to run with the new style, see _run_sequential for the correct way of doing things
@@ -146,7 +147,7 @@ class Node:
                 # calling result()
                 task.result()
                 run_valid_nodes()
-        return outputs[self.transformation.__name__]
+        return outputs[self.function.__name__]
 
     # TODO- move this method elsewhere
     @classmethod
@@ -182,9 +183,9 @@ class Node:
         # Restrict dataframe to the columns that we requested in the schema
         return df[selected_columns]
 
-    def process_node(self, node_obj, **inputs):
+    def process_transformation(self, transformation, **inputs):
         # TODO: apply output validation + rename function to transformation
-        return node_obj.transformation(**inputs)
+        return transformation.function(**inputs)
 
     # def plot(self):
     #     node_graph.plot()
@@ -196,6 +197,6 @@ def node(*args, **kwargs):
     """
 
     def decorator(func):
-        return Node(func, *args, **kwargs)
+        return Transformation(func, *args, **kwargs)
 
     return decorator

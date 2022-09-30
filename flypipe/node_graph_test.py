@@ -31,12 +31,12 @@ class TestNodeGraph:
         graph = NodeGraph(t6)
         graph.calculate_graph_run_status("t6", ["t4"])
 
-        assert graph.get_node_run_status("t1") == RunStatus.SKIP
-        assert graph.get_node_run_status("t2") == RunStatus.ACTIVE
-        assert graph.get_node_run_status("t3") == RunStatus.ACTIVE
-        assert graph.get_node_run_status("t4") == RunStatus.SKIP
-        assert graph.get_node_run_status("t5") == RunStatus.ACTIVE
-        assert graph.get_node_run_status("t6") == RunStatus.ACTIVE
+        assert graph.get_node("t1")['run_status'] == RunStatus.SKIP
+        assert graph.get_node("t2")['run_status'] == RunStatus.ACTIVE
+        assert graph.get_node("t3")['run_status'] == RunStatus.ACTIVE
+        assert graph.get_node("t4")['run_status'] == RunStatus.SKIP
+        assert graph.get_node("t5")['run_status'] == RunStatus.ACTIVE
+        assert graph.get_node("t6")['run_status'] == RunStatus.ACTIVE
 
     def test_calculate_graph_run_status_2(self):
         @node(type="pandas")
@@ -66,9 +66,9 @@ class TestNodeGraph:
         graph = NodeGraph(t6)
         graph.calculate_graph_run_status("t6", ["t4"])
 
-        assert graph.get_node_run_status("t1") == RunStatus.SKIP
-        assert graph.get_node_run_status("t2") == RunStatus.ACTIVE
-        assert graph.get_node_run_status("t3") == RunStatus.ACTIVE
-        assert graph.get_node_run_status("t4") == RunStatus.SKIP
-        assert graph.get_node_run_status("t5") == RunStatus.ACTIVE
-        assert graph.get_node_run_status("t6") == RunStatus.ACTIVE
+        assert graph.get_node("t1")['run_status']==RunStatus.SKIP
+        assert graph.get_node("t2")['run_status']==RunStatus.ACTIVE
+        assert graph.get_node("t3")['run_status']==RunStatus.ACTIVE
+        assert graph.get_node("t4")['run_status']==RunStatus.SKIP
+        assert graph.get_node("t5")['run_status']==RunStatus.ACTIVE
+        assert graph.get_node("t6")['run_status']==RunStatus.ACTIVE

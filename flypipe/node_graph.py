@@ -11,42 +11,32 @@ class RunStatus(Enum):
 
 class NodeGraph:
 
-    def __init__(self, node):
+    def __init__(self, node, graph=None):
         """
         Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
         this.
         """
-        self.graph = self._build_graph(node)
+        if graph:
+            self.graph = graph
+        else:
+            self.graph = self._build_graph(node)
 
     def _build_graph(self, node):
         graph = nx.DiGraph()
         graph.add_node(
-            node.__name__, transformation=node, inputs=[i.__name__ for i in node.dependencies], run_status=RunStatus.UNKNOWN
+            node.__name__, name=node.__name__, transformation=node, inputs=[i.__name__ for i in node.dependencies], run_status=RunStatus.UNKNOWN
         )
 
         if node.dependencies:
             for dependency in node.dependencies:
-                graph.add_node(dependency.__name__, transformation=dependency, run_status=RunStatus.UNKNOWN)
+                graph.add_node(dependency.__name__, name=dependency.__name__, transformation=dependency, run_status=RunStatus.UNKNOWN)
                 graph.add_edge(dependency.__name__, node.__name__)
                 graph = nx.compose(graph, self._build_graph(dependency))
 
         return graph
 
-    def _get_node(self, name):
+    def get_node(self, name):
         return self.graph.nodes[name]
-
-    def get_node_transformation(self, name):
-        return self._get_node(name)['transformation']
-
-    def get_node_run_status(self, name) -> RunStatus:
-        return self._get_node(name)['run_status']
-
-    def set_node_run_status(self, name, run_status: RunStatus):
-        self._get_node(name)['run_status'] = run_status
-
-    def set_run_status(self, node_name, run_status: RunStatus):
-        node = self._get_node(node_name)
-        node.run_status = run_status
 
     def calculate_graph_run_status(self, node_name, skipped_node_names):
         skipped_node_names = set(skipped_node_names)
@@ -55,16 +45,16 @@ class NodeGraph:
         while len(frontier) != 0:
             current_node_name, descendent_run_status = frontier.pop()
             if descendent_run_status == RunStatus.ACTIVE:
-                self.set_node_run_status(current_node_name, RunStatus.ACTIVE)
+                self.get_node(current_node_name)['run_status'] = RunStatus.ACTIVE
                 for ancestor_name in self.graph.predecessors(current_node_name):
                     if ancestor_name in skipped_node_names:
                         frontier.append((ancestor_name, RunStatus.SKIP))
                     else:
                         frontier.append((ancestor_name, RunStatus.ACTIVE))
             else:
-                self.set_node_run_status(current_node_name, RunStatus.SKIP)
+                self.get_node(current_node_name)['run_status'] = RunStatus.SKIP
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    if self.get_node_run_status(ancestor_name) != RunStatus.ACTIVE:
+                    if self.get_node(ancestor_name)['run_status'] != RunStatus.ACTIVE:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
     def get_dependency_map(self):
@@ -76,9 +66,10 @@ class NodeGraph:
         return dependencies
 
     def pop_runnable_nodes(self):
-        runnable_node_names = [node_name for node_name in self.graph if self.graph.in_degree(node_name)==0]
-        runnable_nodes = [self._get_node(node_name) for node_name in runnable_node_names]
-        for node_name in runnable_node_names:
+        candidate_node_names = [node_name for node_name in self.graph if self.graph.in_degree(node_name)==0]
+        runnable_node_names = filter(lambda node_name: self.get_node(node_name)['run_status'] == RunStatus.ACTIVE, candidate_node_names)
+        runnable_nodes = [self.get_node(node_name) for node_name in runnable_node_names]
+        for node_name in candidate_node_names:
             self.graph.remove_node(node_name)
         return runnable_nodes
 
@@ -95,3 +86,6 @@ class NodeGraph:
         plt.title(f'Transformation Graph')
         nx.draw(self.graph, with_labels=True)
         plt.show()
+
+    def copy(self):
+        return NodeGraph(None, graph=self.graph.copy())
