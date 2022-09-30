@@ -18,7 +18,7 @@ class Transformation:
         'pandas_on_spark': DataFrameType.PANDAS_ON_SPARK,
     }
 
-    def __init__(self, function, type: str, dependencies=None, output=None):
+    def __init__(self, function, type: str, dependencies=None, output=None, spark_context=False):
         self.function = function
         self.dependencies = dependencies or []
         try:
@@ -28,6 +28,7 @@ class Transformation:
         self._provided_inputs = {}
         self.output_schema = output
         self.node_graph = NodeGraph(self)
+        self.spark_context = spark_context
 
     @property
     def __name__(self):
@@ -71,7 +72,8 @@ class Transformation:
                 for input_transformation in node['transformation'].dependencies:
                     node_dependencies[input_transformation.__name__] = outputs[input_transformation.__name__].as_type(node['transformation'].type)
 
-                result = self.process_transformation(node['transformation'], **node_dependencies)
+                result = self.process_transformation(spark, node['transformation'], **node_dependencies)
+
                 outputs[node['name']] = DataframeWrapper(spark, result, node['transformation'].output_schema)
         return outputs[node['name']].as_type(self.type)
 
@@ -183,9 +185,13 @@ class Transformation:
         # Restrict dataframe to the columns that we requested in the schema
         return df[selected_columns]
 
-    def process_transformation(self, transformation, **inputs):
+    def process_transformation(self, spark, transformation, **inputs):
         # TODO: apply output validation + rename function to transformation
-        return transformation.function(**inputs)
+        if transformation.spark_context:
+            parameters = {'spark': spark, **inputs}
+        else:
+            parameters = inputs
+        return transformation.function(**parameters)
 
     # def plot(self):
     #     node_graph.plot()
