@@ -1,5 +1,3 @@
-from typing import Union
-
 import numpy as np
 import pyspark.sql.functions as F
 from numpy import dtype
@@ -16,6 +14,7 @@ from pyspark.sql.types import (
     StringType,
 )
 
+from flypipe.dataframe_wrapper import DataframeWrapper
 from flypipe.exceptions import ErrorColumnNotInDataframe
 from flypipe.utils import dataframe_type, DataFrameType, get_schema
 
@@ -28,10 +27,12 @@ class Type:
     pandas_on_spark_type and spark_type_to_pandas_dtype
     """
 
+    spark_type = None
+    pandas_type = None
+
     def __init__(self):
-        self.pandas_type, self.spark_type = pandas_on_spark_type(
-            spark_type_to_pandas_dtype(self.spark_data_type())
-        )
+        self._pandas_type = None
+        self._spark_type = None
 
     def __repr__(self):
         return f"pandas_type {self.pandas_type}, spark_type: {self.spark_type}"
@@ -40,36 +41,7 @@ class Type:
     def spark_data_type(self):
         raise NotImplementedError
 
-    def columns(self, df, column: Union[str, list]):
-        """Receives a str and return a list[str] or
-        if receives a list, returns the list
-
-        Parameters
-        ----------
-        df : dataframe
-            dataframe in wich the column(s) to be casted
-
-        column : str or list
-            column(s) to casted
-
-        Returns
-        -------
-        list
-            list of columns
-
-        Raises
-        ------
-        ErrorColumnNotInDataframe
-            if column(s) provided to be cast do not exist in the dataframe
-        """
-        columns_to_cast = column if isinstance(column, list) else [column]
-        non_existing_columns = list(set(columns_to_cast) - set(df.columns))
-        if non_existing_columns:
-            raise ErrorColumnNotInDataframe(non_existing_columns)
-
-        return columns_to_cast
-
-    def cast(self, df, column: Union[str, list]):
+    def cast(self, df, df_type: DataFrameType, column: str):
         """Receives a str and return a list[str] or
         if receives a list, returns the list
 
@@ -85,31 +57,24 @@ class Type:
         dataframe
             dataframe with given column(s) casted to the DataType defined by the child in spark_data_type
         """
-        columns_to_cast = self.columns(df, column)
+        if df_type == DataFrameType.PYSPARK:
+            df = self._cast_pyspark(df, column)
+        elif df_type == DataFrameType.PANDAS:
+            df = self._cast_pandas(df, column)
+        elif df_type == DataFrameType.PANDAS_ON_SPARK:
+            df = self._cast_pandas_on_spark(df, column)
+        return df
 
-        schema = get_schema(df, columns_to_cast)
-        if dataframe_type(df) == DataFrameType.PYSPARK:
+    def _cast_pyspark(self, df, column: str):
+        df = df.withColumn(column, F.col(column).cast(self.spark_type))
+        return df
 
-            columns_to_cast = {
-                column: data_type
-                for column, data_type in schema.items()
-                if data_type != self.spark_type and column in columns_to_cast
-            }
+    def _cast_pandas(self, df, column: str):
+        df[column] = df[column].astype(self.pandas_type)
+        return df
 
-            for col in columns_to_cast.keys():
-                df = df.withColumn(col, F.col(col).cast(self.spark_type))
-
-        else:
-            columns_to_cast = {
-                column: data_type
-                for column, data_type in schema.items()
-                if data_type != self.pandas_type and column in columns_to_cast
-            }
-
-            if columns_to_cast:
-                columns_to_cast = list(columns_to_cast.keys())
-                df[columns_to_cast] = df[columns_to_cast].astype(self.pandas_type)
-
+    def _cast_pandas_on_spark(self, df, column: str):
+        df[column] = df[column].astype(self.pandas_type)
         return df
 
 
@@ -117,6 +82,7 @@ class Boolean(Type):
     """Casts dataframe to boolean"""
 
     spark_data_type = BooleanType
+    pandas_data_type = np.bool_
 
 
 class Byte(Type):

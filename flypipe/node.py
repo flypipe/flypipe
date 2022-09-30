@@ -1,78 +1,86 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from flypipe.node_graph import NodeGraph
+from flypipe.dataframe_wrapper import DataframeWrapper
+from flypipe.node_graph import NodeGraph, RunStatus
 from collections import namedtuple
-from abc import ABC, abstractmethod
 from types import FunctionType
+
+from flypipe.utils import DataFrameType
 
 logger = logging.getLogger(__name__)
 
 
-NodeInput = namedtuple("NodeInput", ["node", "schema"])
+class Transformation:
 
+    TYPE_MAP = {
+        'pyspark': DataFrameType.PYSPARK,
+        'pandas': DataFrameType.PANDAS,
+        'pandas_on_spark': DataFrameType.PANDAS_ON_SPARK,
+    }
 
-class Node(ABC):
-
-    TYPES = {}
-    TYPE = None
-
-    def __init__(self, transformation, inputs=None, output=None):
-        self.transformation = transformation
-        self.inputs = []
-        if inputs:
-            for input_def in inputs:
-                if isinstance(input_def, tuple):
-                    node, schema = input_def
-                    self.inputs.append(NodeInput(node, schema))
-                elif isinstance(input_def, Node):
-                    self.inputs.append(NodeInput(input_def, None))
-                else:
-                    raise TypeError(
-                        f"Input {input_def} is {type(input_def)} but expected it to be either a tuple or an instance/subinstance of Node"
-                    )
+    def __init__(self, function, type: str, dependencies=None, output=None, spark_context=False):
+        self.function = function
+        self.dependencies = dependencies or []
+        try:
+            self.type = self.TYPE_MAP[type]
+        except KeyError:
+            raise ValueError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
+        self._provided_inputs = {}
         self.output_schema = output
         self.node_graph = NodeGraph(self)
-
-    @classmethod
-    def get_class(cls, node_type):
-        try:
-            return cls.TYPES[node_type]
-        except KeyError:
-            raise ValueError(
-                f"Invalid node type {node_type} specified, provide type must be one of {cls.TYPES.keys()}"
-            )
-
-    @classmethod
-    def register_node_type(cls, node_type_class):
-        cls.TYPES[node_type_class.TYPE] = node_type_class
+        self.spark_context = spark_context
 
     @property
     def __name__(self):
         """Return the name of the wrapped transformation rather than the name of the decorator object"""
-        return self.transformation.__name__
+        return self.function.__name__
 
     @property
     def __doc__(self):
         """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
-        return self.transformation.__doc__
+        return self.function.__doc__
 
-    def __call__(self, *args, **kwargs):
-        return self.transformation(*args, **kwargs)
+    def inputs(self, **kwargs):
+        for k, v in kwargs.items():
+            self._provided_inputs[k] = v
 
-    @classmethod
-    @abstractmethod
-    def convert_dataframe(cls, df, destination_type):
-        # TODO- is there a better place to put this? It seems a little out of place here
-        pass
+        return self
 
-    @classmethod
-    @abstractmethod
-    def get_column_types(cls, df):
-        pass
+    def clear_inputs(self):
+        self._provided_inputs = {}
 
-    def run(self):
+    def __call__(self, *args):
+        return self.function(*args)
+
+    def run(self, spark=None, parallel=True):
+        self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
+        if parallel:
+            return self._run_parallel(spark)
+        else:
+            return self._run_sequential(spark)
+
+    def _run_sequential(self, spark=None):
+        outputs = {k: DataframeWrapper(spark, v, schema=None) for k, v in self._provided_inputs.items()}
+        node_graph = self.node_graph.copy()
+        while not node_graph.is_empty():
+            nodes = node_graph.pop_runnable_nodes()
+            for node in nodes:
+                if node['name'] in outputs:
+                    continue
+
+                node_dependencies = {}
+                for input_transformation in node['transformation'].dependencies:
+                    node_dependencies[input_transformation.__name__] = outputs[input_transformation.__name__].as_type(node['transformation'].type)
+
+                result = self.process_transformation(spark, node['transformation'], **node_dependencies)
+
+                outputs[node['name']] = DataframeWrapper(spark, result, node['transformation'].output_schema)
+        return outputs[node['name']].as_type(self.type)
+
+    def _run_parallel(self, node_graph, spark=None):
+        # TODO- fix this to run with the new style, see _run_sequential for the correct way of doing things
         outputs = {}
-        dependency_map = self.node_graph.get_dependency_map()
+        dependency_map = node_graph.get_dependency_map()
         result_futures = []
 
         def process_and_cache_node(node_obj, **inputs):
@@ -100,7 +108,7 @@ class Node(ABC):
                 if not dependencies:
                     logger.debug(f"Started processing node {node_name}")
 
-                    node_obj = self.node_graph.get_node(node_name)
+                    node_obj = node_graph.get_node_transformation(node_name)
                     try:
                         node_inputs = {}
                         for input_node, input_schema in node_obj.inputs:
@@ -141,7 +149,7 @@ class Node(ABC):
                 # calling result()
                 task.result()
                 run_valid_nodes()
-        return outputs[self.transformation.__name__]
+        return outputs[self.function.__name__]
 
     # TODO- move this method elsewhere
     @classmethod
@@ -177,11 +185,16 @@ class Node(ABC):
         # Restrict dataframe to the columns that we requested in the schema
         return df[selected_columns]
 
-    def process_node(self, node_obj, **inputs):
-        return node_obj(**inputs)
+    def process_transformation(self, spark, transformation, **inputs):
+        # TODO: apply output validation + rename function to transformation
+        if transformation.spark_context:
+            parameters = {'spark': spark, **inputs}
+        else:
+            parameters = inputs
+        return transformation.function(**parameters)
 
-    def plot(self):
-        self.node_graph.plot()
+    # def plot(self):
+    #     node_graph.plot()
 
 
 def node(*args, **kwargs):
@@ -190,10 +203,6 @@ def node(*args, **kwargs):
     """
 
     def decorator(func):
-        try:
-            node_type = kwargs.pop("type")
-        except KeyError:
-            node_type = None
-        return Node.get_class(node_type)(func, *args, **kwargs)
+        return Transformation(func, *args, **kwargs)
 
     return decorator

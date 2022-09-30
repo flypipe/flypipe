@@ -1,11 +1,12 @@
 from flypipe.schema.schema import Schema
+from flypipe.utils import DataFrameType
 
 
 class SchemaConverter:
     """Casts a dataframe using a given schema"""
 
     @staticmethod
-    def cast(df, schema: Schema):
+    def cast(df, df_type: DataFrameType, schema: Schema):
         """Casts a dataframe using a given schema
 
         Parameters
@@ -23,7 +24,7 @@ class SchemaConverter:
         """
 
         for column in schema.columns:
-            df = column.type.cast(df, column.name)
+            df = column.type.cast(df, df_type, column.name)
         return df
 
 
