@@ -1,7 +1,7 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from flypipe.dataframe_wrapper import DataframeWrapper
-from flypipe.node_graph import NodeGraph
+from flypipe.node_graph import NodeGraph, RunStatus
 from collections import namedtuple
 from types import FunctionType
 
@@ -27,6 +27,7 @@ class Node:
             raise ValueError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
         self._provided_inputs = {}
         self.output_schema = output
+        self.node_graph = NodeGraph(self)
 
     @property
     def __name__(self):
@@ -41,13 +42,17 @@ class Node:
     def inputs(self, **kwargs):
         for k, v in kwargs.items():
             self._provided_inputs[k] = v
+
         return self
+
+    def clear_inputs(self):
+        self._provided_inputs = {}
 
     def __call__(self, *args):
         return self.transformation(*args)
 
     def run(self, spark=None, parallel=True):
-        node_graph = NodeGraph(self, list(self._provided_inputs.keys()))
+        self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
         if parallel:
             return self._run_parallel(node_graph, spark)
         else:
@@ -100,7 +105,7 @@ class Node:
                 if not dependencies:
                     logger.debug(f"Started processing node {node_name}")
 
-                    node_obj = node_graph.get_node(node_name)
+                    node_obj = node_graph.get_node_transformation(node_name)
                     try:
                         node_inputs = {}
                         for input_node, input_schema in node_obj.inputs:
