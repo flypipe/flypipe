@@ -43,23 +43,23 @@ def t2(t4, t5):
 
 
 @node(type='pyspark',
-      dependencies=[t4],
+      dependencies=[t6],
       output=Schema([Column('dummy', Integer())]))
-def t3(t4):
-    return t4
+def t3(t6):
+    return t6
 
 
 @node(type='pandas',
-      dependencies=[t2, t3, t4, t7],
+      dependencies=[t2, t3, t7],
       output=Schema([Column('dummy', Integer())]))
-def t1(t2, t3, t4, t7):
+def t1(t2, t3, t7):
     return t2
 
 @node(type='pyspark',
-      dependencies=[t1,t4, t6],
+      dependencies=[t1, t6],
       output=Schema([Column('dummy', Integer())]))
-def t8(t1,t4, t6):
-    return t4
+def t8(t1, t6):
+    return t1
 
 @node(type='pyspark',
       dependencies=[t2],
@@ -76,5 +76,5 @@ def t10(t8, t9):
 
 
 with open('test.html', 'w') as f:
-    f.writelines(GraphHTML.get(t10.node_graph.graph))
+    f.writelines(t10.inputs(t2=pd.DataFrame(data=[{'dummy': [1]}])).html())
 

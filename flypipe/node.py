@@ -1,6 +1,7 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from flypipe.dataframe_wrapper import DataframeWrapper
+from flypipe.graph_html import GraphHTML
 from flypipe.node_graph import NodeGraph, RunStatus
 from collections import namedtuple
 from types import FunctionType
@@ -195,6 +196,10 @@ class Transformation:
 
     def plot(self):
         self.node_graph.plot()
+
+    def html(self):
+        self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
+        return GraphHTML.get(self.node_graph.graph)
 
 
 

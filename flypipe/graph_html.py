@@ -1,6 +1,8 @@
 import json
 
 import networkx as nx
+
+from flypipe.node_graph import RunStatus
 from flypipe.utils import DataFrameType
 
 class GraphHTML:
@@ -13,7 +15,7 @@ class GraphHTML:
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <meta http-equiv="X-UA-Compatible" content="ie=edge">
-              <title>SVG Basics</title>
+              <title>SVG Basics</title>              
             </head>
             <body>
 
@@ -97,7 +99,15 @@ class GraphHTML:
                           .attr("source", d => d.source)
                           .attr("target", d => d.target)
                           .attr('marker-end','url(#arrowhead)')
-                          .attr("id", d => link_id(d.source, d.target));
+                          .attr("id", d => link_id(d.source, d.target))
+                          .style("opacity", function(d) {
+                            if (d.active) {
+                                return 1;
+                            }
+                            else{
+                                return 0.3;
+                            }
+                        });
 
                     // Adding Markers
                     d3.select("svg")
@@ -113,10 +123,8 @@ class GraphHTML:
                         .attr('xoverflow', 'visible')
                         .attr('fill', link_color)
                         .style('stroke','none')
-
                         .append('path')
                         .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-
                         ;
 
                     // Adding the circle nodes
@@ -131,7 +139,16 @@ class GraphHTML:
                         .attr("id", d => node_id(d.name))
                         .attr("name", d => d.name)
                         .attr("fill", d => d.color)
+                        .attr("cursor", "pointer")
                         .style("stroke", "black")
+                        .style("opacity", function(d) {
+                            if (d.active) {
+                                return 1;
+                            }
+                            else{
+                                return 0.3;
+                            }
+                        })
                         .call(d3.drag()
                             .on('start', dragStart)
                             .on('drag', dragging)
@@ -156,7 +173,15 @@ class GraphHTML:
                       .attr("y", function(d) {
                             return yScale(d.position[1]) + 5;
                             })
-                      .text(d => d.name);
+                      .text(d => d.name)
+                      .style("opacity", function(d) {
+                            if (d.active) {
+                                return 1;
+                            }
+                            else{
+                                return 0.3;
+                            }
+                        });
 
                     var zoom = d3.zoom()
                           .scaleExtent([0, 8])
@@ -248,6 +273,9 @@ class GraphHTML:
     @staticmethod
     def get(graph):
         print(graph)
+
+        for node in graph.nodes:
+            print(node, graph.nodes[node]['run_status'])
         root_node = [node[0] for node in graph.out_degree if node[1] == 0][0]
 
         nodes_depth = {}
@@ -281,7 +309,9 @@ class GraphHTML:
             links.append({'source': source,
                           'source_position': nodes_position[source],
                           'target': target,
-                          'target_position': nodes_position[target]})
+                          'target_position': nodes_position[target],
+                          'active': not (graph.nodes[source]['run_status'] == RunStatus.SKIP and
+                                         graph.nodes[target]['run_status'] == RunStatus.SKIP)})
 
 
         nodes = []
@@ -291,6 +321,11 @@ class GraphHTML:
             DataFrameType.PANDAS_ON_SPARK: "green"
         }
         for node, position in nodes_position.items():
-            nodes.append({'name': node, 'position': position, 'color': node_type_colors[graph.nodes[node]['type']]})
+            nodes.append({
+                'name': node,
+                'position': position,
+                'color': node_type_colors[graph.nodes[node]['type']],
+                'active': graph.nodes[node]['run_status'] == RunStatus.ACTIVE
+            })
 
         return GraphHTML.html(nodes, links)
