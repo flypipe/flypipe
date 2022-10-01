@@ -193,8 +193,9 @@ class Transformation:
             parameters = inputs
         return transformation.function(**parameters)
 
-    # def plot(self):
-    #     node_graph.plot()
+    def plot(self):
+        self.node_graph.plot()
+
 
 
 def node(*args, **kwargs):

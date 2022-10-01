@@ -10,6 +10,7 @@ pyspark[sql,pandas_on_spark]==3.2.2
 pylint==2.15.2
 pytest==7.1.3
 pytest-mock==3.9.0
+pyspark-test==0.2.0
 twine==4.0.1
 
 #Documentation

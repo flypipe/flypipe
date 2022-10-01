@@ -24,12 +24,21 @@ class NodeGraph:
     def _build_graph(self, node):
         graph = nx.DiGraph()
         graph.add_node(
-            node.__name__, name=node.__name__, transformation=node, inputs=[i.__name__ for i in node.dependencies], run_status=RunStatus.UNKNOWN
+            node.__name__,
+            name=node.__name__,
+            type=node.type,
+            transformation=node,
+            inputs=[i.__name__ for i in node.dependencies],
+            run_status=RunStatus.UNKNOWN
         )
 
         if node.dependencies:
             for dependency in node.dependencies:
-                graph.add_node(dependency.__name__, name=dependency.__name__, transformation=dependency, run_status=RunStatus.UNKNOWN)
+                graph.add_node(dependency.__name__,
+                               name=dependency.__name__,
+                               type=dependency.type,
+                               transformation=dependency,
+                               run_status=RunStatus.UNKNOWN)
                 graph.add_edge(dependency.__name__, node.__name__)
                 graph = nx.compose(graph, self._build_graph(dependency))
 
