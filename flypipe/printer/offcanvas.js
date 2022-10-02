@@ -1,6 +1,7 @@
 const bsOffcanvas = new bootstrap.Offcanvas('#offcanvas', {
     backdrop: false,
-    scroll: true
+    scroll: true,
+    keyboard: true,
 })
 
 const offcanvasTitle = document.getElementById('offcanvas-title');
@@ -13,6 +14,7 @@ function show_offcanvas(title, body){
 }
 
 function show_transformation(node){
+
     if (typeof node === 'string' || node instanceof String) {
         for (let i = 0; i < nodes.length; i++) {
             if (nodes[i].name == node){
@@ -21,6 +23,9 @@ function show_transformation(node){
             }
         }
     }
+    suppress_nodes();
+    highlight_node(node.name);
+
     title = node.node_type;
 
     body = "<h5 class='mb-4'>" + node.name + "</h5>";
