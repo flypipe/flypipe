@@ -449,10 +449,7 @@ class GraphHTML:
 
     @staticmethod
     def get(graph):
-        print(graph)
 
-        for node in graph.nodes:
-            print(node, graph.nodes[node]['run_status'])
         root_node = [node[0] for node in graph.out_degree if node[1] == 0][0]
 
         nodes_depth = {}
@@ -520,6 +517,6 @@ class GraphHTML:
                     ]
 
             nodes.append(node_attributes)
-            print(nodes[-1])
+
 
         return GraphHTML.html(nodes, links)
