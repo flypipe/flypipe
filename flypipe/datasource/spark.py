@@ -4,8 +4,7 @@ from flypipe.datasource.datasource import DataSource
 import pyspark.sql.functions as F
 
 from flypipe.exceptions import ErrorTimeTravel
-from flypipe.node import node
-
+from flypipe.node import node, datasource_node
 
 instances = {}
 
@@ -43,7 +42,7 @@ class Spark(DataSource):
 
         func = partial(self.spark_datasource, table=self.table, columns=list(self.columns))
         func.__name__ = self.table
-        func = node(type='pyspark', spark_context=True, dependencies=[])(func)
+        func = datasource_node(type='pyspark', spark_context=True, description=f"Spark table {self.table}", dependencies=[])(func)
         self.func = func
         return self.func
 

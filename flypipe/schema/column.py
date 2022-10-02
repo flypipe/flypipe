@@ -1,4 +1,6 @@
-from collections import namedtuple
+class Column:
 
-
-Column = namedtuple('Column', ['name', 'type'])
+    def __init__(self, name, type, description=None):
+        self.name = name
+        self.type = type
+        self.description = description or "No description"

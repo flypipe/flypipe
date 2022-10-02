@@ -12,13 +12,36 @@ from flypipe.schema.schema import Schema
 
 import pandas as pd
 
+from tests.utils.spark import spark
+
+stored_df = spark.createDataFrame(schema=('dummy',), data=[(1,)])
+
+spark.sql("create database if not exists raw")
+spark.sql("create view raw.table as select 1 as dummy")
+
+
+@node(
+    type="pyspark",
+    dependencies=[
+        Spark.table("raw.table").select('dummy')
+    ],
+    output=Schema([
+        Column('dummy', Decimal(10, 2))
+    ])
+)
+def t0(table):
+    return table
+
+
 @node(type='pandas',
+      dependencies=[t0],
       output=Schema([Column('dummy', Integer())]))
 def t5():
     return pd.DataFrame(data=[{'dummy': [1]}])
 
 
 @node(type='pandas',
+      dependencies=[t0],
       output=Schema([Column('dummy', Integer())]))
 def t6():
     return pd.DataFrame(data=[{'dummy': [1]}])

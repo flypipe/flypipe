@@ -26,19 +26,25 @@ class NodeGraph:
         graph.add_node(
             node.__name__,
             name=node.__name__,
+            description=node.description,
             type=node.type,
             transformation=node,
+            node_type=node.node_type,
             inputs=[i.__name__ for i in node.dependencies],
-            run_status=RunStatus.UNKNOWN
+            run_status=RunStatus.UNKNOWN,
+            output_schema=node.output_schema
         )
 
         if node.dependencies:
             for dependency in node.dependencies:
                 graph.add_node(dependency.__name__,
                                name=dependency.__name__,
+                               description=dependency.description,
                                type=dependency.type,
                                transformation=dependency,
-                               run_status=RunStatus.UNKNOWN)
+                               node_type=dependency.node_type,
+                               run_status=RunStatus.UNKNOWN,
+                               output_schema=node.output_schema)
                 graph.add_edge(dependency.__name__, node.__name__)
                 graph = nx.compose(graph, self._build_graph(dependency))
 

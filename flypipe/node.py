@@ -2,9 +2,8 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from flypipe.dataframe_wrapper import DataframeWrapper
 from flypipe.graph_html import GraphHTML
-from flypipe.node_graph import NodeGraph, RunStatus
-from collections import namedtuple
-from types import FunctionType
+from flypipe.node_graph import NodeGraph
+from flypipe.node_type import NodeType
 
 from flypipe.utils import DataFrameType
 
@@ -12,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class Transformation:
+    node_type = NodeType.TRANSFORMATION
 
     TYPE_MAP = {
         'pyspark': DataFrameType.PYSPARK,
@@ -19,9 +19,10 @@ class Transformation:
         'pandas_on_spark': DataFrameType.PANDAS_ON_SPARK,
     }
 
-    def __init__(self, function, type: str, dependencies=None, output=None, spark_context=False):
+    def __init__(self, function, type: str, description=None, dependencies=None, output=None, spark_context=False):
         self.function = function
         self.dependencies = dependencies or []
+        self.description = description or "No description"
         try:
             self.type = self.TYPE_MAP[type]
         except KeyError:
@@ -202,7 +203,6 @@ class Transformation:
         return GraphHTML.get(self.node_graph.graph)
 
 
-
 def node(*args, **kwargs):
     """
     Decorator factory that returns the given function wrapped inside a Node class
@@ -210,5 +210,21 @@ def node(*args, **kwargs):
 
     def decorator(func):
         return Transformation(func, *args, **kwargs)
+
+    return decorator
+
+
+class DataSource(Transformation):
+    node_type = NodeType.DATASOURCE
+    pass
+
+
+def datasource_node(*args, **kwargs):
+    """
+    Decorator factory that returns the given function wrapped inside a Datasource Node class
+    """
+
+    def decorator(func):
+        return DataSource(func, *args, **kwargs)
 
     return decorator
