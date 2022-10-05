@@ -23,8 +23,6 @@ function show_transformation(node){
             }
         }
     }
-    suppress_nodes();
-    highlight_node(node.name);
 
     title = node.node_type;
 
@@ -32,6 +30,11 @@ function show_transformation(node){
     body += '<p class="text-break fw-lighter font-monospace mb-5">' +
                 node.definition.description +
            '</p>';
+
+    body += "<h5 class='mt-5 mb-3'>Tags</h5>";
+    for (let i = 0; i < node.definition.tags.length; i++) {
+        body += "<span class='badge text-bg-light mr-3'>" + node.definition.tags[i] + "</span>";
+    }
 
     body += "<h5 class='mt-5 mb-3'>Transformation</h5>";
     body += '<ul class="list-unstyled">';

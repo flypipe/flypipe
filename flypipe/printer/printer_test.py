@@ -1,11 +1,6 @@
-import pytest
-from pytest_mock import mocker
-
 from flypipe.data_type import Decimal, Integer
-from pyspark_test import assert_pyspark_df_equal
 
 from flypipe.datasource.spark import Spark
-from flypipe.graph_html import GraphHTML
 from flypipe.node import node
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
@@ -71,20 +66,53 @@ def t2(t4, t5):
 def t3(t6):
     return t6
 
+@node(type='pyspark',
+      dependencies=[t6],
+      output=Schema([Column('dummy', Integer())]))
+def t31(t6):
+    return t6
+
+@node(type='pyspark',
+      dependencies=[t6],
+      output=Schema([Column('dummy', Integer())]))
+def t32(t6):
+    return t6
+
+@node(type='pyspark',
+      dependencies=[t6],
+      output=Schema([Column('dummy', Integer())]))
+def t33(t6):
+    return t6
+
+
+@node(type='pyspark',
+      dependencies=[t6],
+      output=Schema([Column('dummy', Integer())]))
+def t34(t6):
+    return t6
+
+@node(type='pyspark',
+      dependencies=[t6],
+      output=Schema([Column('dummy', Integer())]))
+def t35(t6):
+    return t6
+
 
 @node(type='pandas',
-      dependencies=[t2, t3, t7],
+      dependencies=[t2, t3, t7, t31, t32, t33, t34, t35],
       output=Schema([Column('dummy', Integer())]))
-def t1(t2, t3, t7):
+def t1(t2, t3, t7, t31, t32, t33, t34, t35):
     return t2
 
 @node(type='pyspark',
       dependencies=[t1, t6],
+      tags=['model', 'split'],
       output=Schema([Column('dummy', Integer())]))
 def t8(t1, t6):
     return t1
 
 @node(type='pyspark',
+      tags=['model', 'scale'],
       dependencies=[t2],
       output=Schema([Column('dummy', Integer())]))
 def t9(t2):
@@ -92,6 +120,7 @@ def t9(t2):
 
 
 @node(type='pyspark',
+      tags=['model', 'train'],
       dependencies=[t8, t9],
       output=Schema([Column('dummy', Integer())]))
 def t10(t8, t9):
@@ -99,5 +128,6 @@ def t10(t8, t9):
 
 
 with open('test.html', 'w') as f:
-    f.writelines(t10.inputs(t2=pd.DataFrame(data=[{'dummy': [1]}])).html())
+    html = t10.inputs(t2=pd.DataFrame(data=[{'dummy': [1]}])).html(width=-1, height=-1)
+    f.writelines(html)
 

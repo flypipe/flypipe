@@ -1,7 +1,7 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from flypipe.dataframe_wrapper import DataframeWrapper
-from flypipe.graph_html import GraphHTML
+from flypipe.printer.graph_html import GraphHTML
 from flypipe.node_graph import NodeGraph
 from flypipe.node_type import NodeType
 
@@ -19,14 +19,22 @@ class Transformation:
         'pandas_on_spark': DataFrameType.PANDAS_ON_SPARK,
     }
 
-    def __init__(self, function, type: str, description=None, dependencies=None, output=None, spark_context=False):
+    def __init__(self,
+                 function,
+                 type: str,
+                 description=None,
+                 tags=None,
+                 dependencies=None,
+                 output=None,
+                 spark_context=False):
         self.function = function
-        self.dependencies = dependencies or []
-        self.description = description or "No description"
         try:
             self.type = self.TYPE_MAP[type]
         except KeyError:
             raise ValueError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
+        self.description = description or "No description"
+        self.tags = tags or []
+        self.dependencies = dependencies or []
         self._provided_inputs = {}
         self.output_schema = output
         self.node_graph = NodeGraph(self)
@@ -198,9 +206,9 @@ class Transformation:
     def plot(self):
         self.node_graph.plot()
 
-    def html(self):
+    def html(self, width=-1, height=-1):
         self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
-        return GraphHTML.get(self.node_graph.graph)
+        return GraphHTML.get(self.node_graph.graph, width=width, height=height)
 
 
 def node(*args, **kwargs):

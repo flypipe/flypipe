@@ -1,6 +1,7 @@
 // Settings
 function getWidth() {
   return Math.max(
+    user_width,
     document.body.scrollWidth,
     document.documentElement.scrollWidth,
     document.body.offsetWidth,
@@ -11,6 +12,7 @@ function getWidth() {
 
 function getHeight() {
   return Math.max(
+    user_height,
     document.body.scrollHeight,
     document.documentElement.scrollHeight,
     document.body.offsetHeight,
@@ -26,6 +28,7 @@ const highlight_color = "black";
 const circle_radius = 6;
 const font_size = 16;
 const stroke_width = 10;
+const circle_stroke = 1;
 
 // Setting Canvas and SVG
 const canvas = d3.select(".canvas");
@@ -43,9 +46,6 @@ const dragged_link_gen = d3.linkHorizontal()
             .x(d => d[0] - circle_radius + 3)
             .y(d => d[1]);
 
-//Our larger node data
-var nodes = [{"name": "table", "position": [1.0, 50.0], "active": true, "run_status": {"bg-class": "info", "bg-color": "#0dcaf0", "text": "ACTIVE"}, "type": {"shape": "circle", "bg-class": "danger", "bg-color": "#dc3545", "text": "PySpark"}, "node_type": "DATASOURCE", "dependencies": [], "successors": ["t0"], "definition": {"description": "Spark table table", "columns": []}}, {"name": "t0", "position": [2.0, 50.0], "active": true, "run_status": {"bg-class": "info", "bg-color": "#0dcaf0", "text": "ACTIVE"}, "type": {"shape": "circle", "bg-class": "danger", "bg-color": "#dc3545", "text": "PySpark"}, "node_type": "TRANSFORMATION", "dependencies": ["table"], "successors": ["t5", "t6"], "definition": {"description": "No description", "columns": [{"name": "dummy", "type": "Decimal", "description": "No description"}]}}, {"name": "t5", "position": [3.0, 50.0], "active": false, "run_status": {"bg-class": "dark", "bg-color": "#212529", "text": "SKIPPED"}, "type": {"shape": "circle", "bg-class": "success", "bg-color": "#198754", "text": "Pandas"}, "node_type": "TRANSFORMATION", "dependencies": ["t0"], "successors": ["t4", "t2"], "definition": {"description": "No description", "columns": [{"name": "dummy", "type": "Integer", "description": "No description"}]}}, {"name": "t4", "position": [4.0, 33.33], "active": false, "run_status": {"bg-class": "dark", "bg-color": "#212529", "text": "SKIPPED"}, "type": {"shape": "circle", "bg-class": "warning", "bg-color": "#ffc107", "text": "Pandas on Spark"}, "node_type": "TRANSFORMATION", "dependencies": ["t5"], "successors": ["t2"], "definition": {"description": "No description", "columns": [{"name": "dummy", "type": "Integer", "description": "No description"}]}}, {"name": "t6", "position": [4.0, 66.67], "active": true, "run_status": {"bg-class": "info", "bg-color": "#0dcaf0", "text": "ACTIVE"}, "type": {"shape": "circle", "bg-class": "success", "bg-color": "#198754", "text": "Pandas"}, "node_type": "TRANSFORMATION", "dependencies": ["t0"], "successors": ["t3", "t7", "t8"], "definition": {"description": "No description", "columns": [{"name": "dummy", "type": "Integer", "description": "No description"}]}}, {"name": "t2", "position": [5.0, 25.0], "active": false, "run_status": {"bg-class": "dark", "bg-color": "#212529", "text": "SKIPPED"}, "type": {"shape": "circle", "bg-class": "success", "bg-color": "#198754", "text": "Pandas"}, "node_type": "TRANSFORMATION", "dependencies": ["t4", "t5"], "successors": ["t1", "t9"], "definition": {"description": "No description", "columns": [{"name": "dummy", "type": "Integer", "description": "No description"}]}}, {"name": "t3", "position": [5.0, 50.0], "active": true, "run_status": {"bg-class": "info", "bg-color": "#0dcaf0", "text": "ACTIVE"}, "type": {"shape": "circle", "bg-class": "danger", "bg-color": "#dc3545", "text": "PySpark"}, "node_type": "TRANSFORMATION", "dependencies": ["t6"], "successors": ["t1"], "definition": {"description": "No description", "columns": [{"name": "dummy", "type": "Integer", "description": "No description"}]}}, {"name": "t7", "position": [5.0, 75.0], "active": true, "run_status": {"bg-class": "info", "bg-color": "#0dcaf0", "text": "ACTIVE"}, "type": {"shape": "circle", "bg-class": "success", "bg-color": "#198754", "text": "Pandas"}, "node_type": "TRANSFORMATION", "dependencies": ["t6"], "successors": ["t1"], "definition": {"description": "No description", "columns": [{"name": "dummy", "type": "Integer", "description": "No description"}]}}, {"name": "t1", "position": [6.0, 50.0], "active": true, "run_status": {"bg-class": "info", "bg-color": "#0dcaf0", "text": "ACTIVE"}, "type": {"shape": "circle", "bg-class": "success", "bg-color": "#198754", "text": "Pandas"}, "node_type": "TRANSFORMATION", "dependencies": ["t2", "t3", "t7"], "successors": ["t8"], "definition": {"description": "No description", "columns": [{"name": "dummy", "type": "Integer", "description": "No description"}]}}, {"name": "t8", "position": [7.0, 33.33], "active": true, "run_status": {"bg-class": "info", "bg-color": "#0dcaf0", "text": "ACTIVE"}, "type": {"shape": "circle", "bg-class": "danger", "bg-color": "#dc3545", "text": "PySpark"}, "node_type": "TRANSFORMATION", "dependencies": ["t1", "t6"], "successors": ["t10"], "definition": {"description": "No description", "columns": [{"name": "dummy", "type": "Integer", "description": "No description"}]}}, {"name": "t9", "position": [7.0, 66.67], "active": true, "run_status": {"bg-class": "info", "bg-color": "#0dcaf0", "text": "ACTIVE"}, "type": {"shape": "circle", "bg-class": "danger", "bg-color": "#dc3545", "text": "PySpark"}, "node_type": "TRANSFORMATION", "dependencies": ["t2"], "successors": ["t10"], "definition": {"description": "No description", "columns": [{"name": "dummy", "type": "Integer", "description": "No description"}]}}, {"name": "t10", "position": [8.0, 50.0], "active": true, "run_status": {"bg-class": "info", "bg-color": "#0dcaf0", "text": "ACTIVE"}, "type": {"shape": "circle", "bg-class": "danger", "bg-color": "#dc3545", "text": "PySpark"}, "node_type": "TRANSFORMATION", "dependencies": ["t8", "t9"], "successors": [], "definition": {"description": "No description", "columns": [{"name": "dummy", "type": "Integer", "description": "No description"}]}}]
-var links = [{"source": "t8", "source_position": [7.0, 33.33], "target": "t10", "target_position": [8.0, 50.0], "active": true}, {"source": "t1", "source_position": [6.0, 50.0], "target": "t8", "target_position": [7.0, 33.33], "active": true}, {"source": "t2", "source_position": [5.0, 25.0], "target": "t1", "target_position": [6.0, 50.0], "active": true}, {"source": "t2", "source_position": [5.0, 25.0], "target": "t9", "target_position": [7.0, 66.67], "active": true}, {"source": "t4", "source_position": [4.0, 33.33], "target": "t2", "target_position": [5.0, 25.0], "active": false}, {"source": "t5", "source_position": [3.0, 50.0], "target": "t4", "target_position": [4.0, 33.33], "active": false}, {"source": "t5", "source_position": [3.0, 50.0], "target": "t2", "target_position": [5.0, 25.0], "active": false}, {"source": "t0", "source_position": [2.0, 50.0], "target": "t5", "target_position": [3.0, 50.0], "active": true}, {"source": "t0", "source_position": [2.0, 50.0], "target": "t6", "target_position": [4.0, 66.67], "active": true}, {"source": "table", "source_position": [1.0, 50.0], "target": "t0", "target_position": [2.0, 50.0], "active": true}, {"source": "t3", "source_position": [5.0, 50.0], "target": "t1", "target_position": [6.0, 50.0], "active": true}, {"source": "t6", "source_position": [4.0, 66.67], "target": "t3", "target_position": [5.0, 50.0], "active": true}, {"source": "t6", "source_position": [4.0, 66.67], "target": "t7", "target_position": [5.0, 75.0], "active": true}, {"source": "t6", "source_position": [4.0, 66.67], "target": "t8", "target_position": [7.0, 33.33], "active": true}, {"source": "t7", "source_position": [5.0, 75.0], "target": "t1", "target_position": [6.0, 50.0], "active": true}, {"source": "t9", "source_position": [7.0, 66.67], "target": "t10", "target_position": [8.0, 50.0], "active": true}]
 
 
 //x and y scales
@@ -70,19 +70,18 @@ d3.select("g")
       .enter()
       .append("path")
       .attr("d", linkGen)
-      .attr("class", "link")
       .attr("fill", "none")
       .attr("stroke", link_color)
       .attr("source", d => d.source)
       .attr("target", d => d.target)
       .attr('marker-end','url(#arrowhead)')
       .attr("id", d => link_id(d.source, d.target))
-      .style("opacity", function(d) {
+      .attr("class", function(d) {
         if (d.active) {
-            return 1;
+            return "link link-active";
         }
         else{
-            return 0.3;
+            return "link link-inactive";
         }
     });
 
@@ -119,14 +118,7 @@ d3.select("g")
     .attr("fill", d => d.type['bg-color'])
     .attr("cursor", "pointer")
     .style("stroke", "black")
-    .style("opacity", function(d) {
-        if (d.active) {
-            return 1;
-        }
-        else{
-            return 0.3;
-        }
-    })
+    .style("stroke-width", circle_stroke)
     .call(d3.drag()
         .on('start', dragStart)
         .on('drag', dragging)
@@ -153,14 +145,7 @@ d3.select("g")
         return yScale(d.position[1]) - circle_radius - 5;
         })
   .text(d => d.name)
-  .style("opacity", function(d) {
-        if (d.active) {
-            return 1;
-        }
-        else{
-            return 0.3;
-        }
-    });
+    ;
 
 var zoom = d3.zoom()
       .scaleExtent([0, 8])
@@ -237,19 +222,59 @@ function dragging(d,i,nodes){
 }
 
 function dragStart(d,i,nodes){
-    d3.select(nodes[i])
-        .style("stroke", "red")
+    return
 }
 
 function dragEnd(d,i,nodes){
-    d3.select(nodes[i])
-        .style("stroke", "black")
+    return
 }
 
+let highlighted_nodes = new Set();
 function suppress_nodes(){
-    d3.selectAll("circle").attr("stroke","none").attr("stroke-width",0).attr("r", circle_radius);
+    for (let i = 0; i < nodes.length; i++) {
+        node = nodes[i];
+        suppress_node(node.name);
+    }
+}
+
+function suppress_node(node_name){
+    highlighted_nodes.delete(node_name);
+    d3.select("#" + node_id(node_name))
+    .style("stroke-width", circle_stroke)
+    .style("stroke", "black")
+    .attr("r", circle_radius);
+
 }
 
 function highlight_node(node_name){
-    d3.select("#" + node_id(node_name)).attr("stroke","black").attr("stroke-width",2).attr("r", circle_radius + 3);
+    d3.select("#" + node_id(node_name))
+    .style("stroke-width", circle_stroke+1)
+    .style("stroke", "red")
+    highlighted_nodes.add(node_name);
+
+    d3.select("#" + node_id(node_name))
+            .attr('opacity',1)
+            .attr("r", circle_radius)
+            .transition()
+            .duration(350)
+            .attr('opacity',0)
+            .attr("r", circle_radius * 10)
+            .on('end',function(d) { blink(d.name, 0);});
+
 }
+
+//blink
+function blink(node_name, o) {
+    if (highlighted_nodes.has(node_name)){
+        d3.select("#" + node_id(node_name))
+            .attr('opacity',o)
+            .attr("r", circle_radius)
+            .transition()
+            .duration(100)
+            .attr('opacity',(o == 0.5? 1 : 0.5))
+            .on('end',function(d) { blink(d.name, (o == 0.5? 1 : 0.5));});
+    }
+    else {
+        d3.select("#" + node_id(node_name)).attr('opacity',1);
+    }
+};

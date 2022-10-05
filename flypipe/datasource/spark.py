@@ -42,7 +42,10 @@ class Spark(DataSource):
 
         func = partial(self.spark_datasource, table=self.table, columns=list(self.columns))
         func.__name__ = self.table
-        func = datasource_node(type='pyspark', spark_context=True, description=f"Spark table {self.table}", dependencies=[])(func)
+        func = datasource_node(type='pyspark',
+                               description=f"Spark table {self.table}",
+                               dependencies=[],
+                               spark_context=True, )(func)
         self.func = func
         return self.func
 
