@@ -1,5 +1,5 @@
 const bsOffcanvas = new bootstrap.Offcanvas('#offcanvas', {
-    backdrop: false,
+    backdrop: true,
     scroll: true,
     keyboard: true,
 })

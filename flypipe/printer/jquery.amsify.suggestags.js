@@ -665,9 +665,7 @@ var AmsifySuggestags;
 		},
 
 		removeTagByItem : function(item, animate) {
-		    if (this.settings.callback !== undefined){
-			    this.settings.callback($(item).attr('data-val'), 'suppress');
-			}
+
 			this.tagNames.splice($(item).index(), 1);
 			this.animateRemove(item, animate);
 			this.setInputValue();
@@ -681,7 +679,9 @@ var AmsifySuggestags;
 			}
 			$(this.selectors.sTagsInput).removeClass(this.classes.readyToRemove.substring(1));
 			this.checkPlusAfter();
-
+            if (this.settings.callback !== undefined){
+			    this.settings.callback($(item).attr('data-val'), 'suppress');
+			}
 		},
 
 		animateRemove : function(item, animate) {
