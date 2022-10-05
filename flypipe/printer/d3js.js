@@ -241,7 +241,6 @@ function suppress_node(node_name){
     highlighted_nodes.delete(node_name);
     d3.select("#" + node_id(node_name))
     .style("stroke-width", circle_stroke)
-    .style("stroke", "black")
     .attr("r", circle_radius);
 
 }
@@ -249,7 +248,6 @@ function suppress_node(node_name){
 function highlight_node(node_name){
     d3.select("#" + node_id(node_name))
     .style("stroke-width", circle_stroke+1)
-    .style("stroke", "red")
     highlighted_nodes.add(node_name);
 
     d3.select("#" + node_id(node_name))
