@@ -4,6 +4,7 @@ import networkx as nx
 
 from flypipe.node_graph import RunStatus
 from flypipe.utils import DataFrameType
+import os
 
 class GraphHTML:
 
@@ -18,16 +19,18 @@ class GraphHTML:
 
     @staticmethod
     def html(nodes, links, width, height):
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
         tags = set()
         for node in nodes:
             tags.update(node['definition']['tags'])
 
-        html = open("index.html").read()
+        html = open(os.path.join(dir_path, "index.html")).read()
 
         html = html.replace('<link rel="stylesheet" type="text/css" href="amsify.suggestags.css">',
-                            f'<style>{open("amsify.suggestags.css").read()}</style>')
+                            f'<style>{open(os.path.join(dir_path, "amsify.suggestags.css")).read()}</style>')
 
-        html = html.replace('<script type="text/javascript" src="jquery.amsify.suggestags.js"></script>', f'<script>{open("jquery.amsify.suggestags.js").read()}</script>')
+        html = html.replace('<script type="text/javascript" src="jquery.amsify.suggestags.js"></script>', f'<script>{open(os.path.join(dir_path, "jquery.amsify.suggestags.js")).read()}</script>')
         html = html.replace('<script src="data.js"></script>', f'''
         <script>
         var user_width = {width};
@@ -37,9 +40,9 @@ class GraphHTML:
         var links = {json.dumps(links)};
         </script>
         ''')
-        html = html.replace('<script src="d3js.js"></script>', f'<script>{open("d3js.js").read()}</script>')
-        html = html.replace('<script src="offcanvas.js"></script>', f'<script>{open("offcanvas.js").read()}</script>')
-        html = html.replace('<script src="tags.js"></script>', f'<script>{open("tags.js").read()}</script>')
+        html = html.replace('<script src="d3js.js"></script>', f'<script>{open(os.path.join(dir_path, "d3js.js")).read()}</script>')
+        html = html.replace('<script src="offcanvas.js"></script>', f'<script>{open(os.path.join(dir_path, "offcanvas.js")).read()}</script>')
+        html = html.replace('<script src="tags.js"></script>', f'<script>{open(os.path.join(dir_path, "tags.js")).read()}</script>')
 
         return html
 
