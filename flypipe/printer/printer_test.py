@@ -101,5 +101,6 @@ def t8(t4, t5, t6, t7):
 
 with open('test.html', 'w') as f:
     html = t8.inputs(t4=pd.DataFrame(data=[{'col1': [1]}])).html(width=-1, height=-1)
+    print(html)
     f.writelines(html)
 

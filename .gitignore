@@ -142,3 +142,4 @@ dmypy.json
 /spark-warehouse/
 /docs/source/readmes/contributors.md
 /docs/source/modules/
+/flypipe/printer/test.html

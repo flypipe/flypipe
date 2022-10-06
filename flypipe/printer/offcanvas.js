@@ -49,7 +49,8 @@ function show_transformation(node){
     }
     for (let i = 0; i < node.dependencies.length; i++) {
         dependency = node.dependencies[i];
-        body += '<li class="list-group-item"><a href="#" class="link-dark" onclick="show_transformation(\'' + dependency + '\');">' + dependency + '</a></li>';
+        dependency_ = "'" + dependency + "'";
+        body += '<li class="list-group-item"><a style="cursor: pointer;" class="link-dark" onclick="show_transformation(' + dependency_ + ');">' + dependency + '</a></li>';
         link = get_link(dependency, node.name);
         for (let i = 0; i < link.source_selected_columns.length; i++) {
             selected_column = link.source_selected_columns[i];
@@ -67,7 +68,8 @@ function show_transformation(node){
     }
     for (let i = 0; i < node.successors.length; i++) {
         successor = node.successors[i];
-        body += '<li class="list-group-item"><a href="#" class="link-dark" onclick="show_transformation(\'' + successor + '\');">' + successor + '</a></li>';
+        successor_ = "'" + successor + "'";
+        body += '<li class="list-group-item"><a style="cursor: pointer;" class="link-dark" onclick="show_transformation(' + successor_ + ');">' + successor + '</a></li>';
     }
     body += '</ul>';
 

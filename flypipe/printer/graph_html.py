@@ -24,13 +24,16 @@ class GraphHTML:
         tags = set()
         for node in nodes:
             tags.update(node['definition']['tags'])
+        index = open(os.path.join(dir_path, "index.html"))
+        html = index.read()
+        index.close()
 
-        html = open(os.path.join(dir_path, "index.html")).read()
 
         html = html.replace('<link rel="stylesheet" type="text/css" href="amsify.suggestags.css">',
                             f'<style>{open(os.path.join(dir_path, "amsify.suggestags.css")).read()}</style>')
+        html = html.replace('<script type="text/javascript" src="jquery.amsify.suggestags.js"></script>',
+                            f'<script>{open(os.path.join(dir_path, "jquery.amsify.suggestags.js")).read()}</script>')
 
-        html = html.replace('<script type="text/javascript" src="jquery.amsify.suggestags.js"></script>', f'<script>{open(os.path.join(dir_path, "jquery.amsify.suggestags.js")).read()}</script>')
         html = html.replace('<script src="data.js"></script>', f'''
         <script>
         var user_width = {width};
@@ -43,6 +46,7 @@ class GraphHTML:
         html = html.replace('<script src="d3js.js"></script>', f'<script>{open(os.path.join(dir_path, "d3js.js")).read()}</script>')
         html = html.replace('<script src="offcanvas.js"></script>', f'<script>{open(os.path.join(dir_path, "offcanvas.js")).read()}</script>')
         html = html.replace('<script src="tags.js"></script>', f'<script>{open(os.path.join(dir_path, "tags.js")).read()}</script>')
+
 
         return html
 
