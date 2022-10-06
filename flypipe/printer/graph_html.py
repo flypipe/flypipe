@@ -74,26 +74,26 @@ class GraphHTML:
         links = []
         for edge in graph.edges:
 
-            source = edge[0]
-            target = edge[1]
+            source = graph.nodes[edge[0]]
+            target = graph.nodes[edge[1]]
+            edge_data = graph.get_edge_data(edge[0], edge[1])
 
-            links.append({'source': source,
-                          'source_position': nodes_position[source],
-                          'target': target,
-                          'target_position': nodes_position[target],
-                          # 'active': ((graph.nodes[source]['run_status'] == RunStatus.SKIP and
-                          #            graph.nodes[target]['run_status'] == RunStatus.SKIP))
-                          # })
+            links.append({'source': source['name'],
+                          'source_position': nodes_position[source['name']],
+                          'source_selected_columns': edge_data['selected_columns'],
+                          'target': target['name'],
+                          'target_position': nodes_position[target['name']],
                           'active': (not (
-                              (graph.nodes[source]['run_status'] == RunStatus.SKIP and
-                               graph.nodes[target]['run_status'] == RunStatus.SKIP)
-                               or graph.nodes[target]['run_status'] == RunStatus.SKIP)
+                              (source['run_status'] == RunStatus.SKIP and
+                               target['run_status'] == RunStatus.SKIP)
+                               or target['run_status'] == RunStatus.SKIP)
                                      )})
 
         nodes = []
         for node, position in nodes_position.items():
             graph_node = graph.nodes[node]
             tags = [node, graph_node['type'].value, graph_node['node_type'].value] + graph_node['tags']
+
             node_attributes = {
                 'name': node,
                 'position': position,
@@ -101,8 +101,8 @@ class GraphHTML:
                 'run_status': GraphHTML.CSS_MAP[graph_node['run_status']],
                 'type': GraphHTML.CSS_MAP[graph_node['type']],
                 'node_type': graph_node['node_type'].value,
-                'dependencies': list(graph.predecessors(node)),
-                'successors': list(graph.successors(node)),
+                'dependencies': sorted(list(graph.predecessors(node))),
+                'successors': sorted(list(graph.successors(node))),
                 'definition': {
                     'description': graph_node['description'],
                     'tags': tags,

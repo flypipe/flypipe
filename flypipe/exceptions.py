@@ -26,6 +26,11 @@ class ErrorDataframesSchemasDoNotMatch(ErrorErrorDataframesSchemasDoNotMatch):
 class ErrorDataframesDifferentData(ErrorErrorDataframesSchemasDoNotMatch):
     pass
 
+class ErrorNodeTypeInvalid(ValueError):
+    pass
+
+class ErrorDependencyNoSelectedColumns(ValueError):
+    pass
 
 class ErrorModeNotSupported(Exception):
     """Exception raised if mode is not supported

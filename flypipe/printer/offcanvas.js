@@ -44,13 +44,20 @@ function show_transformation(node){
 
     body += "<h5 class='mt-5 mb-3'>Dependencies</h5>";
     body += '<ul class="list-unstyled">';
-    if (node.dependencies.length == 0){
+    if (Object.keys(node.dependencies).length == 0){
         body += '<li class="list-group-item fst-italic">No dependencies</li>';
     }
     for (let i = 0; i < node.dependencies.length; i++) {
         dependency = node.dependencies[i];
         body += '<li class="list-group-item"><a href="#" class="link-dark" onclick="show_transformation(\'' + dependency + '\');">' + dependency + '</a></li>';
+        link = get_link(dependency, node.name);
+        for (let i = 0; i < link.source_selected_columns.length; i++) {
+            selected_column = link.source_selected_columns[i];
+            body += '<li class="list-group-item"><span class="ms-3">' + selected_column + '</span></li>';
+        }
+
     }
+
     body += '</ul>';
 
     body += "<h5 class='mt-5 mb-3'>Successors</h5>";
@@ -64,7 +71,9 @@ function show_transformation(node){
     }
     body += '</ul>';
 
-    body += "<h5 class='mt-5 mb-3'>Output Schema</h5>";
+    if (node.definition.columns.length > 0){
+        body += "<h5 class='mt-5 mb-3'>Output Schema</h5>";
+    }
     for (let i = 0; i < node.definition.columns.length; i++) {
         column = node.definition.columns[i];
         body += '<p class="fw-bold text-start">' +

@@ -34,8 +34,6 @@ class TestBinary:
     def test_binary(self, pandas_df, pyspark_df, pandas_on_spark_df):
         columns = ["binary"]
         type_ = Binary()
-        print(pandas_df.dtypes)
-        print(get_schema(pandas_df))
         df_cast = type_.cast(pandas_df, columns)
 
         assert {

@@ -5,6 +5,7 @@ import pyspark.sql.functions as F
 
 from flypipe.exceptions import ErrorTimeTravel
 from flypipe.node import node, datasource_node
+from flypipe.node_graph import NodeGraph
 
 instances = {}
 
@@ -18,7 +19,7 @@ class Spark(DataSource):
 
     def __init__(self, table):
         self.table = table
-        self.columns = set()
+        self.columns = []
         self.func = None
 
     @classmethod
@@ -35,17 +36,19 @@ class Spark(DataSource):
 
     def select(self, *columns):
         if isinstance(columns[0], list):
-            self.columns = self.columns.union(set(columns[0]))
+            self.columns = list(dict.fromkeys(self.columns + columns[0]))
         else:
             for column in columns:
-                self.columns.add(column)
+                self.columns.append(column)
 
-        func = partial(self.spark_datasource, table=self.table, columns=list(self.columns))
+        func = partial(self.spark_datasource, table=self.table, columns=self.columns)
         func.__name__ = self.table
-        func = datasource_node(type='pyspark',
+        node = datasource_node(type='pyspark',
                                description=f"Spark table {self.table}",
-                               dependencies=[],
-                               spark_context=True, )(func)
+                               spark_context=True,
+                               selected_columns = self.columns)
+
+        func = node(func)
         self.func = func
         return self.func
 

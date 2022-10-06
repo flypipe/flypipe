@@ -1,6 +1,9 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from copy import deepcopy
+
 from flypipe.dataframe_wrapper import DataframeWrapper
+from flypipe.exceptions import ErrorDependencyNoSelectedColumns, ErrorNodeTypeInvalid
 from flypipe.printer.graph_html import GraphHTML
 from flypipe.node_graph import NodeGraph
 from flypipe.node_type import NodeType
@@ -31,14 +34,27 @@ class Transformation:
         try:
             self.type = self.TYPE_MAP[type]
         except KeyError:
-            raise ValueError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
+            raise ErrorNodeTypeInvalid(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
         self.description = description or "No description"
         self.tags = tags or []
         self.dependencies = dependencies or []
+        self.dependencies_selected_columns = {}
+
+        if self.dependencies:
+            self.dependencies = sorted(self.dependencies, key=lambda d: d.__name__)
+            for dependency in self.dependencies:
+                if not dependency.selected_columns:
+                    raise ErrorDependencyNoSelectedColumns(f'Selected columns of dependency {dependency.__name__} not specified')
+                self.dependencies_selected_columns[dependency.__name__] = dependency.selected_columns
+
         self._provided_inputs = {}
         self.output_schema = output
-        self.node_graph = NodeGraph(self)
         self.spark_context = spark_context
+        self.selected_columns = []
+        self.node_graph = None
+
+    def _create_graph(self):
+        self.node_graph = NodeGraph(self)
 
     @property
     def __name__(self):
@@ -49,6 +65,17 @@ class Transformation:
     def __doc__(self):
         """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
         return self.function.__doc__
+
+    def select(self, *columns):
+        self.selected_columns = []
+        if isinstance(columns[0], list):
+            self.selected_columns = list(dict.fromkeys(self.selected_columns + columns[0]))
+        else:
+            for column in columns:
+                self.selected_columns.append(column)
+        self.selected_columns = sorted(list(set(self.selected_columns)))
+        return self
+
 
     def inputs(self, **kwargs):
         for k, v in kwargs.items():
@@ -63,6 +90,7 @@ class Transformation:
         return self.function(*args)
 
     def run(self, spark=None, parallel=True):
+        self._create_graph()
         self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
         if parallel:
             return self._run_parallel(spark)
@@ -70,7 +98,7 @@ class Transformation:
             return self._run_sequential(spark)
 
     def _run_sequential(self, spark=None):
-        outputs = {k: DataframeWrapper(spark, v, schema=None) for k, v in self._provided_inputs.items()}
+        outputs = {k: DataframeWrapper(spark, df, schema=None) for k, df in self._provided_inputs.items()}
         node_graph = self.node_graph.copy()
         while not node_graph.is_empty():
             nodes = node_graph.pop_runnable_nodes()
@@ -85,7 +113,7 @@ class Transformation:
                 result = self.process_transformation(spark, node['transformation'], **node_dependencies)
 
                 outputs[node['name']] = DataframeWrapper(spark, result, node['transformation'].output_schema)
-        return outputs[node['name']].as_type(self.type)
+        return outputs[self.__name__].as_type(self.type)
 
     def _run_parallel(self, node_graph, spark=None):
         # TODO- fix this to run with the new style, see _run_sequential for the correct way of doing things
@@ -196,7 +224,7 @@ class Transformation:
         return df[selected_columns]
 
     def process_transformation(self, spark, transformation, **inputs):
-        # TODO: apply output validation + rename function to transformation
+        # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
         if transformation.spark_context:
             parameters = {'spark': spark, **inputs}
         else:
@@ -207,6 +235,7 @@ class Transformation:
         self.node_graph.plot()
 
     def html(self, width=-1, height=-1):
+        self._create_graph()
         self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
         return GraphHTML.get(self.node_graph.graph, width=width, height=height)
 
@@ -233,6 +262,12 @@ def datasource_node(*args, **kwargs):
     """
 
     def decorator(func):
-        return DataSource(func, *args, **kwargs)
+        """TODO: I had to re-create graph in the decorator as selected_columns are set after the node has been created
+        when creting a virtual datasource node, it is set the columns manually
+        """
+
+        kwargs_init = {k:v for k,v in kwargs.items() if k != 'selected_columns'}
+        ds = DataSource(func, *args, **kwargs_init)
+        return ds.select(kwargs['selected_columns'])
 
     return decorator

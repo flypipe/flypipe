@@ -21,6 +21,15 @@ function getHeight() {
   );
 }
 
+function get_link(source_name, target_name){
+    for (let i = 0; i < links.length; i++) {
+        link = links[i];
+        if (link.source == source_name & link.target == target_name){
+            return link
+        }
+    }
+}
+
 const view_port_width = getWidth();
 const view_port_height = getHeight();
 const link_color = "#999";

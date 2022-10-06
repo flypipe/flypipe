@@ -23,6 +23,7 @@ class NodeGraph:
 
     def _build_graph(self, node):
         graph = nx.DiGraph()
+        # TODO: remove inputs and leave dependencies
         graph.add_node(
             node.__name__,
             name=node.__name__,
@@ -33,7 +34,8 @@ class NodeGraph:
             node_type=node.node_type,
             inputs=[i.__name__ for i in node.dependencies],
             run_status=RunStatus.UNKNOWN,
-            output_schema=node.output_schema
+            output_schema=node.output_schema,
+            selected_columns=node.selected_columns
         )
 
         if node.dependencies:
@@ -46,8 +48,8 @@ class NodeGraph:
                                transformation=dependency,
                                node_type=dependency.node_type,
                                run_status=RunStatus.UNKNOWN,
-                               output_schema=node.output_schema)
-                graph.add_edge(dependency.__name__, node.__name__)
+                               output_schema=dependency.output_schema)
+                graph.add_edge(dependency.__name__, node.__name__, selected_columns=node.dependencies_selected_columns[dependency.__name__])
                 graph = nx.compose(graph, self._build_graph(dependency))
 
         return graph
@@ -73,6 +75,7 @@ class NodeGraph:
                 for ancestor_name in self.graph.predecessors(current_node_name):
                     if self.get_node(ancestor_name)['run_status'] != RunStatus.ACTIVE:
                         frontier.append((ancestor_name, RunStatus.SKIP))
+
 
     def get_dependency_map(self):
         dependencies = {}

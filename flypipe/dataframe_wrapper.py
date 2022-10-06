@@ -41,7 +41,8 @@ class DataframeWrapper:
             self.pandas_data = self.dataframe_converter.convert(self.pyspark_data, DataFrameType.PANDAS)
             if self.schema:
                 self.pandas_data = SchemaConverter.cast(self.pandas_data, DataFrameType.PANDAS, self.schema)
-        return self.pandas_data
+        # FIXME: implement tests
+        return self.pandas_data.copy(deep=True)
 
     def as_pandas_on_spark(self):
         # FIXME: convert to spark and then back again to pandas on spark
@@ -49,7 +50,8 @@ class DataframeWrapper:
             self.pandas_data = self.dataframe_converter.convert(self.pyspark_data, DataFrameType.PANDAS_ON_SPARK)
             if self.schema:
                 self.pandas_data = SchemaConverter.cast(self.pandas_data, DataFrameType.PANDAS_ON_SPARK, self.schema)
-        return self.pandas_data
+        # FIXME: implement tests
+        return self.pandas_data.toSpark().to_pandas_on_spark()
 
     def as_pyspark(self):
         if not self.pyspark_data:
