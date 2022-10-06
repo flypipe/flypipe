@@ -1,10 +1,14 @@
 [build-system]
-requires = ['setuptools', 'setuptools_scm[toml]']
-build-backend = "setuptools.build_meta"
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
 
-# This line makes setuptools choose the package version dynamically via setuptools_scm
-[tool.setuptools_scm]
-write_to = "version.py"
+[project]
+name = "flypipe"
+authors = [{name = "Jose Helio de Brum Muller", email = "josemuller.flypipe@gmail.com"}]
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = ["License :: OSI Approved :: Apache Software License"]
+dynamic = ["version", "description"]
 
-[tool.pytest.ini_options]
-log_cli = 1
+[project.urls]
+Home = "https://github.com/flypipe/flypipe.git"

@@ -16,12 +16,13 @@ classifiers =
 
 [options]
 package_dir=
-    =flypipe
+    =src
+packages=find_namespace:
 install_requires=
   networkx
   pyarrow
   matplotlib
 
-[options.extras_require]
-all = pyspark[sql,pandas_on_spark]
-pyspark = pyspark[sql,pandas_on_spark]
+
+[options.packages.find]
+where=src
