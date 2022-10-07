@@ -1,8 +1,9 @@
 import warnings
 
+import pyspark.sql.functions as F
 from numpy import dtype
 from pyspark.sql.types import MapType
-import pyspark.sql.functions as F
+
 from flypipe.data_type.type import Type
 
 

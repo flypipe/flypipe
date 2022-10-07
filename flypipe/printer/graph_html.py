@@ -1,10 +1,11 @@
 import json
+import os
 
 import networkx as nx
 
 from flypipe.node_graph import RunStatus
 from flypipe.utils import DataFrameType
-import os
+
 
 class GraphHTML:
 

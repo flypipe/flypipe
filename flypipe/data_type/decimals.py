@@ -1,11 +1,8 @@
-from typing import Union
-
 import numpy as np
 import pyspark.sql.functions as F
 from pyspark.sql.types import DecimalType
 
 from flypipe.data_type.type import Type
-from flypipe.utils import dataframe_type, DataFrameType, get_schema
 
 
 class Decimals(Type):

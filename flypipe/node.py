@@ -1,13 +1,11 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from copy import deepcopy
 
 from flypipe.dataframe_wrapper import DataframeWrapper
 from flypipe.exceptions import ErrorDependencyNoSelectedColumns, ErrorNodeTypeInvalid
-from flypipe.printer.graph_html import GraphHTML
 from flypipe.node_graph import NodeGraph
 from flypipe.node_type import NodeType
-
+from flypipe.printer.graph_html import GraphHTML
 from flypipe.utils import DataFrameType
 
 logger = logging.getLogger(__name__)

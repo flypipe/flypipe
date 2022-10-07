@@ -5,8 +5,9 @@ from pandas.testing import assert_frame_equal
 from flypipe.exceptions import (
     ErrorDataframesDifferentData,
     ErrorDataframesSchemasDoNotMatch,
-    DataFrameTypeNotSupported,
+    ErrorDataFrameTypeNotSupported,
 )
+
 
 # TODO: document things
 
@@ -69,7 +70,7 @@ def dataframe_type(df) -> DataFrameType:
             if isinstance(df, sql.DataFrame):
                 return DataFrameType.PYSPARK
 
-    raise DataFrameTypeNotSupported
+    raise ErrorDataFrameTypeNotSupported
 
 
 # TODO: add tests to get_schema

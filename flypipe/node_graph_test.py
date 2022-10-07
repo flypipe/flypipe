@@ -16,15 +16,19 @@ class TestNodeGraph:
         def t3():
             return
 
-        @node(type="pandas", dependencies=[t1, t2, t3])
+        @node(type="pandas", dependencies=[t1.select('c1'),
+                                           t2.select('c1'),
+                                           t3.select('c1')])
         def t4():
             return
 
-        @node(type="pandas", dependencies=[t2, t3])
+        @node(type="pandas", dependencies=[t2.select('c1'),
+                                           t3.select('c1')])
         def t5():
             return
 
-        @node(type="pandas", dependencies=[t4, t5])
+        @node(type="pandas", dependencies=[t4.select('c1'),
+                                           t5.select('c1')])
         def t6():
             return
 
@@ -51,15 +55,19 @@ class TestNodeGraph:
         def t3():
             return
 
-        @node(type="pandas", dependencies=[t1, t2, t3])
+        @node(type="pandas", dependencies=[t1.select('c1'),
+                                           t2.select('c1'),
+                                           t3.select('c1')])
         def t4():
             return
 
-        @node(type="pandas", dependencies=[t2, t3])
+        @node(type="pandas", dependencies=[t2.select('c1'),
+                                           t3.select('c1')])
         def t5():
             return
 
-        @node(type="pandas", dependencies=[t5, t4])
+        @node(type="pandas", dependencies=[t5.select('c1'),
+                                           t4.select('c1')])
         def t6():
             return
 

@@ -5,9 +5,8 @@ from flypipe.exceptions import (
     ErrorDataframesSchemasDoNotMatch,
     ErrorDataframesDifferentData,
     ErrorErrorDataframesSchemasDoNotMatch,
-    DataFrameTypeNotSupported,
+    ErrorDataFrameTypeNotSupported,
 )
-
 from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
 
 
@@ -49,7 +48,7 @@ class TestUtils:
         with pytest.raises(ErrorErrorDataframesSchemasDoNotMatch):
             assert_dataframes_equals(df1, df2)
 
-        with pytest.raises(DataFrameTypeNotSupported):
+        with pytest.raises(ErrorDataFrameTypeNotSupported):
             assert_dataframes_equals(df1, 2)
 
     def test_dataframe_type(self, spark):
@@ -62,5 +61,5 @@ class TestUtils:
         df = df.to_pandas_on_spark()
         assert dataframe_type(df) == DataFrameType.PANDAS_ON_SPARK
 
-        with pytest.raises(DataFrameTypeNotSupported):
+        with pytest.raises(ErrorDataFrameTypeNotSupported):
             dataframe_type(1)

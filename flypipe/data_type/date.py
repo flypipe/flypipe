@@ -1,13 +1,10 @@
-from typing import Union
-
 import numpy as np
 import pandas as pd
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
-from pyspark.sql.types import DateType, StringType
+from pyspark.sql.types import DateType
 
 from flypipe.data_type.type import Type
-from flypipe.utils import dataframe_type, DataFrameType, get_schema
 
 
 class Date(Type):

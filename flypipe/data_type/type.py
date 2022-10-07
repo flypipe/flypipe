@@ -1,7 +1,5 @@
-import numpy as np
 import pyspark.sql.functions as F
 from numpy import dtype
-from pyspark.pandas.typedef import pandas_on_spark_type, spark_type_to_pandas_dtype
 from pyspark.sql.types import (
     BooleanType,
     FloatType,
@@ -14,9 +12,8 @@ from pyspark.sql.types import (
     StringType,
 )
 
-from flypipe.dataframe_wrapper import DataframeWrapper
 from flypipe.exceptions import ErrorColumnNotInDataframe
-from flypipe.utils import dataframe_type, DataFrameType, get_schema
+from flypipe.utils import DataFrameType
 
 
 class Type:
@@ -54,7 +51,7 @@ class Type:
         """
 
         if column not in df.columns:
-            raise ErrorColumnNotInDataframe(f"Column {column} not exists in the dataframe")
+            raise ErrorColumnNotInDataframe(column)
 
         if df_type == DataFrameType.PYSPARK:
             df = self._cast_pyspark(df, column)

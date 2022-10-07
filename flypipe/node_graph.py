@@ -1,5 +1,6 @@
-import networkx as nx
 from enum import Enum
+
+import networkx as nx
 from matplotlib import pyplot as plt
 
 

@@ -1,10 +1,8 @@
 import warnings
 
 import numpy as np
-import pandas as pd
-from numpy import dtype
 import pyspark.sql.functions as F
-from pyspark.pandas.typedef import spark_type_to_pandas_dtype, pandas_on_spark_type
+from numpy import dtype
 from pyspark.sql.types import ArrayType
 
 from flypipe.data_type.type import Type

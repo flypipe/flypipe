@@ -1,13 +1,8 @@
 import pandas
 import pyspark.pandas
 import pytest
-from pytest_mock import mocker
 
-from flypipe.data_type import Decimal
-from pyspark_test import assert_pyspark_df_equal
-
-from flypipe.datasource.spark import Spark
-from flypipe.exceptions import ErrorDependencyNoSelectedColumns, ErrorNodeTypeInvalid
+from flypipe.data_type import Decimals
 from flypipe.node import node
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
@@ -28,7 +23,7 @@ class TestPandasOnSparkNode:
         @node(
             type="pandas_on_spark",
             output=Schema([
-                Column('c1', Decimal(10, 2))
+                Column('c1', Decimals(10, 2))
             ])
         )
         def t1():
@@ -43,7 +38,7 @@ class TestPandasOnSparkNode:
         @node(
             type="pyspark",
             output=Schema([
-                Column('c1', Decimal(10, 2))
+                Column('c1', Decimals(10, 2))
             ])
         )
         def t1():

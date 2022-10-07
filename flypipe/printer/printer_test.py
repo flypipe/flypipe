@@ -1,12 +1,10 @@
-from flypipe.data_type import Decimal, Integer
+import pandas as pd
 
+from flypipe.data_type import Decimals, Integer
 from flypipe.datasource.spark import Spark
 from flypipe.node import node
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
-
-import pandas as pd
-
 from tests.utils.spark import spark
 
 spark.sql("create database if not exists raw")
@@ -19,9 +17,9 @@ spark.sql("create view raw.table as select 1 as col1, 2 as col2, 3 as col3, 4 as
         Spark.table("raw.table").select('col1', 'col2', 'col3', 'col5')
     ],
     output=Schema([
-        Column('col1', Decimal(10, 2)),
-        Column('col2', Decimal(10, 2)),
-        Column('col3', Decimal(10, 2)),
+        Column('col1', Decimals(10, 2)),
+        Column('col2', Decimals(10, 2)),
+        Column('col3', Decimals(10, 2)),
     ]))
 def t1(table):
     return table
@@ -79,7 +77,7 @@ def t6(t1):
         Spark.table("raw.table").select('col2', 'col4')
     ],
     output=Schema([
-        Column('col2', Decimal(10, 2))
+        Column('col2', Decimals(10, 2))
     ]))
 def t7(table):
     return table

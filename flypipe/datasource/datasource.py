@@ -1,6 +1,4 @@
-from abc import ABC, abstractmethod
-
-from flypipe.node import node
+from abc import ABC
 
 
 class DataSource(ABC):
