@@ -5,7 +5,7 @@ from numpy import dtype
 from pyspark.sql.types import ByteType
 
 from flypipe.data_type import Byte
-from flypipe.utils import get_schema
+from flypipe.utils import get_schema, DataFrameType
 
 
 @pytest.fixture(scope="function")
@@ -34,18 +34,23 @@ class TestByte:
     def test_byte(self, pandas_df, pyspark_df, pandas_on_spark_df):
         columns = ["byte"]
         type_ = Byte()
-        df_cast = type_.cast(pandas_df, columns)
+        df_cast = None
+
+        for col in columns:
+            df_cast = type_.cast(pandas_df, DataFrameType.PANDAS, col)
 
         assert {
             "byte": dtype("int8"),
         } == get_schema(df_cast)
 
-        df_cast = type_.cast(pandas_on_spark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pandas_on_spark_df, DataFrameType.PANDAS_ON_SPARK, col)
         assert {
             "byte": dtype("int8"),
         } == get_schema(df_cast)
 
-        df_cast = type_.cast(pyspark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pyspark_df, DataFrameType.PYSPARK, col)
         assert {
             "byte": ByteType(),
         } == get_schema(df_cast)

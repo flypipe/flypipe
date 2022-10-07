@@ -30,16 +30,9 @@ class Type:
     spark_type = None
     pandas_type = None
 
-    def __init__(self):
-        self._pandas_type = None
-        self._spark_type = None
-
     def __repr__(self):
         return f"pandas_type {self.pandas_type}, spark_type: {self.spark_type}"
 
-    @property
-    def spark_data_type(self):
-        raise NotImplementedError
 
     def cast(self, df, df_type: DataFrameType, column: str):
         """Receives a str and return a list[str] or
@@ -49,6 +42,8 @@ class Type:
         ----------
         df : dataframe
             dataframe to have column(s) casted
+        df_type : DataFrameType
+            type of the dataframe
         column: str or list
             column(s) to be casted
 
@@ -57,6 +52,10 @@ class Type:
         dataframe
             dataframe with given column(s) casted to the DataType defined by the child in spark_data_type
         """
+
+        if column not in df.columns:
+            raise ErrorColumnNotInDataframe(f"Column {column} not exists in the dataframe")
+
         if df_type == DataFrameType.PYSPARK:
             df = self._cast_pyspark(df, column)
         elif df_type == DataFrameType.PANDAS:
@@ -81,63 +80,58 @@ class Type:
 class Boolean(Type):
     """Casts dataframe to boolean"""
 
-    spark_data_type = BooleanType
-    pandas_data_type = np.bool_
+    spark_type = BooleanType()
+    pandas_type = dtype("bool")
 
 
 class Byte(Type):
     """Casts dataframe to byte"""
 
-    spark_data_type = ByteType
-
+    spark_type = ByteType()
+    pandas_type = dtype("int8")
 
 class Binary(Type):
     """Casts dataframe to binary"""
 
-    spark_data_type = BinaryType
-    pandas_type = np.bytes_
     spark_type = BinaryType()
-
-    def __init__(self):
-        pass
+    pandas_type = dtype("S")
 
 
 class Integer(Type):
     """Casts dataframe to integer"""
 
-    spark_data_type = IntegerType
-
+    spark_type = IntegerType()
+    pandas_type = dtype("int32")
 
 class Short(Type):
     """Casts dataframe to short"""
 
-    spark_data_type = ShortType
-
+    spark_type = ShortType()
+    pandas_type = dtype("int16")
 
 class Long(Type):
     """Casts dataframe to long"""
 
-    spark_data_type = LongType
-
+    spark_type = LongType()
+    pandas_type = dtype("int64")
 
 class Float(Type):
     """Casts dataframe to float"""
 
-    spark_data_type = FloatType
-
+    spark_type = FloatType()
+    pandas_type = dtype("float32")
 
 class Double(Type):
     """Casts dataframe to double"""
 
-    spark_data_type = DoubleType
-
+    spark_type = DoubleType()
+    pandas_type = dtype("float64")
 
 class String(Type):
     """Casts dataframe to string"""
 
-    spark_data_type = StringType
-    pandas_type = dtype("<U0")
     spark_type = StringType()
+    pandas_type = dtype("<U0")
 
     def __init__(self):
         pass

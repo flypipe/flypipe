@@ -7,6 +7,7 @@ from flypipe.converter.schema import SchemaConverter
 from flypipe.data_type import String, Integer, Date, Decimals
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
+from flypipe.utils import DataFrameType
 
 
 @pytest.fixture(scope="function")
@@ -47,7 +48,8 @@ class TestSchemaConverter:
             ]
         )
 
-        pandas_df_ = SchemaConverter.cast(pandas_df.copy(deep=True), schema)
+        pandas_df_ = SchemaConverter.cast(pandas_df.copy(deep=True),
+                                          DataFrameType.PANDAS, schema)
 
         assert pandas_df_.dtypes['name'] == np.dtype("O")
         assert pandas_df_.dtypes['age'] == np.int
@@ -55,7 +57,9 @@ class TestSchemaConverter:
         assert pandas_df_.dtypes['birth'] == np.dtype("datetime64[ns]")
 
 
-        pandas_on_spark_df_ = SchemaConverter.cast(pandas_on_spark_df.copy(deep=True), schema)
+        pandas_on_spark_df_ = SchemaConverter.cast(pandas_on_spark_df.copy(deep=True),
+                                                   DataFrameType.PANDAS_ON_SPARK,
+                                                   schema)
         assert pandas_on_spark_df_.dtypes['name'] == np.dtype("<U")
         assert pandas_on_spark_df_.dtypes['age'] == np.int
         assert pandas_on_spark_df_.dtypes['balance'] == np.float
@@ -71,7 +75,8 @@ class TestSchemaConverter:
             ]
         )
 
-        pyspark_df_ = SchemaConverter.cast(pyspark_df, schema)
+        pyspark_df_ = SchemaConverter.cast(pyspark_df, DataFrameType.PYSPARK,
+                                           schema)
 
         assert pyspark_df_.schema == StructType([
             StructField("name", StringType(), True),

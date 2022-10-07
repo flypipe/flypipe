@@ -1,6 +1,10 @@
 import warnings
 
 import numpy as np
+import pandas as pd
+from numpy import dtype
+import pyspark.sql.functions as F
+from pyspark.pandas.typedef import spark_type_to_pandas_dtype, pandas_on_spark_type
 from pyspark.sql.types import ArrayType
 
 from flypipe.data_type.type import Type
@@ -19,8 +23,8 @@ class Array(Type):
         Defines the type of the array
     """
 
-    spark_data_type = ArrayType
-    pandas_type = np.ndarray
+    spark_type = None
+    pandas_type = dtype("O")
 
     def __init__(self, type):
         assert (
@@ -32,6 +36,16 @@ class Array(Type):
                 "Make sure the content of the array has been casted to the proper type"
             )
         )
+        self.spark_type = ArrayType(type.spark_type)
 
-        array_pandas_type, array_spark_type = type.pandas_type, type.spark_type
-        self.spark_type = ArrayType(array_spark_type)
+    def _cast_pyspark(self, df, column: str):
+        df = df.withColumn(column, F.col(column).cast(self.spark_type))
+        return df
+
+    def _cast_pandas(self, df, column: str):
+        df[column] = df[column].astype(self.pandas_type)
+        return df
+
+    def _cast_pandas_on_spark(self, df, column: str):
+        df[column] = df[column].astype(np.ndarray)
+        return df

@@ -1,3 +1,5 @@
+import pandas
+import pyspark.pandas
 import pytest
 from pytest_mock import mocker
 
@@ -23,7 +25,7 @@ def spark():
     return spark
 
 
-class TestSparkNode:
+class TestPySparkNode:
 
     def test_exception_invalid_node_type(self, spark):
         with pytest.raises(ErrorNodeTypeInvalid) as e_info:
@@ -47,8 +49,6 @@ class TestSparkNode:
             ]))
             def balance(dummy):
                 return dummy.withColumn('balance', dummy.balance + 1).select('balance')
-
-
 
     def test_end_to_end_adhoc(self, spark):
 
@@ -239,4 +239,92 @@ class TestSparkNode:
         t3.run(spark, parallel=False)
         spy.assert_called_once()
         assert_pyspark_df_equal(spy.spy_return, spark.createDataFrame(schema=('c1', 'c2'), data=[(1, 2)]))
+
+    def test_conversion_to_pandas(self, spark):
+
+        @node(
+            type="pyspark",
+            dependencies=[
+                Spark("dummy_table").select('c1')
+            ],
+            output=Schema([
+                Column('c1', Decimal(10, 2))
+            ])
+        )
+        def t1(dummy_table):
+            return dummy_table
+
+        @node(
+            type="pandas",
+            dependencies=[
+                t1.select('c1')
+            ],
+            output=Schema([
+                Column('c1', Decimal(10, 2))
+            ])
+        )
+        def t2(t1):
+            return t1
+
+        df = t2.run(spark, parallel=False)
+        assert isinstance(df, pandas.DataFrame)
+
+        @node(
+            type="pandas",
+            dependencies=[
+                Spark("dummy_table").select('c1')
+            ],
+            output=Schema([
+                Column('c1', Decimal(10, 2))
+            ])
+        )
+        def t1(dummy_table):
+            return dummy_table
+
+        df = t1.run(spark, parallel=False)
+        assert isinstance(df, pandas.DataFrame)
+
+    def test_conversion_to_pandas_on_spark(self, spark):
+
+        @node(
+            type="pyspark",
+            dependencies=[
+                Spark("dummy_table").select('c1')
+            ],
+            output=Schema([
+                Column('c1', Decimal(10, 2))
+            ])
+        )
+        def t1(dummy_table):
+            return dummy_table
+
+        @node(
+            type="pandas_on_spark",
+            dependencies=[
+                t1.select('c1')
+            ],
+            output=Schema([
+                Column('c1', Decimal(10, 2))
+            ])
+        )
+        def t2(t1):
+            return t1
+
+        df = t2.run(spark, parallel=False)
+        assert isinstance(df, pyspark.pandas.DataFrame)
+
+        @node(
+            type="pandas_on_spark",
+            dependencies=[
+                Spark("dummy_table").select('c1')
+            ],
+            output=Schema([
+                Column('c1', Decimal(10, 2))
+            ])
+        )
+        def t1(dummy_table):
+            return dummy_table
+
+        df = t1.run(spark, parallel=False)
+        assert isinstance(df, pyspark.pandas.DataFrame)
 

@@ -59,7 +59,6 @@ class Transformation:
     @property
     def __name__(self):
         """Return the name of the wrapped transformation rather than the name of the decorator object"""
-        print("===>",self.function.__name__.replace(".","_"))
         return self.function.__name__.replace(".","_")
 
     @property
@@ -235,7 +234,7 @@ class Transformation:
     def plot(self):
         self.node_graph.plot()
 
-    def html(self, width=-1, height=-1):
+    def html(self, width=-1, height=1000):
         self._create_graph()
         self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
         return GraphHTML.get(self.node_graph.graph, width=width, height=height)

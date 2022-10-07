@@ -19,13 +19,4 @@ class DataSource(ABC):
     - Quietly create a graph node for each different datasource defined in the node dependencies, such that if we print
     the graph for a transformation the datasources show up.
     """
-
-
-
-    @staticmethod
-    # @abstractmethod
-    def load(*args, **kwargs):
-        """
-        Abstract method to load data from a data source.
-        """
-        pass
+    pass

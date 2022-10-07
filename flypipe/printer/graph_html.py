@@ -28,6 +28,7 @@ class GraphHTML:
         html = index.read()
         index.close()
 
+        html = html.replace('<div class="text-center" style="height:1000px;">',f'<div class="text-center" style="height:{height}px;">')
 
         html = html.replace('<link rel="stylesheet" type="text/css" href="amsify.suggestags.css">',
                             f'<style>{open(os.path.join(dir_path, "amsify.suggestags.css")).read()}</style>')
@@ -51,7 +52,7 @@ class GraphHTML:
         return html
 
     @staticmethod
-    def get(graph, width=-1, height=-1):
+    def get(graph, width=-1, height=1000):
 
         root_node = [node[0] for node in graph.out_degree if node[1] == 0][0]
 

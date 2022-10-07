@@ -20,7 +20,6 @@ class Date(Type):
         with dates that datatype is of object, this fmt will help casting dates in string
     """
 
-    spark_data_type = DateType
     spark_type = DateType()
     pandas_type = np.dtype("<M8[ns]")
 
@@ -32,9 +31,9 @@ class Date(Type):
         return df
 
     def _cast_pandas(self, df, column: str):
-        df[column] = pd.to_datetime(df[column], format=self.fmt)
+        df[column] = pd.to_datetime(df[column], format=self.fmt).astype(self.pandas_type)
         return df
 
     def _cast_pandas_on_spark(self, df, column: str):
-        df[column] = ps.to_datetime(df[column], format=self.fmt)
+        df[column] = ps.to_datetime(df[column], format=self.fmt).astype(self.pandas_type)
         return df
