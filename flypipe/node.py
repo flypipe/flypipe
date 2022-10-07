@@ -59,6 +59,7 @@ class Transformation:
     @property
     def __name__(self):
         """Return the name of the wrapped transformation rather than the name of the decorator object"""
+        print("===>",self.function.__name__.replace(".","_"))
         return self.function.__name__.replace(".","_")
 
     @property
