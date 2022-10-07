@@ -42,7 +42,7 @@ class Spark(DataSource):
                 self.columns.append(column)
 
         func = partial(self.spark_datasource, table=self.table, columns=self.columns)
-        func.__name__ = self.table
+        func.__name__ = self.table.replace(".","_")
         node = datasource_node(type='pyspark',
                                description=f"Spark table {self.table}",
                                spark_context=True,
