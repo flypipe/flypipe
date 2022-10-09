@@ -8,13 +8,14 @@ from flypipe.schema.schema import Schema
 from tests.utils.spark import spark
 
 spark.sql("create database if not exists raw")
-spark.sql("create view raw.table as select 1 as col1, 2 as col2, 3 as col3, 4 as col4, 5 as col5")
+spark.sql("create view raw.table1 as select 1 as col1, 2 as col2, 3 as col3, 4 as col4, 5 as col5")
+spark.sql("create view raw.table2 as select 1 as col1, 2 as col2, 3 as col3, 4 as col4, 5 as col5")
 
 
 @node(
     type="pyspark",
     dependencies=[
-        Spark.table("raw.table").select('col1', 'col2', 'col3', 'col5')
+        Spark("raw.table1").select('col1', 'col2', 'col3', 'col5')
     ],
     output=Schema([
         Column('col1', Decimals(10, 2)),
@@ -25,7 +26,9 @@ def t1(table):
     return table
 
 @node(type='pandas',
-      dependencies=[t1.select('col3', 'col1')],
+      dependencies=[
+          t1.select('col3', 'col1'),
+      ],
       output=Schema([
           Column('col1', Integer()),
       ]))
@@ -57,9 +60,10 @@ def t4(t2, t3):
       dependencies=[
           t4.select('col1'),
           t1.select('col2'),
+          Spark("raw.table2").select('col1', 'col2'),
       ],
       output=Schema([Column('col3', Integer())]))
-def t5(t1):
+def t5(t1, raw_table2):
     return t1
 
 @node(type='pandas_on_spark',
@@ -74,7 +78,7 @@ def t6(t1):
 @node(
     type="pyspark",
     dependencies=[
-        Spark.table("raw.table").select('col2', 'col4')
+        Spark("raw.table1").select('col2', 'col4')
     ],
     output=Schema([
         Column('col2', Decimals(10, 2))
@@ -99,6 +103,5 @@ def t8(t4, t5, t6, t7):
 
 with open('test.html', 'w') as f:
     html = t8.inputs(t4=pd.DataFrame(data=[{'col1': [1]}])).html(width=-1, height=-1)
-    print(html)
     f.writelines(html)
 

@@ -4,6 +4,7 @@ import os
 import networkx as nx
 
 from flypipe.node_graph import RunStatus
+from flypipe.node_type import NodeType
 from flypipe.utils import DataFrameType
 
 
@@ -129,7 +130,12 @@ class GraphHTML:
                             for column in graph_node['output_schema'].columns
                     ]
 
+            if graph_node['node_type'] == NodeType.DATASOURCE:
+                node_attributes['definition']['query'] = {"table":  graph_node['name'],
+                                                             "columns": graph_node['selected_columns']}
+
             nodes.append(node_attributes)
+
 
 
         return GraphHTML.html(nodes, links, width=width, height=height)

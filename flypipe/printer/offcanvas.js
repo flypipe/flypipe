@@ -13,6 +13,34 @@ function show_offcanvas(title, body){
     bsOffcanvas.show();
 }
 
+function query_html(node){
+    body = ""
+    if (node.definition.hasOwnProperty('query')){
+        console.log(node.definition);
+        body += "<h6 class='mt-3'>" + node.definition.query.table + "</h6>";
+        body += "<code><div class='bg-light vstack gap-1 p-3'><div>SELECT</div>";
+        for (let i = 0; i < node.definition.query.columns.length; i++) {
+            body += "<div class='ms-3'>" +  node.definition.query.columns[i] + (i != node.definition.query.columns.length - 1? ',':'') + '</div>';
+        }
+        body += "<div>FROM " + node.definition.query.table + "</div></div></code>";
+
+    }
+
+    return body;
+}
+
+function show_raw_queries(nodes){
+    body = ""
+    for (let i = 0; i < nodes.length; i++) {
+        node = nodes[i];
+        body += query_html(node);
+
+    }
+    title = "Raw Queries";
+    show_offcanvas(title, body);
+
+}
+
 function show_transformation(node){
 
     if (typeof node === 'string' || node instanceof String) {
@@ -72,6 +100,12 @@ function show_transformation(node){
         body += '<li class="list-group-item"><a style="cursor: pointer;" class="link-dark" onclick="show_transformation(' + successor_ + ');">' + successor + '</a></li>';
     }
     body += '</ul>';
+
+    if (node.definition.hasOwnProperty('query')){
+        body += "<h5 class='mt-5 mb-3'>Raw query</h5>";
+        body += query_html(node);
+    }
+
 
     if (node.definition.columns.length > 0){
         body += "<h5 class='mt-5 mb-3'>Output Schema</h5>";

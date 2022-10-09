@@ -28,6 +28,7 @@ class NodeGraph:
         graph.add_node(
             node.__name__,
             name=node.__name__,
+            varname=node.__varname__,
             description=node.description,
             tags=node.tags,
             type=node.type,
@@ -43,6 +44,7 @@ class NodeGraph:
             for dependency in node.dependencies:
                 graph.add_node(dependency.__name__,
                                name=dependency.__name__,
+                               varname=dependency.__varname__,
                                description=dependency.description,
                                tags=dependency.tags,
                                type=dependency.type,

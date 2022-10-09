@@ -40,8 +40,8 @@ class TestSparkDataSource:
         @node(type='pyspark',
               dependencies=[Spark('dummy_table1').select('c1')],
               output=schema)
-        def t1(dummy_table):
-            return dummy_table
+        def t1(dummy_table1):
+            return dummy_table1
 
         df_expected = spark.createDataFrame(schema=('c1',), data=[(1,)])
         assert_pyspark_df_equal(df_expected, t1.run(spark, parallel=False))

@@ -19,18 +19,6 @@ class Spark(metaclass=SingletonMeta):
         self.columns = []
         self.func = None
 
-    # @classmethod
-    # def table(cls, table):
-    #     global instances
-    #     if table not in instances:
-    #         instances[table] = Spark(table)
-    #     return instances[table]
-
-    # @classmethod
-    # def get_instance(cls, table):
-    #     global instances
-    #     return instances[table]
-
     def select(self, *columns):
         if isinstance(columns[0], list):
             self.columns = list(dict.fromkeys(self.columns + columns[0]))
@@ -39,7 +27,7 @@ class Spark(metaclass=SingletonMeta):
                 self.columns.append(column)
         self.columns = sorted(list(set(self.columns)))
         func = partial(self.spark_datasource, table=self.table, columns=self.columns)
-        func.__name__ = self.table.replace(".","_")
+        func.__name__ = self.table
         node = datasource_node(type='pyspark',
                                description=f"Spark table {self.table}",
                                spark_context=True,

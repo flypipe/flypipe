@@ -22,6 +22,9 @@
     .link-inactive{
        stroke-dasharray: 5,5;
     }
+    .tab {
+        tab-size: 2;
+    }
   </style>
 </head>
 <body>
@@ -41,7 +44,7 @@
                 Actions
               </a>
               <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">Raw Queries</a></li>
+                <li><a class="dropdown-item" style="cursor: pointer" onclick="show_raw_queries(nodes);">Raw Queries</a></li>
               </ul>
             </li>
           </ul>

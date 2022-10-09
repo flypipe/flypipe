@@ -24,9 +24,6 @@ class SingletonMeta(type):
         # previous conditional and reach this point almost at the same time. The
         # first of them will acquire lock and will proceed further, while the
         # rest will wait here.
-        # print()
-        # print(args)
-        # print(kwargs)
         with cls._lock:
             # The first thread to acquire the lock, reaches this conditional,
             # goes inside and creates the Singleton instance. Once it leaves the
