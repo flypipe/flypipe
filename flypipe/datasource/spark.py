@@ -1,12 +1,13 @@
 from functools import partial
 
 from flypipe.datasource.datasource import DataSource
+from flypipe.datasource.singleton import SingletonMeta
 from flypipe.node import datasource_node
 
-instances = {}
+# instances = {}
 
 
-class Spark(DataSource):
+class Spark(metaclass=SingletonMeta):
     """
     Abstract class to connect to Spark Datasource
 
@@ -18,17 +19,17 @@ class Spark(DataSource):
         self.columns = []
         self.func = None
 
-    @classmethod
-    def table(cls, table):
-        global instances
-        if table not in instances:
-            instances[table] = Spark(table)
-        return instances[table]
+    # @classmethod
+    # def table(cls, table):
+    #     global instances
+    #     if table not in instances:
+    #         instances[table] = Spark(table)
+    #     return instances[table]
 
-    @classmethod
-    def get_instance(cls, table):
-        global instances
-        return instances[table]
+    # @classmethod
+    # def get_instance(cls, table):
+    #     global instances
+    #     return instances[table]
 
     def select(self, *columns):
         if isinstance(columns[0], list):
@@ -36,7 +37,7 @@ class Spark(DataSource):
         else:
             for column in columns:
                 self.columns.append(column)
-
+        self.columns = sorted(list(set(self.columns)))
         func = partial(self.spark_datasource, table=self.table, columns=self.columns)
         func.__name__ = self.table.replace(".","_")
         node = datasource_node(type='pyspark',

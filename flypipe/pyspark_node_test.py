@@ -97,7 +97,7 @@ class TestPySparkNode:
 
     def test_end_to_end_full(self, spark):
         @node(type='pyspark',
-              dependencies=[Spark('dummy_table').select('c1')],
+              dependencies=[Spark('dummy_table').select('c1', 'c2')],
               output=Schema([
                   Column('c1', Decimals(16, 2)),
                   Column('c2', Decimals(16, 2))
@@ -114,7 +114,6 @@ class TestPySparkNode:
             return t1.withColumn('c1', t1.c1 + 1)
 
         expected_df = spark.createDataFrame(schema=('c1',), data=[(2,)])
-
         assert_pyspark_df_equal(t2.run(spark, parallel=False), expected_df)
 
     def test_skip_upstream(self, spark):
@@ -146,12 +145,11 @@ class TestPySparkNode:
             return a.withColumn('c1', a.c1 + 1)
 
         @node(type='pyspark',
-              dependencies=[Spark('dummy_table').select('c1')],
+              dependencies=[],
               output=Schema([
-                  Column('c1', Decimals(16, 2)),
-                  Column('c2', Decimals(16, 2))
+                  Column('c1', Decimals(16, 2))
               ]))
-        def d(dummy_table):
+        def d():
             return spark.createDataFrame(schema=('c1',), data=[(6,), (7,)])
 
         @node(type='pyspark',
@@ -197,7 +195,7 @@ class TestPySparkNode:
         @node(
             type="pyspark",
             dependencies=[
-                Spark.table("dummy_table").select('c1')
+                Spark("dummy_table").select('c1')
             ],
             output=Schema([
                 Column('c1', Decimals(10, 2))
@@ -209,7 +207,7 @@ class TestPySparkNode:
         @node(
             type="pyspark",
             dependencies=[
-                Spark.table("dummy_table").select('c2')
+                Spark("dummy_table").select('c2')
             ],
             output=Schema([
                 Column('c2', Decimals(10, 2))
@@ -229,10 +227,10 @@ class TestPySparkNode:
         def t3(t1, t2):
             return t1.join(t2)
 
-        func_name = Spark.get_instance('dummy_table').func.function.__name__
-        spy = mocker.spy(Spark.get_instance('dummy_table').func, 'function')
+        func_name = Spark('dummy_table').func.function.__name__
+        spy = mocker.spy(Spark('dummy_table').func, 'function')
         # Filthy hack to stop the spy removing the __name__ attribute from the function
-        Spark.get_instance('dummy_table').func.function.__name__ = func_name
+        Spark('dummy_table').func.function.__name__ = func_name
 
         t3.run(spark, parallel=False)
         spy.assert_called_once()

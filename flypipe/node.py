@@ -98,6 +98,7 @@ class Transformation:
     def _run_sequential(self, spark=None):
         outputs = {k: DataframeWrapper(spark, df, schema=None) for k, df in self._provided_inputs.items()}
         node_graph = self.node_graph.copy()
+
         while not node_graph.is_empty():
             nodes = node_graph.pop_runnable_nodes()
             for node in nodes:
@@ -111,6 +112,7 @@ class Transformation:
                 result = self.process_transformation(spark, node['transformation'], **node_dependencies)
 
                 outputs[node['name']] = DataframeWrapper(spark, result, node['transformation'].output_schema)
+
         return outputs[self.__name__].as_type(self.type)
 
     def _run_parallel(self, node_graph, spark=None):
@@ -227,6 +229,7 @@ class Transformation:
             parameters = {'spark': spark, **inputs}
         else:
             parameters = inputs
+
         return transformation.function(**parameters)
 
     def plot(self):

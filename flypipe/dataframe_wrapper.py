@@ -20,10 +20,18 @@ class DataframeWrapper:
         self.type = dataframe_type(df)
         if self.type == DataFrameType.PANDAS:
             self.pandas_data = df
+            if self.schema:
+                self.pandas_data = self.pandas_data[[col.name for col in self.schema.columns]]
+
         elif self.type == DataFrameType.PYSPARK:
             self.pyspark_data = df
+            if self.schema:
+                self.pyspark_data = self.pyspark_data.select([col.name for col in self.schema.columns])
+
         elif self.type == DataFrameType.PANDAS_ON_SPARK:
             self.pandas_on_spark_data = df
+            if self.schema:
+                self.pandas_on_spark_data = self.pandas_on_spark_data[[col.name for col in self.schema.columns]]
         else:
             raise ValueError(f'Type {self.type} not supported')
 
