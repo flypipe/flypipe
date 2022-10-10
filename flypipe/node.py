@@ -57,12 +57,12 @@ class Transformation:
     @property
     def __name__(self):
         """Return the name of the wrapped transformation rather than the name of the decorator object"""
-        return self.function.__name__
+        return self.__varname__.replace(".", "_")
 
     @property
     def __varname__(self):
         """Return the variable name of the wrapped transformation rather than the name of the decorator object"""
-        return self.__name__.replace(".", "_")
+        return self.function.__name__
 
     @property
     def __doc__(self):
@@ -82,7 +82,7 @@ class Transformation:
 
     def inputs(self, **kwargs):
         for k, v in kwargs.items():
-            self._provided_inputs[k] = v
+            self._provided_inputs[k.replace(".","_")] = v
 
         return self
 
@@ -94,6 +94,7 @@ class Transformation:
 
     def run(self, spark=None, parallel=True):
         self._create_graph()
+
         self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
         if parallel:
             return self._run_parallel(spark)
@@ -107,18 +108,18 @@ class Transformation:
         while not node_graph.is_empty():
             nodes = node_graph.pop_runnable_nodes()
             for node in nodes:
-                if node['varname'] in outputs:
+                if node['name'] in outputs:
                     continue
 
                 node_dependencies = {}
                 for input_transformation in node['transformation'].dependencies:
-                    node_dependencies[input_transformation.__varname__] = outputs[input_transformation.__varname__].as_type(node['transformation'].type)
+                    node_dependencies[input_transformation.__name__] = outputs[input_transformation.__name__].as_type(node['transformation'].type)
 
                 result = self.process_transformation(spark, node['transformation'], **node_dependencies)
 
-                outputs[node['varname']] = DataframeWrapper(spark, result, node['transformation'].output_schema)
+                outputs[node['name']] = DataframeWrapper(spark, result, node['transformation'].output_schema)
 
-        return outputs[self.__varname__].as_type(self.type)
+        return outputs[self.__name__].as_type(self.type)
 
     def _run_parallel(self, node_graph, spark=None):
         # TODO- fix this to run with the new style, see _run_sequential for the correct way of doing things

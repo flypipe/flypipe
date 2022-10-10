@@ -87,15 +87,19 @@ class GraphHTML:
             source = graph.nodes[edge[0]]
             target = graph.nodes[edge[1]]
             edge_data = graph.get_edge_data(edge[0], edge[1])
+
             links.append({'source': source['name'],
                           'source_position': nodes_position[source['name']],
                           'source_selected_columns': edge_data['selected_columns'],
                           'target': target['name'],
                           'target_position': nodes_position[target['name']],
                           'active': (not (
-                              (source['run_status'] == RunStatus.SKIP and
+                              (
+                               source['run_status'] == RunStatus.SKIP and
                                target['run_status'] == RunStatus.SKIP)
-                               or target['run_status'] == RunStatus.SKIP)
+                               or target['run_status'] == RunStatus.SKIP
+                               or (source['run_status'] == RunStatus.SKIP)
+                               )
                                      )})
 
         nodes = []
@@ -104,7 +108,8 @@ class GraphHTML:
             tags = [node, graph_node['type'].value, graph_node['node_type'].value] + graph_node['tags']
 
             node_attributes = {
-                'name': node,
+                'name': graph_node['name'],
+                'varname': graph_node['varname'],
                 'position': position,
                 'active': RunStatus.ACTIVE == graph_node['run_status'],
                 'run_status': GraphHTML.CSS_MAP[graph_node['run_status']],
@@ -140,11 +145,9 @@ class GraphHTML:
                     for column in graph_node['selected_columns']
                 ]
 
-                node_attributes['definition']['query'] = {"table":  graph_node['name'],
+                node_attributes['definition']['query'] = {"table":  graph_node['varname'],
                                                              "columns": graph_node['selected_columns']}
 
             nodes.append(node_attributes)
-
-
 
         return GraphHTML.html(nodes, links, width=width, height=height)

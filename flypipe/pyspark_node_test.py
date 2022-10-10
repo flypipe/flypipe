@@ -116,6 +116,36 @@ class TestPySparkNode:
         expected_df = spark.createDataFrame(schema=('c1',), data=[(2,)])
         assert_pyspark_df_equal(t2.run(spark, parallel=False), expected_df)
 
+    def test_skip_datasource(self, spark, mocker):
+        """
+        When we provide a dependency input to a node, not only does that node not need to be run but we also expect any
+        dependencies of the provided node not to be run.
+
+        When t1 has a dependency to a datasource and it is provided then datasource should not run
+
+        """
+
+        @node(type='pyspark',
+              dependencies=[Spark('dummy_table').select('c1')],
+              output=Schema([
+                  Column('c1', Decimals(16, 2)),
+                  Column('c2', Decimals(16, 2))
+              ]))
+        def t1(dummy_table):
+            return dummy_table
+
+        func_name = Spark('dummy_table').func.function.__name__
+        spy = mocker.spy(Spark('dummy_table').func, 'function')
+        # Filthy hack to stop the spy removing the __name__ attribute from the function
+        Spark('dummy_table').func.function.__name__ = func_name
+
+        df = spark.createDataFrame(schema=('c1', 'c2', 'c3'), data=[(1, 2, 3)])
+        output_df = t1.inputs(dummy_table=df).run(spark, parallel=False)
+        spy.assert_not_called()
+        assert_pyspark_df_equal(output_df,
+                                spark.createDataFrame(schema=('c1', 'c2',), data=[(1, 2,)]))
+
+
     def test_skip_upstream(self, spark):
         """
         When we provide a dependency input to a node, not only does that node not need to be run but we also expect any

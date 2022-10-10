@@ -195,8 +195,6 @@ var tooltip = d3.select("body")
     .text("a simple tooltip");
 
 function suppress_link(d,i){
-    console.log('suppress_link');
-    console.log(d,i);
     d3.selectAll('path.link')
       .filter(function(d_, i) {
         return d_['source'] == d['source'] & d_['target'] == d['target'];

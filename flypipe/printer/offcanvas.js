@@ -16,7 +16,7 @@ function show_offcanvas(title, body){
 function query_html(node){
     body = ""
     if (node.definition.hasOwnProperty('query')){
-        console.log(node.definition);
+
         body += "<h6 class='mt-3'>" + node.definition.query.table + "</h6>";
         body += "<code><div class='bg-light vstack gap-1 p-3'><div>SELECT</div>";
         for (let i = 0; i < node.definition.query.columns.length; i++) {
@@ -80,6 +80,7 @@ function show_transformation(node){
         dependency_ = "'" + dependency + "'";
         body += '<li class="list-group-item"><a style="cursor: pointer;" class="link-dark" onclick="show_transformation(' + dependency_ + ');">' + dependency + '</a></li>';
         link = get_link(dependency, node.name);
+
         for (let i = 0; i < link.source_selected_columns.length; i++) {
             selected_column = link.source_selected_columns[i];
             body += '<li class="list-group-item"><span class="ms-3">' + selected_column + '</span></li>';

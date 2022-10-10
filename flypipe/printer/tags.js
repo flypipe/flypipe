@@ -1,5 +1,5 @@
 function action_tag(tag, action){
-    console.log(tag, action);
+
     if (action == 'highlight') {
         for (let i = 0; i < nodes.length; i++) {
             node = nodes[i];
