@@ -36,7 +36,7 @@ const link_color = "#999";
 const highlight_color = "black";
 const circle_radius = 6;
 const font_size = 16;
-const stroke_width = 10;
+const stroke_width = 3;
 const circle_stroke = 1;
 
 // Setting Canvas and SVG
@@ -45,7 +45,7 @@ const canvas = d3.select(".canvas");
 const svg = canvas.append('svg')
                   .attr('height', view_port_height)
                   .attr('width', view_port_width)
-                  .attr("class","bg-light");
+                  ;
 
 var g = svg.append("g");
 
@@ -85,6 +85,8 @@ d3.select("g")
       .attr("target", d => d.target)
       .attr('marker-end','url(#arrowhead)')
       .attr("id", d => link_id(d.source, d.target))
+      .attr("cursor", "pointer")
+      .attr("stroke-width", stroke_width)
       .attr("class", function(d) {
         if (d.active) {
             return "link link-active";
@@ -92,7 +94,9 @@ d3.select("g")
         else{
             return "link link-inactive";
         }
-    });
+      })
+      .on('mouseover', function (d, i) { highlight_link(d,i); })
+      .on('mouseout', function (d, i) { suppress_link(d,i); });
 
 // Adding Markers
 d3.select("svg")
@@ -103,12 +107,12 @@ d3.select("svg")
     .attr('refX', 13)
     .attr('refY', 0)
     .attr('orient', 'auto')
-    .attr('markerWidth', 10)
-    .attr('markerHeight', 10)
+    .attr('markerWidth', 3)
+    .attr('markerHeight', 3)
     .attr('xoverflow', 'visible')
     .attr('fill', link_color)
     .style('stroke','none')
-    .attr("stroke-width", stroke_width)
+    .attr("stroke-width", 1)
     .append('path')
     .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
     ;
@@ -164,6 +168,14 @@ var zoom = d3.zoom()
 
 svg.call(zoom);
 
+function mouse_position(){
+    var coordinates= d3.mouse(this);
+    var x = coordinates[0];
+    var y = coordinates[1];
+
+
+    return [x, y];
+}
 
 function suppress(d,i){
     d3.selectAll('path.link')
@@ -171,6 +183,84 @@ function suppress(d,i){
         return d_['source'] == d['name'] | d_['target'] == d['name'];
       })
       .attr("stroke", link_color);
+}
+
+var tooltip = d3.select("body")
+    .append("div")
+    .attr("id", "tooltip")
+    .style("position", "absolute")
+    .style("z-index", "10")
+    .style("visibility", "hidden")
+    .attr("class", "text-bg-light p-3")
+    .text("a simple tooltip");
+
+function suppress_link(d,i){
+    console.log('suppress_link');
+    console.log(d,i);
+    d3.selectAll('path.link')
+      .filter(function(d_, i) {
+        return d_['source'] == d['source'] & d_['target'] == d['target'];
+      })
+      .attr("stroke", link_color);
+
+    d3.select("#tooltip")
+      .style("visibility", "hidden");
+}
+
+function highlight_link(d,i){
+
+    d3.selectAll('path.link')
+      .filter(function(d_, i) {
+            return d_['source'] == d['source'] & d_['target'] == d['target'];
+      })
+      .attr("stroke", highlight_color)
+      ;
+
+
+    var source;
+
+    for (let i = 0; i < nodes.length; i++) {
+        node = nodes[i];
+        if (node.name == d['source']){
+            source = node;
+            break;
+        }
+    }
+
+    source_target_columns = {};
+    for (let i = 0; i < source.definition.columns.length; i++) {
+      source_column = source.definition.columns[i]['name'];
+      source_target_columns[source_column] = d.source_selected_columns.includes(source_column);
+    }
+
+
+    matches = "";
+    for (const [key, value] of Object.entries(source_target_columns)) {
+        matches += "<tr><td>" + key + "</td>";
+        matches += "<td>" + (value? '<i class="fa fa-long-arrow-right" aria-hidden="true"></i>': "") + "</td>";
+        matches += "<td>" + (value? key: "") + "</td></tr>";
+    }
+    text = `
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">` + d['source'] + `</th>
+          <th scope="col"></th>
+          <th scope="col">` + d['target'] + `</th>
+        </tr>
+      </thead>
+      <tbody>`
+      + matches +
+      `</tbody></table>`;
+
+
+
+    d3.select("#tooltip")
+      .style("left", (d3.event.x + 20) + "px")
+      .style("top", (d3.event.y + 5) + "px")
+      .style("visibility", "visible")
+      .html(text);
+
 }
 
 function highlight_path(d,i){

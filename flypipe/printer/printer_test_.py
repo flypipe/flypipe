@@ -83,14 +83,14 @@ def t6(t1):
     output=Schema([
         Column('col2', Decimals(10, 2))
     ]))
-def t7(table):
-    return table
+def t7(raw_table1):
+    return raw_table1
 
 @node(type='pandas',
       dependencies=[
           t4.select('col1'),
           t6.select('col4'),
-          t5.select('col2'),
+          t5.select('col3'),
           t7.select('col2'),
       ],
       output=Schema([Column('col1', Integer())]))

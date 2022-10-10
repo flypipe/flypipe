@@ -52,7 +52,9 @@ class NodeGraph:
                                node_type=dependency.node_type,
                                run_status=RunStatus.UNKNOWN,
                                output_schema=dependency.output_schema)
-                graph.add_edge(dependency.__name__, node.__name__, selected_columns=node.dependencies_selected_columns[dependency.__name__])
+                graph.add_edge(dependency.__name__,
+                               node.__name__,
+                               selected_columns=node.dependencies_selected_columns[dependency.__name__])
                 graph = nx.compose(graph, self._build_graph(dependency))
 
         return graph

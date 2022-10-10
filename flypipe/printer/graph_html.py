@@ -78,7 +78,7 @@ class GraphHTML:
             for i, node in enumerate(nodes_depth[depth]):
 
                 x = float(depth)
-                y = float(round((i+1) * padding, 2))
+                y = float(round((i+1) * padding, 2)) - (2.5 if depth % 2 == 0 else 0.0)
                 nodes_position[node] = [x, y]
 
         links = []
@@ -87,7 +87,6 @@ class GraphHTML:
             source = graph.nodes[edge[0]]
             target = graph.nodes[edge[1]]
             edge_data = graph.get_edge_data(edge[0], edge[1])
-
             links.append({'source': source['name'],
                           'source_position': nodes_position[source['name']],
                           'source_selected_columns': edge_data['selected_columns'],
@@ -131,6 +130,16 @@ class GraphHTML:
                     ]
 
             if graph_node['node_type'] == NodeType.DATASOURCE:
+
+                node_attributes['definition']['columns'] = [
+                    {
+                        'name': column,
+                        'type': None,
+                        'description': None
+                    }
+                    for column in graph_node['selected_columns']
+                ]
+
                 node_attributes['definition']['query'] = {"table":  graph_node['name'],
                                                              "columns": graph_node['selected_columns']}
 

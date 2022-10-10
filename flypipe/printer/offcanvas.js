@@ -114,11 +114,13 @@ function show_transformation(node){
         column = node.definition.columns[i];
         body += '<p class="fw-bold text-start">' +
                     column.name +
-                    '<span class="badge rounded-pill text-bg-secondary float-end">' + column.type + '</span>' +
+
+                    (column.type ? '<span class="badge rounded-pill text-bg-secondary float-end">' + column.type + '</span>' : '') +
                 '</p>' +
-                '<p class="fw-lighter font-monospace mb-5">' +
-                column.description +
-                '</p>';
+
+                (column.description ?
+                    ('<p class="fw-lighter font-monospace mb-5">' + column.description + '</p>')
+                    :'');
     }
 
     show_offcanvas(title, body);
