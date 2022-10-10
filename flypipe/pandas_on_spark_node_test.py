@@ -31,7 +31,7 @@ class TestPandasOnSparkNode:
                 Spark("dummy_table").select('c1')
             ],
             output=Schema([
-                Column('c1', Decimals(10, 2))
+                Column('c1', Decimals(10, 2), 'dummy')
             ])
         )
         def t1(dummy_table):
@@ -46,7 +46,7 @@ class TestPandasOnSparkNode:
                 t1.select('c1')
             ],
             output=Schema([
-                Column('c1', Decimals(10, 2))
+                Column('c1', Decimals(10, 2), 'dummy')
             ])
         )
         def t2(t1):
@@ -64,7 +64,7 @@ class TestPandasOnSparkNode:
                 Spark("dummy_table").select('c1')
             ],
             output=Schema([
-                Column('c1', Decimals(10, 2))
+                Column('c1', Decimals(10, 2), 'dummy')
             ])
         )
         def t1(dummy_table):
@@ -76,7 +76,7 @@ class TestPandasOnSparkNode:
                 t1.select('c1')
             ],
             output=Schema([
-                Column('c1', Decimals(10, 2))
+                Column('c1', Decimals(10, 2), 'dummy')
             ])
         )
         def t2(t1):

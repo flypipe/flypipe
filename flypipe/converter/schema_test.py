@@ -41,10 +41,10 @@ class TestSchemaConverter:
 
         schema = Schema(
             [
-                Column("name", String()),
-                Column("age", Integer()),
-                Column("balance", Decimals(6,2)),
-                Column("birth", Date(fmt="%m%d%Y")),
+                Column("name", String(), 'dummy'),
+                Column("age", Integer(), 'dummy'),
+                Column("balance", Decimals(6,2), 'dummy'),
+                Column("birth", Date(fmt="%m%d%Y"), 'dummy'),
             ]
         )
 
@@ -68,10 +68,10 @@ class TestSchemaConverter:
     def test_convert_pypsark(self, spark, pyspark_df):
         schema = Schema(
             [
-                Column("name", String()),
-                Column("age", Integer()),
-                Column("balance", Decimals(6, 2)),
-                Column("birth", Date(fmt="MMddyyyy")),
+                Column("name", String(), 'dummy'),
+                Column("age", Integer(), 'dummy'),
+                Column("balance", Decimals(6, 2), 'dummy'),
+                Column("birth", Date(fmt="MMddyyyy"), 'dummy'),
             ]
         )
 

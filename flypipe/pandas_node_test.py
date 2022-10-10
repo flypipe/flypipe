@@ -23,7 +23,7 @@ class TestPandasOnSparkNode:
         @node(
             type="pandas_on_spark",
             output=Schema([
-                Column('c1', Decimals(10, 2))
+                Column('c1', Decimals(10, 2), 'dummy')
             ])
         )
         def t1():
@@ -38,7 +38,7 @@ class TestPandasOnSparkNode:
         @node(
             type="pyspark",
             output=Schema([
-                Column('c1', Decimals(10, 2))
+                Column('c1', Decimals(10, 2), 'dummy')
             ])
         )
         def t1():

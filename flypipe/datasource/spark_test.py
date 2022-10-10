@@ -34,7 +34,7 @@ def spark():
 class TestSparkDataSource:
     def test_load(self, spark):
         schema = Schema([
-                  Column('c1', Decimals(16, 2))
+                  Column('c1', Decimals(16, 2), 'dummy')
                  ])
 
         @node(type='pyspark',
@@ -50,7 +50,7 @@ class TestSparkDataSource:
         @node(type='pyspark',
               dependencies=[Spark('dummy_table1').select('c0')],
               output=Schema([
-                  Column('c0', Decimals(16, 2))])
+                  Column('c0', Decimals(16, 2), 'dummy')])
               )
         def t0(dummy_table1):
             return dummy_table1
@@ -58,7 +58,7 @@ class TestSparkDataSource:
         @node(type='pyspark',
               dependencies=[Spark('dummy_table1').select('c1')],
               output=Schema([
-                  Column('c1', Decimals(16, 2))])
+                  Column('c1', Decimals(16, 2), 'dummy')])
               )
         def t1(dummy_table1):
             return dummy_table1
@@ -66,7 +66,7 @@ class TestSparkDataSource:
         @node(type='pyspark',
               dependencies=[Spark('dummy_table2').select('c2')],
               output=Schema([
-                  Column('c2', Decimals(16, 2))])
+                  Column('c2', Decimals(16, 2), 'dummy')])
               )
         def t2(dummy_table2):
             return dummy_table2
@@ -74,7 +74,7 @@ class TestSparkDataSource:
         @node(type='pyspark',
               dependencies=[Spark('dummy_table3').select('c3')],
               output=Schema([
-                  Column('c3', Decimals(16, 2))])
+                  Column('c3', Decimals(16, 2), 'dummy')])
               )
         def t3(dummy_table3):
             return dummy_table3
@@ -87,10 +87,10 @@ class TestSparkDataSource:
                   t3.select('c3'),
               ],
               output=Schema([
-                  Column('c0', Decimals(16, 2)),
-                  Column('c1', Decimals(16, 2)),
-                  Column('c2', Decimals(16, 2)),
-                  Column('c3', Decimals(16, 2)),
+                  Column('c0', Decimals(16, 2), 'dummy'),
+                  Column('c1', Decimals(16, 2), 'dummy'),
+                  Column('c2', Decimals(16, 2), 'dummy'),
+                  Column('c3', Decimals(16, 2), 'dummy'),
                   ])
               )
         def t4(t0, t1, t2, t3):
