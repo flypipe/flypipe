@@ -15,7 +15,7 @@ class GraphHTML:
         DataFrameType.PYSPARK: {'shape': 'circle', 'bg-class': 'danger', 'bg-color': '#dc3545', 'text': DataFrameType.PYSPARK.value},
         DataFrameType.PANDAS_ON_SPARK: {'shape': 'circle', 'bg-class': 'warning', 'bg-color': '#ffc107', 'text': DataFrameType.PANDAS_ON_SPARK.value},
 
-        RunStatus.ACTIVE: {'bg-class': 'success', 'bg-color': '#198754', 'text': 'ACTIVE'},
+        RunStatus.ACTIVE: {'bg-class': 'info', 'bg-color': '#0dcaf0', 'text': 'ACTIVE'},
         RunStatus.SKIP: {'bg-class': 'dark', 'bg-color': '#212529', 'text': 'SKIPPED'},
     }
 
