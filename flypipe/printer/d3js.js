@@ -157,7 +157,7 @@ d3.select("g")
   .attr("y", function(d) {
         return yScale(d.position[1]) - circle_radius - 5;
         })
-  .text(d => d.name)
+  .text(d => d.varname)
     ;
 
 var zoom = d3.zoom()
