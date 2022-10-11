@@ -85,4 +85,3 @@ class TestPandasOnSparkNode:
         df = t2.run(spark, parallel=False)
         assert isinstance(df, pandas.DataFrame)
 
-

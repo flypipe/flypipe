@@ -54,13 +54,13 @@ class GraphHTML:
         return html
 
     @staticmethod
-    def get(graph, width=-1, height=1000):
-
+    def _nodes_position(graph):
         root_node = [node[0] for node in graph.out_degree if node[1] == 0][0]
 
         nodes_depth = {}
         for node in graph:
-            depth = len(max(list(nx.all_simple_paths(graph, node, root_node)), key=lambda x: len(x), default=[root_node]))
+            depth = len(
+                max(list(nx.all_simple_paths(graph, node, root_node)), key=lambda x: len(x), default=[root_node]))
 
             if depth not in nodes_depth:
                 nodes_depth[depth] = [node]
@@ -69,17 +69,23 @@ class GraphHTML:
 
         max_depth = max(nodes_depth.keys())
 
-        nodes_depth = {-1*k+max_depth+1: v for k,v in nodes_depth.items()}
+        nodes_depth = {-1 * k + max_depth + 1: v for k, v in nodes_depth.items()}
 
         nodes_position = {}
         for depth in sorted(nodes_depth.keys()):
-            padding = 100/(len(nodes_depth[depth]) + 1)
+            padding = 100 / (len(nodes_depth[depth]) + 1)
 
             for i, node in enumerate(nodes_depth[depth]):
-
                 x = float(depth)
-                y = float(round((i+1) * padding, 2)) - (2.5 if depth % 2 == 0 else 0.0)
+                y = float(round((i + 1) * padding, 2)) - (2.5 if depth % 2 == 0 else 0.0)
                 nodes_position[node] = [x, y]
+
+        return nodes_position
+
+    @staticmethod
+    def get(graph, width=-1, height=1000):
+
+        nodes_position = GraphHTML._nodes_position(graph)
 
         links = []
         for edge in graph.edges:
@@ -88,11 +94,11 @@ class GraphHTML:
             target = graph.nodes[edge[1]]
             edge_data = graph.get_edge_data(edge[0], edge[1])
 
-            links.append({'source': source['name'],
-                          'source_position': nodes_position[source['name']],
+            links.append({'source': source['transformation'].__name__,
+                          'source_position': nodes_position[source['transformation'].__name__],
                           'source_selected_columns': edge_data['selected_columns'],
-                          'target': target['name'],
-                          'target_position': nodes_position[target['name']],
+                          'target': target['transformation'].__name__,
+                          'target_position': nodes_position[target['transformation'].__name__],
                           'active': (not (
                               (
                                source['run_status'] == RunStatus.SKIP and
@@ -103,38 +109,44 @@ class GraphHTML:
                                      )})
 
         nodes = []
-        for node, position in nodes_position.items():
-            graph_node = graph.nodes[node]
-            tags = [node, graph_node['type'].value, graph_node['node_type'].value] + graph_node['tags']
+        for node_name, position in nodes_position.items():
+            graph_node = graph.nodes[node_name]
+            tags = (
+                [
+                    node_name,
+                    graph_node['transformation'].type.value,
+                    graph_node['transformation'].node_type.value
+                ] + graph_node['transformation'].tags
+            )
 
             node_attributes = {
-                'name': graph_node['name'],
-                'varname': graph_node['varname'],
+                'name': graph_node['transformation'].__name__,
+                'varname': graph_node['transformation'].__varname__,
                 'position': position,
                 'active': RunStatus.ACTIVE == graph_node['run_status'],
                 'run_status': GraphHTML.CSS_MAP[graph_node['run_status']],
-                'type': GraphHTML.CSS_MAP[graph_node['type']],
-                'node_type': graph_node['node_type'].value,
-                'dependencies': sorted(list(graph.predecessors(node))),
-                'successors': sorted(list(graph.successors(node))),
+                'type': GraphHTML.CSS_MAP[graph_node['transformation'].type],
+                'node_type': graph_node['transformation'].node_type.value,
+                'dependencies': sorted(list(graph.predecessors(node_name))),
+                'successors': sorted(list(graph.successors(node_name))),
                 'definition': {
-                    'description': graph_node['description'],
+                    'description': graph_node['transformation'].description,
                     'tags': tags,
                     'columns': [],
                 }
             }
 
-            if graph_node['output_schema']:
+            if graph_node['transformation'].output_schema:
                 node_attributes['definition']['columns'] = [
                         {
                             'name': column.name,
                             'type': column.type.__class__.__name__,
                             'description': column.description
                         }
-                            for column in graph_node['output_schema'].columns
+                            for column in graph_node['transformation'].output_schema.columns
                     ]
 
-            if graph_node['node_type'] == NodeType.DATASOURCE:
+            if graph_node['transformation'].node_type == NodeType.DATASOURCE:
 
                 node_attributes['definition']['columns'] = [
                     {
@@ -142,11 +154,13 @@ class GraphHTML:
                         'type': None,
                         'description': None
                     }
-                    for column in graph_node['selected_columns']
+                    for column in graph_node['transformation'].selected_columns
                 ]
 
-                node_attributes['definition']['query'] = {"table":  graph_node['varname'],
-                                                             "columns": graph_node['selected_columns']}
+                node_attributes['definition']['query'] = {
+                    "table":  graph_node['transformation'].__varname__,
+                    "columns": graph_node['transformation'].selected_columns
+                }
 
             nodes.append(node_attributes)
 
