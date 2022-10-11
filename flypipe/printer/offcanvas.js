@@ -32,9 +32,7 @@ function query_html(node){
 function show_raw_queries(nodes){
     body = ""
     for (let i = 0; i < nodes.length; i++) {
-        node = nodes[i];
-        body += query_html(node);
-
+        body += query_html(nodes[i]);
     }
     title = "Raw Queries";
     show_offcanvas(title, body);
@@ -44,12 +42,7 @@ function show_raw_queries(nodes){
 function show_transformation(node){
 
     if (typeof node === 'string' || node instanceof String) {
-        for (let i = 0; i < nodes.length; i++) {
-            if (nodes[i].name == node){
-                node = nodes[i];
-                break;
-            }
-        }
+        node = nodes_map[node];
     }
 
     title = node.node_type;

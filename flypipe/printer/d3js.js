@@ -1,3 +1,29 @@
+// variables
+var nodes_map = {};
+
+for (let i = 0; i < nodes.length; i++) {
+    node = nodes[i];
+    nodes_map[node.name] = node;
+}
+
+var links_map = {};
+
+for (let i = 0; i < links.length; i++) {
+    link = links[i];
+    links_map[link.source + "-" + link.target] = link;
+}
+
+let highlighted_nodes = new Set();
+const view_port_width = getWidth();
+const view_port_height = getHeight();
+const link_color = "#999";
+const highlight_color = "black";
+const circle_radius = 6;
+const font_size = 16;
+const stroke_width = 3;
+const circle_stroke = 1;
+
+
 // Settings
 function getWidth() {
   return Math.max(
@@ -22,22 +48,9 @@ function getHeight() {
 }
 
 function get_link(source_name, target_name){
-    for (let i = 0; i < links.length; i++) {
-        link = links[i];
-        if (link.source == source_name & link.target == target_name){
-            return link
-        }
-    }
+    return links_map[source_name + "-" + target_name];
 }
 
-const view_port_width = getWidth();
-const view_port_height = getHeight();
-const link_color = "#999";
-const highlight_color = "black";
-const circle_radius = 6;
-const font_size = 16;
-const stroke_width = 3;
-const circle_stroke = 1;
 
 // Setting Canvas and SVG
 const canvas = d3.select(".canvas");
@@ -132,11 +145,7 @@ d3.select("g")
     .attr("cursor", "pointer")
     .style("stroke", "black")
     .style("stroke-width", circle_stroke)
-    .call(d3.drag()
-        .on('start', dragStart)
-        .on('drag', dragging)
-        .on('end', dragEnd)
-      )
+    .call(d3.drag().on('drag', dragging))
     .on('mouseover', function (d, i) { highlight_path(d,i); })
     .on('mouseout', function (d, i) { suppress(d,i); })
     .on('click', function(d,i){ show_transformation(d);  });
@@ -173,7 +182,6 @@ function mouse_position(){
     var x = coordinates[0];
     var y = coordinates[1];
 
-
     return [x, y];
 }
 
@@ -205,6 +213,8 @@ function suppress_link(d,i){
       .style("visibility", "hidden");
 }
 
+
+
 function highlight_link(d,i){
 
     d3.selectAll('path.link')
@@ -214,23 +224,13 @@ function highlight_link(d,i){
       .attr("stroke", highlight_color)
       ;
 
-
-    var source;
-
-    for (let i = 0; i < nodes.length; i++) {
-        node = nodes[i];
-        if (node.name == d['source']){
-            source = node;
-            break;
-        }
-    }
+    var source = nodes_map[d['source']];
 
     source_target_columns = {};
     for (let i = 0; i < source.definition.columns.length; i++) {
       source_column = source.definition.columns[i]['name'];
       source_target_columns[source_column] = d.source_selected_columns.includes(source_column);
     }
-
 
     matches = "";
     for (const [key, value] of Object.entries(source_target_columns)) {
@@ -250,8 +250,6 @@ function highlight_link(d,i){
       <tbody>`
       + matches +
       `</tbody></table>`;
-
-
 
     d3.select("#tooltip")
       .style("left", (d3.event.x + 20) + "px")
@@ -316,22 +314,6 @@ function dragging(d,i,nodes){
     //move link
     move_parent_links(d, dragged_node)
 
-}
-
-function dragStart(d,i,nodes){
-    return
-}
-
-function dragEnd(d,i,nodes){
-    return
-}
-
-let highlighted_nodes = new Set();
-function suppress_nodes(){
-    for (let i = 0; i < nodes.length; i++) {
-        node = nodes[i];
-        suppress_node(node.name);
-    }
 }
 
 function suppress_node(node_name){
