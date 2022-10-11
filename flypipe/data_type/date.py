@@ -23,6 +23,9 @@ class Date(Type):
     def __init__(self, fmt: str = "%Y-%m-%d"):
         self.fmt = fmt
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}(fmt="{self.fmt}")'
+
     def _cast_pyspark(self, df, column: str):
         df = df.withColumn(column, F.to_date(F.col(column), self.fmt))
         return df

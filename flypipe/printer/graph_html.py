@@ -121,7 +121,7 @@ class GraphHTML:
 
             node_attributes = {
                 'name': graph_node['transformation'].__name__,
-                'varname': graph_node['transformation'].__varname__,
+                'varname': graph_node['transformation'].varname,
                 'position': position,
                 'active': RunStatus.ACTIVE == graph_node['run_status'],
                 'run_status': GraphHTML.CSS_MAP[graph_node['run_status']],
@@ -158,7 +158,7 @@ class GraphHTML:
                 ]
 
                 node_attributes['definition']['query'] = {
-                    "table":  graph_node['transformation'].__varname__,
+                    "table":  graph_node['transformation'].varname,
                     "columns": graph_node['transformation'].selected_columns
                 }
 

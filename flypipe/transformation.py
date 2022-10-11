@@ -44,10 +44,11 @@ class Transformation:
     @property
     def __name__(self):
         """Return the name of the wrapped transformation rather than the name of the decorator object"""
-        return self.__varname__.replace(".", "_")
+        # TODO: replace with regex only a-z and 0-9 digits
+        return self.varname.replace(".", "_")
 
     @property
-    def __varname__(self):
+    def varname(self):
         """Return the variable name of the wrapped transformation rather than the name of the decorator object"""
         return self.function.__name__
 

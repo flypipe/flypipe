@@ -23,7 +23,7 @@ class Map(Type):
         Defines the type of the values of the map
     """
 
-    spark_type = None
+    spark_type = MapType
     pandas_type = dtype("O")
 
     def __init__(self, key_type, value_type):
@@ -36,9 +36,13 @@ class Map(Type):
                 "Make sure the content of the map has been casted to the proper key and value types"
             )
         )
-
+        self.key_type = key_type
+        self.value_type = value_type
 
         self.spark_type = MapType(key_type.spark_type, value_type.spark_type)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({str(self.key_type)}, {str(self.value_type)})"
 
     def _cast_pyspark(self, df, column: str):
         df = df.withColumn(column, F.col(column).cast(self.spark_type))

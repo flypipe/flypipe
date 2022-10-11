@@ -25,13 +25,16 @@ class Decimals(Type):
 
     """
 
-    spark_data_type = DecimalType
+    spark_type = DecimalType
     pandas_type = np.dtype("float64")
 
-    def __init__(self, precision: int = None, scale: int = 2):
+    def __init__(self, precision: int = 13, scale: int = 2):
         self.precision = precision
         self.scale = scale
         self.spark_type = DecimalType(precision=self.precision, scale=self.scale)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(precision={self.precision}, scale={self.scale})"
 
     def _cast_pyspark(self, df, column: str):
         df = df.withColumn(column, F.col(column).cast(self.spark_type))

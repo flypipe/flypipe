@@ -6,6 +6,7 @@ build-backend = "flit_core.buildapi"
 name = "flypipe"
 authors = [
     {name = "Jose Helio de Brum Muller", email = "josemuller.flypipe@gmail.com"},
+    {name = "Chris Marwick", email = "chrismarwick.flypipe@gmail.com"},
 ]
 readme = "README.md"
 license = {file = "LICENSE"}

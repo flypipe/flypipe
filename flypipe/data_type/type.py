@@ -28,7 +28,7 @@ class Type:
     pandas_type = None
 
     def __repr__(self):
-        return f"pandas_type {self.pandas_type}, spark_type: {self.spark_type}"
+        return f"{self.__class__.__name__}()"
 
 
     def cast(self, df, df_type: DataFrameType, column: str):

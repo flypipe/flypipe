@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 import pyspark.sql.functions as F
 from numpy import dtype
-from pyspark.sql.types import ArrayType
+from pyspark.sql.types import ArrayType, StringType
 
 from flypipe.data_type.type import Type
 
@@ -21,7 +21,7 @@ class Array(Type):
         Defines the type of the array
     """
 
-    spark_type = None
+    spark_type = ArrayType
     pandas_type = dtype("O")
 
     def __init__(self, type):
@@ -34,7 +34,12 @@ class Array(Type):
                 "Make sure the content of the array has been casted to the proper type"
             )
         )
-        self.spark_type = ArrayType(type.spark_type)
+
+        self.type = type
+        self.spark_type = ArrayType(self.type.spark_type)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({str(self.type)})"
 
     def _cast_pyspark(self, df, column: str):
         df = df.withColumn(column, F.col(column).cast(self.spark_type))
