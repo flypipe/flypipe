@@ -166,6 +166,7 @@ d3.select("g")
   .attr("y", function(d) {
         return yScale(d.position[1]) - circle_radius - 5;
         })
+
   .text(d => d.varname)
     ;
 
@@ -322,12 +323,18 @@ function suppress_node(node_name){
     .style("stroke-width", circle_stroke)
     .attr("r", circle_radius);
 
+    d3.select("#" + text_id(node_name))
+      .classed('fw-bolder', false);
+
 }
 
 function highlight_node(node_name){
     d3.select("#" + node_id(node_name))
     .style("stroke-width", circle_stroke+1)
     highlighted_nodes.add(node_name);
+
+    d3.select("#" + text_id(node_name))
+      .classed('fw-bolder', true);
 
     d3.select("#" + node_id(node_name))
             .attr('opacity',1)
