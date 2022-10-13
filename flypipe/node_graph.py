@@ -59,6 +59,12 @@ class NodeGraph:
     def get_node(self, name: str):
         return self.graph.nodes[name]
 
+    def get_edges(self):
+        return self.graph.edges
+
+    def get_edge_data(self, source_node_name, target_node_name):
+        return self.graph.get_edge_data(source_node_name, target_node_name)
+
     def get_transformation(self, name: str) -> Transformation:
         return self.get_node(name)['transformation']
 
@@ -95,6 +101,31 @@ class NodeGraph:
         for source, destination in self.graph.edges:
             dependencies[destination].add(source)
         return dependencies
+
+    def get_nodes_depth(self):
+        """
+        Return a map of node names to their depth in the graph, depth being the minimal distance to the root/first node.
+        """
+        # TODO- this function is failing unit tests, I can see 3 issues:
+        # - The depth of each node is maximal not minimal, that is if there is a path of length 2 to the start node and a
+        # path of length 1 it uses 2 as the depth where it should be 1.
+        # - Depth is 1 more than it ought to be. The start node should have depth 0 not depth 1.
+        # - We ought to be having the node name as the key and not the value.
+        end_node = [node_name for node_name, num_out_edges in self.graph.out_degree if num_out_edges==0][0]
+
+        nodes_depth = {}
+        for node in self.graph:
+            depth = len(
+                max(list(nx.all_simple_paths(self.graph, node, end_node)), key=lambda x: len(x), default=[end_node]))
+
+            if depth not in nodes_depth:
+                nodes_depth[depth] = [node]
+            else:
+                nodes_depth[depth] += [node]
+
+        max_depth = max(nodes_depth.keys())
+
+        return {-1 * k + max_depth + 1: v for k, v in nodes_depth.items()}
 
     def pop_runnable_transformations(self) -> List[Transformation]:
         candidate_node_names = [node_name for node_name in self.graph if self.graph.in_degree(node_name)==0]

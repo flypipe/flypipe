@@ -3,7 +3,7 @@ import os
 
 import networkx as nx
 
-from flypipe.node_graph import RunStatus
+from flypipe.node_graph import RunStatus, NodeGraph
 from flypipe.node_type import NodeType
 from flypipe.utils import DataFrameType
 
@@ -19,8 +19,12 @@ class GraphHTML:
         RunStatus.SKIP: {'bg-class': 'dark', 'bg-color': '#212529', 'text': 'SKIPPED'},
     }
 
-    @staticmethod
-    def html(nodes, links, width, height):
+    def __init__(self, graph: NodeGraph, width=-1, height=1000):
+        self.graph = graph
+        self.width = width
+        self.height = height
+
+    def html(self, nodes, links):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         tags = set()
@@ -30,7 +34,7 @@ class GraphHTML:
         html = index.read()
         index.close()
 
-        html = html.replace('<div class="text-center" style="height:1000px;">',f'<div class="text-center" style="height:{height}px;">')
+        html = html.replace('<div class="text-center" style="height:1000px;">',f'<div class="text-center" style="height:{self.height}px;">')
 
         html = html.replace('<link rel="stylesheet" type="text/css" href="amsify.suggestags.css">',
                             f'<style>{open(os.path.join(dir_path, "amsify.suggestags.css")).read()}</style>')
@@ -39,8 +43,8 @@ class GraphHTML:
 
         html = html.replace('<script src="data.js"></script>', f'''
         <script>
-        var user_width = {width};
-        var user_height = {height};
+        var user_width = {self.width};
+        var user_height = {self.height};
         var tags = {json.dumps(list(tags))};
         var nodes = {json.dumps(nodes)};
         var links = {json.dumps(links)};
@@ -55,21 +59,7 @@ class GraphHTML:
 
     @staticmethod
     def _nodes_position(graph):
-        root_node = [node[0] for node in graph.out_degree if node[1] == 0][0]
-
-        nodes_depth = {}
-        for node in graph:
-            depth = len(
-                max(list(nx.all_simple_paths(graph, node, root_node)), key=lambda x: len(x), default=[root_node]))
-
-            if depth not in nodes_depth:
-                nodes_depth[depth] = [node]
-            else:
-                nodes_depth[depth] += [node]
-
-        max_depth = max(nodes_depth.keys())
-
-        nodes_depth = {-1 * k + max_depth + 1: v for k, v in nodes_depth.items()}
+        nodes_depth = graph.get_nodes_depth()
 
         nodes_position = {}
         for depth in sorted(nodes_depth.keys()):
@@ -82,35 +72,26 @@ class GraphHTML:
 
         return nodes_position
 
-    @staticmethod
-    def get(graph, width=-1, height=1000):
-
-        nodes_position = GraphHTML._nodes_position(graph)
+    def get(self):
+        nodes_position = self._nodes_position(self.graph)
 
         links = []
-        for edge in graph.edges:
+        for source_node_name, target_node_name in self.graph.get_edges():
+            source_node = self.graph.get_node(source_node_name)
+            target_node = self.graph.get_node(target_node_name)
+            edge_data = self.graph.get_edge_data(source_node_name, target_node_name)
 
-            source = graph.nodes[edge[0]]
-            target = graph.nodes[edge[1]]
-            edge_data = graph.get_edge_data(edge[0], edge[1])
-
-            links.append({'source': source['transformation'].__name__,
-                          'source_position': nodes_position[source['transformation'].__name__],
+            links.append({'source': source_node['transformation'].__name__,
+                          'source_position': nodes_position[source_node['transformation'].__name__],
                           'source_selected_columns': edge_data['selected_columns'],
-                          'target': target['transformation'].__name__,
-                          'target_position': nodes_position[target['transformation'].__name__],
-                          'active': (not (
-                              (
-                               source['run_status'] == RunStatus.SKIP and
-                               target['run_status'] == RunStatus.SKIP)
-                               or target['run_status'] == RunStatus.SKIP
-                               or (source['run_status'] == RunStatus.SKIP)
-                               )
-                                     )})
+                          'target': target_node['transformation'].__name__,
+                          'target_position': nodes_position[target_node['transformation'].__name__],
+                          'active': (source_node['run_status'] != RunStatus.SKIP and target_node['run_status'] != RunStatus.SKIP)
+                          })
 
         nodes = []
         for node_name, position in nodes_position.items():
-            graph_node = graph.nodes[node_name]
+            graph_node = self.graph.get_node(node_name)
             tags = (
                 [
                     node_name,
@@ -127,8 +108,8 @@ class GraphHTML:
                 'run_status': GraphHTML.CSS_MAP[graph_node['run_status']],
                 'type': GraphHTML.CSS_MAP[graph_node['transformation'].type],
                 'node_type': graph_node['transformation'].node_type.value,
-                'dependencies': sorted(list(graph.predecessors(node_name))),
-                'successors': sorted(list(graph.successors(node_name))),
+                'dependencies': sorted(list(self.graph.graph.predecessors(node_name))),
+                'successors': sorted(list(self.graph.graph.successors(node_name))),
                 'definition': {
                     'description': graph_node['transformation'].description,
                     'tags': tags,
@@ -164,4 +145,4 @@ class GraphHTML:
 
             nodes.append(node_attributes)
 
-        return GraphHTML.html(nodes, links, width=width, height=height)
+        return self.html(nodes, links)

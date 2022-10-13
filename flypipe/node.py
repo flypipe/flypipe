@@ -14,6 +14,7 @@ class Node(Transformation):
 
     def _create_graph(self):
         self.node_graph = NodeGraph(self)
+        self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
 
     def select(self, *columns):
         self.selected_columns = []
@@ -39,7 +40,6 @@ class Node(Transformation):
 
     def run(self, spark=None, parallel=True):
         self._create_graph()
-        self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
         if parallel:
             raise NotImplementedError
         else:
@@ -81,8 +81,7 @@ class Node(Transformation):
 
     def html(self, width=-1, height=1000):
         self._create_graph()
-        self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
-        return GraphHTML.get(self.node_graph.graph, width=width, height=height)
+        return GraphHTML(self.node_graph, width=width, height=height).get()
 
 
 def node(*args, **kwargs):
