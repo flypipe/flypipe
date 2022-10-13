@@ -53,23 +53,30 @@ class GraphHTML:
             js_scripts['tags'] = f.read()
         return get_template("index2.html").render(height=self.height, css_scripts=css_scripts, js_scripts=js_scripts)
 
-    @staticmethod
-    def _nodes_position(graph):
-        nodes_depth = graph.get_nodes_depth()
+    def get_node_positions(self):
+        """
+        Simple algorithm to set the positions of the nodes when printing them. The x coordinate is set directly from the
+        depth, to set the y coordinate we are just evenly spacing however many nodes existing at a particular depth.
+        """
+        nodes_depth = self.graph.get_nodes_depth()
 
-        nodes_position = {}
+        node_positions = {}
         for depth in sorted(nodes_depth.keys()):
-            padding = 100 / (len(nodes_depth[depth]) + 1)
+            vertical_padding = round(100 / (len(nodes_depth[depth]) + 1), 2)
 
             for i, node in enumerate(nodes_depth[depth]):
                 x = float(depth)
-                y = float(round((i + 1) * padding, 2)) - (2.5 if depth % 2 == 0 else 0.0)
-                nodes_position[node] = [x, y]
+                # Tweak the y position of nodes in different depths to avoid overlapping lines. For example if we had
+                # transformations t1, t2 and t3 with edges between t1 and t2, t1 and t3 and t2 and t3 then the line
+                # between t1 and t3 would be hidden
+                vertical_displacement = (2.5 if depth % 2 == 0 else 0.0)
+                y = float((i + 1) * vertical_padding) - vertical_displacement
+                node_positions[node] = [x, y]
 
-        return nodes_position
+        return node_positions
 
     def get(self):
-        nodes_position = self._nodes_position(self.graph)
+        node_positions = self.get_node_positions()
 
         links = []
         for source_node_name, target_node_name in self.graph.get_edges():
@@ -78,15 +85,15 @@ class GraphHTML:
             edge_data = self.graph.get_edge_data(source_node_name, target_node_name)
 
             links.append({'source': source_node['transformation'].__name__,
-                          'source_position': nodes_position[source_node['transformation'].__name__],
+                          'source_position': node_positions[source_node['transformation'].__name__],
                           'source_selected_columns': edge_data['selected_columns'],
                           'target': target_node['transformation'].__name__,
-                          'target_position': nodes_position[target_node['transformation'].__name__],
+                          'target_position': node_positions[target_node['transformation'].__name__],
                           'active': (source_node['run_status'] != RunStatus.SKIP and target_node['run_status'] != RunStatus.SKIP)
                           })
 
         nodes = []
-        for node_name, position in nodes_position.items():
+        for node_name, position in node_positions.items():
             graph_node = self.graph.get_node(node_name)
             tags = (
                 [
