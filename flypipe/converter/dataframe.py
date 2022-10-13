@@ -29,11 +29,9 @@ class DataFrameConverter:
         """
 
         pandas_to_spark = lambda df: self.spark.createDataFrame(df)
-        pandas_to_pandas_on_spark = lambda df: self.spark.createDataFrame(
-            df
-        ).to_pandas_on_spark()
+        pandas_to_pandas_on_spark = lambda df: df
 
-        pandas_on_spark_to_pandas = lambda df: df.to_pandas()
+        pandas_on_spark_to_pandas = lambda df: df
         pandas_on_spark_to_spark = lambda df: df.to_spark()
 
         spark_to_pandas = lambda df: df.toPandas()

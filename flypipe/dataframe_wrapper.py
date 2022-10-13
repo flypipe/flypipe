@@ -63,7 +63,7 @@ class DataframeWrapper:
             if self.schema:
                 self.pandas_on_spark_data = SchemaConverter.cast(self.pandas_on_spark_data, DataFrameType.PANDAS_ON_SPARK, self.schema)
         # FIXME: implement tests
-        return self.pandas_on_spark_data.to_spark().to_pandas_on_spark()
+        return self.pandas_on_spark_data.copy(deep=True)
 
     def as_pyspark(self):
         if self.pyspark_data is None:
