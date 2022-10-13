@@ -39,6 +39,8 @@ class Spark(metaclass=SingletonMeta):
 
     @staticmethod
     def spark_datasource(spark, table, columns):
+        assert spark is not None, 'Error: spark not provided'
+
         df = spark.table(table)
         if columns:
             return df.select(columns)

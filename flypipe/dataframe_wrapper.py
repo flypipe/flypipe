@@ -64,7 +64,7 @@ class DataframeWrapper:
                 self.pandas_on_spark_data = self.dataframe_converter.convert(df, DataFrameType.PANDAS_ON_SPARK)
             else:
                 df = self.pandas_data
-                self.pandas_on_spark_data = self.dataframe_converter.convert(df, DataFrameType.PANDAS)
+                self.pandas_on_spark_data = df
 
             if self.schema:
                 self.pandas_on_spark_data = SchemaConverter.cast(self.pandas_on_spark_data,
