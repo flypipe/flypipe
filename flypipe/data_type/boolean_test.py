@@ -4,7 +4,7 @@ from numpy import dtype
 from pyspark.sql.types import BooleanType
 
 from flypipe.data_type import Boolean
-from flypipe.exceptions import ErrorColumnNotInDataframe
+from flypipe.exceptions import ColumnNotInDataframeError
 from flypipe.utils import get_schema, DataFrameType
 
 
@@ -34,13 +34,13 @@ class TestBoolean:
     def test_column_exists(self, pandas_df, pyspark_df, pandas_on_spark_df):
 
         type_ = Boolean()
-        with pytest.raises(ErrorColumnNotInDataframe):
+        with pytest.raises(ColumnNotInDataframeError):
             type_.cast(pandas_df, DataFrameType.PANDAS, "non_existent_colum")
 
-        with pytest.raises(ErrorColumnNotInDataframe):
+        with pytest.raises(ColumnNotInDataframeError):
             type_.cast(pandas_on_spark_df, DataFrameType.PANDAS_ON_SPARK, "non_existent_colum")
 
-        with pytest.raises(ErrorColumnNotInDataframe):
+        with pytest.raises(ColumnNotInDataframeError):
             type_.cast(pyspark_df, DataFrameType.PYSPARK, "non_existent_colum")
 
     def test_boolean(self, pandas_df, pyspark_df, pandas_on_spark_df):

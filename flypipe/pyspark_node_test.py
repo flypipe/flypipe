@@ -5,7 +5,7 @@ from pyspark_test import assert_pyspark_df_equal
 
 from flypipe.data_type import Decimals
 from flypipe.datasource.spark import Spark
-from flypipe.exceptions import ErrorDependencyNoSelectedColumns, ErrorNodeTypeInvalid
+from flypipe.exceptions import DependencyNoSelectedColumnsError, NodeTypeInvalidError
 from flypipe.node import node
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
@@ -26,7 +26,7 @@ def spark():
 class TestPySparkNode:
 
     def test_exception_invalid_node_type(self, spark):
-        with pytest.raises(ErrorNodeTypeInvalid) as e_info:
+        with pytest.raises(NodeTypeInvalidError) as e_info:
             @node(type='anything', output=Schema([
                 Column('balance', Decimals(16, 2), 'dummy')
             ]))
@@ -41,7 +41,7 @@ class TestPySparkNode:
             pass
 
 
-        with pytest.raises(ErrorDependencyNoSelectedColumns) as e_info:
+        with pytest.raises(DependencyNoSelectedColumnsError) as e_info:
             @node(type='pyspark', dependencies=[dummy], output=Schema([
                 Column('balance', Decimals(16, 2), 'dummy')
             ]))

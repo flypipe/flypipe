@@ -12,7 +12,7 @@ from pyspark.sql.types import (
     StringType,
 )
 
-from flypipe.exceptions import ErrorColumnNotInDataframe
+from flypipe.exceptions import ColumnNotInDataframeError
 from flypipe.utils import DataFrameType
 
 
@@ -51,7 +51,7 @@ class Type:
         """
 
         if column not in df.columns:
-            raise ErrorColumnNotInDataframe(column)
+            raise ColumnNotInDataframeError(column)
 
         if df_type == DataFrameType.PYSPARK:
             df = self._cast_pyspark(df, column)

@@ -1,6 +1,6 @@
 from flypipe.converter.dataframe import DataFrameConverter
 from flypipe.converter.schema import SchemaConverter
-from flypipe.exceptions import ErrorDataFrameTypeNotSupported
+from flypipe.exceptions import DataframeTypeNotSupportedError
 from flypipe.utils import dataframe_type, DataFrameType
 
 
@@ -43,7 +43,7 @@ class DataframeWrapper:
         elif df_type == DataFrameType.PANDAS_ON_SPARK:
             return self.as_pandas_on_spark()
         else:
-            raise ErrorDataFrameTypeNotSupported(f'Type {df_type} not supported')
+            raise DataframeTypeNotSupportedError(f'Type {df_type} not supported')
 
     def as_pandas(self):
         # FIXME: return deep copy of dataframe

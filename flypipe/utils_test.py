@@ -3,9 +3,9 @@ import pytest
 
 from flypipe.exceptions import (
     ErrorDataframesSchemasDoNotMatch,
-    ErrorDataframesDifferentData,
-    ErrorErrorDataframesSchemasDoNotMatch,
-    ErrorDataFrameTypeNotSupported,
+    DataframeDifferentDataError,
+    DataframeSchemasDoNotMatchError,
+    DataframeTypeNotSupportedError,
 )
 from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
 
@@ -34,7 +34,7 @@ class TestUtils:
         df2 = spark.createDataFrame(
             pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"]})
         )
-        with pytest.raises(ErrorDataframesDifferentData):
+        with pytest.raises(DataframeDifferentDataError):
             assert_dataframes_equals(df1, df2)
 
         df2 = spark.createDataFrame(
@@ -45,10 +45,10 @@ class TestUtils:
         with pytest.raises(ErrorDataframesSchemasDoNotMatch):
             assert_dataframes_equals(df1, df2)
 
-        with pytest.raises(ErrorErrorDataframesSchemasDoNotMatch):
+        with pytest.raises(DataframeSchemasDoNotMatchError):
             assert_dataframes_equals(df1, df2)
 
-        with pytest.raises(ErrorDataFrameTypeNotSupported):
+        with pytest.raises(DataframeTypeNotSupportedError):
             assert_dataframes_equals(df1, 2)
 
     def test_dataframe_type(self, spark):
@@ -61,5 +61,5 @@ class TestUtils:
         df = df.to_pandas_on_spark()
         assert dataframe_type(df) == DataFrameType.PANDAS_ON_SPARK
 
-        with pytest.raises(ErrorDataFrameTypeNotSupported):
+        with pytest.raises(DataframeTypeNotSupportedError):
             dataframe_type(1)

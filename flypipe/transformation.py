@@ -1,5 +1,5 @@
 from abc import ABC
-from flypipe.exceptions import ErrorDependencyNoSelectedColumns, ErrorNodeTypeInvalid
+from flypipe.exceptions import DependencyNoSelectedColumnsError, NodeTypeInvalidError
 from flypipe.utils import DataFrameType
 
 
@@ -22,7 +22,7 @@ class Transformation:
         try:
             self.type = self.TYPE_MAP[type]
         except KeyError:
-            raise ErrorNodeTypeInvalid(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
+            raise NodeTypeInvalidError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
         self.description = description or "No description"
         self.tags = tags or []
         self.dependencies = dependencies or []
@@ -32,7 +32,7 @@ class Transformation:
             self.dependencies = sorted(self.dependencies, key=lambda d: d.__name__)
             for dependency in self.dependencies:
                 if not dependency.selected_columns:
-                    raise ErrorDependencyNoSelectedColumns(f'Selected columns of dependency {dependency.__name__} not specified')
+                    raise DependencyNoSelectedColumnsError(f'Selected columns of dependency {dependency.__name__} not specified')
                 self.dependencies_selected_columns[dependency.__name__] = dependency.selected_columns
 
         self._provided_inputs = {}

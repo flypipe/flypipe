@@ -3,28 +3,27 @@ from typing import List, Union
 from flypipe.mode import Mode
 
 
-class ErrorDataFrameTypeNotSupported(Exception):
+class DataframeTypeNotSupportedError(Exception):
     pass
 
 
-class ErrorErrorDataframesSchemasDoNotMatch(Exception):
+class DataframeSchemasDoNotMatchError(Exception):
     pass
 
 
-class ErrorDataframesSchemasDoNotMatch(ErrorErrorDataframesSchemasDoNotMatch):
+class DataframeDifferentDataError(DataframeSchemasDoNotMatchError):
     pass
 
 
-class ErrorDataframesDifferentData(ErrorErrorDataframesSchemasDoNotMatch):
+class NodeTypeInvalidError(ValueError):
     pass
 
-class ErrorNodeTypeInvalid(ValueError):
+
+class DependencyNoSelectedColumnsError(ValueError):
     pass
 
-class ErrorDependencyNoSelectedColumns(ValueError):
-    pass
 
-class ErrorColumnNotInDataframe(Exception):
+class ColumnNotInDataframeError(Exception):
     """Exception raised if column is not in dataframe
 
     Attributes:
