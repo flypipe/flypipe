@@ -34,6 +34,7 @@ class Node(Transformation):
 
     def clear_inputs(self):
         self._provided_inputs = {}
+        return self
 
     def __call__(self, *args):
         return self.function(*args)
