@@ -1,8 +1,5 @@
 import json
 import os
-
-import networkx as nx
-
 from flypipe.node_graph import RunStatus, NodeGraph
 from flypipe.node_type import NodeType
 from flypipe.printer.template import get_template
@@ -24,10 +21,12 @@ class GraphHTML:
         self.graph = graph
         self.width = width
         self.height = height
+        self._node_positions = self.get_node_positions()
 
-    def html(self, nodes, links):
+    def html(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
+        nodes = self.nodes
         tags = set()
         for node in nodes:
             tags.update(node['definition']['tags'])
@@ -43,7 +42,7 @@ class GraphHTML:
         var user_height = {self.height};
         var tags = {json.dumps(list(tags))};
         var nodes = {json.dumps(nodes)};
-        var links = {json.dumps(links)};
+        var links = {json.dumps(self.edges)};
         '''
         with open(os.path.join(dir_path, "d3js.js"), 'r') as f:
             js_scripts['d3js'] = f.read()
@@ -51,7 +50,7 @@ class GraphHTML:
             js_scripts['offcanvas'] = f.read()
         with open(os.path.join(dir_path, "tags.js"), 'r') as f:
             js_scripts['tags'] = f.read()
-        return get_template("index2.html").render(height=self.height, css_scripts=css_scripts, js_scripts=js_scripts)
+        return get_template("index.html").render(height=self.height, css_scripts=css_scripts, js_scripts=js_scripts)
 
     def get_node_positions(self):
         """
@@ -75,42 +74,28 @@ class GraphHTML:
 
         return node_positions
 
-    def get(self):
-        node_positions = self.get_node_positions()
-
-        links = []
-        for source_node_name, target_node_name in self.graph.get_edges():
-            source_node = self.graph.get_node(source_node_name)
-            target_node = self.graph.get_node(target_node_name)
-            edge_data = self.graph.get_edge_data(source_node_name, target_node_name)
-
-            links.append({'source': source_node['transformation'].__name__,
-                          'source_position': node_positions[source_node['transformation'].__name__],
-                          'source_selected_columns': edge_data['selected_columns'],
-                          'target': target_node['transformation'].__name__,
-                          'target_position': node_positions[target_node['transformation'].__name__],
-                          'active': (source_node['run_status'] != RunStatus.SKIP and target_node['run_status'] != RunStatus.SKIP)
-                          })
-
+    @property
+    def nodes(self):
         nodes = []
-        for node_name, position in node_positions.items():
+        for node_name, position in self._node_positions.items():
             graph_node = self.graph.get_node(node_name)
             tags = (
-                [
-                    node_name,
-                    graph_node['transformation'].type.value,
-                    graph_node['transformation'].node_type.value
-                ] + graph_node['transformation'].tags
+                    [
+                        node_name,
+                        graph_node['transformation'].type.value,
+                        graph_node['transformation'].node_type.value
+                    ] + graph_node['transformation'].tags
             )
 
             node_attributes = {
                 'name': graph_node['transformation'].__name__,
                 'varname': graph_node['transformation'].varname,
                 'position': position,
-                'active': RunStatus.ACTIVE == graph_node['run_status'],
+                'active': RunStatus.ACTIVE==graph_node['run_status'],
                 'run_status': GraphHTML.CSS_MAP[graph_node['run_status']],
                 'type': GraphHTML.CSS_MAP[graph_node['transformation'].type],
                 'node_type': graph_node['transformation'].node_type.value,
+                # TODO- if possible, it would be nice not to have to reach into the internal graph object under NodeGraph
                 'dependencies': sorted(list(self.graph.graph.predecessors(node_name))),
                 'successors': sorted(list(self.graph.graph.successors(node_name))),
                 'definition': {
@@ -122,16 +107,15 @@ class GraphHTML:
 
             if graph_node['transformation'].output_schema:
                 node_attributes['definition']['columns'] = [
-                        {
-                            'name': column.name,
-                            'type': column.type.__class__.__name__,
-                            'description': column.description
-                        }
-                            for column in graph_node['transformation'].output_schema.columns
-                    ]
+                    {
+                        'name': column.name,
+                        'type': column.type.__class__.__name__,
+                        'description': column.description
+                    }
+                    for column in graph_node['transformation'].output_schema.columns
+                ]
 
-            if graph_node['transformation'].node_type == NodeType.DATASOURCE:
-
+            if graph_node['transformation'].node_type==NodeType.DATASOURCE:
                 node_attributes['definition']['columns'] = [
                     {
                         'name': column,
@@ -142,10 +126,26 @@ class GraphHTML:
                 ]
 
                 node_attributes['definition']['query'] = {
-                    "table":  graph_node['transformation'].varname,
+                    "table": graph_node['transformation'].varname,
                     "columns": graph_node['transformation'].selected_columns
                 }
 
             nodes.append(node_attributes)
+        return nodes
 
-        return self.html(nodes, links)
+    @property
+    def edges(self):
+        edges = []
+        for source_node_name, target_node_name in self.graph.get_edges():
+            source_node = self.graph.get_node(source_node_name)
+            target_node = self.graph.get_node(target_node_name)
+            edge_data = self.graph.get_edge_data(source_node_name, target_node_name)
+
+            edges.append({'source': source_node['transformation'].__name__,
+                          'source_position': self._node_positions[source_node['transformation'].__name__],
+                          'source_selected_columns': edge_data['selected_columns'],
+                          'target': target_node['transformation'].__name__,
+                          'target_position': self._node_positions[target_node['transformation'].__name__],
+                          'active': (source_node['run_status'] != RunStatus.SKIP and target_node['run_status'] != RunStatus.SKIP)
+                          })
+        return edges

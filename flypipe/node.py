@@ -81,7 +81,7 @@ class Node(Transformation):
 
     def html(self, width=-1, height=1000):
         self._create_graph()
-        return GraphHTML(self.node_graph, width=width, height=height).get()
+        return GraphHTML(self.node_graph, width=width, height=height).html()
 
 
 def node(*args, **kwargs):
