@@ -5,6 +5,7 @@ import networkx as nx
 
 from flypipe.node_graph import RunStatus, NodeGraph
 from flypipe.node_type import NodeType
+from flypipe.printer.template import get_template
 from flypipe.utils import DataFrameType
 
 
@@ -30,32 +31,27 @@ class GraphHTML:
         tags = set()
         for node in nodes:
             tags.update(node['definition']['tags'])
-        index = open(os.path.join(dir_path, "index.html"))
-        html = index.read()
-        index.close()
 
-        html = html.replace('<div class="text-center" style="height:1000px;">',f'<div class="text-center" style="height:{self.height}px;">')
-
-        html = html.replace('<link rel="stylesheet" type="text/css" href="amsify.suggestags.css">',
-                            f'<style>{open(os.path.join(dir_path, "amsify.suggestags.css")).read()}</style>')
-        html = html.replace('<script type="text/javascript" src="jquery.amsify.suggestags.js"></script>',
-                            f'<script>{open(os.path.join(dir_path, "jquery.amsify.suggestags.js")).read()}</script>')
-
-        html = html.replace('<script src="data.js"></script>', f'''
-        <script>
+        css_scripts = {}
+        js_scripts = {}
+        with open(os.path.join(dir_path, "amsify.suggestags.css"), 'r') as f:
+            css_scripts['amsify_suggestags'] = f.read()
+        with open(os.path.join(dir_path, "jquery.amsify.suggestags.js"), 'r') as f:
+            js_scripts['amsify_suggestags'] = f.read()
+        js_scripts['d3_graph_setup'] = f'''
         var user_width = {self.width};
         var user_height = {self.height};
         var tags = {json.dumps(list(tags))};
         var nodes = {json.dumps(nodes)};
         var links = {json.dumps(links)};
-        </script>
-        ''')
-        html = html.replace('<script src="d3js.js"></script>', f'<script>{open(os.path.join(dir_path, "d3js.js")).read()}</script>')
-        html = html.replace('<script src="offcanvas.js"></script>', f'<script>{open(os.path.join(dir_path, "offcanvas.js")).read()}</script>')
-        html = html.replace('<script src="tags.js"></script>', f'<script>{open(os.path.join(dir_path, "tags.js")).read()}</script>')
-
-
-        return html
+        '''
+        with open(os.path.join(dir_path, "d3js.js"), 'r') as f:
+            js_scripts['d3js'] = f.read()
+        with open(os.path.join(dir_path, "offcanvas.js"), 'r') as f:
+            js_scripts['offcanvas'] = f.read()
+        with open(os.path.join(dir_path, "tags.js"), 'r') as f:
+            js_scripts['tags'] = f.read()
+        return get_template("index2.html").render(height=self.height, css_scripts=css_scripts, js_scripts=js_scripts)
 
     @staticmethod
     def _nodes_position(graph):

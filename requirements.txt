@@ -5,6 +5,7 @@ networkx==2.8
 pyarrow==8.0.0
 matplotlib==3.5.3
 pyspark[sql,pandas_on_spark]==3.2.2
+Jinja2==3.1.2
 
 #CICD
 pylint==2.15.2
