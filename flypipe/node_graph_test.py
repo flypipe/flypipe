@@ -108,4 +108,4 @@ class TestNodeGraph:
             return
 
         graph = NodeGraph(t5)
-        assert graph.get_depth_map() == {'t1': 0, 't2': 0, 't3': 1, 't4': 1, 't5': 2}
+        assert graph.get_nodes_depth() == {1: ['t2', 't1'], 2: ['t3'], 3: ['t4'], 4: ['t5']}

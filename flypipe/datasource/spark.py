@@ -1,6 +1,5 @@
 from functools import partial
 
-from flypipe.datasource.datasource import DataSource
 from flypipe.datasource.singleton import SingletonMeta
 from flypipe.node import datasource_node
 
@@ -16,24 +15,28 @@ class Spark(metaclass=SingletonMeta):
 
     def __init__(self, table):
         self.table = table
-        self.columns = []
+        self.all_selected_columns = []
         self.func = None
 
     def select(self, *columns):
         if isinstance(columns[0], list):
-            self.columns = list(dict.fromkeys(self.columns + columns[0]))
+            columns = columns[0]
         else:
-            for column in columns:
-                self.columns.append(column)
-        self.columns = sorted(list(set(self.columns)))
-        func = partial(self.spark_datasource, table=self.table, columns=self.columns)
+            columns = [column for column in columns]
+
+        self.all_selected_columns = sorted(list(dict.fromkeys(self.all_selected_columns + columns)))
+        func = partial(self.spark_datasource,
+                       table=self.table,
+                       columns=self.all_selected_columns)
+
         func.__name__ = self.table
         node = datasource_node(type='pyspark',
                                description=f"Spark table {self.table}",
                                spark_context=True,
-                               selected_columns = self.columns)
+                               selected_columns = columns)
 
         func = node(func)
+        func.grouped_selected_columns = self.all_selected_columns
         self.func = func
         return self.func
 
@@ -46,4 +49,3 @@ class Spark(metaclass=SingletonMeta):
             return df.select(columns)
 
         return df
-

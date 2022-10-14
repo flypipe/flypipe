@@ -66,15 +66,10 @@ class PySparkSchemaReader:
     @classmethod
     def _read_pyspark(cls, df, supported_types):
         columns = []
-        print("888888888888888")
 
-        print(supported_types.keys())
         for schema_ in df.schema:
             column = schema_.name
 
-            # print(schema_.dataType, schema_.dataType.__class__)
-            print(schema_.dataType.__class__.__name__, Array.spark_type.__name__,
-                  type(schema_.dataType.__class__.__name__), type(Array.spark_type.__name__))
             spark_data_type = None
             if schema_.dataType.__class__ == Decimals.spark_type:
                 spark_data_type = Decimals(precision=schema_.dataType.precision,

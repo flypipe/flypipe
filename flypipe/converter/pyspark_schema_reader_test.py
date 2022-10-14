@@ -64,20 +64,7 @@ class TestPySparkSchemaReader:
 
     def test_pyspark(self, spark, pyspark_df):
 
-        print()
-        for s in pyspark_df.schema:
-            print(s.name, s.dataType, s.metadata)
-            if s.dataType.__class__ == DecimalType:
-                print(s.dataType.precision, s.dataType.scale)
-
-
         schema = PySparkSchemaReader.read(pyspark_df)
-
-        for col in schema.columns:
-            print(col)
-
-        print()
-        print(str(schema))
 
         expected_schema = Schema([
                             Column("byte", Byte(), "no description"),
@@ -95,7 +82,5 @@ class TestPySparkSchemaReader:
                             Column("array_of_date", Array(Array(Array(Date(fmt="%Y-%m-%d")))), "no description"),
                             Column("map_of_map", Map(String(), Map(String(), Integer())), "no description"),
                         ])
-
-        print(str(expected_schema))
 
         assert str(schema) == str(expected_schema)

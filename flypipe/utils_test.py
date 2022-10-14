@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from flypipe.exceptions import (
-    ErrorDataframesSchemasDoNotMatch,
+    DataframeSchemasDoNotMatchError,
     DataframeDifferentDataError,
     DataframeSchemasDoNotMatchError,
     DataframeTypeNotSupportedError,
@@ -28,7 +28,7 @@ class TestUtils:
         assert_dataframes_equals(df1, df2)
 
         df2 = spark.createDataFrame(pd.DataFrame(data={"col1": [1, 2], "col2": [1, 2]}))
-        with pytest.raises(ErrorDataframesSchemasDoNotMatch):
+        with pytest.raises(DataframeSchemasDoNotMatchError):
             assert_dataframes_equals(df1, df2)
 
         df2 = spark.createDataFrame(
@@ -42,7 +42,7 @@ class TestUtils:
                 data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"], "col3": [1, 2, 3]}
             )
         )
-        with pytest.raises(ErrorDataframesSchemasDoNotMatch):
+        with pytest.raises(DataframeSchemasDoNotMatchError):
             assert_dataframes_equals(df1, df2)
 
         with pytest.raises(DataframeSchemasDoNotMatchError):

@@ -24,6 +24,7 @@ class Node(Transformation):
             for column in columns:
                 self.selected_columns.append(column)
         self.selected_columns = sorted(list(set(self.selected_columns)))
+        self.grouped_selected_columns = self.selected_columns
         return self
 
     def inputs(self, **kwargs):
