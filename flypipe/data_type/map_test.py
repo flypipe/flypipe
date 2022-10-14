@@ -7,7 +7,7 @@ from pyspark.sql.types import MapType, IntegerType, StringType, DateType
 
 from flypipe.data_type import Map, Integer, String, Date
 from flypipe.data_type.map import MapContentCast
-from flypipe.utils import get_schema
+from flypipe.utils import get_schema, DataFrameType
 
 
 # pytestmark = pytest.mark.filterwarnings("error")
@@ -50,14 +50,19 @@ class TestMap:
         ):
             type_ = Map(Integer(), String())
 
-        df_cast = type_.cast(pandas_df, columns)
+        df_cast = None
+
+        for col in columns:
+            df_cast = type_.cast(pandas_df, DataFrameType.PANDAS, col)
 
         assert dtype("O") == get_schema(df_cast)["int_str"]
 
-        df_cast = type_.cast(pandas_on_spark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pandas_on_spark_df, DataFrameType.PANDAS_ON_SPARK, col)
         assert dtype("O") == get_schema(df_cast)["int_str"]
 
-        df_cast = type_.cast(pyspark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pyspark_df, DataFrameType.PYSPARK, col)
         assert MapType(IntegerType(), StringType()) == get_schema(df_cast)["int_str"]
 
     def test_str_date(self, pandas_df, pyspark_df, pandas_on_spark_df):
@@ -68,14 +73,19 @@ class TestMap:
         ):
             type_ = Map(String(), Date())
 
-        df_cast = type_.cast(pandas_df, columns)
+        df_cast = None
+
+        for col in columns:
+            df_cast = type_.cast(pandas_df, DataFrameType.PANDAS, col)
 
         assert dtype("O") == get_schema(df_cast)["str_date"]
 
-        df_cast = type_.cast(pandas_on_spark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pandas_on_spark_df, DataFrameType.PANDAS_ON_SPARK, col)
         assert dtype("O") == get_schema(df_cast)["str_date"]
 
-        df_cast = type_.cast(pyspark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pyspark_df, DataFrameType.PYSPARK, col)
         assert MapType(StringType(), DateType()) == get_schema(df_cast)["str_date"]
 
     def test_int_str_str(self, pandas_df, pyspark_df, pandas_on_spark_df):
@@ -86,12 +96,16 @@ class TestMap:
         ):
             type_ = Map(Integer(), Map(String(), String()))
 
-        df_cast = type_.cast(pandas_df, columns)
+        df_cast = None
 
+        for col in columns:
+            df_cast = type_.cast(pandas_df, DataFrameType.PANDAS, col)
         assert dtype("O") == get_schema(df_cast)["int_str_str"]
 
-        df_cast = type_.cast(pandas_on_spark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pandas_on_spark_df, DataFrameType.PANDAS_ON_SPARK, col)
         assert dtype("O") == get_schema(df_cast)["int_str_str"]
 
-        df_cast = type_.cast(pyspark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pyspark_df, DataFrameType.PYSPARK, col)
         assert MapType(IntegerType(), MapType(StringType(), StringType())) == get_schema(df_cast)["int_str_str"]

@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from flypipe.converter.dataframe import DataFrameConverter
-from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
+from flypipe.utils import assert_dataframes_equals, DataFrameType
 
 
 @pytest.fixture(scope="function")

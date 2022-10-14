@@ -1,13 +1,10 @@
-from typing import Union
-
 import numpy as np
 import pandas as pd
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
-from pyspark.sql.types import DateType, StringType
+from pyspark.sql.types import DateType
 
 from flypipe.data_type.type import Type
-from flypipe.utils import dataframe_type, DataFrameType, get_schema
 
 
 class Date(Type):
@@ -20,21 +17,23 @@ class Date(Type):
         with dates that datatype is of object, this fmt will help casting dates in string
     """
 
-    spark_data_type = DateType
     spark_type = DateType()
     pandas_type = np.dtype("<M8[ns]")
 
     def __init__(self, fmt: str = "%Y-%m-%d"):
         self.fmt = fmt
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}(fmt="{self.fmt}")'
+
     def _cast_pyspark(self, df, column: str):
         df = df.withColumn(column, F.to_date(F.col(column), self.fmt))
         return df
 
     def _cast_pandas(self, df, column: str):
-        df[column] = pd.to_datetime(df[column], format=self.fmt)
+        df[column] = pd.to_datetime(df[column], format=self.fmt).astype(self.pandas_type)
         return df
 
     def _cast_pandas_on_spark(self, df, column: str):
-        df[column] = ps.to_datetime(df[column], format=self.fmt)
+        df[column] = ps.to_datetime(df[column], format=self.fmt).astype(self.pandas_type)
         return df

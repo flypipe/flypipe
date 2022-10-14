@@ -1,16 +1,13 @@
 from functools import partial
-from typing import List
+
 from flypipe.datasource.datasource import DataSource
-import pyspark.sql.functions as F
+from flypipe.datasource.singleton import SingletonMeta
+from flypipe.node import datasource_node
 
-from flypipe.exceptions import ErrorTimeTravel
-from flypipe.node import node
-
-
-instances = {}
+# instances = {}
 
 
-class Spark(DataSource):
+class Spark(metaclass=SingletonMeta):
     """
     Abstract class to connect to Spark Datasource
 
@@ -19,36 +16,31 @@ class Spark(DataSource):
 
     def __init__(self, table):
         self.table = table
-        self.columns = set()
+        self.columns = []
         self.func = None
-
-    @classmethod
-    def table(cls, table):
-        global instances
-        if table not in instances:
-            instances[table] = Spark(table)
-        return instances[table]
-
-    @classmethod
-    def get_instance(cls, table):
-        global instances
-        return instances[table]
 
     def select(self, *columns):
         if isinstance(columns[0], list):
-            self.columns = self.columns.union(set(columns[0]))
+            self.columns = list(dict.fromkeys(self.columns + columns[0]))
         else:
             for column in columns:
-                self.columns.add(column)
-
-        func = partial(self.spark_datasource, table=self.table, columns=list(self.columns))
+                self.columns.append(column)
+        self.columns = sorted(list(set(self.columns)))
+        func = partial(self.spark_datasource, table=self.table, columns=self.columns)
         func.__name__ = self.table
-        func = node(type='pyspark', spark_context=True, dependencies=[])(func)
+        node = datasource_node(type='pyspark',
+                               description=f"Spark table {self.table}",
+                               spark_context=True,
+                               selected_columns = self.columns)
+
+        func = node(func)
         self.func = func
         return self.func
 
     @staticmethod
     def spark_datasource(spark, table, columns):
+        assert spark is not None, 'Error: spark not provided'
+
         df = spark.table(table)
         if columns:
             return df.select(columns)

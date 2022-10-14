@@ -1,6 +1,10 @@
-import networkx as nx
 from enum import Enum
+from typing import List
+
+import networkx as nx
 from matplotlib import pyplot as plt
+
+from flypipe.transformation import Transformation
 
 
 class RunStatus(Enum):
@@ -9,9 +13,11 @@ class RunStatus(Enum):
     SKIP = 2
 
 
+
+
 class NodeGraph:
 
-    def __init__(self, node, graph=None):
+    def __init__(self, transformation: Transformation, graph=None):
         """
         Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
         this.
@@ -19,24 +25,54 @@ class NodeGraph:
         if graph:
             self.graph = graph
         else:
-            self.graph = self._build_graph(node)
+            self.graph = self._build_graph(transformation)
 
-    def _build_graph(self, node):
+    def __repr__(self):
+        graph_str = ""
+        for node in self.graph:
+            graph_str += "\n" + str(self.get_transformation(node))
+
+        return graph_str
+
+    def _build_graph(self, transformation: Transformation) -> nx.DiGraph:
         graph = nx.DiGraph()
+        # TODO: remove inputs and leave dependencies
         graph.add_node(
-            node.__name__, name=node.__name__, transformation=node, inputs=[i.__name__ for i in node.dependencies], run_status=RunStatus.UNKNOWN
+            transformation.__name__,
+            transformation=transformation,
+            run_status=RunStatus.UNKNOWN,
         )
 
-        if node.dependencies:
-            for dependency in node.dependencies:
-                graph.add_node(dependency.__name__, name=dependency.__name__, transformation=dependency, run_status=RunStatus.UNKNOWN)
-                graph.add_edge(dependency.__name__, node.__name__)
+        if transformation.dependencies:
+            for dependency in transformation.dependencies:
+                graph.add_node(dependency.__name__,
+                               transformation=dependency,
+                               run_status=RunStatus.UNKNOWN,
+                               )
+                graph.add_edge(dependency.__name__,
+                               transformation.__name__,
+                               selected_columns=transformation.dependencies_selected_columns[dependency.__name__])
                 graph = nx.compose(graph, self._build_graph(dependency))
 
         return graph
 
-    def get_node(self, name):
+    def get_node(self, name: str):
         return self.graph.nodes[name]
+
+    def get_edges(self):
+        return self.graph.edges
+
+    def get_edge_data(self, source_node_name, target_node_name):
+        return self.graph.get_edge_data(source_node_name, target_node_name)
+
+    def get_transformation(self, name: str) -> Transformation:
+        return self.get_node(name)['transformation']
+
+    def get_run_status(self, name: str) -> RunStatus:
+        return self.get_node(name)['run_status']
+
+    def set_run_status(self, name: str, run_status: RunStatus):
+        self.graph.nodes[name]['run_status'] = run_status
 
     def calculate_graph_run_status(self, node_name, skipped_node_names):
         skipped_node_names = set(skipped_node_names)
@@ -45,17 +81,18 @@ class NodeGraph:
         while len(frontier) != 0:
             current_node_name, descendent_run_status = frontier.pop()
             if descendent_run_status == RunStatus.ACTIVE:
-                self.get_node(current_node_name)['run_status'] = RunStatus.ACTIVE
+                self.set_run_status(current_node_name, RunStatus.ACTIVE)
                 for ancestor_name in self.graph.predecessors(current_node_name):
                     if ancestor_name in skipped_node_names:
                         frontier.append((ancestor_name, RunStatus.SKIP))
                     else:
                         frontier.append((ancestor_name, RunStatus.ACTIVE))
             else:
-                self.get_node(current_node_name)['run_status'] = RunStatus.SKIP
+                self.set_run_status(current_node_name, RunStatus.SKIP)
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    if self.get_node(ancestor_name)['run_status'] != RunStatus.ACTIVE:
+                    if self.get_run_status(ancestor_name) != RunStatus.ACTIVE:
                         frontier.append((ancestor_name, RunStatus.SKIP))
+
 
     def get_dependency_map(self):
         dependencies = {}
@@ -65,10 +102,36 @@ class NodeGraph:
             dependencies[destination].add(source)
         return dependencies
 
-    def pop_runnable_nodes(self):
+    def get_nodes_depth(self):
+        """
+        Return a map of node names to their depth in the graph, depth being the minimal distance to the root/first node.
+        """
+        # TODO- this function is failing unit tests, I can see 3 issues:
+        # - The depth of each node is maximal not minimal, that is if there is a path of length 2 to the start node and a
+        # path of length 1 it uses 2 as the depth where it should be 1.
+        # - Depth is 1 more than it ought to be. The start node should have depth 0 not depth 1.
+        # - We ought to be having the node name as the key and not the value.
+        end_node = [node_name for node_name, num_out_edges in self.graph.out_degree if num_out_edges==0][0]
+
+        nodes_depth = {}
+        for node in self.graph:
+            depth = len(
+                max(list(nx.all_simple_paths(self.graph, node, end_node)), key=lambda x: len(x), default=[end_node]))
+
+            if depth not in nodes_depth:
+                nodes_depth[depth] = [node]
+            else:
+                nodes_depth[depth] += [node]
+
+        max_depth = max(nodes_depth.keys())
+
+        return {-1 * k + max_depth + 1: v for k, v in nodes_depth.items()}
+
+    def pop_runnable_transformations(self) -> List[Transformation]:
         candidate_node_names = [node_name for node_name in self.graph if self.graph.in_degree(node_name)==0]
-        runnable_node_names = filter(lambda node_name: self.get_node(node_name)['run_status'] == RunStatus.ACTIVE, candidate_node_names)
-        runnable_nodes = [self.get_node(node_name) for node_name in runnable_node_names]
+        runnable_node_names = filter(lambda node_name: self.get_run_status(node_name) == RunStatus.ACTIVE,
+                                     candidate_node_names)
+        runnable_nodes = [self.get_transformation(node_name) for node_name in runnable_node_names]
         for node_name in candidate_node_names:
             self.graph.remove_node(node_name)
         return runnable_nodes

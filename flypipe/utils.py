@@ -3,10 +3,11 @@ from enum import Enum
 from pandas.testing import assert_frame_equal
 
 from flypipe.exceptions import (
-    ErrorDataframesDifferentData,
+    DataframeDifferentDataError,
     ErrorDataframesSchemasDoNotMatch,
-    DataFrameTypeNotSupported,
+    DataframeTypeNotSupportedError,
 )
+
 
 # TODO: document things
 
@@ -50,7 +51,7 @@ def assert_dataframes_equals(df1, df2) -> None:
         assert_schemas_are_equals(df1, df2)
 
         if df1.exceptAll(df2).count() != df2.exceptAll(df1).count():
-            raise ErrorDataframesDifferentData()
+            raise DataframeDifferentDataError()
 
 
 def dataframe_type(df) -> DataFrameType:
@@ -69,7 +70,7 @@ def dataframe_type(df) -> DataFrameType:
             if isinstance(df, sql.DataFrame):
                 return DataFrameType.PYSPARK
 
-    raise DataFrameTypeNotSupported
+    raise DataframeTypeNotSupportedError
 
 
 # TODO: add tests to get_schema

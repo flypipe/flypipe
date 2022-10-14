@@ -1,6 +1,0 @@
-"""
-setup.py present for legacy reasons (see https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html)
-"""
-from setuptools import setup
-
-setup()

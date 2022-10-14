@@ -4,8 +4,8 @@ from numpy import dtype
 from pyspark.sql.types import BooleanType
 
 from flypipe.data_type import Boolean
-from flypipe.exceptions import ErrorColumnNotInDataframe
-from flypipe.utils import get_schema
+from flypipe.exceptions import ColumnNotInDataframeError
+from flypipe.utils import get_schema, DataFrameType
 
 
 @pytest.fixture(scope="function")
@@ -32,17 +32,24 @@ def pandas_on_spark_df(pyspark_df):
 
 class TestBoolean:
     def test_column_exists(self, pandas_df, pyspark_df, pandas_on_spark_df):
-        columns = ["non_existent_colum"]
+
         type_ = Boolean()
-        with pytest.raises(ErrorColumnNotInDataframe):
-            type_.cast(pandas_df, columns)
-            type_.cast(pyspark_df, columns)
-            type_.cast(pandas_on_spark_df, columns)
+        with pytest.raises(ColumnNotInDataframeError):
+            type_.cast(pandas_df, DataFrameType.PANDAS, "non_existent_colum")
+
+        with pytest.raises(ColumnNotInDataframeError):
+            type_.cast(pandas_on_spark_df, DataFrameType.PANDAS_ON_SPARK, "non_existent_colum")
+
+        with pytest.raises(ColumnNotInDataframeError):
+            type_.cast(pyspark_df, DataFrameType.PYSPARK, "non_existent_colum")
 
     def test_boolean(self, pandas_df, pyspark_df, pandas_on_spark_df):
         columns = ["bool"]
         type_ = Boolean()
-        df_cast = type_.cast(pandas_df, columns)
+        df_cast = None
+
+        for col in columns:
+            df_cast = type_.cast(pandas_df, DataFrameType.PANDAS, col)
         assert {
             "bool": dtype("bool"),
             "int": dtype("int64"),
@@ -50,19 +57,22 @@ class TestBoolean:
 
         columns = ["bool", "int"]
         type_ = Boolean()
-        df_cast = type_.cast(pandas_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pandas_df, DataFrameType.PANDAS, col)
         assert {
             "bool": dtype("bool"),
             "int": dtype("bool"),
         } == get_schema(df_cast)
 
-        df_cast = type_.cast(pandas_on_spark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pandas_on_spark_df, DataFrameType.PANDAS_ON_SPARK, col)
         assert {
             "bool": dtype("bool"),
             "int": dtype("bool"),
         } == get_schema(df_cast)
 
-        df_cast = type_.cast(pyspark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pyspark_df, DataFrameType.PYSPARK, col)
         assert {
             "bool": BooleanType(),
             "int": BooleanType(),

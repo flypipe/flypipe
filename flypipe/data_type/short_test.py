@@ -5,7 +5,7 @@ from numpy import dtype
 from pyspark.sql.types import ShortType
 
 from flypipe.data_type import Short
-from flypipe.utils import get_schema
+from flypipe.utils import get_schema, DataFrameType
 
 
 @pytest.fixture(scope="function")
@@ -34,18 +34,23 @@ class TestShort:
     def test_short(self, pandas_df, pyspark_df, pandas_on_spark_df):
         columns = ["short"]
         type_ = Short()
-        df_cast = type_.cast(pandas_df, columns)
+        df_cast = None
+
+        for col in columns:
+            df_cast = type_.cast(pandas_df, DataFrameType.PANDAS, col)
 
         assert {
             "short": dtype("int16"),
         } == get_schema(df_cast)
 
-        df_cast = type_.cast(pandas_on_spark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pandas_on_spark_df, DataFrameType.PANDAS_ON_SPARK, col)
         assert {
             "short": dtype("int16"),
         } == get_schema(df_cast)
 
-        df_cast = type_.cast(pyspark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pyspark_df, DataFrameType.PYSPARK, col)
         assert {
             "short": ShortType(),
         } == get_schema(df_cast)

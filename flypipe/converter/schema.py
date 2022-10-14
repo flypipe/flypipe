@@ -14,6 +14,8 @@ class SchemaConverter:
 
         df: pandas, pandas_on_spark or spark dataframe
             dataframe to be casted
+        df_type: DataFrameType
+            type of the dataframe
         schema: Schema
             the schema definition in which the columns of the dataframe will be casted to the defined data types
 
@@ -21,6 +23,7 @@ class SchemaConverter:
         -------
         df: pandas, pandas_on_spark or spark dataframe
             dataframe casted to the given schema
+
         """
 
         for column in schema.columns:

@@ -6,8 +6,8 @@ import pytest
 from numpy import dtype
 from pyspark.sql.types import DecimalType
 
-from flypipe.data_type import Decimal
-from flypipe.utils import get_schema
+from flypipe.data_type import Decimals
+from flypipe.utils import get_schema, DataFrameType
 
 
 @pytest.fixture(scope="function")
@@ -39,21 +39,27 @@ def pandas_on_spark_df(pyspark_df):
 class TestDecimal:
     def test_decimal(self, pandas_df, pyspark_df, pandas_on_spark_df):
         columns = ["decimal"]
-        type_ = Decimal(precision=10, scale=2)
+        type_ = Decimals(precision=10, scale=2)
+        df_cast = None
+        for col in columns:
+            df_cast = type_.cast(pandas_df, DataFrameType.PANDAS, col)
 
-        df_cast = type_.cast(pandas_df, columns)
         assert {
             "decimal": dtype("float64"),
         } == get_schema(df_cast)
         assert df_cast.loc[0, "decimal"] == np.round(3.489, decimals=2)
 
-        df_cast = type_.cast(pandas_on_spark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pandas_on_spark_df, DataFrameType.PANDAS_ON_SPARK, col)
+
         assert {
             "decimal": dtype("float64"),
         } == get_schema(df_cast)
         assert df_cast.loc[0, "decimal"] == np.round(3.489, decimals=2)
 
-        df_cast = type_.cast(pyspark_df, columns)
+        for col in columns:
+            df_cast = type_.cast(pyspark_df, DataFrameType.PYSPARK, col)
+
         assert {
             "decimal": DecimalType(precision=10, scale=2),
         } == get_schema(df_cast)
