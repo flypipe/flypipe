@@ -2,7 +2,6 @@ import pandas as pd
 import pytest
 
 from flypipe.exceptions import (
-    DataframeSchemasDoNotMatchError,
     DataframeDifferentDataError,
     DataframeSchemasDoNotMatchError,
     DataframeTypeNotSupportedError,

@@ -1,6 +1,4 @@
-import pandas as pd
-
-from flypipe.data_type import Decimals, Integer
+from flypipe.data_type import Decimals
 from flypipe.datasource.spark import Spark
 from flypipe.node import node
 from flypipe.schema.column import Column

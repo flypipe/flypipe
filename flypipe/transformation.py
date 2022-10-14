@@ -1,4 +1,3 @@
-from abc import ABC
 from flypipe.exceptions import DependencyNoSelectedColumnsError, NodeTypeInvalidError
 from flypipe.utils import DataFrameType
 

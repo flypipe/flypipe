@@ -1,6 +1,4 @@
-from typing import List, Union
-
-from flypipe.mode import Mode
+from typing import Union
 
 
 class DataframeTypeNotSupportedError(Exception):

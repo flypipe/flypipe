@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 import pytest
 from numpy import dtype
-from pyspark.sql.types import StringType, TimestampType, DateType
+from pyspark.sql.types import StringType, TimestampType
 
 from flypipe.data_type import Timestamp
 from flypipe.utils import get_schema, DataFrameType

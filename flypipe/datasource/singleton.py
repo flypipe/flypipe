@@ -1,4 +1,4 @@
-from threading import Lock, Thread
+from threading import Lock
 
 
 class SingletonMeta(type):

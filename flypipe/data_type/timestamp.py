@@ -1,11 +1,8 @@
 import numpy as np
-import pandas as pd
-import pyspark.pandas as ps
 import pyspark.sql.functions as F
 from pyspark.sql.types import TimestampType
 
 from flypipe.data_type import Date
-from flypipe.data_type.type import Type
 
 
 class Timestamp(Date):

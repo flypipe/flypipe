@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 import pyspark.sql.functions as F
 from numpy import dtype
-from pyspark.sql.types import ArrayType, StringType
+from pyspark.sql.types import ArrayType
 
 from flypipe.data_type.type import Type
 

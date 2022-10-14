@@ -1,14 +1,10 @@
-
-import pandas as pd
 import pytest
-from pyspark.sql.types import DecimalType
 
 from flypipe.converter.pyspark_schema_reader import PySparkSchemaReader
 from flypipe.data_type import String, Integer, Date, Decimals, Byte, Float, Double, Long, Short, Boolean, Timestamp, \
     Array, Map
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
-from flypipe.utils import DataFrameType
 
 
 @pytest.fixture(scope="function")

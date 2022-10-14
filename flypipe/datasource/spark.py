@@ -3,6 +3,7 @@ from functools import partial
 from flypipe.datasource.singleton import SingletonMeta
 from flypipe.node import datasource_node
 
+
 # instances = {}
 
 

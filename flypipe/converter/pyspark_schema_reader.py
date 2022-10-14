@@ -1,4 +1,4 @@
-from pyspark.sql.types import DecimalType, ArrayType, MapType, StructType
+from pyspark.sql.types import ArrayType, MapType
 
 from flypipe.data_type import data_types, Decimals, Array, Map
 from flypipe.schema import Column

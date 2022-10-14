@@ -1,5 +1,6 @@
 import json
 import os
+
 from flypipe.node_graph import RunStatus, NodeGraph
 from flypipe.node_type import NodeType
 from flypipe.printer.template import get_template
