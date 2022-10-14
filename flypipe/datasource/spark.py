@@ -1,10 +1,11 @@
 from functools import partial
 
 from flypipe.datasource.singleton import SingletonMeta
-from flypipe.node import datasource_node
+from flypipe.node import Node
 
 
 # instances = {}
+from flypipe.node_type import NodeType
 
 
 class Spark(metaclass=SingletonMeta):
@@ -31,7 +32,7 @@ class Spark(metaclass=SingletonMeta):
                        columns=self.all_selected_columns)
 
         func.__name__ = self.table
-        node = datasource_node(type='pyspark',
+        node = spark_datasource_node(type='pyspark',
                                description=f"Spark table {self.table}",
                                spark_context=True,
                                selected_columns = columns)
@@ -50,3 +51,23 @@ class Spark(metaclass=SingletonMeta):
             return df.select(columns)
 
         return df
+
+class SparkDataSource(Node):
+    node_type = NodeType.DATASOURCE
+
+
+def spark_datasource_node(*args, **kwargs):
+    """
+    Decorator factory that returns the given function wrapped inside a Datasource Node class
+    """
+
+    def decorator(func):
+        """TODO: I had to re-create graph in the decorator as selected_columns are set after the node has been created
+        when creting a virtual datasource node, it is set the columns manually
+        """
+
+        kwargs_init = {k:v for k,v in kwargs.items() if k != 'selected_columns'}
+        ds = SparkDataSource(func, *args, **kwargs_init)
+        return ds.select(kwargs['selected_columns'])
+
+    return decorator
