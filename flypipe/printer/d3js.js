@@ -18,8 +18,8 @@ const view_port_width = getWidth();
 const view_port_height = getHeight();
 const link_color = "#999";
 const highlight_color = "black";
-const circle_radius = 6;
-const font_size = 16;
+const circle_radius = 7;
+const font_size = 17;
 const stroke_width = 3;
 const circle_stroke = 1;
 
