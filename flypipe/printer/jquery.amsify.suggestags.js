@@ -269,8 +269,10 @@ var AmsifySuggestags;
 		},
 
 		getTag : function(value) {
+
 			if(this.settings.suggestions.length) {
 				var tag = value;
+
 				$.each(this.settings.suggestions, function(key, item){
 					if(typeof item === 'object' && item.value == value) {
 						tag = item.tag
@@ -409,7 +411,8 @@ var AmsifySuggestags;
 			var _self = this;
 			var found = false;
 			var all   = (showAll)? true: false;
-			var lower = value.toString().toLowerCase();
+			var lower = value.toString().toLowerCase().trim();
+
 			$(this.selectors.listArea).find(_self.classes.noSuggestion).hide();
 			var $list = $(this.selectors.listArea).find(this.classes.list);
 			$list.find(this.classes.listItem).each(function(){

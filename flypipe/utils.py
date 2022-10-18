@@ -4,7 +4,7 @@ from pandas.testing import assert_frame_equal
 
 from flypipe.exceptions import (
     DataframeDifferentDataError,
-    ErrorDataframesSchemasDoNotMatch,
+    DataframeSchemasDoNotMatchError,
     DataframeTypeNotSupportedError,
 )
 
@@ -21,7 +21,7 @@ class DataFrameType(Enum):
 def assert_schemas_are_equals(df1, df2) -> None:
     if dataframe_type(df1) == DataFrameType.PANDAS:
         if not df1.dtypes.equals(df2.dtypes):
-            raise ErrorDataframesSchemasDoNotMatch(
+            raise DataframeSchemasDoNotMatchError(
                 f"Schema of df1 {df1.dtypes} != schema df2 {df2.dtypes}"
             )
 
@@ -31,7 +31,7 @@ def assert_schemas_are_equals(df1, df2) -> None:
         schema_df1 = json.dumps(sorted(df1.dtypes, key=lambda t: t[0]))
         schema_df2 = json.dumps(sorted(df2.dtypes, key=lambda t: t[0]))
         if schema_df1 != schema_df2:
-            raise ErrorDataframesSchemasDoNotMatch(
+            raise DataframeSchemasDoNotMatchError(
                 f"Schema of df1 {schema_df1} != schema df2 {schema_df2}"
             )
 

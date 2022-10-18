@@ -1,5 +1,6 @@
 import json
 import os
+
 from flypipe.node_graph import RunStatus, NodeGraph
 from flypipe.node_type import NodeType
 from flypipe.printer.template import get_template
@@ -122,12 +123,12 @@ class GraphHTML:
                         'type': None,
                         'description': None
                     }
-                    for column in graph_node['transformation'].selected_columns
+                    for column in graph_node['transformation'].grouped_selected_columns
                 ]
 
                 node_attributes['definition']['query'] = {
                     "table": graph_node['transformation'].varname,
-                    "columns": graph_node['transformation'].selected_columns
+                    "columns": graph_node['transformation'].grouped_selected_columns
                 }
 
             nodes.append(node_attributes)

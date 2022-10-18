@@ -1,4 +1,3 @@
-from abc import ABC
 from flypipe.exceptions import DependencyNoSelectedColumnsError, NodeTypeInvalidError
 from flypipe.utils import DataFrameType
 
@@ -27,6 +26,7 @@ class Transformation:
         self.tags = tags or []
         self.dependencies = dependencies or []
         self.dependencies_selected_columns = {}
+        self.dependencies_grouped_selected_columns = {}
 
         if self.dependencies:
             self.dependencies = sorted(self.dependencies, key=lambda d: d.__name__)
@@ -34,11 +34,13 @@ class Transformation:
                 if not dependency.selected_columns:
                     raise DependencyNoSelectedColumnsError(f'Selected columns of dependency {dependency.__name__} not specified')
                 self.dependencies_selected_columns[dependency.__name__] = dependency.selected_columns
+                self.dependencies_grouped_selected_columns[dependency.__name__] = dependency.grouped_selected_columns
 
         self._provided_inputs = {}
         self.output_schema = output
         self.spark_context = spark_context
         self.selected_columns = []
+        self.grouped_selected_columns = []
         self.node_graph = None
 
     @property

@@ -24,6 +24,7 @@ class Node(Transformation):
             for column in columns:
                 self.selected_columns.append(column)
         self.selected_columns = sorted(list(set(self.selected_columns)))
+        self.grouped_selected_columns = self.selected_columns
         return self
 
     def inputs(self, **kwargs):
@@ -92,26 +93,5 @@ def node(*args, **kwargs):
 
     def decorator(func):
         return Node(func, *args, **kwargs)
-
-    return decorator
-
-
-class DataSource(Node):
-    node_type = NodeType.DATASOURCE
-
-
-def datasource_node(*args, **kwargs):
-    """
-    Decorator factory that returns the given function wrapped inside a Datasource Node class
-    """
-
-    def decorator(func):
-        """TODO: I had to re-create graph in the decorator as selected_columns are set after the node has been created
-        when creting a virtual datasource node, it is set the columns manually
-        """
-
-        kwargs_init = {k:v for k,v in kwargs.items() if k != 'selected_columns'}
-        ds = DataSource(func, *args, **kwargs_init)
-        return ds.select(kwargs['selected_columns'])
 
     return decorator

@@ -51,7 +51,8 @@ class NodeGraph:
                                )
                 graph.add_edge(dependency.__name__,
                                transformation.__name__,
-                               selected_columns=transformation.dependencies_selected_columns[dependency.__name__])
+                               selected_columns=transformation.dependencies_selected_columns[dependency.__name__],
+                               grouped_selected_columns=transformation.dependencies_grouped_selected_columns[dependency.__name__])
                 graph = nx.compose(graph, self._build_graph(dependency))
 
         return graph
