@@ -1,14 +1,17 @@
 import pandas
+import pandas as pd
 import pyspark.pandas
 import pytest
 from pyspark_test import assert_pyspark_df_equal
+from tabulate import tabulate
 
-from flypipe.data_type import Decimals
-from flypipe.datasource.spark import Spark
+from flypipe.data_type import Decimals, String
+from flypipe.datasource.spark import Spark, SelectionNotFoundInTable
 from flypipe.exceptions import DependencyNoSelectedColumnsError, NodeTypeInvalidError
 from flypipe.node import node
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
+from tests.utils.spark import drop_database
 
 
 @pytest.fixture(scope="function")
@@ -19,7 +22,9 @@ def spark():
         spark
             .createDataFrame(schema=('c1', 'c2', 'c3'), data=[(1, 2, 3)])
             .createOrReplaceTempView('dummy_table')
+
     )
+
     return spark
 
 
@@ -144,7 +149,6 @@ class TestPySparkNode:
         spy.assert_not_called()
         assert_pyspark_df_equal(output_df,
                                 spark.createDataFrame(schema=('c1', 'c2',), data=[(1, 2,)]))
-
 
     def test_skip_upstream(self, spark):
         """
@@ -353,4 +357,76 @@ class TestPySparkNode:
 
         df = t1.run(spark, parallel=False)
         assert isinstance(df, pyspark.pandas.DataFrame)
+
+    def test_datasource_case_sensitive_columns(self, spark):
+        """
+        Test columns case sensitive
+
+        Pandas dataframe
+        import pandas as pd
+        df = pd.DataFrame(data={"My_Col": [1]})
+        print(df['My_Col']) #<-- passes
+        print(df['my_col']) #<-- fails
+
+        Pyspark Dataframe
+        df = spark.createDataFrame(schema=('My_Col__x',), data=[(1,)])
+        df.select('My_Col__x') #<-- passes
+        df.select('my_col__x') #<-- fails
+
+
+        """
+        db_name = "test_pyspark_node"
+        drop_database(spark, db_name)
+        my_data = (
+            spark
+            .createDataFrame(schema=('My_Col__x', 'My_Col__y', 'My_Col__z',),
+                             data=[("dummy","dummy","dummy",)])
+        )
+
+        spark.sql(f"create database if not exists {db_name}")
+        (
+            my_data
+            .write.mode("overwrite")
+            .saveAsTable(f"{db_name}.dummy_table__anything_c")
+        )
+
+
+        @node(type='pandas_on_spark',
+              dependencies=[
+                  Spark(f"{db_name}.dummy_table__anything_c")
+                    .select('Id', 'my_col__x', 'My_Col__z')
+              ],
+              output=Schema([
+                  Column('my_col', String(), 'dummy'),
+              ]))
+        def my_col(test_pyspark_node_dummy_table__anything_c):
+            df = test_pyspark_node_dummy_table__anything_c
+            df = df.rename(columns={'my_col__x': 'my_col'})
+            return df
+
+        with pytest.raises(SelectionNotFoundInTable) as exc_info:
+            (
+                my_col
+                    .clear_inputs()
+                    .run(spark, parallel=False)
+            )
+        expected_error_df = pd.DataFrame(data = {
+            'test_pyspark_node.dummy_table__anything_c': [
+               '',  'My_Col__x ', 'My_Col__z'
+            ],
+            'selection': [
+                'Id', 'my_col__x', 'My_Col__z'
+            ],
+            'error': [
+                'not found','Did you mean `My_Col__x`?','found'
+            ]
+        })
+        expected_error_df = expected_error_df.sort_values([
+            'selection',
+            'test_pyspark_node.dummy_table__anything_c'
+        ]).reset_index(drop=True)
+        assert str(exc_info.value) == \
+               f"Flypipe: could not find some columns in `test_pyspark_node.dummy_table__anything_c`" \
+                   f"\n\n{tabulate(expected_error_df, headers='keys', tablefmt='mixed_outline')}\n"
+
 
