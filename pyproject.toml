@@ -21,6 +21,7 @@ dynamic = ["version", "description"]
 requires-python=">=3.8"
 dependencies  = [
     "networkx >=2.8,<3",
+    "tabulate >=0.8,<1",
 ]
 
 [project.urls]
