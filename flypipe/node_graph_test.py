@@ -41,7 +41,7 @@ class TestNodeGraph:
         assert set(graph.get_edges()) == {('t1', 't2'), ('t1', 't3'), ('t2', 't4'), ('t3', 't4')}
         assert graph.get_edge_data('t1', 't2')['selected_columns'] == ['fruit']
         assert graph.get_edge_data('t1', 't3')['selected_columns'] == ['color']
-        # assert set(graph.get_node('t1')['output_columns']) == {'fruit', 'color'}
+        assert set(graph.get_node('t1')['output_columns']) == {'fruit', 'color'}
 
     def test_calculate_graph_run_status_1(self):
         @node(type="pandas")

@@ -50,12 +50,15 @@ class NodeGraph:
 
             if current_transformation.dependencies:
                 for dependency in current_transformation.dependencies:
-                    graph.add_node(
-                        dependency.__name__,
-                        transformation=dependency,
-                        run_status=RunStatus.UNKNOWN,
-                        output_columns=dependency.selected_columns,
-                    )
+                    if dependency.__name__ not in graph.nodes:
+                        graph.add_node(
+                            dependency.__name__,
+                            transformation=dependency,
+                            run_status=RunStatus.UNKNOWN,
+                            output_columns=list(dependency.selected_columns),
+                        )
+                    else:
+                        graph.nodes[dependency.__name__]['output_columns'].extend(dependency.selected_columns)
                     graph.add_edge(
                         dependency.__name__,
                         current_transformation.__name__,
