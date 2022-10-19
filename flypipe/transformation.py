@@ -26,7 +26,6 @@ class Transformation:
             raise NodeTypeInvalidError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
         self.description = description or "No description"
         self.tags = tags or []
-        self.requested_output_columns = []
         self.dependencies = dependencies or []
         self.dependencies_selected_columns = {}
         self.dependencies_grouped_selected_columns = {}

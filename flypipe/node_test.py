@@ -1,6 +1,15 @@
+import pytest
+
 from flypipe.node import node
 import pandas as pd
 from pandas.testing import assert_frame_equal
+
+
+@pytest.fixture(scope="function")
+def spark():
+    from tests.utils.spark import spark
+
+    return spark
 
 
 class TestNode:
@@ -24,7 +33,7 @@ class TestNode:
         assert node_input2.selected_columns == ('c3',)
         assert a.output_columns == ['c1', 'c2', 'c3']
 
-    def test_select_column(self):
+    def test_select_column(self, spark):
         data = pd.DataFrame({'fruit': ['apple', 'banana'], 'color': ['red', 'yellow']})
         @node(
             type='pandas',
@@ -40,14 +49,14 @@ class TestNode:
             return a
 
         @node(
-            type='pyspark',
+            type='pandas',
             dependencies=[a.select('color')]
         )
         def c(a):
             return a
 
-        assert_frame_equal(b.run(parallel=False), data[['fruit']])
-        assert_frame_equal(c.run(parallel=False), data[['color']])
+        assert_frame_equal(b.run(spark, parallel=False), data[['fruit']])
+        assert_frame_equal(c.run(spark, parallel=False), data[['color']])
 
     def test_consolidated_query(self):
         pass

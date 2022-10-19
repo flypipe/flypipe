@@ -22,10 +22,6 @@ class Node(Transformation):
         # TODO- if self.output_schema is defined then we should ensure each of the columns is in it.
         # otherwise if self.output_schema is not defined then we won't know the ultimate output schema so can't do any validation
 
-        # TODO- DON'T DO THIS HERE THIS IS CALLED AT DEFINITION TIME
-        for column in columns:
-            self.requested_output_columns.append(column)
-
         return InputNode(self, list(columns))
 
     def inputs(self, **kwargs):
@@ -50,10 +46,10 @@ class Node(Transformation):
 
     def _run_sequential(self, spark=None):
         outputs = {k: DataframeWrapper(spark, df, schema=None) for k, df in self._provided_inputs.items()}
-        node_graph = self.node_graph.copy()
+        execution_graph = self.node_graph.copy()
 
-        while not node_graph.is_empty():
-            transformations = node_graph.pop_runnable_transformations()
+        while not execution_graph.is_empty():
+            transformations = execution_graph.pop_runnable_transformations()
             for transformation in transformations:
                 if transformation.__name__ in outputs:
                     continue
@@ -74,11 +70,13 @@ class Node(Transformation):
                 result = self.process_transformation(spark, transformation, **dependency_values)
                 # TODO- once output schema is implemented, we should only use output_columns if the output schema
                 # isn't provided
-                result_type = dataframe_type(result)
-                if result_type in (DataFrameType.PANDAS, DataFrameType.PANDAS_ON_SPARK):
-                    result = result[transformation.output_columns]
-                elif result_type == DataFrameType.PYSPARK:
-                    result = result.select(transformation.output_columns)
+                output_columns = self.node_graph.get_node_output_columns(transformation.__name__)
+                if output_columns:
+                    result_type = dataframe_type(result)
+                    if result_type in (DataFrameType.PANDAS, DataFrameType.PANDAS_ON_SPARK):
+                        result = result[output_columns]
+                    elif result_type == DataFrameType.PYSPARK:
+                        result = result.select(output_columns)
 
                 output = DataframeWrapper(spark, result, transformation.output_schema)
 
