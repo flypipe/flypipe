@@ -45,15 +45,18 @@ class NodeGraph:
 
         if transformation.dependencies:
             for dependency in transformation.dependencies:
-                graph.add_node(dependency.__name__,
-                               transformation=dependency,
-                               run_status=RunStatus.UNKNOWN,
-                               )
-                graph.add_edge(dependency.__name__,
-                               transformation.__name__,
-                               selected_columns=transformation.dependencies_selected_columns[dependency.__name__],
-                               grouped_selected_columns=transformation.dependencies_grouped_selected_columns[dependency.__name__])
-                graph = nx.compose(graph, self._build_graph(dependency))
+                graph.add_node(
+                    dependency.__name__,
+                    transformation=dependency,
+                    run_status=RunStatus.UNKNOWN,
+                    output_columns=dependency.selected_columns,
+                )
+                graph.add_edge(
+                    dependency.__name__,
+                    transformation.__name__,
+                    selected_columns=dependency.selected_columns
+                )
+                graph = nx.compose(graph, self._build_graph(dependency.node))
 
         return graph
 
