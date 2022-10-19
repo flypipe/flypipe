@@ -2,7 +2,6 @@ from enum import Enum
 from typing import List
 
 import networkx as nx
-from matplotlib import pyplot as plt
 
 from flypipe.transformation import Transformation
 
@@ -140,13 +139,10 @@ class NodeGraph:
     def is_empty(self):
         return nx.number_of_nodes(self.graph) == 0
 
-    #
-    # @classmethod
-    # def get_runnable_nodes(cls, execution_graph):
-    #     nodes = [node for node in execution_graph if execution_graph.in_degree(node) == 0]
-
-
     def plot(self):
+
+        from matplotlib import pyplot as plt
+
         plt.title(f'Transformation Graph')
         nx.draw(self.graph, with_labels=True)
         plt.show()
