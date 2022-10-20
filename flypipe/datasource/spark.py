@@ -28,9 +28,9 @@ class Spark:
 
         func.__name__ = self.table
         node = spark_datasource_node(type='pyspark',
-                               description=f"Spark table {self.table}",
-                               spark_context=True,
-                               selected_columns = self.selected_columns)
+                                     description=f"Spark table {self.table}",
+                                     spark_context=True,
+                                     selected_columns = self.selected_columns)
 
         func = node(func)
         self.func = func
