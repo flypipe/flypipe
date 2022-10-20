@@ -33,29 +33,6 @@ class NodeGraph:
 
         return graph_str
 
-    # def _build_graph(self, transformation: Transformation) -> nx.DiGraph:
-    #     graph = nx.DiGraph()
-    #     # TODO: remove inputs and leave dependencies
-    #     graph.add_node(
-    #         transformation.__name__,
-    #         transformation=transformation,
-    #         run_status=RunStatus.UNKNOWN,
-    #     )
-    #
-    #     if transformation.dependencies:
-    #         for dependency in transformation.dependencies:
-    #             graph.add_node(dependency.__name__,
-    #                            transformation=dependency,
-    #                            run_status=RunStatus.UNKNOWN,
-    #                            )
-    #             graph.add_edge(dependency.__name__,
-    #                            transformation.__name__,
-    #                            selected_columns=transformation.dependencies_selected_columns[dependency.__name__],
-    #                            graph_selected_columns=transformation.dependencies_graph_selected_columns[dependency.__name__])
-    #             graph = nx.compose(graph, self._build_graph(dependency))
-    #
-    #     return graph
-
     def _build_graph(self, transformation) -> nx.DiGraph:
         graph = nx.DiGraph()
 

@@ -17,7 +17,6 @@ class Node(Transformation):
         self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
 
     def select(self, *columns):
-        # TODO: validate there are no duplicated selection
         self.selected_columns = []
         if isinstance(columns[0], list):
             self.selected_columns = list(dict.fromkeys(self.selected_columns + columns[0]))
@@ -76,7 +75,7 @@ class Node(Transformation):
 
 
     def process_transformation(self, spark, transformation: Transformation, **inputs):
-        # TODO: apply output validation + rename function to transformation
+        # TODO: apply output validation
         if transformation.spark_context:
             parameters = {'spark': spark, **inputs}
         else:

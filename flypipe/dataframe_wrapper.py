@@ -62,7 +62,6 @@ class DataframeWrapper:
             raise DataframeTypeNotSupportedError(f'Type {df_type} not supported')
 
     def as_pandas(self):
-        # FIXME: return deep copy of dataframe
         if self.pandas_data is None:
             df = self.pyspark_data if self.pandas_on_spark_data is None else self.pandas_on_spark_data
             self.pandas_data = self.dataframe_converter.convert(df, DataFrameType.PANDAS)
@@ -72,22 +71,23 @@ class DataframeWrapper:
         return self.pandas_data.copy(deep=True)
 
     def as_pandas_on_spark(self):
-        # FIXME: convert to spark and then back again to pandas on spark
         if self.pandas_on_spark_data is None:
 
             if self.pandas_data is None:
-                df = self.pyspark_data
-                self.pandas_on_spark_data = self.dataframe_converter.convert(df, DataFrameType.PANDAS_ON_SPARK)
+                self.pandas_on_spark_data = self.dataframe_converter.convert(self.pyspark_data,
+                                                                             DataFrameType.PANDAS_ON_SPARK)
             else:
-                df = self.pandas_data
-                self.pandas_on_spark_data = df
+                self.pandas_on_spark_data = self.as_pandas()
 
             if self.schema:
                 self.pandas_on_spark_data = SchemaConverter.cast(self.pandas_on_spark_data,
                                                                  dataframe_type(self.pandas_on_spark_data),
                                                                  self.schema)
-        # FIXME: implement tests
-        return self.pandas_on_spark_data.copy(deep=True)
+
+            return self.pandas_on_spark_data
+        else:
+            # FIXME: implement tests
+            return self.pandas_on_spark_data.copy(deep=True)
 
     def as_pyspark(self):
         if self.pyspark_data is None:
