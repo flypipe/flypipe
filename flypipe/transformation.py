@@ -1,4 +1,5 @@
 from flypipe.exceptions import DependencyNoSelectedColumnsError, NodeTypeInvalidError
+from flypipe.node_type import NodeType
 from flypipe.utils import DataFrameType
 
 
@@ -32,7 +33,7 @@ class Transformation:
             self.dependencies = sorted(self.dependencies, key=lambda d: d.__name__)
 
             for dependency in self.dependencies:
-                if not dependency.selected_columns:
+                if not dependency.selected_columns and dependency.node_type != NodeType.DATASOURCE:
                     raise DependencyNoSelectedColumnsError(f'Selected columns of dependency {dependency.__name__} not specified')
                 self.dependencies_selected_columns[dependency.__name__] = dependency.selected_columns
                 # self.dependencies_graph_selected_columns[dependency.__name__] = dependency.graph_selected_columns
