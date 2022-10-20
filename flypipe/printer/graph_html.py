@@ -2,7 +2,6 @@ import json
 import os
 
 from flypipe.node_graph import RunStatus, NodeGraph
-from flypipe.node_type import NodeType
 from flypipe.printer.template import get_template
 from flypipe.utils import DataFrameType
 
@@ -107,6 +106,7 @@ class GraphHTML:
             }
 
             if graph_node['transformation'].output_schema:
+
                 node_attributes['definition']['columns'] = [
                     {
                         'name': column.name,
@@ -116,19 +116,20 @@ class GraphHTML:
                     for column in graph_node['transformation'].output_schema.columns
                 ]
 
-            if graph_node['transformation'].node_type==NodeType.DATASOURCE:
+            else:
+
                 node_attributes['definition']['columns'] = [
                     {
                         'name': column,
                         'type': None,
                         'description': None
                     }
-                    for column in graph_node['transformation'].grouped_selected_columns
+                    for column in graph_node['graph_selected_columns']
                 ]
 
                 node_attributes['definition']['query'] = {
                     "table": graph_node['transformation'].varname,
-                    "columns": graph_node['transformation'].grouped_selected_columns
+                    "columns": graph_node['graph_selected_columns']
                 }
 
             nodes.append(node_attributes)

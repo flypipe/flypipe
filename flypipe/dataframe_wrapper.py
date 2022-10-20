@@ -1,6 +1,6 @@
 from flypipe.converter.dataframe import DataFrameConverter
 from flypipe.converter.schema import SchemaConverter
-from flypipe.exceptions import DataframeTypeNotSupportedError
+from flypipe.exceptions import DataframeTypeNotSupportedError, SelectionNotFoundInTable
 from flypipe.utils import dataframe_type, DataFrameType
 
 
@@ -10,8 +10,9 @@ class DataframeWrapper:
     exact concrete dataframe type it's storing is.
     """
 
-    def __init__(self, spark, df, schema):
+    def __init__(self, spark, node_name, df, schema):
         self.spark = spark
+        self.node_name = node_name
         self.dataframe_converter = DataFrameConverter(self.spark)
         self.schema = schema
         self.pandas_data = None
@@ -35,13 +36,28 @@ class DataframeWrapper:
         else:
             raise ValueError(f'Type {self.type} not supported')
 
-    def as_type(self, df_type: DataFrameType):
+    def select(self, df, selected_columns: [str]=None):
+
+        if not selected_columns:
+            return df
+
+        df_cols = [col for col in df.columns]
+
+        if not set(selected_columns).issubset(set(df_cols)):
+            raise SelectionNotFoundInTable(self.node_name, df_cols, selected_columns)
+
+        return df[selected_columns]
+
+
+    def as_type(self, df_type: DataFrameType, selected_columns: [str]=None):
         if df_type == DataFrameType.PANDAS:
-            return self.as_pandas()
+            return self.select(self.as_pandas(), selected_columns)
+
         elif df_type == DataFrameType.PYSPARK:
-            return self.as_pyspark()
+            return self.select(self.as_pyspark(), selected_columns)
+
         elif df_type == DataFrameType.PANDAS_ON_SPARK:
-            return self.as_pandas_on_spark()
+            return self.select(self.as_pandas_on_spark(), selected_columns)
         else:
             raise DataframeTypeNotSupportedError(f'Type {df_type} not supported')
 

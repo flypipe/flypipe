@@ -6,8 +6,8 @@ from pyspark_test import assert_pyspark_df_equal
 from tabulate import tabulate
 
 from flypipe.data_type import Decimals, String
-from flypipe.datasource.spark import Spark, SelectionNotFoundInTable
-from flypipe.exceptions import DependencyNoSelectedColumnsError, NodeTypeInvalidError
+from flypipe.datasource.spark import Spark
+from flypipe.exceptions import DependencyNoSelectedColumnsError, NodeTypeInvalidError, SelectionNotFoundInTable
 from flypipe.node import node
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
@@ -20,7 +20,7 @@ def spark():
 
     (
         spark
-            .createDataFrame(schema=('c1', 'c2', 'c3'), data=[(1, 2, 3)])
+            .createDataFrame(schema=('c1', 'c2', 'c3',), data=[(1, 2, 3,)])
             .createOrReplaceTempView('dummy_table')
 
     )
@@ -129,9 +129,10 @@ class TestPySparkNode:
         When t1 has a dependency to a datasource and it is provided then datasource should not run
 
         """
+        spark_node = Spark('dummy_table')
 
         @node(type='pyspark',
-              dependencies=[Spark('dummy_table').select('c1')],
+              dependencies=[spark_node.select('c1', 'c2')],
               output=Schema([
                   Column('c1', Decimals(16, 2), 'dummy'),
                   Column('c2', Decimals(16, 2), 'dummy')
@@ -139,12 +140,12 @@ class TestPySparkNode:
         def t1(dummy_table):
             return dummy_table
 
-        func_name = Spark('dummy_table').func.function.__name__
-        spy = mocker.spy(Spark('dummy_table').func, 'function')
+        func_name = spark_node.func.function.__name__
+        spy = mocker.spy(spark_node.func, 'function')
         # Filthy hack to stop the spy removing the __name__ attribute from the function
-        Spark('dummy_table').func.function.__name__ = func_name
+        spark_node.func.function.__name__ = func_name
 
-        df = spark.createDataFrame(schema=('c1', 'c2', 'c3'), data=[(1, 2, 3)])
+        df = spark.createDataFrame(schema=('c1', 'c2', 'c3',), data=[(1, 2, 3,)])
         output_df = t1.inputs(dummy_table=df).run(spark, parallel=False)
         spy.assert_not_called()
         assert_pyspark_df_equal(output_df,
@@ -225,11 +226,11 @@ class TestPySparkNode:
         Therefore in the below scenario where we have a node requesting table.c1 and another node requested table.c2, we
         expect one query to table for both columns and for the other column c3 in the table not to be included.
         """
-
+        spark_node_t1 = Spark("dummy_table")
         @node(
             type="pyspark",
             dependencies=[
-                Spark("dummy_table").select('c1')
+                spark_node_t1.select('c1')
             ],
             output=Schema([
                 Column('c1', Decimals(10, 2), 'dummy')
@@ -238,10 +239,11 @@ class TestPySparkNode:
         def t1(dummy_table):
             return dummy_table
 
+        spark_node_t2 = Spark("dummy_table")
         @node(
             type="pyspark",
             dependencies=[
-                Spark("dummy_table").select('c2')
+                spark_node_t2.select('c2')
             ],
             output=Schema([
                 Column('c2', Decimals(10, 2), 'dummy')
@@ -261,14 +263,24 @@ class TestPySparkNode:
         def t3(t1, t2):
             return t1.join(t2)
 
-        func_name = Spark('dummy_table').func.function.__name__
-        spy = mocker.spy(Spark('dummy_table').func, 'function')
+        # spark_node_t2 should not be called
+        func_name = spark_node_t2.func.function.__name__
+        spy = mocker.spy(spark_node_t2.func, 'function')
         # Filthy hack to stop the spy removing the __name__ attribute from the function
-        Spark('dummy_table').func.function.__name__ = func_name
+        spark_node_t2.func.function.__name__ = func_name
+
+        t3.run(spark, parallel=False)
+        spy.assert_not_called()
+
+        # spark_node_t1 should be called once
+        func_name = spark_node_t1.func.function.__name__
+        spy = mocker.spy(spark_node_t1.func, 'function')
+        # Filthy hack to stop the spy removing the __name__ attribute from the function
+        spark_node_t1.func.function.__name__ = func_name
 
         t3.run(spark, parallel=False)
         spy.assert_called_once()
-        assert_pyspark_df_equal(spy.spy_return, spark.createDataFrame(schema=('c1', 'c2'), data=[(1, 2)]))
+        assert_pyspark_df_equal(spy.spy_return, spark.createDataFrame(schema=('c1', 'c2', 'c3',), data=[(1, 2, 3,)]))
 
     def test_conversion_to_pandas(self, spark):
 

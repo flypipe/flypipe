@@ -101,7 +101,7 @@ class TestSparkDataSource:
                 .join(t3)
             )
 
-        df_expected = spark.createDataFrame(schema=('c0', 'c1', 'c2', 'c3',), data=[(0, 1, 2, 3)])
+        df_expected = spark.createDataFrame(schema=('c0', 'c1', 'c2', 'c3',), data=[(0, 1, 2, 3,)])
         assert_pyspark_df_equal(df_expected, t4.run(spark, parallel=False))
 
 

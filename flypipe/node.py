@@ -25,7 +25,6 @@ class Node(Transformation):
             for column in columns:
                 self.selected_columns.append(column)
         self.selected_columns = sorted(list(set(self.selected_columns)))
-        self.grouped_selected_columns = self.selected_columns
         return self
 
     def inputs(self, **kwargs):
@@ -49,7 +48,7 @@ class Node(Transformation):
             return self._run_sequential(spark)
 
     def _run_sequential(self, spark=None):
-        outputs = {k: DataframeWrapper(spark, df, schema=None) for k, df in self._provided_inputs.items()}
+        outputs = {input_name: DataframeWrapper(spark, input_name, df, schema=None) for input_name, df in self._provided_inputs.items()}
         node_graph = self.node_graph.copy()
 
         while not node_graph.is_empty():
@@ -60,18 +59,24 @@ class Node(Transformation):
 
                 node_dependencies = {}
                 for input_transformation in transformation.dependencies:
+
+                    selected_columns = transformation.dependencies_selected_columns[input_transformation.__name__]
+
                     node_dependencies[input_transformation.__name__] = \
-                        outputs[input_transformation.__name__].as_type(transformation.type)
+                        outputs[input_transformation.__name__].as_type(transformation.type, selected_columns)
 
                 result = self.process_transformation(spark, transformation, **node_dependencies)
 
-                outputs[transformation.__name__] = DataframeWrapper(spark, result, transformation.output_schema)
+                outputs[transformation.__name__] = DataframeWrapper(spark,
+                                                                    transformation.varname,
+                                                                    result,
+                                                                    transformation.output_schema)
 
         return outputs[self.__name__].as_type(self.type)
 
 
     def process_transformation(self, spark, transformation: Transformation, **inputs):
-        # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
+        # TODO: apply output validation + rename function to transformation
         if transformation.spark_context:
             parameters = {'spark': spark, **inputs}
         else:

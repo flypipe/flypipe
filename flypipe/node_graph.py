@@ -16,7 +16,7 @@ class RunStatus(Enum):
 
 class NodeGraph:
 
-    def __init__(self, transformation: Transformation, graph=None):
+    def __init__(self, transformation, graph=None):
         """
         Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
         this.
@@ -33,28 +33,79 @@ class NodeGraph:
 
         return graph_str
 
-    def _build_graph(self, transformation: Transformation) -> nx.DiGraph:
-        graph = nx.DiGraph()
-        # TODO: remove inputs and leave dependencies
-        graph.add_node(
-            transformation.__name__,
-            transformation=transformation,
-            run_status=RunStatus.UNKNOWN,
-        )
+    # def _build_graph(self, transformation: Transformation) -> nx.DiGraph:
+    #     graph = nx.DiGraph()
+    #     # TODO: remove inputs and leave dependencies
+    #     graph.add_node(
+    #         transformation.__name__,
+    #         transformation=transformation,
+    #         run_status=RunStatus.UNKNOWN,
+    #     )
+    #
+    #     if transformation.dependencies:
+    #         for dependency in transformation.dependencies:
+    #             graph.add_node(dependency.__name__,
+    #                            transformation=dependency,
+    #                            run_status=RunStatus.UNKNOWN,
+    #                            )
+    #             graph.add_edge(dependency.__name__,
+    #                            transformation.__name__,
+    #                            selected_columns=transformation.dependencies_selected_columns[dependency.__name__],
+    #                            graph_selected_columns=transformation.dependencies_graph_selected_columns[dependency.__name__])
+    #             graph = nx.compose(graph, self._build_graph(dependency))
+    #
+    #     return graph
 
-        if transformation.dependencies:
-            for dependency in transformation.dependencies:
-                graph.add_node(dependency.__name__,
-                               transformation=dependency,
-                               run_status=RunStatus.UNKNOWN,
-                               )
-                graph.add_edge(dependency.__name__,
-                               transformation.__name__,
-                               selected_columns=transformation.dependencies_selected_columns[dependency.__name__],
-                               grouped_selected_columns=transformation.dependencies_grouped_selected_columns[dependency.__name__])
-                graph = nx.compose(graph, self._build_graph(dependency))
+    def _build_graph(self, transformation) -> nx.DiGraph:
+        graph = nx.DiGraph()
+
+        graph_selected_columns = {}
+
+        frontier = [(None, transformation)]
+        while len(frontier) != 0:
+            parent, child = frontier.pop(0)
+
+            if child.__name__ not in graph.nodes:
+                graph.add_node(
+                        child.__name__,
+                        transformation=child,
+                        run_status=RunStatus.UNKNOWN,
+                        graph_selected_columns = [],
+                    )
+            else:
+                graph.nodes[child.__name__]['transformation'] = graph.nodes[child.__name__]['transformation'].select(child.selected_columns)
+
+            if parent:
+
+                if not graph.has_edge(child.__name__, parent.__name__):
+
+                    graph.add_edge(child.__name__,
+                                   parent.__name__,
+                                   selected_columns=parent.dependencies_selected_columns[child.__name__])
+
+
+
+                if child.__name__ not in graph_selected_columns:
+                    graph_selected_columns[child.__name__] = parent.dependencies_selected_columns[child.__name__]
+
+                else:
+                    graph_selected_columns[child.__name__] = list(dict.fromkeys(
+                        graph_selected_columns[child.__name__] +
+                        parent.dependencies_selected_columns[child.__name__]
+                    ))
+
+
+
+                graph.nodes[child.__name__]['graph_selected_columns'] = graph_selected_columns[child.__name__]
+
+            for grand_child in sorted(child.dependencies, key=lambda dependency: dependency.__name__, reverse=False):
+                frontier.append((child, grand_child))
+
+
 
         return graph
+
+
 
     def get_node(self, name: str):
         return self.graph.nodes[name]
