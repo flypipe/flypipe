@@ -33,6 +33,11 @@ def spark():
 
 class TestSparkDataSource:
     def test_load(self, spark):
+        """
+        Test basic functionality of the datasource i.e from Spark('dummy_table1').select('c1') we a) pick up the
+        contents of dummy_table1 which we earlier prepared in the spark fixture and b) limit the contents to the
+        selected c1 column.
+        """
         schema = Schema([
                   Column('c1', Decimals(16, 2), 'dummy')
                  ])
@@ -47,6 +52,9 @@ class TestSparkDataSource:
         assert_pyspark_df_equal(df_expected, t1.run(spark, parallel=False))
 
     def test_multiple_sources(self, spark):
+        """
+        Verify that everything works ok with multiple datasources.
+        """
         @node(type='pyspark',
               dependencies=[Spark('dummy_table1').select('c0')],
               output=Schema([
