@@ -64,6 +64,17 @@ class Node(Transformation):
                     node_dependencies[input_transformation.__name__] = \
                         outputs[input_transformation.__name__].as_type(transformation.type, selected_columns)
 
+                """
+                FIXME: in case transformation.type is pandas_on_spark, it can process pandas or pandas_on_spark dataframes,
+                it can receive multiple dataframes as inputs with mixed of pandas or pandas_on_spark and can
+                have problems when merging these dataframes within the transformation
+                
+                if at least 1 input is pandas_on_spark, convert all other pandas to pandas_on_spark dataframe
+                if all inputs are pandas_on_spark, just process 
+                """
+
+                #  will load the data
+
                 result = self.process_transformation(spark, transformation, **node_dependencies)
 
                 outputs[transformation.__name__] = DataframeWrapper(spark,

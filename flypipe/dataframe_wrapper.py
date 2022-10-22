@@ -50,6 +50,8 @@ class DataframeWrapper:
 
 
     def as_type(self, df_type: DataFrameType, selected_columns: [str]=None):
+
+        # FIXME: apply select before as spark datasources brings all columns and if converting to pandas, will load the data
         if df_type == DataFrameType.PANDAS:
             return self.select(self.as_pandas(), selected_columns)
 
