@@ -2,9 +2,11 @@ import logging
 
 from flypipe.dataframe_wrapper import DataframeWrapper
 from flypipe.node_graph import NodeGraph
+from flypipe.node_input import InputNode
 from flypipe.node_type import NodeType
 from flypipe.printer.graph_html import GraphHTML
 from flypipe.transformation import Transformation
+from flypipe.utils import DataFrameType, dataframe_type
 
 logger = logging.getLogger(__name__)
 
@@ -17,16 +19,10 @@ class Node(Transformation):
         self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
 
     def select(self, *columns):
-        # TODO: validate there are no duplicated selection
-        self.selected_columns = []
-        if isinstance(columns[0], list):
-            self.selected_columns = list(dict.fromkeys(self.selected_columns + columns[0]))
-        else:
-            for column in columns:
-                self.selected_columns.append(column)
-        self.selected_columns = sorted(list(set(self.selected_columns)))
-        self.grouped_selected_columns = self.selected_columns
-        return self
+        # TODO- if self.output_schema is defined then we should ensure each of the columns is in it.
+        # otherwise if self.output_schema is not defined then we won't know the ultimate output schema so can't do any validation
+
+        return InputNode(self, list(columns))
 
     def inputs(self, **kwargs):
         for k, v in kwargs.items():
@@ -50,22 +46,41 @@ class Node(Transformation):
 
     def _run_sequential(self, spark=None):
         outputs = {k: DataframeWrapper(spark, df, schema=None) for k, df in self._provided_inputs.items()}
-        node_graph = self.node_graph.copy()
+        execution_graph = self.node_graph.copy()
 
-        while not node_graph.is_empty():
-            transformations = node_graph.pop_runnable_transformations()
+        while not execution_graph.is_empty():
+            transformations = execution_graph.pop_runnable_transformations()
             for transformation in transformations:
                 if transformation.__name__ in outputs:
                     continue
 
-                node_dependencies = {}
-                for input_transformation in transformation.dependencies:
-                    node_dependencies[input_transformation.__name__] = \
-                        outputs[input_transformation.__name__].as_type(transformation.type)
+                dependency_values = {}
+                for node_input in transformation.dependencies:
+                    node_input_value = outputs[node_input.__name__].as_type(
+                        transformation.type)
 
-                result = self.process_transformation(spark, transformation, **node_dependencies)
+                    # Only select the columns that were requested in the dependency definition
+                    if transformation.type in (DataFrameType.PANDAS, DataFrameType.PANDAS_ON_SPARK):
+                        node_input_value = node_input_value[node_input.selected_columns]
+                    elif transformation.type == DataFrameType.PYSPARK:
+                        node_input_value = node_input_value.select(node_input.selected_columns)
 
-                outputs[transformation.__name__] = DataframeWrapper(spark, result, transformation.output_schema)
+                    dependency_values[node_input.__name__] = node_input_value
+
+                result = self.process_transformation(spark, transformation, **dependency_values)
+                # TODO- once output schema is implemented, we should only use output_columns if the output schema
+                # isn't provided
+                output_columns = self.node_graph.get_node_output_columns(transformation.__name__)
+                if output_columns:
+                    result_type = dataframe_type(result)
+                    if result_type in (DataFrameType.PANDAS, DataFrameType.PANDAS_ON_SPARK):
+                        result = result[output_columns]
+                    elif result_type == DataFrameType.PYSPARK:
+                        result = result.select(output_columns)
+
+                output = DataframeWrapper(spark, result, transformation.output_schema)
+
+                outputs[transformation.__name__] = output
 
         return outputs[self.__name__].as_type(self.type)
 

@@ -1,4 +1,6 @@
+from typing import List
 from flypipe.exceptions import DependencyNoSelectedColumnsError, NodeTypeInvalidError
+from flypipe.node_input import InputNode
 from flypipe.utils import DataFrameType
 
 
@@ -14,7 +16,7 @@ class Transformation:
                  type: str,
                  description=None,
                  tags=None,
-                 dependencies=None,
+                 dependencies: List[InputNode] = None,
                  output=None,
                  spark_context=False):
         self.function = function
@@ -30,11 +32,10 @@ class Transformation:
 
         if self.dependencies:
             self.dependencies = sorted(self.dependencies, key=lambda d: d.__name__)
-            for dependency in self.dependencies:
-                if not dependency.selected_columns:
-                    raise DependencyNoSelectedColumnsError(f'Selected columns of dependency {dependency.__name__} not specified')
-                self.dependencies_selected_columns[dependency.__name__] = dependency.selected_columns
-                self.dependencies_grouped_selected_columns[dependency.__name__] = dependency.grouped_selected_columns
+            # TODO- do we need to validate that columns have been selected? Maybe we can do it in another place?
+            # for dependency in self.dependencies:
+                # if not dependency.selected_columns:
+                #     raise DependencyNoSelectedColumnsError(f'Selected columns of dependency {dependency.__name__} not specified')
 
         self._provided_inputs = {}
         self.output_schema = output

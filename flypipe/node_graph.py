@@ -35,29 +35,42 @@ class NodeGraph:
 
     def _build_graph(self, transformation: Transformation) -> nx.DiGraph:
         graph = nx.DiGraph()
-        # TODO: remove inputs and leave dependencies
+
         graph.add_node(
             transformation.__name__,
             transformation=transformation,
             run_status=RunStatus.UNKNOWN,
+            output_columns=None,
         )
 
-        if transformation.dependencies:
-            for dependency in transformation.dependencies:
-                graph.add_node(dependency.__name__,
-                               transformation=dependency,
-                               run_status=RunStatus.UNKNOWN,
-                               )
-                graph.add_edge(dependency.__name__,
-                               transformation.__name__,
-                               selected_columns=transformation.dependencies_selected_columns[dependency.__name__],
-                               grouped_selected_columns=transformation.dependencies_grouped_selected_columns[dependency.__name__])
-                graph = nx.compose(graph, self._build_graph(dependency))
+        frontier = [transformation]
+        while frontier:
+            current_transformation = frontier.pop()
 
+            if current_transformation.dependencies:
+                for dependency in current_transformation.dependencies:
+                    if dependency.__name__ not in graph.nodes:
+                        graph.add_node(
+                            dependency.__name__,
+                            transformation=dependency.node,
+                            run_status=RunStatus.UNKNOWN,
+                            output_columns=list(dependency.selected_columns),
+                        )
+                    else:
+                        graph.nodes[dependency.__name__]['output_columns'].extend(dependency.selected_columns)
+                    graph.add_edge(
+                        dependency.__name__,
+                        current_transformation.__name__,
+                        selected_columns=dependency.selected_columns
+                    )
+                    frontier.insert(0, dependency.node)
         return graph
 
     def get_node(self, name: str):
         return self.graph.nodes[name]
+
+    def get_node_output_columns(self, name: str):
+        return self.graph.nodes[name]['output_columns']
 
     def get_edges(self):
         return self.graph.edges
