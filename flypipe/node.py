@@ -33,16 +33,8 @@ class Node:
             raise NodeTypeInvalidError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
         self.description = description or "No description"
         self.tags = tags or []
-        self.dependencies = dependencies or []
-        self.dependencies_selected_columns = {}
-        self.dependencies_grouped_selected_columns = {}
 
-        if self.dependencies:
-            self.dependencies = sorted(self.dependencies, key=lambda d: d.__name__)
-            # TODO- do we need to validate that columns have been selected? Maybe we can do it in another place?
-            # for dependency in self.dependencies:
-                # if not dependency.selected_columns:
-                #     raise DependencyNoSelectedColumnsError(f'Selected columns of dependency {dependency.__name__} not specified')
+        self.input_nodes = dependencies or []
 
         self._provided_inputs = {}
         self.output_schema = output
@@ -111,29 +103,41 @@ class Node:
     def input_dataframe_type(self):
         return self.type
 
+    def get_node_inputs(self, outputs: Mapping[str, NodeResult]):
+        inputs = {}
+        for input_node in self.input_nodes:
+            node_input_value = outputs[input_node.__name__].as_type(self.input_dataframe_type)
+            # TODO: problem- how will the node flag translate to converting all inputs to a pandas on spark node to pandas?
+
+            # TODO: how do we cast the type and also filter the columns?
+            # Only select the columns that were requested in the dependency definition
+
+            inputs[input_node.__name__] = node_input_value.select_columns(*input_node.selected_columns).df
+        return inputs
+
     def _run_sequential(self, spark=None):
         outputs = {k: NodeResult(spark, df, schema=None) for k, df in self._provided_inputs.items()}
         execution_graph = self.node_graph.copy()
 
         while not execution_graph.is_empty():
-            transformations = execution_graph.pop_runnable_transformations()
-            for transformation in transformations:
-                if transformation.__name__ in outputs:
+            runnable_nodes = execution_graph.pop_runnable_transformations()
+            for runnable_node in runnable_nodes:
+                if runnable_node.__name__ in outputs:
                     continue
 
-                dependency_values = transformation.get_node_inputs(outputs)
+                dependency_values = runnable_node.get_node_inputs(outputs)
                 result = NodeResult(
                     spark,
-                    transformation.process_transformation(spark, **dependency_values),
-                    transformation.output_schema
+                    runnable_node.process_transformation(spark, **dependency_values),
+                    runnable_node.output_schema
                 )
-                output_columns = self.node_graph.get_node_output_columns(transformation.__name__)
+                output_columns = self.node_graph.get_node_output_columns(runnable_node.__name__)
                 if output_columns:
                     result.select_columns(*output_columns)
 
-                outputs[transformation.__name__] = result
+                outputs[runnable_node.__name__] = result
 
-        return outputs[self.__name__].as_type(self.type)
+        return outputs[self.__name__].as_type(self.type).df
 
 
     def process_transformation(self, spark, **inputs):
