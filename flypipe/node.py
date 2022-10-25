@@ -32,13 +32,20 @@ class Node:
             self.type = self.TYPE_MAP[type]
         except KeyError:
             raise NodeTypeInvalidError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
+
+        # TODO: enforce tags for now, later validation can be set as optional via environment variable
         self.description = description or "No description"
+
+        # TODO: enforce tags for now, later validation can be set as optional via environment variable
         self.tags = tags or []
 
         self.input_nodes = dependencies or []
 
         self._provided_inputs = {}
+
+        # TODO: enforce tags for now, later validation can be set as optional via environment variable
         self.output_schema = output
+
         self.spark_context = spark_context
         self.node_graph = None
 
@@ -74,12 +81,14 @@ class Node:
 
     def select(self, *columns):
         # TODO- if self.output_schema is defined then we should ensure each of the columns is in it.
-        # otherwise if self.output_schema is not defined then we won't know the ultimate output schema so can't do any validation
+        # otherwise if self.output_schema is not defined then we won't know the ultimate output schema
+        # so can't do any validation
 
         return InputNode(self, list(columns))
 
     def inputs(self, **kwargs):
         for k, v in kwargs.items():
+            #TODO: apply same replacement as defined in method __name__
             self._provided_inputs[k.replace(".","_")] = v
 
         return self
