@@ -1,8 +1,9 @@
 import logging
-
-from flypipe.dataframe_wrapper import DataframeWrapper
+from typing import Mapping
+from flypipe.dataframe.dataframe import DataFrame
 from flypipe.node_graph import NodeGraph
 from flypipe.node_input import InputNode
+from flypipe.node_result import NodeResult
 from flypipe.node_type import NodeType
 from flypipe.printer.graph_html import GraphHTML
 from flypipe.transformation import Transformation
@@ -13,6 +14,15 @@ logger = logging.getLogger(__name__)
 
 class Node(Transformation):
     node_type = NodeType.TRANSFORMATION
+
+    @classmethod
+    def get_class(cls, node_type):
+        # I put the import here to avoid a circular import error
+        from flypipe.pandas_on_spark_node import PandasOnSparkNode
+        if node_type == 'pandas_on_spark':
+            return PandasOnSparkNode
+        else:
+            return Node
 
     def _create_graph(self):
         self.node_graph = NodeGraph(self)
@@ -44,8 +54,24 @@ class Node(Transformation):
         else:
             return self._run_sequential(spark)
 
+    @property
+    def input_dataframe_type(self):
+        return self.type
+
+    def get_node_inputs(self, outputs: Mapping[str, NodeResult]):
+        inputs = {}
+        for node_input in self.dependencies:
+            node_input_value = outputs[node_input.__name__].as_type(self.input_dataframe_type)
+            # TODO: problem- how will the node flag translate to converting all inputs to a pandas on spark node to pandas?
+
+            # TODO: how do we cast the type and also filter the columns?
+            # Only select the columns that were requested in the dependency definition
+
+            inputs[node_input.__name__] = node_input_value.select_columns(*node_input.selected_columns)
+        return inputs
+
     def _run_sequential(self, spark=None):
-        outputs = {k: DataframeWrapper(spark, df, schema=None) for k, df in self._provided_inputs.items()}
+        outputs = {k: NodeResult(spark, df, schema=None) for k, df in self._provided_inputs.items()}
         execution_graph = self.node_graph.copy()
 
         while not execution_graph.is_empty():
@@ -54,33 +80,17 @@ class Node(Transformation):
                 if transformation.__name__ in outputs:
                     continue
 
-                dependency_values = {}
-                for node_input in transformation.dependencies:
-                    node_input_value = outputs[node_input.__name__].as_type(
-                        transformation.type)
-
-                    # Only select the columns that were requested in the dependency definition
-                    if transformation.type in (DataFrameType.PANDAS, DataFrameType.PANDAS_ON_SPARK):
-                        node_input_value = node_input_value[node_input.selected_columns]
-                    elif transformation.type == DataFrameType.PYSPARK:
-                        node_input_value = node_input_value.select(node_input.selected_columns)
-
-                    dependency_values[node_input.__name__] = node_input_value
-
-                result = self.process_transformation(spark, transformation, **dependency_values)
-                # TODO- once output schema is implemented, we should only use output_columns if the output schema
-                # isn't provided
+                dependency_values = transformation.get_node_inputs(outputs)
+                result = NodeResult(
+                    spark,
+                    self.process_transformation(spark, transformation, **dependency_values),
+                    transformation.output_schema
+                )
                 output_columns = self.node_graph.get_node_output_columns(transformation.__name__)
                 if output_columns:
-                    result_type = dataframe_type(result)
-                    if result_type in (DataFrameType.PANDAS, DataFrameType.PANDAS_ON_SPARK):
-                        result = result[output_columns]
-                    elif result_type == DataFrameType.PYSPARK:
-                        result = result.select(output_columns)
+                    result.select_columns(*output_columns)
 
-                output = DataframeWrapper(spark, result, transformation.output_schema)
-
-                outputs[transformation.__name__] = output
+                outputs[transformation.__name__] = result
 
         return outputs[self.__name__].as_type(self.type)
 
@@ -102,12 +112,13 @@ class Node(Transformation):
         return GraphHTML(self.node_graph, width=width, height=height).html()
 
 
-def node(*args, **kwargs):
+def node(type, *args, **kwargs):
     """
     Decorator factory that returns the given function wrapped inside a Node class
     """
 
     def decorator(func):
-        return Node(func, *args, **kwargs)
+        kwargs['type'] = type
+        return Node.get_class(type)(func, *args, **kwargs)
 
     return decorator
