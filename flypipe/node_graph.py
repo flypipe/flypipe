@@ -3,7 +3,7 @@ from typing import List
 
 import networkx as nx
 
-from flypipe.transformation import Transformation
+from flypipe.node import Node
 
 
 class RunStatus(Enum):
@@ -16,7 +16,7 @@ class RunStatus(Enum):
 
 class NodeGraph:
 
-    def __init__(self, transformation: Transformation, graph=None):
+    def __init__(self, transformation: Node, graph=None):
         """
         Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
         this.
@@ -33,7 +33,7 @@ class NodeGraph:
 
         return graph_str
 
-    def _build_graph(self, transformation: Transformation) -> nx.DiGraph:
+    def _build_graph(self, transformation: Node) -> nx.DiGraph:
         graph = nx.DiGraph()
 
         graph.add_node(
@@ -78,7 +78,7 @@ class NodeGraph:
     def get_edge_data(self, source_node_name, target_node_name):
         return self.graph.get_edge_data(source_node_name, target_node_name)
 
-    def get_transformation(self, name: str) -> Transformation:
+    def get_transformation(self, name: str) -> Node:
         return self.get_node(name)['transformation']
 
     def get_run_status(self, name: str) -> RunStatus:
@@ -140,7 +140,7 @@ class NodeGraph:
 
         return {-1 * k + max_depth + 1: v for k, v in nodes_depth.items()}
 
-    def pop_runnable_transformations(self) -> List[Transformation]:
+    def pop_runnable_transformations(self) -> List[Node]:
         candidate_node_names = [node_name for node_name in self.graph if self.graph.in_degree(node_name)==0]
         runnable_node_names = filter(lambda node_name: self.get_run_status(node_name) == RunStatus.ACTIVE,
                                      candidate_node_names)
