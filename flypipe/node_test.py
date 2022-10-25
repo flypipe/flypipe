@@ -1,12 +1,10 @@
 import pytest
-
-from flypipe.data_type import String
 from flypipe.datasource.spark import Spark
-from flypipe.node import node
+from flypipe.node import node, Node
 import pandas as pd
 from pandas.testing import assert_frame_equal
 from flypipe.converter.dataframe import DataFrameConverter
-from flypipe.schema import Schema, Column
+from flypipe.pandas_on_spark_node import PandasOnSparkNode
 
 
 @pytest.fixture(scope="function")
@@ -19,6 +17,14 @@ def spark():
 
 
 class TestNode:
+
+    @pytest.mark.parametrize('node_type,expected_class', [
+        ('pyspark', Node),
+        ('pandas', Node),
+        ('pandas_on_spark', PandasOnSparkNode),
+    ])
+    def test_get_class(self, node_type, expected_class):
+        assert Node.get_class(node_type) == expected_class
 
     def test_select(self):
         """
@@ -35,9 +41,8 @@ class TestNode:
         node_input2 = a.select('c3')
         assert node_input1.__name__ == 'a'
         assert node_input2.__name__ == 'a'
-        assert node_input1.selected_columns == ('c1', 'c2')
-        assert node_input2.selected_columns == ('c3',)
-        assert a.output_columns == ['c1', 'c2', 'c3']
+        assert node_input1.selected_columns == ['c1', 'c2']
+        assert node_input2.selected_columns == ['c3']
 
     def test_select_column(self, spark):
         data = pd.DataFrame({'fruit': ['apple', 'banana'], 'color': ['red', 'yellow']})
