@@ -4,6 +4,7 @@ from flypipe.dataframe.dataframe import DataFrame
 from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
+from flypipe.node_run_context import NodeRunContext
 from flypipe.node_type import NodeType
 from flypipe.utils import DataFrameType, dataframe_type
 
@@ -92,12 +93,13 @@ class Node:
     def __call__(self, *args):
         return self.function(*args)
 
-    def run(self, spark=None, parallel=True):
+    def run(self, spark=None, parallel=True, **kwargs):
         self._create_graph()
-        if parallel:
-            raise NotImplementedError
-        else:
-            return self._run_sequential(spark)
+        with NodeRunContext(**kwargs):
+            if parallel:
+                raise NotImplementedError
+            else:
+                return self._run_sequential(spark)
 
     @property
     def input_dataframe_type(self):
@@ -107,12 +109,7 @@ class Node:
         inputs = {}
         for input_node in self.input_nodes:
             node_input_value = outputs[input_node.__name__].as_type(self.input_dataframe_type)
-            # TODO: problem- how will the node flag translate to converting all inputs to a pandas on spark node to pandas?
-
-            # TODO: how do we cast the type and also filter the columns?
-            # Only select the columns that were requested in the dependency definition
-
-            inputs[input_node.__name__] = node_input_value.select_columns(*input_node.selected_columns).df
+            inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns).df
         return inputs
 
     def _run_sequential(self, spark=None):

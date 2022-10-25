@@ -67,5 +67,23 @@ class TestNode:
         assert_frame_equal(b.run(spark, parallel=False), data[['fruit']])
         assert_frame_equal(c.run(spark, parallel=False), data[['color']])
 
-    def test_consolidated_query(self):
-        pass
+    def test_alias(self):
+        """
+        Ensure we can set up a node dependency with an alias.
+        """
+        @node(
+            type='pandas'
+        )
+        def t1():
+            return pd.DataFrame({'fruit': ['banana', 'apple'], 'color': ['yellow', 'red']})
+
+        @node(
+            type='pandas',
+            dependencies=[t1.select('fruit').alias('my_fruits')]
+        )
+        def t2(my_fruits):
+            return my_fruits
+
+        # No assertions are required, if the alias doesn't work then t2 will crash when run as the argument signature
+        # won't align with what it's expecting.
+        t2.run(parallel=False)
