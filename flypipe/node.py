@@ -1,19 +1,71 @@
 import logging
-from typing import Mapping
+from typing import Mapping, List
 from flypipe.dataframe.dataframe import DataFrame
-from flypipe.node_graph import NodeGraph
+from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
 from flypipe.node_type import NodeType
-from flypipe.printer.graph_html import GraphHTML
-from flypipe.transformation import Transformation
 from flypipe.utils import DataFrameType, dataframe_type
 
 logger = logging.getLogger(__name__)
 
 
-class Node(Transformation):
+class Node:
     node_type = NodeType.TRANSFORMATION
+    TYPE_MAP = {
+        'pyspark': DataFrameType.PYSPARK,
+        'pandas': DataFrameType.PANDAS,
+        'pandas_on_spark': DataFrameType.PANDAS_ON_SPARK,
+    }
+
+    def __init__(self,
+                 function,
+                 type: str,
+                 description=None,
+                 tags=None,
+                 dependencies: List[InputNode] = None,
+                 output=None,
+                 spark_context=False):
+        self.function = function
+        try:
+            self.type = self.TYPE_MAP[type]
+        except KeyError:
+            raise NodeTypeInvalidError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
+        self.description = description or "No description"
+        self.tags = tags or []
+        self.dependencies = dependencies or []
+        self.dependencies_selected_columns = {}
+        self.dependencies_grouped_selected_columns = {}
+
+        if self.dependencies:
+            self.dependencies = sorted(self.dependencies, key=lambda d: d.__name__)
+            # TODO- do we need to validate that columns have been selected? Maybe we can do it in another place?
+            # for dependency in self.dependencies:
+                # if not dependency.selected_columns:
+                #     raise DependencyNoSelectedColumnsError(f'Selected columns of dependency {dependency.__name__} not specified')
+
+        self._provided_inputs = {}
+        self.output_schema = output
+        self.spark_context = spark_context
+        self.selected_columns = []
+        self.grouped_selected_columns = []
+        self.node_graph = None
+
+    @property
+    def __name__(self):
+        """Return the name of the wrapped transformation rather than the name of the decorator object"""
+        # TODO: replace with regex only a-z and 0-9 digits
+        return self.varname.replace(".", "_")
+
+    @property
+    def varname(self):
+        """Return the variable name of the wrapped transformation rather than the name of the decorator object"""
+        return self.function.__name__
+
+    @property
+    def __doc__(self):
+        """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
+        return self.function.__doc__
 
     @classmethod
     def get_class(cls, node_type):
@@ -25,6 +77,7 @@ class Node(Transformation):
             return Node
 
     def _create_graph(self):
+        from flypipe.node_graph import NodeGraph
         self.node_graph = NodeGraph(self)
         self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
 
@@ -58,18 +111,6 @@ class Node(Transformation):
     def input_dataframe_type(self):
         return self.type
 
-    def get_node_inputs(self, outputs: Mapping[str, NodeResult]):
-        inputs = {}
-        for node_input in self.dependencies:
-            node_input_value = outputs[node_input.__name__].as_type(self.input_dataframe_type)
-            # TODO: problem- how will the node flag translate to converting all inputs to a pandas on spark node to pandas?
-
-            # TODO: how do we cast the type and also filter the columns?
-            # Only select the columns that were requested in the dependency definition
-
-            inputs[node_input.__name__] = node_input_value.select_columns(*node_input.selected_columns)
-        return inputs
-
     def _run_sequential(self, spark=None):
         outputs = {k: NodeResult(spark, df, schema=None) for k, df in self._provided_inputs.items()}
         execution_graph = self.node_graph.copy()
@@ -83,7 +124,7 @@ class Node(Transformation):
                 dependency_values = transformation.get_node_inputs(outputs)
                 result = NodeResult(
                     spark,
-                    self.process_transformation(spark, transformation, **dependency_values),
+                    transformation.process_transformation(spark, **dependency_values),
                     transformation.output_schema
                 )
                 output_columns = self.node_graph.get_node_output_columns(transformation.__name__)
@@ -95,19 +136,20 @@ class Node(Transformation):
         return outputs[self.__name__].as_type(self.type)
 
 
-    def process_transformation(self, spark, transformation: Transformation, **inputs):
+    def process_transformation(self, spark, **inputs):
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
-        if transformation.spark_context:
+        if self.spark_context:
             parameters = {'spark': spark, **inputs}
         else:
             parameters = inputs
 
-        return transformation.function(**parameters)
+        return self.function(**parameters)
 
     def plot(self):
         self.node_graph.plot()
 
     def html(self, width=-1, height=1000):
+        from flypipe.printer.graph_html import GraphHTML
         self._create_graph()
         return GraphHTML(self.node_graph, width=width, height=height).html()
 
