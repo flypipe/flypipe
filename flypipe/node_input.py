@@ -10,11 +10,15 @@ class InputNode:
     def __init__(self, node, selected_columns):
         self.node = node
         self.selected_columns = selected_columns
+        self._alias = None
 
     @property
     def __name__(self):
         return self.node.__name__
 
-    def alias(self, alias):
-        # TODO- implement
-        pass
+    def get_alias(self):
+        return self._alias if self._alias else self.__name__
+
+    def alias(self, value):
+        self._alias = value
+        return self

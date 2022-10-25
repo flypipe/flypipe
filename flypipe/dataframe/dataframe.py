@@ -2,9 +2,10 @@ from flypipe.converter.dataframe import DataFrameConverter
 from flypipe.converter.schema import SchemaConverter
 from flypipe.exceptions import DataframeTypeNotSupportedError
 from flypipe.utils import dataframe_type, DataFrameType
+from abc import ABC, abstractmethod
 
 
-class DataFrame:
+class DataFrame(ABC):
     """
     Flypipe dataframe, currently it's just a very thin wrapper around a pandas/spark/etc dataframe that knows what
     exact concrete dataframe type it's storing is.
@@ -20,21 +21,23 @@ class DataFrame:
         self.dataframe_converter = DataFrameConverter(self.spark)
 
     @classmethod
-    def get_class(cls, df):
+    def get_instance(cls, spark, df, schema):
         # Avoid circular imports by doing local imports here
         from flypipe.dataframe.pandas import PandasDataFrame
         from flypipe.dataframe.pandas_on_spark import PandasOnSparkDataFrame
         from flypipe.dataframe.spark import SparkDataFrame
         df_type = dataframe_type(df)
         if df_type == DataFrameType.PANDAS:
-            return PandasDataFrame
+            df_instance = PandasDataFrame
         elif df_type == DataFrameType.PYSPARK:
-            return SparkDataFrame
+            df_instance = SparkDataFrame
         elif df_type == DataFrameType.PANDAS_ON_SPARK:
-            return PandasOnSparkDataFrame
+            df_instance = PandasOnSparkDataFrame
         else:
             raise ValueError(f'No flypipe dataframe type found for dataframe {df_type}')
+        return df_instance(spark, df, schema)
 
+    @abstractmethod
     def select_columns(self, *columns):
         raise NotImplementedError
 
@@ -42,11 +45,9 @@ class DataFrame:
         if self.TYPE == df_type:
             dataframe = self
         else:
-            if df_type not in self.cached_conversions:
-                dataframe = self.dataframe_converter.convert(self.df, df_type)
+            dataframe = DataFrame.get_instance(self.spark, self.dataframe_converter.convert(self.df, df_type), self.schema)
+            if self.schema:
                 dataframe = SchemaConverter.cast(dataframe, self.TYPE, self.schema)
-            else:
-                dataframe = self.cached_conversions[df_type]
         return dataframe
 
     # def as_pandas(self):
