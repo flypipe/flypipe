@@ -47,23 +47,23 @@ class NodeGraph:
         while frontier:
             current_transformation = frontier.pop()
 
-            if current_transformation.dependencies:
-                for dependency in current_transformation.dependencies:
-                    if dependency.__name__ not in graph.nodes:
+            if current_transformation.input_nodes:
+                for input_node in current_transformation.input_nodes:
+                    if input_node.__name__ not in graph.nodes:
                         graph.add_node(
-                            dependency.__name__,
-                            transformation=dependency.node,
+                            input_node.__name__,
+                            transformation=input_node.node,
                             run_status=RunStatus.UNKNOWN,
-                            output_columns=list(dependency.selected_columns),
+                            output_columns=list(input_node.selected_columns),
                         )
                     else:
-                        graph.nodes[dependency.__name__]['output_columns'].extend(dependency.selected_columns)
+                        graph.nodes[input_node.__name__]['output_columns'].extend(input_node.selected_columns)
                     graph.add_edge(
-                        dependency.__name__,
+                        input_node.__name__,
                         current_transformation.__name__,
-                        selected_columns=dependency.selected_columns
+                        selected_columns=input_node.selected_columns
                     )
-                    frontier.insert(0, dependency.node)
+                    frontier.insert(0, input_node.node)
         return graph
 
     def get_node(self, name: str):
