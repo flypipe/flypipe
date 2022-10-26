@@ -67,9 +67,9 @@ class Node:
         else:
             return Node
 
-    def _create_graph(self):
+    def _create_graph(self, pandas_on_spark_use_pandas=False):
         from flypipe.node_graph import NodeGraph
-        self.node_graph = NodeGraph(self)
+        self.node_graph = NodeGraph(self, pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
         self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
 
     def select(self, *columns):
@@ -91,13 +91,12 @@ class Node:
     def __call__(self, *args):
         return self.function(*args)
 
-    def run(self, spark=None, parallel=True, **kwargs):
-        self._create_graph()
-        with NodeRunContext(**kwargs):
-            if parallel:
-                raise NotImplementedError
-            else:
-                return self._run_sequential(spark)
+    def run(self, spark=None, parallel=True, pandas_on_spark_use_pandas=False):
+        self._create_graph(pandas_on_spark_use_pandas)
+        if parallel:
+            raise NotImplementedError
+        else:
+            return self._run_sequential(spark)
 
     @property
     def input_dataframe_type(self):
@@ -147,9 +146,9 @@ class Node:
     def plot(self):
         self.node_graph.plot()
 
-    def html(self, width=-1, height=1000):
+    def html(self, width=-1, height=1000, pandas_on_spark_use_pandas=False):
         from flypipe.printer.graph_html import GraphHTML
-        self._create_graph()
+        self._create_graph(pandas_on_spark_use_pandas)
         return GraphHTML(self.node_graph, width=width, height=height).html()
 
 

@@ -4,6 +4,7 @@ from typing import List
 import networkx as nx
 
 from flypipe.node import Node
+from flypipe.utils import DataFrameType
 
 
 class RunStatus(Enum):
@@ -16,7 +17,7 @@ class RunStatus(Enum):
 
 class NodeGraph:
 
-    def __init__(self, transformation: Node, graph=None):
+    def __init__(self, transformation: Node, graph=None, pandas_on_spark_use_pandas=False):
         """
         Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
         this.
@@ -24,7 +25,7 @@ class NodeGraph:
         if graph:
             self.graph = graph
         else:
-            self.graph = self._build_graph(transformation)
+            self.graph = self._build_graph(transformation, pandas_on_spark_use_pandas)
 
     def __repr__(self):
         graph_str = ""
@@ -33,9 +34,12 @@ class NodeGraph:
 
         return graph_str
 
-    def _build_graph(self, transformation: Node) -> nx.DiGraph:
+    def _build_graph(self, transformation: Node, pandas_on_spark_use_pandas: bool) -> nx.DiGraph:
         graph = nx.DiGraph()
 
+        # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
+        if pandas_on_spark_use_pandas and transformation.type == DataFrameType.PANDAS_ON_SPARK:
+            transformation.type = DataFrameType.PANDAS
         graph.add_node(
             transformation.__name__,
             transformation=transformation,

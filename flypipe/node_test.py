@@ -1,10 +1,9 @@
 import pytest
-
-from flypipe.node import node, Node
 import pandas as pd
+from flypipe.node import node, Node
 from pandas.testing import assert_frame_equal
-
 from flypipe.pandas_on_spark_node import PandasOnSparkNode
+from flypipe.utils import DataFrameType, dataframe_type
 
 
 @pytest.fixture(scope="function")
@@ -87,3 +86,39 @@ class TestNode:
         # No assertions are required, if the alias doesn't work then t2 will crash when run as the argument signature
         # won't align with what it's expecting.
         t2.run(parallel=False)
+
+    @pytest.mark.parametrize('extra_run_config,expected_df_type', [
+        ({}, DataFrameType.PANDAS_ON_SPARK),
+        ({'pandas_on_spark_use_pandas': False}, DataFrameType.PANDAS_ON_SPARK),
+        ({'pandas_on_spark_use_pandas': True}, DataFrameType.PANDAS),
+    ])
+    def test_input_dataframes_type(self, spark, mocker, extra_run_config, expected_df_type):
+        stub = mocker.stub()
+
+        @node(
+            type='pandas'
+        )
+        def t1():
+            return pd.DataFrame({'fruit': ['Banana', 'Apple'], 'color': ['Yellow', 'Red']})
+
+        @node(
+            type='pyspark'
+        )
+        def t2():
+            return spark.createDataFrame(schema=('name', 'fruit'), data=[('Chris', 'Banana')])
+
+        @node(
+            type='pandas_on_spark',
+            dependencies=[
+                t1.select('fruit', 'color'),
+                t2.select('name', 'fruit'),
+            ]
+        )
+        def t3(t1, t2):
+            stub(t1, t2)
+            return t1.merge(t2)
+
+        t3.run(spark, parallel=False, **extra_run_config)
+        assert dataframe_type(stub.call_args[0][0])==expected_df_type
+        assert dataframe_type(stub.call_args[0][1])==expected_df_type
+
