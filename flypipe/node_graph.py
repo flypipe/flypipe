@@ -3,7 +3,8 @@ from typing import List
 
 import networkx as nx
 
-from flypipe.transformation import Transformation
+from flypipe.node import Node
+from flypipe.utils import DataFrameType
 
 
 class RunStatus(Enum):
@@ -16,7 +17,7 @@ class RunStatus(Enum):
 
 class NodeGraph:
 
-    def __init__(self, transformation: Transformation, graph=None):
+    def __init__(self, transformation: Node, graph=None, pandas_on_spark_use_pandas=False):
         """
         Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
         this.
@@ -24,7 +25,7 @@ class NodeGraph:
         if graph:
             self.graph = graph
         else:
-            self.graph = self._build_graph(transformation)
+            self.graph = self._build_graph(transformation, pandas_on_spark_use_pandas)
 
     def __repr__(self):
         graph_str = ""
@@ -33,9 +34,12 @@ class NodeGraph:
 
         return graph_str
 
-    def _build_graph(self, transformation: Transformation) -> nx.DiGraph:
+    def _build_graph(self, transformation: Node, pandas_on_spark_use_pandas: bool) -> nx.DiGraph:
         graph = nx.DiGraph()
 
+        # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
+        if pandas_on_spark_use_pandas and transformation.type == DataFrameType.PANDAS_ON_SPARK:
+            transformation.type = DataFrameType.PANDAS
         graph.add_node(
             transformation.__name__,
             transformation=transformation,
@@ -47,23 +51,23 @@ class NodeGraph:
         while frontier:
             current_transformation = frontier.pop()
 
-            if current_transformation.dependencies:
-                for dependency in current_transformation.dependencies:
-                    if dependency.__name__ not in graph.nodes:
+            if current_transformation.input_nodes:
+                for input_node in current_transformation.input_nodes:
+                    if input_node.__name__ not in graph.nodes:
                         graph.add_node(
-                            dependency.__name__,
-                            transformation=dependency.node,
+                            input_node.__name__,
+                            transformation=input_node.node,
                             run_status=RunStatus.UNKNOWN,
-                            output_columns=list(dependency.selected_columns),
+                            output_columns=list(input_node.selected_columns),
                         )
                     else:
-                        graph.nodes[dependency.__name__]['output_columns'].extend(dependency.selected_columns)
+                        graph.nodes[input_node.__name__]['output_columns'].extend(input_node.selected_columns)
                     graph.add_edge(
-                        dependency.__name__,
+                        input_node.__name__,
                         current_transformation.__name__,
-                        selected_columns=dependency.selected_columns
+                        selected_columns=input_node.selected_columns
                     )
-                    frontier.insert(0, dependency.node)
+                    frontier.insert(0, input_node.node)
         return graph
 
     def get_node(self, name: str):
@@ -78,7 +82,7 @@ class NodeGraph:
     def get_edge_data(self, source_node_name, target_node_name):
         return self.graph.get_edge_data(source_node_name, target_node_name)
 
-    def get_transformation(self, name: str) -> Transformation:
+    def get_transformation(self, name: str) -> Node:
         return self.get_node(name)['transformation']
 
     def get_run_status(self, name: str) -> RunStatus:
@@ -140,7 +144,7 @@ class NodeGraph:
 
         return {-1 * k + max_depth + 1: v for k, v in nodes_depth.items()}
 
-    def pop_runnable_transformations(self) -> List[Transformation]:
+    def pop_runnable_transformations(self) -> List[Node]:
         candidate_node_names = [node_name for node_name in self.graph if self.graph.in_degree(node_name)==0]
         runnable_node_names = filter(lambda node_name: self.get_run_status(node_name) == RunStatus.ACTIVE,
                                      candidate_node_names)
