@@ -1,6 +1,3 @@
-from flypipe.converter.dataframe import DataFrameConverter
-from flypipe.converter.schema import SchemaConverter
-from flypipe.exceptions import DataframeTypeNotSupportedError
 from flypipe.utils import dataframe_type, DataFrameType
 from abc import ABC, abstractmethod
 
@@ -18,7 +15,6 @@ class DataFrame(ABC):
         self.schema = schema
         if self.schema:
             self.df = self.select_columns(schema.columns)
-        self.dataframe_converter = DataFrameConverter(self.spark)
 
     @classmethod
     def get_instance(cls, spark, df, schema):
@@ -40,15 +36,6 @@ class DataFrame(ABC):
     @abstractmethod
     def select_columns(self, *columns):
         raise NotImplementedError
-
-    def as_type(self, df_type: DataFrameType):
-        if self.TYPE == df_type:
-            dataframe = self
-        else:
-            dataframe = DataFrame.get_instance(self.spark, self.dataframe_converter.convert(self.df, df_type), self.schema)
-            if self.schema:
-                dataframe = SchemaConverter.cast(dataframe, self.TYPE, self.schema)
-        return dataframe
 
     # def as_pandas(self):
     #     # FIXME: return deep copy of dataframe

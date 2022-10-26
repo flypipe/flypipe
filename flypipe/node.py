@@ -40,8 +40,6 @@ class Node:
         self._provided_inputs = {}
         self.output_schema = output
         self.spark_context = spark_context
-        self.selected_columns = []
-        self.grouped_selected_columns = []
         self.node_graph = None
 
     @property
