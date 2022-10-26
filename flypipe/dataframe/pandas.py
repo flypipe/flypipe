@@ -1,8 +1,8 @@
-from flypipe.dataframe.dataframe import DataFrame
+from flypipe.dataframe.dataframe import DataFrameWrapper
 from flypipe.utils import DataFrameType
 
 
-class PandasDataFrame(DataFrame):
+class PandasDataFrame(DataFrameWrapper):
     TYPE = DataFrameType.PANDAS
 
     def select_columns(self, *columns):

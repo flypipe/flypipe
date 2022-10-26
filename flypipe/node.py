@@ -1,6 +1,5 @@
 import logging
 from typing import Mapping, List
-from flypipe.dataframe.dataframe import DataFrame
 from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult

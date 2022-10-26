@@ -2,7 +2,7 @@ from flypipe.utils import dataframe_type, DataFrameType
 from abc import ABC, abstractmethod
 
 
-class DataFrame(ABC):
+class DataFrameWrapper(ABC):
     """
     Flypipe dataframe, currently it's just a very thin wrapper around a pandas/spark/etc dataframe that knows what
     exact concrete dataframe type it's storing is.
