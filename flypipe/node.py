@@ -52,6 +52,14 @@ class Node:
     def __name__(self):
         return self.function.__name__
 
+    # TODO is the below functionality still needed? I don't think so at the moment, because the df name used as input
+    # for a node is based solely off the function name and so won't have any '.'
+    # @property
+    # def __name__(self):
+    #     """Return the name of the wrapped transformation rather than the name of the decorator object"""
+    #     # TODO: replace with regex only a-z and 0-9 digits
+    #     return self.varname.replace(".", "_")
+
     @property
     def __class__(self):
         return self.function.__class__

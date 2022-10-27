@@ -20,7 +20,7 @@ class TestNodeGraph:
         # TODO- we should not be having to call a private method to setup
         t3._create_graph()
         positions = GraphHTML(t3.node_graph).get_node_positions()
-        assert positions == {'t1': [1.0, 50.0], 't2': [2.0, 47.5], 't3': [3.0, 50.0]}
+        assert positions == {t1.key: [1.0, 50.0], t2.key: [2.0, 47.5], t3.key: [3.0, 50.0]}
 
     def test_get_node_positions_2(self):
         @node(type='pandas')
@@ -42,4 +42,4 @@ class TestNodeGraph:
         # TODO- we should not be having to call a private method to setup
         t4._create_graph()
         positions = GraphHTML(t4.node_graph).get_node_positions()
-        assert positions == {'t1': [1.0, 50.0], 't2': [2.0, 30.83], 't3': [2.0, 64.16], 't4': [3.0, 50.0]}
+        assert positions == {t1.key: [1.0, 50.0], t2.key: [2.0, 30.83], t3.key: [2.0, 64.16], t4.key: [3.0, 50.0]}
