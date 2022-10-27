@@ -27,13 +27,6 @@ class NodeGraph:
         else:
             self.graph = self._build_graph(transformation, pandas_on_spark_use_pandas)
 
-    def __repr__(self):
-        graph_str = ""
-        for node in self.graph:
-            graph_str += "\n" + str(self.get_transformation(node))
-
-        return graph_str
-
     def _build_graph(self, transformation: Node, pandas_on_spark_use_pandas: bool) -> nx.DiGraph:
         graph = nx.DiGraph()
 

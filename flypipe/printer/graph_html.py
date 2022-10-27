@@ -80,13 +80,6 @@ class GraphHTML:
         nodes = []
         for node_name, position in self._node_positions.items():
             graph_node = self.graph.get_node(node_name)
-            tags = (
-                    [
-                        node_name,
-                        graph_node['transformation'].type.value,
-                        graph_node['transformation'].node_type.value
-                    ] + graph_node['transformation'].tags
-            )
 
             node_attributes = {
                 'name': graph_node['transformation'].__name__,
@@ -101,7 +94,7 @@ class GraphHTML:
                 'successors': sorted(list(self.graph.graph.successors(node_name))),
                 'definition': {
                     'description': graph_node['transformation'].description,
-                    'tags': tags,
+                    'tags': graph_node['transformation'].tags,
                     'columns': [],
                 }
             }

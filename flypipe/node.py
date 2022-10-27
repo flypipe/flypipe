@@ -36,7 +36,9 @@ class Node:
         self.description = description or "No description"
 
         # TODO: enforce tags for now, later validation can be set as optional via environment variable
-        self.tags = tags or []
+        self.tags = [self.type.value, self.node_type]
+        if tags:
+            self.tags.extend(tags)
 
         self.input_nodes = dependencies or []
 
