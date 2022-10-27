@@ -5,5 +5,5 @@ from flypipe.utils import DataFrameType
 class PandasOnSparkDataFrame(DataFrameWrapper):
     TYPE = DataFrameType.PANDAS_ON_SPARK
 
-    def select_columns(self, *columns):
-        return PandasOnSparkDataFrame(self.spark, self.df[list(columns)], self.schema)
+    def _select_columns(self, columns):
+        return self.df[list(columns)]

@@ -14,7 +14,7 @@ class DataFrameWrapper(ABC):
         self.df = df
         self.schema = schema
         if self.schema:
-            self.df = self.select_columns(schema.columns)
+            self.df = self._select_columns([column.name for column in schema.columns])
 
     @classmethod
     def get_instance(cls, spark, df, schema):
@@ -33,8 +33,13 @@ class DataFrameWrapper(ABC):
             raise ValueError(f'No flypipe dataframe type found for dataframe {df_type}')
         return df_instance(spark, df, schema)
 
-    @abstractmethod
     def select_columns(self, *columns):
+        if columns and isinstance(columns[0], list):
+            columns = columns[0]
+        return self.__class__(self.spark, self._select_columns(columns), self.schema)
+
+    @abstractmethod
+    def _select_columns(self, columns):
         raise NotImplementedError
 
     # def as_pandas(self):
