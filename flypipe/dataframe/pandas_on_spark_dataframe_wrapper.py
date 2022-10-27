@@ -1,8 +1,8 @@
-from flypipe.dataframe.dataframe import DataFrameWrapper
+from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from flypipe.utils import DataFrameType
 
 
-class PandasOnSparkDataFrame(DataFrameWrapper):
+class PandasOnSparkDataFrameWrapper(DataFrameWrapper):
     TYPE = DataFrameType.PANDAS_ON_SPARK
 
     def _select_columns(self, columns):

@@ -1,6 +1,6 @@
 from flypipe.converter.dataframe import DataFrameConverter
 from flypipe.converter.schema import SchemaConverter
-from flypipe.dataframe.dataframe import DataFrameWrapper
+from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from flypipe.utils import DataFrameType
 
 
