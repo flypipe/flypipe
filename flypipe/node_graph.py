@@ -41,7 +41,7 @@ class NodeGraph:
         if pandas_on_spark_use_pandas and transformation.type == DataFrameType.PANDAS_ON_SPARK:
             transformation.type = DataFrameType.PANDAS
         graph.add_node(
-            transformation.__name__,
+            transformation.key,
             transformation=transformation,
             run_status=RunStatus.UNKNOWN,
             output_columns=None,
@@ -53,18 +53,18 @@ class NodeGraph:
 
             if current_transformation.input_nodes:
                 for input_node in current_transformation.input_nodes:
-                    if input_node.__name__ not in graph.nodes:
+                    if input_node.key not in graph.nodes:
                         graph.add_node(
-                            input_node.__name__,
+                            input_node.key,
                             transformation=input_node.node,
                             run_status=RunStatus.UNKNOWN,
                             output_columns=list(input_node.selected_columns),
                         )
                     else:
-                        graph.nodes[input_node.__name__]['output_columns'].extend(input_node.selected_columns)
+                        graph.nodes[input_node.key]['output_columns'].extend(input_node.selected_columns)
                     graph.add_edge(
-                        input_node.__name__,
-                        current_transformation.__name__,
+                        input_node.key,
+                        current_transformation.key,
                         selected_columns=input_node.selected_columns
                     )
                     frontier.insert(0, input_node.node)

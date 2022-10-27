@@ -16,6 +16,10 @@ class InputNode:
     def __name__(self):
         return self.node.__name__
 
+    @property
+    def key(self):
+        return self.node.key
+
     def get_alias(self):
         return self._alias if self._alias else self.__name__
 
