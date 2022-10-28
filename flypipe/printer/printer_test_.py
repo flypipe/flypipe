@@ -46,6 +46,7 @@ def t3(table):
 
 @node(
     type="pyspark",
+    description='This is a test',
     dependencies=[
         t1.select('col1'),
         t2.select('col2', 'col3'),
@@ -57,7 +58,6 @@ def t3(table):
     ]))
 def t4(t1, t2, t3):
     return t3
-
 
 
 with open('test.html', 'w') as f:

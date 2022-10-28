@@ -3,7 +3,7 @@ var nodes_map = {};
 
 for (let i = 0; i < nodes.length; i++) {
     node = nodes[i];
-    nodes_map[node.name] = node;
+    nodes_map[node.key] = node;
 }
 
 var links_map = {};
@@ -47,8 +47,8 @@ function getHeight() {
   );
 }
 
-function get_link(source_name, target_name){
-    return links_map[source_name + "-" + target_name];
+function get_link(source_key, target_key){
+    return links_map[source_key + "-" + target_key];
 }
 
 
@@ -75,7 +75,7 @@ var xScale = d3.scaleLinear().domain([d3.min(nodes, d => d.position[0]), d3.max(
 var yScale = d3.scaleLinear().domain([d3.min(nodes, d => d.position[1]), d3.max(nodes, d => d.position[1])]).range([100, view_port_height * 0.9]);
 
 function node_id(id){ return "node-" + id.replace('.', '-'); }
-function link_id(source_id, target_id){ return source_id.replace('.', '-') + "-" + target_id.replace('.', '-'); }
+function link_id(source_id, target_id){ return source_id + "-" + target_id; }
 function text_id(id){ return "text-" + id.replace('.', '-'); }
 
 // Our link generator with the new .x() and .y() definitions
@@ -139,7 +139,7 @@ d3.select("g")
     .attr("cx", d => xScale(d.position[0]))
     .attr("cy", d => yScale(d.position[1]))
     .attr("r", circle_radius + "px")
-    .attr("id", d => node_id(d.name))
+    .attr("id", d => node_id(d.key))
     .attr("name", d => d.name)
     .attr("fill", d => d.type['bg-color'])
     .attr("cursor", "pointer")
@@ -159,7 +159,7 @@ d3.select("g")
   .append("text")
   .attr("font-size", font_size + "px")
   .attr("text-anchor", "left")
-  .attr("id", d => text_id(d.name))
+  .attr("id", d => text_id(d.key))
   .attr("x", function(d) {
         return xScale(d.position[0]) - circle_radius;
         })
@@ -167,7 +167,7 @@ d3.select("g")
         return yScale(d.position[1]) - circle_radius - 5;
         })
 
-  .text(d => d.varname)
+  .text(d => d.name)
     ;
 
 var zoom = d3.zoom()
@@ -226,6 +226,7 @@ function highlight_link(d,i){
       ;
 
     var source = nodes_map[d['source']];
+    var target = nodes_map[d['target']];
 
     source_target_columns = {};
     for (let i = 0; i < source.definition.columns.length; i++) {
@@ -243,9 +244,9 @@ function highlight_link(d,i){
     <table class="table">
       <thead>
         <tr>
-          <th scope="col">` + d['source'] + `</th>
+          <th scope="col">` + source.name + `</th>
           <th scope="col"></th>
-          <th scope="col">` + d['target'] + `</th>
+          <th scope="col">` + target.name + `</th>
         </tr>
       </thead>
       <tbody>`
@@ -270,6 +271,7 @@ function highlight_path(d,i){
 }
 
 function move_parent_links(d, dragged_node){
+    console.log('dragged_node is ' + dragged_node);
 
     // move parent links
     d3.selectAll('path.link')
@@ -343,7 +345,7 @@ function highlight_node(node_name){
             .duration(350)
             .attr('opacity',0)
             .attr("r", circle_radius * 10)
-            .on('end',function(d) { blink(d.name, 0);});
+            .on('end',function(d) { blink(d.key, 0);});
 
 }
 
@@ -356,7 +358,7 @@ function blink(node_name, o) {
             .transition()
             .duration(100)
             .attr('opacity',(o == 0.5? 1 : 0.5))
-            .on('end',function(d) { blink(d.name, (o == 0.5? 1 : 0.5));});
+            .on('end',function(d) { blink(d.key, (o == 0.5? 1 : 0.5));});
     }
     else {
         d3.select("#" + node_id(node_name)).attr('opacity',1);

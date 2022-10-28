@@ -36,7 +36,9 @@ class Node:
         self.description = description or "No description"
 
         # TODO: enforce tags for now, later validation can be set as optional via environment variable
-        self.tags = tags or []
+        self.tags = [self.type.value, self.node_type.value]
+        if tags:
+            self.tags.extend(tags)
 
         self.input_nodes = dependencies or []
 
@@ -50,14 +52,27 @@ class Node:
 
     @property
     def __name__(self):
-        """Return the name of the wrapped transformation rather than the name of the decorator object"""
-        # TODO: replace with regex only a-z and 0-9 digits
-        return self.varname.replace(".", "_")
+        return self.function.__name__
 
     @property
-    def varname(self):
-        """Return the variable name of the wrapped transformation rather than the name of the decorator object"""
-        return self.function.__name__
+    def __class__(self):
+        return self.function.__class__
+
+    @property
+    def __module__(self):
+        return self.function.__module__
+
+    @property
+    def key(self):
+        """
+        Generate a key for a node for use in dictionaries, etc. The main goal is for it to be unique, so that nodes
+        with the same function name still return different keys.
+        """
+        # import re
+        # thing = f'{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}'
+        # thing = re.sub('[^\da-zA-Z]', '-', thing)
+        # return thing
+        return self.function.__qualname__
 
     @property
     def __doc__(self):
@@ -76,7 +91,7 @@ class Node:
     def _create_graph(self, pandas_on_spark_use_pandas=False):
         from flypipe.node_graph import NodeGraph
         self.node_graph = NodeGraph(self, pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
-        self.node_graph.calculate_graph_run_status(self.__name__, self._provided_inputs)
+        self.node_graph.calculate_graph_run_status(self.key, self._provided_inputs)
 
     def select(self, *columns):
         # TODO- if self.output_schema is defined then we should ensure each of the columns is in it.
@@ -113,7 +128,7 @@ class Node:
     def get_node_inputs(self, outputs: Mapping[str, NodeResult]):
         inputs = {}
         for input_node in self.input_nodes:
-            node_input_value = outputs[input_node.__name__].as_type(self.input_dataframe_type)
+            node_input_value = outputs[input_node.key].as_type(self.input_dataframe_type)
             inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns).df
         return inputs
 
@@ -124,7 +139,7 @@ class Node:
         while not execution_graph.is_empty():
             runnable_nodes = execution_graph.pop_runnable_transformations()
             for runnable_node in runnable_nodes:
-                if runnable_node.__name__ in outputs:
+                if runnable_node.key in outputs:
                     continue
 
                 dependency_values = runnable_node.get_node_inputs(outputs)
@@ -133,13 +148,13 @@ class Node:
                     runnable_node.process_transformation(spark, **dependency_values),
                     runnable_node.output_schema
                 )
-                output_columns = self.node_graph.get_node_output_columns(runnable_node.__name__)
+                output_columns = self.node_graph.get_node_output_columns(runnable_node.key)
                 if output_columns:
                     result.select_columns(*output_columns)
 
-                outputs[runnable_node.__name__] = result
+                outputs[runnable_node.key] = result
 
-        return outputs[self.__name__].as_type(self.type).df
+        return outputs[self.key].as_type(self.type).df
 
 
     def process_transformation(self, spark, **inputs):

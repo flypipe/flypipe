@@ -47,7 +47,7 @@ function show_transformation(node){
 
     title = node.node_type;
 
-    body = "<h5 class='mb-4'>" + node.varname + "</h5>";
+    body = "<h5 class='mb-4'>" + node.name + "</h5>";
     body += '<p class="text-break fw-lighter font-monospace mb-5">' +
                 node.definition.description +
            '</p>';

@@ -1,10 +1,13 @@
 import pytest
+
+from flypipe.data_type import String
 from flypipe.datasource.spark import Spark
 from flypipe.converter.dataframe import DataFrameConverter
 import pandas as pd
 from flypipe.node import node, Node
 from pandas.testing import assert_frame_equal
 from flypipe.pandas_on_spark_node import PandasOnSparkNode
+from flypipe.schema import Schema, Column
 from flypipe.utils import DataFrameType, dataframe_type
 
 
@@ -147,3 +150,33 @@ class TestNode:
         assert dataframe_type(stub.call_args[0][0])==expected_df_type
         assert dataframe_type(stub.call_args[0][1])==expected_df_type
 
+    def test_key(self):
+        """
+        Ensure that different nodes with the same function name have different keys
+        """
+        class A:
+            @classmethod
+            @node(
+                type='pandas',
+                output=Schema(
+                    Column('fruit', String, '')
+                )
+            )
+            def test(cls):
+                return pd.DataFrame({'fruit': ['banana']})
+
+        class B:
+            class C:
+                @classmethod
+                @node(
+                    type='pandas',
+                    dependencies=[A.test.select('fruit')],
+                    output=Schema(
+                        Column('fruit', String, '')
+                    )
+                )
+                def test(cls, test):
+                    return test['fruit']
+
+        assert A.test.key == 'TestNode.test_key.<locals>.A.test'
+        assert B.C.test.key == 'TestNode.test_key.<locals>.B.C.test'

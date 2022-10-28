@@ -16,8 +16,16 @@ class InputNode:
     def __name__(self):
         return self.node.__name__
 
+    @property
+    def key(self):
+        return self.node.key
+
     def get_alias(self):
-        return self._alias if self._alias else self.__name__
+        if self._alias:
+            return self._alias
+        # Sometimes the node name will have periods in it, for example if it's coming from a spark table datasource,
+        # periods are not valid argument names so let's replace them with underscores.
+        return self.__name__.replace('.', '_').replace('<', )
 
     def alias(self, value):
         self._alias = value

@@ -74,4 +74,7 @@ def Spark(table):
     def spark_datasource(spark):
         return spark.table(table)
     spark_datasource.function.__name__ = table
+    # __qualname__ gives the fullly qualified name of a function, the last section will be the __name__ of the function.
+    # Unfortunately it doesn't seem to automatically adjust from the above change in __name__ so we do this manually.
+    spark_datasource.function.__qualname__ = '.'.join(spark_datasource.function.__qualname__.split('.')[:-1] + [table])
     return spark_datasource
