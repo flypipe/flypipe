@@ -75,7 +75,7 @@ var xScale = d3.scaleLinear().domain([d3.min(nodes, d => d.position[0]), d3.max(
 var yScale = d3.scaleLinear().domain([d3.min(nodes, d => d.position[1]), d3.max(nodes, d => d.position[1])]).range([100, view_port_height * 0.9]);
 
 function node_id(id){ return "node-" + id.replace('.', '-'); }
-function link_id(source_id, target_id){ return source_id.replace('.', '-') + "-" + target_id.replace('.', '-'); }
+function link_id(source_id, target_id){ return source_id + "-" + target_id; }
 function text_id(id){ return "text-" + id.replace('.', '-'); }
 
 // Our link generator with the new .x() and .y() definitions
@@ -226,6 +226,7 @@ function highlight_link(d,i){
       ;
 
     var source = nodes_map[d['source']];
+    var target = nodes_map[d['target']];
 
     source_target_columns = {};
     for (let i = 0; i < source.definition.columns.length; i++) {
@@ -243,9 +244,9 @@ function highlight_link(d,i){
     <table class="table">
       <thead>
         <tr>
-          <th scope="col">` + d['source'] + `</th>
+          <th scope="col">` + source.name + `</th>
           <th scope="col"></th>
-          <th scope="col">` + d['target'] + `</th>
+          <th scope="col">` + target.name + `</th>
         </tr>
       </thead>
       <tbody>`
@@ -270,6 +271,7 @@ function highlight_path(d,i){
 }
 
 function move_parent_links(d, dragged_node){
+    console.log('dragged_node is ' + dragged_node);
 
     // move parent links
     d3.selectAll('path.link')

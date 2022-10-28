@@ -68,6 +68,10 @@ class Node:
         Generate a key for a node for use in dictionaries, etc. The main goal is for it to be unique, so that nodes
         with the same function name still return different keys.
         """
+        # import re
+        # thing = f'{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}'
+        # thing = re.sub('[^\da-zA-Z]', '-', thing)
+        # return thing
         return self.function.__qualname__
 
     @property
