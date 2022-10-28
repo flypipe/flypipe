@@ -36,7 +36,7 @@ class Node:
         self.description = description or "No description"
 
         # TODO: enforce tags for now, later validation can be set as optional via environment variable
-        self.tags = [self.type.value, self.node_type]
+        self.tags = [self.type.value, self.node_type.value]
         if tags:
             self.tags.extend(tags)
 
@@ -54,14 +54,6 @@ class Node:
     def __name__(self):
         return self.function.__name__
 
-    # TODO is the below functionality still needed? I don't think so at the moment, because the df name used as input
-    # for a node is based solely off the function name and so won't have any '.'
-    # @property
-    # def __name__(self):
-    #     """Return the name of the wrapped transformation rather than the name of the decorator object"""
-    #     # TODO: replace with regex only a-z and 0-9 digits
-    #     return self.varname.replace(".", "_")
-
     @property
     def __class__(self):
         return self.function.__class__
@@ -69,8 +61,6 @@ class Node:
     @property
     def __module__(self):
         return self.function.__module__
-
-    # TODO- replace spaces with underscore for input df
 
     @property
     def key(self):

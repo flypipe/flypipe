@@ -82,14 +82,13 @@ class GraphHTML:
             graph_node = self.graph.get_node(node_name)
 
             node_attributes = {
+                'key': graph_node['transformation'].key,
                 'name': graph_node['transformation'].__name__,
-                'varname': graph_node['transformation'].varname,
                 'position': position,
                 'active': RunStatus.ACTIVE==graph_node['run_status'],
                 'run_status': GraphHTML.CSS_MAP[graph_node['run_status']],
                 'type': GraphHTML.CSS_MAP[graph_node['transformation'].type],
                 'node_type': graph_node['transformation'].node_type.value,
-                # TODO- if possible, it would be nice not to have to reach into the internal graph object under NodeGraph
                 'dependencies': sorted(list(self.graph.graph.predecessors(node_name))),
                 'successors': sorted(list(self.graph.graph.successors(node_name))),
                 'definition': {
@@ -120,7 +119,7 @@ class GraphHTML:
                 ]
 
                 node_attributes['definition']['query'] = {
-                    "table": graph_node['transformation'].varname,
+                    "table": graph_node['transformation'].__key__,
                     "columns": graph_node['transformation'].grouped_selected_columns
                 }
 
@@ -135,11 +134,11 @@ class GraphHTML:
             target_node = self.graph.get_node(target_node_name)
             edge_data = self.graph.get_edge_data(source_node_name, target_node_name)
 
-            edges.append({'source': source_node['transformation'].__name__,
-                          'source_position': self._node_positions[source_node['transformation'].__name__],
+            edges.append({'source': source_node['transformation'].key,
+                          'source_position': self._node_positions[source_node['transformation'].key],
                           'source_selected_columns': edge_data['selected_columns'],
-                          'target': target_node['transformation'].__name__,
-                          'target_position': self._node_positions[target_node['transformation'].__name__],
+                          'target': target_node['transformation'].key,
+                          'target_position': self._node_positions[target_node['transformation'].key],
                           'active': (source_node['run_status'] != RunStatus.SKIP and target_node['run_status'] != RunStatus.SKIP)
                           })
         return edges

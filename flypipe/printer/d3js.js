@@ -3,7 +3,7 @@ var nodes_map = {};
 
 for (let i = 0; i < nodes.length; i++) {
     node = nodes[i];
-    nodes_map[node.name] = node;
+    nodes_map[node.key] = node;
 }
 
 var links_map = {};
@@ -47,8 +47,8 @@ function getHeight() {
   );
 }
 
-function get_link(source_name, target_name){
-    return links_map[source_name + "-" + target_name];
+function get_link(source_key, target_key){
+    return links_map[source_key + "-" + target_key];
 }
 
 
@@ -139,7 +139,7 @@ d3.select("g")
     .attr("cx", d => xScale(d.position[0]))
     .attr("cy", d => yScale(d.position[1]))
     .attr("r", circle_radius + "px")
-    .attr("id", d => node_id(d.name))
+    .attr("id", d => node_id(d.key))
     .attr("name", d => d.name)
     .attr("fill", d => d.type['bg-color'])
     .attr("cursor", "pointer")
@@ -159,7 +159,7 @@ d3.select("g")
   .append("text")
   .attr("font-size", font_size + "px")
   .attr("text-anchor", "left")
-  .attr("id", d => text_id(d.name))
+  .attr("id", d => text_id(d.key))
   .attr("x", function(d) {
         return xScale(d.position[0]) - circle_radius;
         })
@@ -167,7 +167,7 @@ d3.select("g")
         return yScale(d.position[1]) - circle_radius - 5;
         })
 
-  .text(d => d.varname)
+  .text(d => d.name)
     ;
 
 var zoom = d3.zoom()
@@ -343,7 +343,7 @@ function highlight_node(node_name){
             .duration(350)
             .attr('opacity',0)
             .attr("r", circle_radius * 10)
-            .on('end',function(d) { blink(d.name, 0);});
+            .on('end',function(d) { blink(d.key, 0);});
 
 }
 
@@ -356,7 +356,7 @@ function blink(node_name, o) {
             .transition()
             .duration(100)
             .attr('opacity',(o == 0.5? 1 : 0.5))
-            .on('end',function(d) { blink(d.name, (o == 0.5? 1 : 0.5));});
+            .on('end',function(d) { blink(d.key, (o == 0.5? 1 : 0.5));});
     }
     else {
         d3.select("#" + node_id(node_name)).attr('opacity',1);
