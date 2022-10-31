@@ -1,4 +1,6 @@
+import numpy as np
 from flypipe.schema import Schema
+from flypipe.schema.types import Type
 from flypipe.utils import dataframe_type, DataFrameType
 from abc import ABC, abstractmethod
 
@@ -8,7 +10,8 @@ class DataFrameWrapper(ABC):
     Flypipe dataframe, currently it's just a very thin wrapper around a pandas/spark/etc dataframe that knows what
     exact concrete dataframe type it's storing is.
     """
-    TYPE = None
+    DF_TYPE = None
+    _TYPE_MAP = {}
 
     def __init__(self, spark, df, schema):
         self.spark = spark
@@ -53,6 +56,21 @@ class DataFrameWrapper(ABC):
     @abstractmethod
     def _select_columns(self, columns):
         """Return a copy of the underlying dataframe with only the supplied columns selected"""
+        raise NotImplementedError
+
+    def cast_column(self, column: str, flypipe_type: Type):
+        if flypipe_type.key() in self._TYPE_MAP:
+            df_type = self._TYPE_MAP[flypipe_type.key()]
+            return self._cast_column(column, flypipe_type, df_type)
+        else:
+            try:
+                return getattr(self, f'_cast_column_{flypipe_type.key()}')(column, flypipe_type)
+            except AttributeError:
+                raise TypeError(
+                    f'Unable to cast to flypipe type {flypipe_type.name}- no dataframe type registered')
+
+    @abstractmethod
+    def _cast_column(self, column: str, flypipe_type: Type, df_type):
         raise NotImplementedError
 
     # def as_pandas(self):

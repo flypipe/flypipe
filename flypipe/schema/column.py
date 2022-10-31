@@ -1,4 +1,4 @@
-from flypipe.data_type.type import Type
+from flypipe.schema.types import Type
 
 
 class Column:
