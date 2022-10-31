@@ -1,13 +1,10 @@
-import logging
+import re
 from typing import Mapping, List
 from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
-from flypipe.node_run_context import NodeRunContext
 from flypipe.node_type import NodeType
-from flypipe.utils import DataFrameType, dataframe_type
-
-logger = logging.getLogger(__name__)
+from flypipe.utils import DataFrameType
 
 
 class Node:
@@ -26,6 +23,7 @@ class Node:
                  dependencies: List[InputNode] = None,
                  output=None,
                  spark_context=False):
+        self._key = None
         self.function = function
         try:
             self.type = self.TYPE_MAP[type]
@@ -68,11 +66,14 @@ class Node:
         Generate a key for a node for use in dictionaries, etc. The main goal is for it to be unique, so that nodes
         with the same function name still return different keys.
         """
-        # import re
-        # thing = f'{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}'
-        # thing = re.sub('[^\da-zA-Z]', '-', thing)
-        # return thing
-        return self.function.__qualname__
+        if self._key is None:
+            import_ = f'{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}.{self.function.__qualname__}'
+            self._key = re.sub('[^\da-zA-Z]', '_', import_)
+        return self._key
+
+    @key.setter
+    def key(self, value):
+        self._key = value
 
     @property
     def __doc__(self):
@@ -98,13 +99,23 @@ class Node:
         # otherwise if self.output_schema is not defined then we won't know the ultimate output schema
         # so can't do any validation
 
-        return InputNode(self, list(columns))
+        cols = columns[0] if isinstance(columns[0], list) else list(columns)
 
-    def inputs(self, **kwargs):
-        for k, v in kwargs.items():
-            #TODO: apply same replacement as defined in method __name__
-            self._provided_inputs[k.replace(".","_")] = v
+        if len(cols) != len(set(cols)):
+            raise ValueError(f"Duplicated columns in selection of {self.__name__}")
+        return InputNode(self, cols)
 
+    def get_node_inputs(self, outputs: Mapping[str, NodeResult]):
+        inputs = {}
+        for input_node in self.input_nodes:
+            node_input_value = outputs[input_node.key].as_type(self.input_dataframe_type)
+            inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns)
+
+        return inputs
+
+    def inputs(self, inputs):
+        for node, df in inputs.items():
+            self._provided_inputs[node.key] = df
         return self
 
     def clear_inputs(self):
@@ -125,13 +136,6 @@ class Node:
     def input_dataframe_type(self):
         return self.type
 
-    def get_node_inputs(self, outputs: Mapping[str, NodeResult]):
-        inputs = {}
-        for input_node in self.input_nodes:
-            node_input_value = outputs[input_node.key].as_type(self.input_dataframe_type)
-            inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns).df
-        return inputs
-
     def _run_sequential(self, spark=None):
         outputs = {k: NodeResult(spark, df, schema=None) for k, df in self._provided_inputs.items()}
         execution_graph = self.node_graph.copy()
@@ -143,6 +147,7 @@ class Node:
                     continue
 
                 dependency_values = runnable_node.get_node_inputs(outputs)
+                print(runnable_node.__name__)
                 result = NodeResult(
                     spark,
                     runnable_node.process_transformation(spark, **dependency_values),

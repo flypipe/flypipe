@@ -3,11 +3,13 @@ import pandas as pd
 import pyspark.pandas
 import pytest
 from pyspark_test import assert_pyspark_df_equal
+
 from tabulate import tabulate
 
 from flypipe.data_type import Decimals, String
-from flypipe.datasource.spark import Spark, SelectionNotFoundInTable
-from flypipe.exceptions import DependencyNoSelectedColumnsError, NodeTypeInvalidError
+from flypipe.exceptions import SelectionNotFoundInDataFrame
+from flypipe.datasource.spark import Spark
+from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node import node
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
@@ -37,21 +39,6 @@ class TestPySparkNode:
             ]))
             def dummy():
                 pass
-
-    def test_exception_not_specified_dependencies(self, spark):
-        @node(type='pyspark', output=Schema([
-            Column('balance', Decimals(16, 2), 'dummy')
-        ]))
-        def dummy():
-            pass
-
-
-        with pytest.raises(DependencyNoSelectedColumnsError) as e_info:
-            @node(type='pyspark', dependencies=[dummy], output=Schema([
-                Column('balance', Decimals(16, 2), 'dummy')
-            ]))
-            def balance(dummy):
-                return dummy.withColumn('balance', dummy.balance + 1).select('balance')
 
     def test_end_to_end_adhoc(self, spark):
 
@@ -98,7 +85,10 @@ class TestPySparkNode:
         df = spark.createDataFrame(schema=('c1',), data=[(1,)])
         expected_df = spark.createDataFrame(schema=('c1',), data=[(2,)])
 
-        assert_pyspark_df_equal(t2.inputs(t1=df).run(spark, parallel=False), expected_df)
+        assert_pyspark_df_equal(t2
+                                .inputs({t1: df})
+                                .run(spark, parallel=False),
+                                expected_df)
 
     def test_end_to_end_full(self, spark):
         @node(type='pyspark',
@@ -129,9 +119,9 @@ class TestPySparkNode:
         When t1 has a dependency to a datasource and it is provided then datasource should not run
 
         """
-
+        spark_dummy_table = Spark('dummy_table')
         @node(type='pyspark',
-              dependencies=[Spark('dummy_table').select('c1')],
+              dependencies=[spark_dummy_table.select('c1', 'c2')],
               output=Schema([
                   Column('c1', Decimals(16, 2), 'dummy'),
                   Column('c2', Decimals(16, 2), 'dummy')
@@ -139,13 +129,13 @@ class TestPySparkNode:
         def t1(dummy_table):
             return dummy_table
 
-        func_name = Spark('dummy_table').func.function.__name__
-        spy = mocker.spy(Spark('dummy_table').func, 'function')
+        func_name = spark_dummy_table.function.__name__
+        spy = mocker.spy(spark_dummy_table, 'function')
         # Filthy hack to stop the spy removing the __name__ attribute from the function
-        Spark('dummy_table').func.function.__name__ = func_name
+        spark_dummy_table.function.__name__ = func_name
 
         df = spark.createDataFrame(schema=('c1', 'c2', 'c3'), data=[(1, 2, 3)])
-        output_df = t1.inputs(dummy_table=df).run(spark, parallel=False)
+        output_df = t1.inputs({Spark('dummy_table'): df}).run(spark, parallel=False)
         spy.assert_not_called()
         assert_pyspark_df_equal(output_df,
                                 spark.createDataFrame(schema=('c1', 'c2',), data=[(1, 2,)]))
@@ -195,7 +185,7 @@ class TestPySparkNode:
         df = spark.createDataFrame(schema=('c1',), data=[(4,), (5,)])
         expected_df = spark.createDataFrame(schema=('c1',), data=[(4,), (5,), (6,), (7,)])
 
-        assert_pyspark_df_equal(c.inputs(b=df).run(spark, parallel=False), expected_df)
+        assert_pyspark_df_equal(c.inputs({b: df}).run(spark, parallel=False), expected_df)
 
     def test_datasource_basic(self, spark):
         stored_df = spark.createDataFrame(schema=('c1',), data=[(1,)])
@@ -225,11 +215,11 @@ class TestPySparkNode:
         Therefore in the below scenario where we have a node requesting table.c1 and another node requested table.c2, we
         expect one query to table for both columns and for the other column c3 in the table not to be included.
         """
-
+        spark_dummy_table = Spark("dummy_table")
         @node(
             type="pyspark",
             dependencies=[
-                Spark("dummy_table").select('c1')
+                spark_dummy_table.select('c1')
             ],
             output=Schema([
                 Column('c1', Decimals(10, 2), 'dummy')
@@ -238,10 +228,11 @@ class TestPySparkNode:
         def t1(dummy_table):
             return dummy_table
 
+        spark_dummy_table_2 = Spark("dummy_table")
         @node(
             type="pyspark",
             dependencies=[
-                Spark("dummy_table").select('c2')
+                spark_dummy_table_2.select('c2')
             ],
             output=Schema([
                 Column('c2', Decimals(10, 2), 'dummy')
@@ -261,14 +252,20 @@ class TestPySparkNode:
         def t3(t1, t2):
             return t1.join(t2)
 
-        func_name = Spark('dummy_table').func.function.__name__
-        spy = mocker.spy(Spark('dummy_table').func, 'function')
+        func_name = spark_dummy_table.function.__name__
+        spy = mocker.spy(spark_dummy_table, 'function')
         # Filthy hack to stop the spy removing the __name__ attribute from the function
-        Spark('dummy_table').func.function.__name__ = func_name
+        spark_dummy_table.function.__name__ = func_name
+
+        func_name2 = spark_dummy_table_2.function.__name__
+        spy2 = mocker.spy(spark_dummy_table_2, 'function')
+        # Filthy hack to stop the spy removing the __name__ attribute from the function
+        spark_dummy_table_2.function.__name__ = func_name2
 
         t3.run(spark, parallel=False)
         spy.assert_called_once()
-        assert_pyspark_df_equal(spy.spy_return, spark.createDataFrame(schema=('c1', 'c2'), data=[(1, 2)]))
+        spy2.assert_not_called()
+        assert_pyspark_df_equal(spy.spy_return, spark.createDataFrame(schema=('c1', 'c2', 'c3'), data=[(1, 2, 3)]))
 
     def test_conversion_to_pandas(self, spark):
 
@@ -404,14 +401,14 @@ class TestPySparkNode:
             df = df.rename(columns={'my_col__x': 'my_col'})
             return df
 
-        with pytest.raises(SelectionNotFoundInTable) as exc_info:
+        with pytest.raises(SelectionNotFoundInDataFrame) as exc_info:
             (
                 my_col
                     .clear_inputs()
                     .run(spark, parallel=False)
             )
         expected_error_df = pd.DataFrame(data = {
-            'test_pyspark_node.dummy_table__anything_c': [
+            'dataframe': [
                '',  'My_Col__x ', 'My_Col__z'
             ],
             'selection': [
@@ -423,10 +420,60 @@ class TestPySparkNode:
         })
         expected_error_df = expected_error_df.sort_values([
             'selection',
-            'test_pyspark_node.dummy_table__anything_c'
+            'dataframe'
         ]).reset_index(drop=True)
         assert str(exc_info.value) == \
-               f"Flypipe: could not find some columns in `test_pyspark_node.dummy_table__anything_c`" \
+               f"Flypipe: could not find some columns in the dataframe" \
                    f"\n\n{tabulate(expected_error_df, headers='keys', tablefmt='mixed_outline')}\n"
 
+    def test_duplicated_output_columns(self, spark):
 
+        @node(
+            type="pandas_on_spark",
+            dependencies=[Spark("dummy_table").select("c1", "c2")],
+            output=Schema([
+                Column("c1", String(), "dummy"),
+                Column("c2", String(), "dummy")
+        ]))
+        def t1(dummy_table):
+            return dummy_table
+
+        @node(
+            type="pandas_on_spark",
+            dependencies=[t1.select("c1", "c2")],
+            output=Schema([
+                Column("c1", String(), "dummy"),
+                Column("c2", String(), "dummy")
+            ]))
+        def t2(t1):
+            return t1
+
+        @node(
+            type="pandas_on_spark",
+            dependencies=[t1.select("c1")],
+            output=Schema([
+                Column("c1", String(), "dummy")
+            ]))
+        def t3(t1):
+            return t1
+
+        @node(
+            type="pyspark",
+            dependencies=[t2.select("c1", "c2"),
+                          t1.select("c1")],
+            output=Schema([
+                Column("c2", String(), "dummy")
+            ]))
+        def t4(t1, t2):
+            return t2
+
+
+        t4._create_graph()
+        for node_name in t4.node_graph.graph:
+            node_ = t4.node_graph.get_node(node_name)
+            if node_['transformation'].__name__ == "t4":
+                continue
+            assert len(node_['output_columns']) == len(set(node_['output_columns']))
+
+        df = t4.run(spark, parallel=False)
+        assert_pyspark_df_equal(df, spark.createDataFrame(schema=('c2',), data=[("2",)]))

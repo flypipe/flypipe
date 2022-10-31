@@ -33,6 +33,7 @@ class NodeGraph:
         # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
         if pandas_on_spark_use_pandas and transformation.type == DataFrameType.PANDAS_ON_SPARK:
             transformation.type = DataFrameType.PANDAS
+
         graph.add_node(
             transformation.key,
             transformation=transformation,
@@ -54,7 +55,10 @@ class NodeGraph:
                             output_columns=list(input_node.selected_columns),
                         )
                     else:
-                        graph.nodes[input_node.key]['output_columns'].extend(input_node.selected_columns)
+                        graph.nodes[input_node.key]['output_columns'] = list(dict.fromkeys(
+                            graph.nodes[input_node.key]['output_columns'] +
+                            input_node.selected_columns))
+
                     graph.add_edge(
                         input_node.key,
                         current_transformation.key,

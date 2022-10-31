@@ -31,7 +31,7 @@ class TestPandasOnSparkNode:
             return pandas.DataFrame(data={'c1': [1], 'c2': [2], 'c3': [3]})
 
         df = t1.run(spark, parallel=False)
-        assert isinstance(df, pandas.DataFrame)
+        assert isinstance(df, pyspark.pandas.frame.DataFrame)
 
 
     def test_conversion_to_pyspark(self, spark, pandas_df):
@@ -45,5 +45,5 @@ class TestPandasOnSparkNode:
         def t1():
             return pandas_df
 
-        df = t1.inputs(dummy_table=pandas_df).run(spark, parallel=False)
+        df = t1.run(spark, parallel=False)
         assert isinstance(df, pyspark.sql.DataFrame)

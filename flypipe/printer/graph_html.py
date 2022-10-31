@@ -130,10 +130,10 @@ class GraphHTML:
     def edges(self):
         edges = []
         for source_node_name, target_node_name in self.graph.get_edges():
+
             source_node = self.graph.get_node(source_node_name)
             target_node = self.graph.get_node(target_node_name)
             edge_data = self.graph.get_edge_data(source_node_name, target_node_name)
-
             edges.append({'source': source_node['transformation'].key,
                           'source_position': self._node_positions[source_node['transformation'].key],
                           'source_selected_columns': edge_data['selected_columns'],
