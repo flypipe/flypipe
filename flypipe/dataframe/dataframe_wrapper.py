@@ -10,15 +10,18 @@ class DataFrameWrapper(ABC):
     """
     TYPE = None
 
-    def __init__(self, spark, df, schema):
+    def __init__(self, spark, df, schema, selected_columns=None):
         self.spark = spark
         self.df = df
         self.schema = schema
+
         if self.schema:
             self.df = self._select_columns([column.name for column in schema.columns])
+        elif selected_columns:
+            self.df = self._select_columns(selected_columns)
 
     @classmethod
-    def get_instance(cls, spark, df, schema):
+    def get_instance(cls, spark, df, schema, selected_columns=None):
         # Avoid circular imports by doing local imports here
         from flypipe.dataframe.pandas_dataframe_wrapper import PandasDataFrameWrapper
         from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import PandasOnSparkDataFrameWrapper
@@ -32,7 +35,7 @@ class DataFrameWrapper(ABC):
             df_instance = PandasOnSparkDataFrameWrapper
         else:
             raise ValueError(f'No flypipe dataframe type found for dataframe {df_type}')
-        return df_instance(spark, df, schema)
+        return df_instance(spark, df, schema, selected_columns)
 
     def select_columns(self, *columns):
         """

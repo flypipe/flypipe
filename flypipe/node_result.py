@@ -6,9 +6,9 @@ from flypipe.utils import DataFrameType
 
 class NodeResult:
 
-    def __init__(self, spark, df, schema):
+    def __init__(self, spark, df, schema, selected_columns):
         self.spark = spark
-        self.df_wrapper = DataFrameWrapper.get_instance(spark, df, schema)
+        self.df_wrapper = DataFrameWrapper.get_instance(spark, df, schema, selected_columns)
         self.schema = schema
         # TODO- should we create an instance level cache decorator instead of doing this manually?
         self.cached_conversions = {}

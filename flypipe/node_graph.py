@@ -145,7 +145,7 @@ class NodeGraph:
         candidate_node_names = [node_name for node_name in self.graph if self.graph.in_degree(node_name)==0]
         runnable_node_names = filter(lambda node_name: self.get_run_status(node_name) == RunStatus.ACTIVE,
                                      candidate_node_names)
-        runnable_nodes = [self.get_transformation(node_name) for node_name in runnable_node_names]
+        runnable_nodes = [self.get_node(node_name) for node_name in runnable_node_names]
         for node_name in candidate_node_names:
             self.graph.remove_node(node_name)
         return runnable_nodes

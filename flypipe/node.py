@@ -137,27 +137,28 @@ class Node:
         return self.type
 
     def _run_sequential(self, spark=None):
-        outputs = {k: NodeResult(spark, df, schema=None) for k, df in self._provided_inputs.items()}
+        outputs = {k: NodeResult(spark, df, schema=None, selected_columns=None) for k, df in self._provided_inputs.items()}
         execution_graph = self.node_graph.copy()
 
         while not execution_graph.is_empty():
             runnable_nodes = execution_graph.pop_runnable_transformations()
             for runnable_node in runnable_nodes:
-                if runnable_node.key in outputs:
+                if runnable_node['transformation'].key in outputs:
                     continue
 
-                dependency_values = runnable_node.get_node_inputs(outputs)
-                print(runnable_node.__name__)
+                dependency_values = runnable_node['transformation'].get_node_inputs(outputs)
+
                 result = NodeResult(
                     spark,
-                    runnable_node.process_transformation(spark, **dependency_values),
-                    runnable_node.output_schema
+                    runnable_node['transformation'].process_transformation(spark, **dependency_values),
+                    runnable_node['transformation'].output_schema,
+                    runnable_node['output_columns']
                 )
-                output_columns = self.node_graph.get_node_output_columns(runnable_node.key)
+                output_columns = self.node_graph.get_node_output_columns(runnable_node['transformation'].key)
                 if output_columns:
                     result.select_columns(*output_columns)
 
-                outputs[runnable_node.key] = result
+                outputs[runnable_node['transformation'].key] = result
 
         return outputs[self.key].as_type(self.type).df
 
