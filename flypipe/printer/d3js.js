@@ -74,9 +74,9 @@ const dragged_link_gen = d3.linkHorizontal()
 var xScale = d3.scaleLinear().domain([d3.min(nodes, d => d.position[0]), d3.max(nodes, d => d.position[0])]).range([100, view_port_width * 0.9]);
 var yScale = d3.scaleLinear().domain([d3.min(nodes, d => d.position[1]), d3.max(nodes, d => d.position[1])]).range([100, view_port_height * 0.9]);
 
-function node_id(id){ return "node-" + id.replace('.', '-'); }
+function node_id(id){ return "node-" + id; }
 function link_id(source_id, target_id){ return source_id + "-" + target_id; }
-function text_id(id){ return "text-" + id.replace('.', '-'); }
+function text_id(id){ return "text-" + id; }
 
 // Our link generator with the new .x() and .y() definitions
 var linkGen = d3.linkHorizontal()
@@ -140,7 +140,7 @@ d3.select("g")
     .attr("cy", d => yScale(d.position[1]))
     .attr("r", circle_radius + "px")
     .attr("id", d => node_id(d.key))
-    .attr("name", d => d.name)
+    .attr("name", d => d.key)
     .attr("fill", d => d.type['bg-color'])
     .attr("cursor", "pointer")
     .style("stroke", "black")
@@ -271,16 +271,15 @@ function highlight_path(d,i){
 }
 
 function move_parent_links(d, dragged_node){
-    console.log('dragged_node is ' + dragged_node);
 
     // move parent links
     d3.selectAll('path.link')
       .filter(function(d_, i) {
-        return d_['source'] == d['name'] | d_['target'] == d['name'];
+        return d_['source'] == d['key'] | d_['target'] == d['key'];
       })
       .attr("d", function(d_) {
 
-        if (d_['source'] == d['name']){
+        if (d_['source'] == d['key']){
             var source_node = d3.select("#" + node_id(d_.target));
             var data = {
             'target': [source_node.attr('cx') * 1, source_node.attr('cy') * 1],

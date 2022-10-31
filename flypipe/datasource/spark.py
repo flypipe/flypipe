@@ -1,5 +1,7 @@
 import re
 from flypipe.node import node
+from flypipe.node_type import NodeType
+
 
 def Spark(table):
     @node(
@@ -14,6 +16,6 @@ def Spark(table):
     spark_datasource.function.__name__ = table
 
     key = f"spark.{table}"
-    spark_datasource.key = re.sub('[^\da-zA-Z]', '_', key)
-
+    spark_datasource.key = re.sub('[^\da-zA-Z]', '-', key)
+    spark_datasource.node_type = NodeType.DATASOURCE
     return spark_datasource

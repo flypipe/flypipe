@@ -67,8 +67,8 @@ class Node:
         with the same function name still return different keys.
         """
         if self._key is None:
-            import_ = f'{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}.{self.function.__qualname__}'
-            self._key = re.sub('[^\da-zA-Z]', '_', import_)
+            key = f'{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}.{self.function.__qualname__}'
+            self._key = re.sub('[^\da-zA-Z]', '-', key)
         return self._key
 
     @key.setter
