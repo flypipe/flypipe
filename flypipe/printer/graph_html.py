@@ -143,7 +143,7 @@ class GraphHTML:
             source_node = self.graph.get_node(source_node_name)
             target_node = self.graph.get_node(target_node_name)
             edge_data = self.graph.get_edge_data(source_node_name, target_node_name)
-            print(source_node_name, target_node_name, edge_data['selected_columns'])
+
             edges.append({'source': source_node['transformation'].key,
                           'source_name': source_node['transformation'].__name__,
                           'source_position': self._node_positions[source_node['transformation'].key],
