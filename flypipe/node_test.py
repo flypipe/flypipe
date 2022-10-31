@@ -25,10 +25,10 @@ class TestNode:
     @pytest.mark.parametrize('node_type,expected_class', [
         ('pyspark', Node),
         ('pandas', Node),
-        ('pandas_on_spark', PandasOnSparkNode),
+        ('pandas_on_spark', Node),
     ])
     def test_get_class(self, node_type, expected_class):
-        assert Node.get_class(node_type) == expected_class
+        assert type(Node(None, node_type)) == expected_class
 
     def test_select(self):
         """

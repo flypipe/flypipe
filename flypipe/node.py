@@ -80,14 +80,14 @@ class Node:
         """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
         return self.function.__doc__
 
-    @classmethod
-    def get_class(cls, node_type):
-        # I put the import here to avoid a circular import error
-        from flypipe.pandas_on_spark_node import PandasOnSparkNode
-        if node_type == 'pandas_on_spark':
-            return PandasOnSparkNode
-        else:
-            return Node
+    # @classmethod
+    # def get_class(cls, node_type):
+    #     # I put the import here to avoid a circular import error
+    #     from flypipe.pandas_on_spark_node import PandasOnSparkNode
+    #     if node_type == 'pandas_on_spark':
+    #         return PandasOnSparkNode
+    #     else:
+    #         return Node
 
     def _create_graph(self, pandas_on_spark_use_pandas=False):
         from flypipe.node_graph import NodeGraph
@@ -188,6 +188,7 @@ def node(type, *args, **kwargs):
 
     def decorator(func):
         kwargs['type'] = type
-        return Node.get_class(type)(func, *args, **kwargs)
+        # return Node.get_class(type)(func, *args, **kwargs)
+        return Node(func, *args, **kwargs)
 
     return decorator

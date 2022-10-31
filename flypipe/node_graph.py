@@ -1,3 +1,4 @@
+from copy import copy
 from enum import Enum
 from typing import List
 
@@ -48,6 +49,11 @@ class NodeGraph:
             if current_transformation.input_nodes:
                 for input_node in current_transformation.input_nodes:
                     if input_node.key not in graph.nodes:
+
+                        # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
+                        if pandas_on_spark_use_pandas and input_node.node.type == DataFrameType.PANDAS_ON_SPARK:
+                            input_node.node.type = DataFrameType.PANDAS
+
                         graph.add_node(
                             input_node.key,
                             transformation=input_node.node,
