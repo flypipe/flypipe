@@ -32,6 +32,7 @@ class NodeGraph:
         graph = nx.DiGraph()
 
         # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
+        # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
         if pandas_on_spark_use_pandas and transformation.type == DataFrameType.PANDAS_ON_SPARK:
             transformation.type = DataFrameType.PANDAS
 
@@ -51,6 +52,7 @@ class NodeGraph:
                     if input_node.key not in graph.nodes:
 
                         # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
+                        # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
                         if pandas_on_spark_use_pandas and input_node.node.type == DataFrameType.PANDAS_ON_SPARK:
                             input_node.node.type = DataFrameType.PANDAS
 
