@@ -477,3 +477,59 @@ class TestPySparkNode:
 
         df = t4.run(spark, parallel=False)
         assert_pyspark_df_equal(df, spark.createDataFrame(schema=('c2',), data=[("2",)]))
+
+
+    def test_dataframes_are_isolated_from_nodes(self, spark):
+        import  pyspark.sql.functions as F
+
+        @node(
+            type="pyspark",
+            output=Schema([
+                Column('c1', String(), 'dummy'),
+                Column('c2', String(), 'dummy')
+            ])
+        )
+        def t1():
+            return spark.createDataFrame(pandas.DataFrame(data={'c1': ["1"], 'c2': ["2"]}))
+
+        @node(
+            type="pyspark",
+            dependencies=[
+                t1.select("c1", "c2")
+            ],
+            output=Schema([
+                Column('c1', String(), 'dummy'),
+                Column('c2', String(), 'dummy'),
+                Column('c3', String(), 'dummy'),
+            ])
+        )
+        def t2(t1):
+            t1 = t1.withColumn("c1", F.lit("t2 set this value"))
+            t1 = t1.withColumn("c3", F.lit("t2 set this value"))
+            return t1
+
+        @node(
+            type="pyspark",
+            dependencies=[
+                t1.select("c1", "c2"),
+                t2.select("c1", "c2", "c3")
+            ],
+            output=Schema([
+                Column('c1', String(), 'dummy'),
+                Column('c2', String(), 'dummy'),
+                Column('c3', String(), 'dummy'),
+            ])
+        )
+        def t3(t1, t2):
+            t1 = t1.toPandas()
+            t2 = t2.toPandas()
+            assert list(t1.columns) == ["c1", "c2"]
+            assert t1.loc[0, "c1"] == "1"
+            assert t1.loc[0, "c2"] == "2"
+            assert list(t2.columns) == ["c1", "c2", "c3"]
+            assert t2.loc[0, "c1"] == "t2 set this value"
+            assert t2.loc[0, "c2"] == "2"
+            assert t2.loc[0, "c3"] == "t2 set this value"
+            return spark.createDataFrame(t2)
+
+        df = t3.run(spark, parallel=False)

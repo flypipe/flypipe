@@ -6,7 +6,6 @@ from flypipe.converter.dataframe import DataFrameConverter
 import pandas as pd
 from flypipe.node import node, Node
 from pandas.testing import assert_frame_equal
-from flypipe.pandas_on_spark_node import PandasOnSparkNode
 from flypipe.schema import Schema, Column
 from flypipe.utils import DataFrameType, dataframe_type
 

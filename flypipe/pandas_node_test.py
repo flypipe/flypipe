@@ -1,8 +1,9 @@
 import pandas
 import pyspark.pandas
 import pytest
+from tabulate import tabulate
 
-from flypipe.data_type import Decimals
+from flypipe.data_type import Decimals, String
 from flypipe.node import node
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
@@ -47,3 +48,59 @@ class TestPandasOnSparkNode:
 
         df = t1.run(spark, parallel=False)
         assert isinstance(df, pyspark.sql.DataFrame)
+
+    def test_dataframes_are_isolated_from_nodes(self):
+
+        @node(
+            type="pandas",
+            output=Schema([
+                Column('c1', String(), 'dummy'),
+                Column('c2', String(), 'dummy')
+            ])
+        )
+        def t1():
+            return pandas.DataFrame(data={'c1': ["1"], 'c2': ["2"]})
+
+        @node(
+            type="pandas",
+            dependencies=[
+                t1.select("c1", "c2")
+            ],
+            output=Schema([
+                Column('c1', String(), 'dummy'),
+                Column('c2', String(), 'dummy'),
+                Column('c3', String(), 'dummy'),
+            ])
+        )
+        def t2(t1):
+            t1["c1"] = "t2 set this value"
+            t1["c3"] = t1["c1"]
+            return t1
+
+        @node(
+            type="pandas",
+            dependencies=[
+                t1.select("c1", "c2"),
+                t2.select("c1", "c2", "c3")
+            ],
+            output=Schema([
+                Column('c1', String(), 'dummy'),
+                Column('c2', String(), 'dummy'),
+                Column('c3', String(), 'dummy'),
+            ])
+        )
+        def t3(t1, t2):
+            assert list(t1.columns) == ["c1", "c2"]
+            assert t1.loc[0, "c1"] == "1"
+            assert t1.loc[0, "c2"] == "2"
+            assert list(t2.columns) == ["c1", "c2", "c3"]
+            assert t2.loc[0, "c1"] == "t2 set this value"
+            assert t2.loc[0, "c2"] == "2"
+            assert t2.loc[0, "c3"] == "t2 set this value"
+            return t2
+
+        df = t3.run(spark, parallel=False)
+
+
+
+
