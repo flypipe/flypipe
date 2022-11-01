@@ -6,10 +6,10 @@ from flypipe.utils import DataFrameType
 
 class NodeResult:
 
-    def __init__(self, spark, raw_df, schema):
+    def __init__(self, spark, df, schema, selected_columns):
         self.spark = spark
-        raw_df_wrapper = DataFrameWrapper.get_instance(spark, raw_df)
-        self.df = self._apply_schema_to_df(spark, raw_df_wrapper, schema)
+        self.df_wrapper = DataFrameWrapper.get_instance(spark, df, schema, selected_columns)
+        self.schema = schema
         # TODO- should we create an instance level cache decorator instead of doing this manually?
         self.cached_conversions = {}
         self.dataframe_converter = DataFrameConverter(spark)
@@ -27,8 +27,7 @@ class NodeResult:
         return None
 
     def select_columns(self, *columns):
-        self.df = self.df.select_columns(*columns)
-        return self.df
+        return self.df_wrapper.select_columns(*columns)
 
     def as_type(self, df_type: DataFrameType):
         if df_type not in self.cached_conversions:
@@ -36,9 +35,13 @@ class NodeResult:
         return self.cached_conversions[df_type]
 
     def _as_type(self, df_type: DataFrameType):
-        if self.df.DF_TYPE == df_type:
-            dataframe = self.df
+        if self.df_wrapper.TYPE == df_type:
+            dataframe = self.df_wrapper
         else:
-            # TODO- is this a good idea? We are having to reach into self.df to grab the df, this usually is a mark of a design issue
-            dataframe = DataFrameWrapper.get_instance(self.spark, self.dataframe_converter.convert(self.df.df, df_type))
+            # TODO- is this a good idea? We are having to reach into self.df_wrapper to grab the df, this usually is a mark of a design issue
+            dataframe = DataFrameWrapper.get_instance(self.spark,
+                                                      self.dataframe_converter.convert(self.df_wrapper.df, df_type),
+                                                      self.schema)
+            if self.schema:
+                dataframe.df = SchemaConverter.cast(dataframe.df, df_type, dataframe.schema)
         return dataframe

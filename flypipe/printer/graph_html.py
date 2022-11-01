@@ -81,6 +81,13 @@ class GraphHTML:
         for node_name, position in self._node_positions.items():
             graph_node = self.graph.get_node(node_name)
 
+            successors = sorted(list(self.graph.graph.successors(node_name)))
+            successors_names = [self.graph.get_node(successor)['transformation'].__name__ for successor in successors]
+
+            dependencies = sorted(list(self.graph.graph.predecessors(node_name)))
+            dependencies_names = [self.graph.get_node(dependency)['transformation'].__name__ for dependency in dependencies]
+
+
             node_attributes = {
                 'key': graph_node['transformation'].key,
                 'name': graph_node['transformation'].__name__,
@@ -89,8 +96,10 @@ class GraphHTML:
                 'run_status': GraphHTML.CSS_MAP[graph_node['run_status']],
                 'type': GraphHTML.CSS_MAP[graph_node['transformation'].type],
                 'node_type': graph_node['transformation'].node_type.value,
-                'dependencies': sorted(list(self.graph.graph.predecessors(node_name))),
-                'successors': sorted(list(self.graph.graph.successors(node_name))),
+                'dependencies': dependencies,
+                'dependencies_names': dependencies_names,
+                'successors': successors,
+                'successors_names': successors_names,
                 'definition': {
                     'description': graph_node['transformation'].description,
                     'tags': graph_node['transformation'].tags,
@@ -115,12 +124,12 @@ class GraphHTML:
                         'type': None,
                         'description': None
                     }
-                    for column in graph_node['transformation'].grouped_selected_columns
+                    for column in graph_node['output_columns']
                 ]
 
                 node_attributes['definition']['query'] = {
-                    "table": graph_node['transformation'].__key__,
-                    "columns": graph_node['transformation'].grouped_selected_columns
+                    "table": graph_node['transformation'].__name__,
+                    "columns": graph_node['output_columns']
                 }
 
             nodes.append(node_attributes)
@@ -130,14 +139,17 @@ class GraphHTML:
     def edges(self):
         edges = []
         for source_node_name, target_node_name in self.graph.get_edges():
+
             source_node = self.graph.get_node(source_node_name)
             target_node = self.graph.get_node(target_node_name)
             edge_data = self.graph.get_edge_data(source_node_name, target_node_name)
 
             edges.append({'source': source_node['transformation'].key,
+                          'source_name': source_node['transformation'].__name__,
                           'source_position': self._node_positions[source_node['transformation'].key],
                           'source_selected_columns': edge_data['selected_columns'],
                           'target': target_node['transformation'].key,
+                          'target_name': target_node['transformation'].__name__,
                           'target_position': self._node_positions[target_node['transformation'].key],
                           'active': (source_node['run_status'] != RunStatus.SKIP and target_node['run_status'] != RunStatus.SKIP)
                           })

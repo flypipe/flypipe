@@ -3,7 +3,9 @@ from pyspark.sql.types import BooleanType, ByteType, BinaryType, IntegerType, Sh
     DoubleType, StringType, DecimalType
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from flypipe.schema.types import Type, Boolean, Byte, Binary, Integer, Short, Long, Float, Double, String
+from flypipe.exceptions import SelectionNotFoundInDataFrame
 from flypipe.utils import DataFrameType
+
 
 
 class SparkDataFrameWrapper(DataFrameWrapper):
@@ -22,6 +24,12 @@ class SparkDataFrameWrapper(DataFrameWrapper):
     }
 
     def _select_columns(self, columns):
+
+        df_cols = [col for col, _ in self.df.dtypes]
+
+        if not set(columns).issubset(set(df_cols)):
+            raise SelectionNotFoundInDataFrame(df_cols, columns)
+
         return self.df.select(list(columns))
 
     def _cast_column(self, column: str, flypipe_type: Type, df_type):

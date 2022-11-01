@@ -11,12 +11,18 @@ class DataFrameWrapper(ABC):
     DF_TYPE = None
     _TYPE_MAP = {}
 
-    def __init__(self, spark, df):
+    def __init__(self, spark, df, schema, selected_columns=None):
         self.spark = spark
         self.df = df
+        self.schema = schema
+
+        if self.schema:
+            self.df = self._select_columns([column.name for column in schema.columns])
+        elif selected_columns:
+            self.df = self._select_columns(selected_columns)
 
     @classmethod
-    def get_instance(cls, spark, df):
+    def get_instance(cls, spark, df, schema, selected_columns=None):
         # Avoid circular imports by doing local imports here
         from flypipe.dataframe.pandas_dataframe_wrapper import PandasDataFrameWrapper
         from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import PandasOnSparkDataFrameWrapper
@@ -30,7 +36,7 @@ class DataFrameWrapper(ABC):
             df_instance = PandasOnSparkDataFrameWrapper
         else:
             raise ValueError(f'No flypipe dataframe type found for dataframe {df_type}')
-        return df_instance(spark, df)
+        return df_instance(spark, df, schema, selected_columns)
 
     def select_columns(self, *columns):
         """
@@ -38,11 +44,11 @@ class DataFrameWrapper(ABC):
         dataframe_wrapper.select_columns('col1', 'col2', ...)
         dataframe_wrapper.select_columns(['col1', 'col2', ...])
 
-        Returns a new instance of the class wrapped around the dataframe with just those specific columns selected.
+        Returns a dataframe with just those specific columns selected.
         """
         if columns and isinstance(columns[0], list):
             columns = columns[0]
-        return self.__class__(self.spark, self._select_columns(columns))
+        return self._select_columns(columns)
 
     @abstractmethod
     def _select_columns(self, columns):
