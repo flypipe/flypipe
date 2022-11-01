@@ -1,3 +1,4 @@
+from copy import copy
 from enum import Enum
 from typing import List
 
@@ -31,8 +32,10 @@ class NodeGraph:
         graph = nx.DiGraph()
 
         # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
+        # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
         if pandas_on_spark_use_pandas and transformation.type == DataFrameType.PANDAS_ON_SPARK:
             transformation.type = DataFrameType.PANDAS
+
         graph.add_node(
             transformation.key,
             transformation=transformation,
@@ -47,14 +50,23 @@ class NodeGraph:
             if current_transformation.input_nodes:
                 for input_node in current_transformation.input_nodes:
                     if input_node.key not in graph.nodes:
+
+                        # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
+                        # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
+                        if pandas_on_spark_use_pandas and input_node.node.type == DataFrameType.PANDAS_ON_SPARK:
+                            input_node.node.type = DataFrameType.PANDAS
+
                         graph.add_node(
                             input_node.key,
                             transformation=input_node.node,
                             run_status=RunStatus.UNKNOWN,
-                            output_columns=list(input_node.selected_columns),
+                            output_columns=sorted(list(input_node.selected_columns)),
                         )
                     else:
-                        graph.nodes[input_node.key]['output_columns'].extend(input_node.selected_columns)
+                        graph.nodes[input_node.key]['output_columns'] = sorted(list(
+                            set(graph.nodes[input_node.key]['output_columns'])
+                            .union(set(input_node.selected_columns))))
+
                     graph.add_edge(
                         input_node.key,
                         current_transformation.key,
@@ -141,7 +153,7 @@ class NodeGraph:
         candidate_node_names = [node_name for node_name in self.graph if self.graph.in_degree(node_name)==0]
         runnable_node_names = filter(lambda node_name: self.get_run_status(node_name) == RunStatus.ACTIVE,
                                      candidate_node_names)
-        runnable_nodes = [self.get_transformation(node_name) for node_name in runnable_node_names]
+        runnable_nodes = [self.get_node(node_name) for node_name in runnable_node_names]
         for node_name in candidate_node_names:
             self.graph.remove_node(node_name)
         return runnable_nodes

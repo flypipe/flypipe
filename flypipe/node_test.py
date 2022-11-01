@@ -6,7 +6,6 @@ from flypipe.converter.dataframe import DataFrameConverter
 import pandas as pd
 from flypipe.node import node, Node
 from pandas.testing import assert_frame_equal
-from flypipe.pandas_on_spark_node import PandasOnSparkNode
 from flypipe.schema import Schema, Column
 from flypipe.utils import DataFrameType, dataframe_type
 
@@ -25,10 +24,10 @@ class TestNode:
     @pytest.mark.parametrize('node_type,expected_class', [
         ('pyspark', Node),
         ('pandas', Node),
-        ('pandas_on_spark', PandasOnSparkNode),
+        ('pandas_on_spark', Node),
     ])
     def test_get_class(self, node_type, expected_class):
-        assert Node.get_class(node_type) == expected_class
+        assert type(Node(None, node_type)) == expected_class
 
     def test_select(self):
         """
@@ -158,9 +157,9 @@ class TestNode:
             @classmethod
             @node(
                 type='pandas',
-                output=Schema(
-                    Column('fruit', String, '')
-                )
+                output=Schema([
+                        Column('fruit', String(), '')
+                    ])
             )
             def test(cls):
                 return pd.DataFrame({'fruit': ['banana']})
@@ -171,12 +170,66 @@ class TestNode:
                 @node(
                     type='pandas',
                     dependencies=[A.test.select('fruit')],
-                    output=Schema(
-                        Column('fruit', String, '')
-                    )
+                    output=Schema([
+                        Column('fruit', String(), '')
+                    ])
                 )
                 def test(cls, test):
                     return test['fruit']
 
-        assert A.test.key == 'TestNode.test_key.<locals>.A.test'
-        assert B.C.test.key == 'TestNode.test_key.<locals>.B.C.test'
+        assert A.test.key == 'flypipe_node_test_function_test_TestNode_test_key__locals__A_test'
+        assert B.C.test.key == 'flypipe_node_test_function_test_TestNode_test_key__locals__B_C_test'
+
+
+    def test_duplicated_selected(self):
+        """
+        Ensure throw exception if selected duplicated columns
+        """
+
+        @node(
+            type='pandas'
+        )
+        def t1():
+            return pd.DataFrame({'fruit': ['banana', 'apple'], 'color': ['yellow', 'red']})
+
+        with pytest.raises(ValueError):
+            @node(
+                type='pandas',
+                dependencies=[t1.select('fruit', 'fruit').alias('my_fruits')]
+            )
+            def t2(my_fruits):
+                return my_fruits
+
+
+    def test_(self, spark):
+        """
+        Ensure throw exception if selected duplicated columns
+        """
+
+        @node(
+            type='pandas_on_spark',
+            output=Schema([
+                Column('fruit', String(), 'dummy'),
+                Column('color', String(), 'dummy'),
+            ])
+        )
+        def t1():
+            return spark.createDataFrame(
+                pd.DataFrame({'fruit': ['banana', 'apple'], 'color': ['yellow', 'red']})
+            ).to_pandas_on_spark()
+
+
+        @node(
+            type='pandas',
+            dependencies=[t1.select('color')],
+            output=Schema([
+                Column('another_color', String(), 'dummy'),
+            ])
+        )
+        def t2(t1):
+            t1['another_color'] = t1['color']
+            return t1
+
+        t2.run(spark, parallel=False)
+
+

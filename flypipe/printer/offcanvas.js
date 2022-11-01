@@ -69,10 +69,10 @@ function show_transformation(node){
         body += '<li class="list-group-item fst-italic">No dependencies</li>';
     }
     for (let i = 0; i < node.dependencies.length; i++) {
-        dependency = node.dependencies[i];
-        dependency_ = "'" + dependency + "'";
-        body += '<li class="list-group-item"><a style="cursor: pointer;" class="link-dark" onclick="show_transformation(' + dependency_ + ');">' + dependency + '</a></li>';
-        link = get_link(dependency, node.name);
+        dependency_key = "'" + node.dependencies[i] + "'";
+        dependency_name = node.dependencies_names[i];
+        body += '<li class="list-group-item"><a style="cursor: pointer;" class="link-dark" onclick="show_transformation(' + dependency_key + ');">' + dependency_name + '</a></li>';
+        link = get_link(node.dependencies[i], node.key);
 
         for (let i = 0; i < link.source_selected_columns.length; i++) {
             selected_column = link.source_selected_columns[i];
@@ -88,10 +88,10 @@ function show_transformation(node){
     if (node.successors.length == 0){
         body += '<li class="list-group-item fst-italic">No successors</li>';
     }
-    for (let i = 0; i < node.successors.length; i++) {
-        successor = node.successors[i];
-        successor_ = "'" + successor + "'";
-        body += '<li class="list-group-item"><a style="cursor: pointer;" class="link-dark" onclick="show_transformation(' + successor_ + ');">' + successor + '</a></li>';
+    for (let i = 0; i < node.successors_names.length; i++) {
+        successor_name = node.successors_names[i];
+        successor_key = "'" + node.successors[i] + "'";
+        body += '<li class="list-group-item"><a style="cursor: pointer;" class="link-dark" onclick="show_transformation(' + successor_key + ');">' + successor_name + '</a></li>';
     }
     body += '</ul>';
 

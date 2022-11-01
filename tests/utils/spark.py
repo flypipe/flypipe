@@ -20,4 +20,4 @@ def drop_database(spark, db_name):
     path = os.path.join(dir_path,
                         'spark-warehouse',
                         f"{db_name}.db")
-    shutil.rmtree(path)
+    shutil.rmtree(path, ignore_errors=True)

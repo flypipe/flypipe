@@ -1,13 +1,10 @@
-import logging
+import re
 from typing import Mapping, List
 from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
-from flypipe.node_run_context import NodeRunContext
 from flypipe.node_type import NodeType
-from flypipe.utils import DataFrameType, dataframe_type
-
-logger = logging.getLogger(__name__)
+from flypipe.utils import DataFrameType
 
 
 class Node:
@@ -26,6 +23,7 @@ class Node:
                  dependencies: List[InputNode] = None,
                  output=None,
                  spark_context=False):
+        self._key = None
         self.function = function
         try:
             self.type = self.TYPE_MAP[type]
@@ -68,25 +66,19 @@ class Node:
         Generate a key for a node for use in dictionaries, etc. The main goal is for it to be unique, so that nodes
         with the same function name still return different keys.
         """
-        # import re
-        # thing = f'{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}'
-        # thing = re.sub('[^\da-zA-Z]', '-', thing)
-        # return thing
-        return self.function.__qualname__
+        if self._key is None:
+            key = f'{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}.{self.function.__qualname__}'
+            self._key = re.sub('[^\da-zA-Z]', '_', key)
+        return self._key
+
+    @key.setter
+    def key(self, value):
+        self._key = value
 
     @property
     def __doc__(self):
         """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
         return self.function.__doc__
-
-    @classmethod
-    def get_class(cls, node_type):
-        # I put the import here to avoid a circular import error
-        from flypipe.pandas_on_spark_node import PandasOnSparkNode
-        if node_type == 'pandas_on_spark':
-            return PandasOnSparkNode
-        else:
-            return Node
 
     def _create_graph(self, pandas_on_spark_use_pandas=False):
         from flypipe.node_graph import NodeGraph
@@ -98,13 +90,23 @@ class Node:
         # otherwise if self.output_schema is not defined then we won't know the ultimate output schema
         # so can't do any validation
 
-        return InputNode(self, list(columns))
+        cols = columns[0] if isinstance(columns[0], list) else list(columns)
 
-    def inputs(self, **kwargs):
-        for k, v in kwargs.items():
-            #TODO: apply same replacement as defined in method __name__
-            self._provided_inputs[k.replace(".","_")] = v
+        if len(cols) != len(set(cols)):
+            raise ValueError(f"Duplicated columns in selection of {self.__name__}")
+        return InputNode(self, cols)
 
+    def get_node_inputs(self, outputs: Mapping[str, NodeResult]):
+        inputs = {}
+        for input_node in self.input_nodes:
+            node_input_value = outputs[input_node.key].as_type(self.input_dataframe_type)
+            inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns)
+
+        return inputs
+
+    def inputs(self, inputs):
+        for node, df in inputs.items():
+            self._provided_inputs[node.key] = df
         return self
 
     def clear_inputs(self):
@@ -125,34 +127,29 @@ class Node:
     def input_dataframe_type(self):
         return self.type
 
-    def get_node_inputs(self, outputs: Mapping[str, NodeResult]):
-        inputs = {}
-        for input_node in self.input_nodes:
-            node_input_value = outputs[input_node.key].as_type(self.input_dataframe_type)
-            inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns).df
-        return inputs
-
     def _run_sequential(self, spark=None):
-        outputs = {k: NodeResult(spark, df, schema=None) for k, df in self._provided_inputs.items()}
+        outputs = {k: NodeResult(spark, df, schema=None, selected_columns=None) for k, df in self._provided_inputs.items()}
         execution_graph = self.node_graph.copy()
 
         while not execution_graph.is_empty():
             runnable_nodes = execution_graph.pop_runnable_transformations()
             for runnable_node in runnable_nodes:
-                if runnable_node.key in outputs:
+                if runnable_node['transformation'].key in outputs:
                     continue
 
-                dependency_values = runnable_node.get_node_inputs(outputs)
+                dependency_values = runnable_node['transformation'].get_node_inputs(outputs)
+
                 result = NodeResult(
                     spark,
-                    runnable_node.process_transformation(spark, **dependency_values),
-                    runnable_node.output_schema
+                    runnable_node['transformation'].process_transformation(spark, **dependency_values),
+                    runnable_node['transformation'].output_schema,
+                    runnable_node['output_columns']
                 )
-                output_columns = self.node_graph.get_node_output_columns(runnable_node.key)
+                output_columns = self.node_graph.get_node_output_columns(runnable_node['transformation'].key)
                 if output_columns:
                     result.select_columns(*output_columns)
 
-                outputs[runnable_node.key] = result
+                outputs[runnable_node['transformation'].key] = result
 
         return outputs[self.key].as_type(self.type).df
 
@@ -182,6 +179,6 @@ def node(type, *args, **kwargs):
 
     def decorator(func):
         kwargs['type'] = type
-        return Node.get_class(type)(func, *args, **kwargs)
+        return Node(func, *args, **kwargs)
 
     return decorator
