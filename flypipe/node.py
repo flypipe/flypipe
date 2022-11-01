@@ -4,6 +4,8 @@ from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
 from flypipe.node_type import NodeType
+from flypipe.schema import Schema, Column
+from flypipe.schema.types import Unknown
 from flypipe.utils import DataFrameType
 
 
@@ -128,7 +130,7 @@ class Node:
         return self.type
 
     def _run_sequential(self, spark=None):
-        outputs = {k: NodeResult(spark, df, schema=None, selected_columns=None) for k, df in self._provided_inputs.items()}
+        outputs = {k: NodeResult(spark, df, schema=None) for k, df in self._provided_inputs.items()}
         execution_graph = self.node_graph.copy()
 
         while not execution_graph.is_empty():
@@ -142,8 +144,10 @@ class Node:
                 result = NodeResult(
                     spark,
                     runnable_node['transformation'].process_transformation(spark, **dependency_values),
-                    runnable_node['transformation'].output_schema,
-                    runnable_node['output_columns']
+                    schema=self._get_consolidated_output_schema(
+                        runnable_node['transformation'].output_schema,
+                        runnable_node['output_columns']
+                    )
                 )
                 output_columns = self.node_graph.get_node_output_columns(runnable_node['transformation'].key)
                 if output_columns:
@@ -152,6 +156,19 @@ class Node:
                 outputs[runnable_node['transformation'].key] = result
 
         return outputs[self.key].as_type(self.type).df
+
+    @classmethod
+    def _get_consolidated_output_schema(cls, output_schema, output_columns):
+        """
+        The output schema for a transformation is currently optional. If not provided, we create a simple one from the
+        set of columns selected by descendant nodes.
+        """
+        if output_schema:
+            return output_schema
+        columns = []
+        for output_column in output_columns:
+            columns.append(Column(output_column, Unknown(), ''))
+        return Schema(columns)
 
 
     def process_transformation(self, spark, **inputs):

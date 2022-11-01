@@ -13,6 +13,10 @@ class Type:
         return True
 
 
+class Unknown(Type):
+    pass
+
+
 class Boolean(Type):
     VALID_VALUES = {True, False, 1, 0}
 
