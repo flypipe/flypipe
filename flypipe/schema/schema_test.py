@@ -16,6 +16,6 @@ class TestSchema:
 
         expected = pd.DataFrame({'column1': [True, False, True, False, None, pd.NA, np.nan]})
 
-        df_wrapper = DataFrameWrapper.get_instance(None, df, schema)
+        df_wrapper = DataFrameWrapper.get_instance(None, df)
         df_wrapper = schema.apply(df_wrapper)
         assert_frame_equal(df_wrapper.df, expected)

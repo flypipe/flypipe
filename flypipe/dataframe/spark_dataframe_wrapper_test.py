@@ -21,7 +21,7 @@ class TestSparkDataFrameWrapper:
             (0,),
             (None,)
         ])
-        df_wrapper = DataFrameWrapper.get_instance(spark, df, None)
+        df_wrapper = DataFrameWrapper.get_instance(spark, df)
         df_wrapper.cast_column('col1', Boolean())
         assert_pyspark_df_equal(df_wrapper.df, spark.createDataFrame(schema=('col1',), data=[
             (True,),
@@ -37,7 +37,7 @@ class TestSparkDataFrameWrapper:
             (1.2345678,),
             (None,)
         ])
-        df_wrapper = DataFrameWrapper.get_instance(spark, df, None)
+        df_wrapper = DataFrameWrapper.get_instance(spark, df)
         df_wrapper.cast_column('col1', Decimal(5, 2))
         assert df_wrapper.df.dtypes[0] == ('col1', 'decimal(5,2)')
         # TODO: should probably not resort to a pandas conversion + df check but I can't seem to create a pyspark df with DecimalType and the below literals.

@@ -34,8 +34,7 @@ class TestDataFrameWrapper:
         (spark.createDataFrame(schema=['column'], data=[[1]]).to_pandas_on_spark(), PandasOnSparkDataFrameWrapper),
     ])
     def test_get_instance(self, df, expected_class):
-        schema = Schema([Column('column', String(), '')])
-        assert isinstance(DataFrameWrapper.get_instance(spark, df, schema), expected_class)
+        assert isinstance(DataFrameWrapper.get_instance(spark, df), expected_class)
 
     @pytest.mark.parametrize('df', [
         pd.DataFrame({'col1': [1], 'col2': [2]}),
@@ -47,11 +46,7 @@ class TestDataFrameWrapper:
         Ensure that DataFrameWrapper.select_columns does the selection operation out-of-place and returns a new
         dataframe wrapper, therefore the original dataframe wrapper should be untouched.
         """
-        schema = Schema([
-            Column('col1', Integer(), ''),
-            Column('col2', Integer(), ''),
-        ])
-        df_wrapper = DataFrameWrapper.get_instance(spark, df, schema)
+        df_wrapper = DataFrameWrapper.get_instance(spark, df)
         df_wrapper2 = df_wrapper.select_columns('col1')
 
     def test_cast_column_basic(self, mocker):

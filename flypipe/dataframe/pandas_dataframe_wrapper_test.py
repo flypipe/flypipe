@@ -17,7 +17,7 @@ class TestPandasDataFrameWrapper:
             'col1': [True, False, 1, 0, None, np.nan, np.NAN, pd.NA, pd.NaT],
             'col2': [1, 1, 0, 0, 0, 1, 1, 1, 1],
         })
-        df_wrapper = DataFrameWrapper.get_instance(None, df, None)
+        df_wrapper = DataFrameWrapper.get_instance(None, df)
         df_wrapper.cast_column('col1', Boolean())
         assert_frame_equal(df_wrapper.df, pd.DataFrame({
             'col1': [True, False, True, False, None, np.nan, np.NAN, pd.NA, pd.NaT],
@@ -33,7 +33,7 @@ class TestPandasDataFrameWrapper:
         df = pd.DataFrame({
             'col1': [True, 'rubbish'],
         })
-        df_wrapper = DataFrameWrapper.get_instance(None, df, None)
+        df_wrapper = DataFrameWrapper.get_instance(None, df)
         with pytest.raises(ValueError) as ex:
             df_wrapper.cast_column('col1', Boolean())
         assert str(ex.value) == 'Invalid type Boolean for column col1, found incompatible row value "rubbish"'
@@ -41,7 +41,7 @@ class TestPandasDataFrameWrapper:
     def test_cast_column_decimal(self):
         schema = None
         df_wrapper = DataFrameWrapper.get_instance(
-            None, pd.DataFrame({'col1': ['A', 'B', 'C', 'D'], 'col2': [10, 56.66666666667, 5678, np.nan]}), schema)
+            None, pd.DataFrame({'col1': ['A', 'B', 'C', 'D'], 'col2': [10, 56.66666666667, 5678, np.nan]}))
         df_wrapper.cast_column('col2', Decimal(3, 2))
         # TODO- looks like we're doing nothing with the precision?
         assert_frame_equal(df_wrapper.df, pd.DataFrame(
@@ -50,7 +50,7 @@ class TestPandasDataFrameWrapper:
 
     def test_cast_column_datetime(self):
         schema = None
-        df_wrapper = DataFrameWrapper.get_instance(None, pd.DataFrame({'col1': ['2022-10-31 20:30:35', np.nan]}), schema)
+        df_wrapper = DataFrameWrapper.get_instance(None, pd.DataFrame({'col1': ['2022-10-31 20:30:35', np.nan]}))
         df_wrapper.cast_column('col1', DateTime())
         assert_frame_equal(df_wrapper.df, pd.DataFrame(
             {'col1': [pd.Timestamp(2022, 10, 31, 20, 30, 35), np.nan]},
@@ -59,7 +59,7 @@ class TestPandasDataFrameWrapper:
 
     def test_cast_column_date(self):
         schema = None
-        df_wrapper = DataFrameWrapper.get_instance(None, pd.DataFrame({'col1': ['2022-10-31 20:30:35', np.nan]}), schema)
+        df_wrapper = DataFrameWrapper.get_instance(None, pd.DataFrame({'col1': ['2022-10-31 20:30:35', np.nan]}))
         df_wrapper.cast_column('col1', Date())
         assert_frame_equal(df_wrapper.df, pd.DataFrame(
             {'col1': [pd.Timestamp(2022, 10, 31, 20, 30, 35), np.nan]},

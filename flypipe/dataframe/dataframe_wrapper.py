@@ -1,5 +1,3 @@
-import numpy as np
-from flypipe.schema import Schema
 from flypipe.schema.types import Type
 from flypipe.utils import dataframe_type, DataFrameType
 from abc import ABC, abstractmethod
@@ -13,15 +11,12 @@ class DataFrameWrapper(ABC):
     DF_TYPE = None
     _TYPE_MAP = {}
 
-    def __init__(self, spark, df, schema):
+    def __init__(self, spark, df):
         self.spark = spark
         self.df = df
-        self.schema = schema
-        if self.schema:
-            self.df = self._select_columns([column.name for column in schema.columns])
 
     @classmethod
-    def get_instance(cls, spark, df, schema):
+    def get_instance(cls, spark, df):
         # Avoid circular imports by doing local imports here
         from flypipe.dataframe.pandas_dataframe_wrapper import PandasDataFrameWrapper
         from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import PandasOnSparkDataFrameWrapper
@@ -35,7 +30,7 @@ class DataFrameWrapper(ABC):
             df_instance = PandasOnSparkDataFrameWrapper
         else:
             raise ValueError(f'No flypipe dataframe type found for dataframe {df_type}')
-        return df_instance(spark, df, schema)
+        return df_instance(spark, df)
 
     def select_columns(self, *columns):
         """
@@ -47,11 +42,7 @@ class DataFrameWrapper(ABC):
         """
         if columns and isinstance(columns[0], list):
             columns = columns[0]
-        new_dataframe_schema_columns = []
-        for column in self.schema.columns:
-            if column.name in columns:
-                new_dataframe_schema_columns.append(column)
-        return self.__class__(self.spark, self._select_columns(columns), Schema(new_dataframe_schema_columns))
+        return self.__class__(self.spark, self._select_columns(columns))
 
     @abstractmethod
     def _select_columns(self, columns):
