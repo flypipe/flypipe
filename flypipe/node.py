@@ -179,7 +179,6 @@ def node(type, *args, **kwargs):
 
     def decorator(func):
         kwargs['type'] = type
-        # return Node.get_class(type)(func, *args, **kwargs)
         return Node(func, *args, **kwargs)
 
     return decorator

@@ -478,9 +478,6 @@ class TestPySparkNode:
         df = t4.run(spark, parallel=False)
         assert_pyspark_df_equal(df, spark.createDataFrame(schema=('c2',), data=[("2",)]))
 
-    """
-    text---main---function-t1-t1
-    """
     def test_dataframes_are_isolated_from_nodes(self, spark):
         import  pyspark.sql.functions as F
 
