@@ -60,12 +60,12 @@ class NodeGraph:
                             input_node.key,
                             transformation=input_node.node,
                             run_status=RunStatus.UNKNOWN,
-                            output_columns=list(input_node.selected_columns),
+                            output_columns=sorted(list(input_node.selected_columns)),
                         )
                     else:
-                        graph.nodes[input_node.key]['output_columns'] = list(dict.fromkeys(
-                            graph.nodes[input_node.key]['output_columns'] +
-                            input_node.selected_columns))
+                        graph.nodes[input_node.key]['output_columns'] = sorted(list(
+                            set(graph.nodes[input_node.key]['output_columns'])
+                            .union(set(input_node.selected_columns))))
 
                     graph.add_edge(
                         input_node.key,

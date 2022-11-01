@@ -68,7 +68,7 @@ class Node:
         """
         if self._key is None:
             key = f'{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}.{self.function.__qualname__}'
-            self._key = re.sub('[^\da-zA-Z]', '-', key)
+            self._key = re.sub('[^\da-zA-Z]', '_', key)
         return self._key
 
     @key.setter
