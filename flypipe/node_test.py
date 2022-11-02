@@ -1,12 +1,14 @@
 import pytest
-
+import pandas as pd
+import pyspark.pandas as ps
+from pyspark_test import assert_pyspark_df_equal
+from pandas.testing import assert_frame_equal
 from flypipe.datasource.spark import Spark
 from flypipe.converter.dataframe import DataFrameConverter
-import pandas as pd
 from flypipe.node import node, Node
 from pandas.testing import assert_frame_equal
 from flypipe.schema import Schema, Column
-from flypipe.schema.types import String
+from flypipe.schema.types import String, Decimal, Integer
 from flypipe.utils import DataFrameType, dataframe_type
 
 
@@ -48,6 +50,13 @@ class TestNode:
         assert node_input2.selected_columns == ['c3']
 
     def test_select_column(self, spark):
+        """
+        Ensure that:
+        a) when we select a subset of columns from a parent transformation we only receive those columns in the
+        transformation to be run.
+        b) when we have multiple nodes selecting different columns from the same parent node the columns don't leak
+        into other transformations.
+        """
         data = pd.DataFrame({'fruit': ['apple', 'banana'], 'color': ['red', 'yellow']})
         @node(
             type='pandas',
@@ -62,7 +71,15 @@ class TestNode:
         def b(a):
             return a
 
+        @node(
+            type='pandas',
+            dependencies=[a.select('color')]
+        )
+        def c(a):
+            return a
+
         assert_frame_equal(b.run(spark, parallel=False), data[['fruit']])
+        assert_frame_equal(c.run(spark, parallel=False), data[['color']])
 
     def test_conversion_after_output_column_filter(self, spark, mocker):
         """
@@ -201,8 +218,8 @@ class TestNode:
         @node(
             type='pandas_on_spark',
             output=Schema([
-                Column('fruit', String(), 'dummy'),
-                Column('color', String(), 'dummy'),
+                Column('fruit', String()),
+                Column('color', String()),
             ])
         )
         def t1():
@@ -224,4 +241,189 @@ class TestNode:
 
         t2.run(spark, parallel=False)
 
+    def test_run_dataframe_conversion(self, spark):
+        """
+        If a node is dependant upon a node of a different dataframe type, then we expect the output of the parent node
+        to be converted when it's provided to the child node.
+        """
+        @node(
+            type="pandas_on_spark",
+            output=Schema([
+                Column('c1', Decimal(10, 2))
+            ])
+        )
+        def t1():
+            return spark.createDataFrame(pd.DataFrame(data={'c1': [1], 'c2': [2], 'c3': [3]})).to_pandas_on_spark()
 
+        @node(
+            type="pandas",
+            dependencies=[t1.select('c1')]
+        )
+        def t2(t1):
+            return t1
+
+        t1_output = t1.run(spark, parallel=False)
+        t2_output = t2.run(spark, parallel=False)
+        assert isinstance(t1_output, ps.frame.DataFrame)
+        assert isinstance(t2_output, pd.DataFrame)
+
+    def test_run_input_dataframes_isolation(self):
+        """
+        Suppose we have a node with an output x. We provide this output as input to a second node and do some tweaks to
+        it. We want to ensure that the basic output is not affected by the tweaks done by the second node.
+        """
+
+        @node(
+            type="pandas",
+            output=Schema([
+                Column('c1', String()),
+                Column('c2', String())
+            ])
+        )
+        def t1():
+            return pd.DataFrame(data={'c1': ["1"], 'c2': ["2"]})
+
+        @node(
+            type="pandas",
+            dependencies=[
+                t1.select("c1", "c2")
+            ],
+            output=Schema([
+                Column('c1', String(), 'dummy'),
+                Column('c2', String(), 'dummy'),
+                Column('c3', String(), 'dummy'),
+            ])
+        )
+        def t2(t1):
+            t1["c1"] = "t2 set this value"
+            t1["c3"] = t1["c1"]
+            return t1
+
+        @node(
+            type="pandas",
+            dependencies=[
+                t1.select("c1", "c2"),
+                t2.select("c1", "c2", "c3")
+            ],
+            output=Schema([
+                Column('c1', String()),
+                Column('c2', String()),
+                Column('c3', String()),
+            ])
+        )
+        def t3(t1, t2):
+            assert list(t1.columns) == ["c1", "c2"]
+            assert t1.loc[0, "c1"] == "1"
+            assert t1.loc[0, "c2"] == "2"
+            assert list(t2.columns) == ["c1", "c2", "c3"]
+            assert t2.loc[0, "c1"] == "t2 set this value"
+            assert t2.loc[0, "c2"] == "2"
+            assert t2.loc[0, "c3"] == "t2 set this value"
+            return t2
+
+        t3.run(spark, parallel=False)
+
+    def test_adhoc_call(self, spark):
+        """
+        If we call a node directly with a function call we should skip calling the input dependencies and instead use
+        the passed in arguments
+        """
+
+        @node(type='pyspark',
+              dependencies=[Spark('dummy_table').select('c1')],
+              output=Schema([
+                  Column('c1', Decimal(16, 2), 'dummy'),
+                  Column('c2', Decimal(16, 2), 'dummy')
+              ]))
+        def t1(dummy_table):
+            raise Exception('I shouldnt be run!')
+
+        @node(type='pyspark',
+              dependencies=[t1.select('c1')],
+              output=Schema([
+                  Column('c1', Decimal(16, 2), 'dummy')
+              ]))
+        def t2(t1):
+            return t1.withColumn('c1', t1.c1 + 1)
+
+        df = spark.createDataFrame(schema=('c1',), data=[(1,)])
+        expected_df = spark.createDataFrame(schema=('c1',), data=[(2,)])
+
+        assert_pyspark_df_equal(t2(df), expected_df)
+
+    def test_run_skip_input(self):
+        """
+        If we manually provide a dataframe via the input function prior to running a node then dependent transformation
+        that ordinarily generates the input dataframe should be skipped.
+        """
+        @node(type='pandas',
+              output=Schema([
+                  Column('c1', Integer(), 'dummy'),
+                  Column('c2', Integer(), 'dummy'),
+              ]))
+        def t1():
+            raise Exception('I shouldnt be run!')
+
+        @node(type='pandas',
+              dependencies=[t1.select('c1')],
+              output=Schema([
+                  Column('c1', Integer(), 'dummy')
+              ]))
+        def t2(t1):
+            t1['c1'] = t1['c1'] + 1
+            return t1
+
+        df = pd.DataFrame({'c1': [1]})
+        expected_df = pd.DataFrame({'c1': [2]})
+
+        assert_frame_equal(
+            t2.inputs({t1: df}).run(parallel=False),
+            expected_df
+        )
+
+    def test_run_skip_input_2(self, spark):
+        """
+        When we provide a dependency input to a node, not only does that node not need to be run but we also expect any
+        dependencies of the provided node not to be run.
+
+        a - b
+              \
+               c
+              /
+            d
+        When b is provided and we process c, only c and d should be run.
+        """
+
+        @node(type='pyspark',
+              dependencies=[Spark('dummy_table').select('c1')],
+              output=Schema([
+                  Column('c1', Integer(), 'dummy'),
+                  Column('c2', Integer(), 'dummy')
+              ]))
+        def a(dummy_table):
+            raise Exception('I shouldnt be run!')
+
+        @node(type='pyspark', dependencies=[a.select('c1')], output=Schema([
+            Column('c1', Integer(), 'dummy')
+        ]))
+        def b(a):
+            return a.withColumn('c1', a.c1 + 1)
+
+        @node(type='pyspark',
+              dependencies=[],
+              output=Schema([
+                  Column('c1', Integer(), 'dummy')
+              ]))
+        def d():
+            return spark.createDataFrame(schema=('c1',), data=[(6,), (7,)])
+
+        @node(type='pyspark',
+              dependencies=[b.select('c1'), d.select('c1')],
+              output=Schema([Column('c1', Integer(), 'dummy')]))
+        def c(b, d):
+            return b.union(d)
+
+        df = spark.createDataFrame(schema=('c1',), data=[(4,), (5,)])
+        expected_df = spark.createDataFrame(schema=('c1',), data=[(4,), (5,), (6,), (7,)])
+
+        assert_pyspark_df_equal(c.inputs({b: df}).run(spark, parallel=False), expected_df, check_dtype=False)

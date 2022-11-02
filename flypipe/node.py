@@ -106,6 +106,9 @@ class Node:
 
         return inputs
 
+    # t1.inputs({dep1: ..., dep2: ...}).run()
+    # t1.run(inputs={dep1: ..., dep2: ...})
+
     def inputs(self, inputs):
         for node, df in inputs.items():
             self._provided_inputs[node.key] = df

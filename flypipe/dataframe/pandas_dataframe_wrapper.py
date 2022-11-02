@@ -25,7 +25,11 @@ class PandasDataFrameWrapper(DataFrameWrapper):
         return self.df[list(columns)]
 
     def _get_rows_for_cast(self, column, flypipe_type):
+        # TODO: get rid of this, try to do the cast + identify non null rows in the same action otherwise we are iterating twice through the df
         rows = self.df[column].notnull()
+
+        # TODO: change is_valid_value to be a set of allowed values and hard code isin
+        # self.df[~self.df[column].isin([....])].head(1).shape[0] == 0
         invalid_value_indexes = np.flatnonzero(
             ~self.df[column].loc[rows].apply(lambda row: flypipe_type.is_valid_value(row)))
         if invalid_value_indexes.any():

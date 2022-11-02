@@ -1,9 +1,14 @@
 import numpy as np
 import pandas as pd
+import pyspark.pandas as ps
 from numpy import dtype
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from flypipe.schema.types import Boolean, Byte, Binary, Integer, Short, Long, Float, Double, String, Decimal, Type
 from flypipe.utils import DataFrameType
+
+
+#TODO: is there a better place to put this?
+ps.set_option('compute.ops_on_diff_frames', True)
 
 
 class PandasOnSparkDataFrameWrapper(DataFrameWrapper):
@@ -23,23 +28,13 @@ class PandasOnSparkDataFrameWrapper(DataFrameWrapper):
     def _select_columns(self, columns):
         return self.df[list(columns)]
 
-    def _get_rows_for_cast(self, column, flypipe_type):
-        rows = self.df[column].notnull()
-        invalid_value_indexes = np.flatnonzero(
-            ~self.df[column].loc[rows].apply(lambda row: flypipe_type.is_valid_value(row)))
-        if invalid_value_indexes.any():
-            raise ValueError(
-                f'Invalid type {flypipe_type.name} for column {column}, found incompatible row value '
-                f'"{self.df[column].loc[invalid_value_indexes[0]]}"')
-        return rows
-
     def _cast_column(self, column, flypipe_type, df_type):
-        rows = self._get_rows_for_cast(column, flypipe_type)
+        rows = self.df[column].notnull()
 
         self.df[column].loc[rows] = self.df[column].loc[rows].astype(df_type)
 
     def _cast_column_decimal(self, column, flypipe_type):
-        rows = self._get_rows_for_cast(column, flypipe_type)
+        rows = self.df[column].notnull()
 
         self.df[column].loc[rows] = self.df[column].loc[rows].astype(dtype('float64'))
         self.df[column].loc[rows] = self.df[column].loc[rows].round(flypipe_type.scale)
@@ -51,6 +46,6 @@ class PandasOnSparkDataFrameWrapper(DataFrameWrapper):
         return self._cast_column_date_or_timestamp(column, flypipe_type)
 
     def _cast_column_date_or_timestamp(self, column, flypipe_type):
-        rows = self._get_rows_for_cast(column, flypipe_type)
+        rows = self.df[column].notnull()
         self.df[column].loc[rows] = pd.to_datetime(
             self.df[column].loc[rows], format=flypipe_type.fmt).astype(dtype("datetime64[ns]"))
