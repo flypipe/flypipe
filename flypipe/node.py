@@ -82,10 +82,10 @@ class Node:
         """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
         return self.function.__doc__
 
-    def _create_graph(self, pandas_on_spark_use_pandas=False):
+    def _create_graph(self, skipped_node_names=None, pandas_on_spark_use_pandas=False):
         from flypipe.node_graph import NodeGraph
         self.node_graph = NodeGraph(self, pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
-        self.node_graph.calculate_graph_run_status(self.key, self._provided_inputs)
+        self.node_graph.calculate_graph_run_status(self.key, skipped_node_names)
 
     def select(self, *columns):
         # TODO- if self.output_schema is defined then we should ensure each of the columns is in it.
@@ -106,34 +106,27 @@ class Node:
 
         return inputs
 
-    # t1.inputs({dep1: ..., dep2: ...}).run()
-    # t1.run(inputs={dep1: ..., dep2: ...})
-
-    def inputs(self, inputs):
-        for node, df in inputs.items():
-            self._provided_inputs[node.key] = df
-        return self
-
-    def clear_inputs(self):
-        self._provided_inputs = {}
-        return self
-
     def __call__(self, *args):
         return self.function(*args)
 
-    def run(self, spark=None, parallel=True, pandas_on_spark_use_pandas=False):
-        self._create_graph(pandas_on_spark_use_pandas)
+    def run(self, spark=None, parallel=True, inputs=None, pandas_on_spark_use_pandas=False):
+        if not inputs:
+            inputs = {}
+        provided_inputs = {node.key: df for node, df in inputs.items()}
+        self._create_graph(list(provided_inputs.keys()), pandas_on_spark_use_pandas)
         if parallel:
             raise NotImplementedError
         else:
-            return self._run_sequential(spark)
+            return self._run_sequential(spark, provided_inputs)
 
     @property
     def input_dataframe_type(self):
         return self.type
 
-    def _run_sequential(self, spark=None):
-        outputs = {k: NodeResult(spark, df, schema=None) for k, df in self._provided_inputs.items()}
+    def _run_sequential(self, spark=None, provided_inputs=None):
+        if provided_inputs is None:
+            provided_inputs = {}
+        outputs = {key: NodeResult(spark, df, schema=None) for key, df in provided_inputs.items()}
         execution_graph = self.node_graph.copy()
 
         while not execution_graph.is_empty():
@@ -174,7 +167,6 @@ class Node:
             schema = None
         return schema
 
-
     def process_transformation(self, spark, **inputs):
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
         if self.spark_context:
@@ -187,9 +179,9 @@ class Node:
     def plot(self):
         self.node_graph.plot()
 
-    def html(self, width=-1, height=1000, pandas_on_spark_use_pandas=False):
+    def html(self, width=-1, height=1000, skipped_node_names=None, pandas_on_spark_use_pandas=False):
         from flypipe.printer.graph_html import GraphHTML
-        self._create_graph(pandas_on_spark_use_pandas)
+        self._create_graph(skipped_node_names, pandas_on_spark_use_pandas)
         return GraphHTML(self.node_graph, width=width, height=height).html()
 
 

@@ -377,7 +377,7 @@ class TestNode:
         expected_df = pd.DataFrame({'c1': [2]})
 
         assert_frame_equal(
-            t2.inputs({t1: df}).run(parallel=False),
+            t2.run(inputs={t1: df}, parallel=False),
             expected_df
         )
 
@@ -426,4 +426,4 @@ class TestNode:
         df = spark.createDataFrame(schema=('c1',), data=[(4,), (5,)])
         expected_df = spark.createDataFrame(schema=('c1',), data=[(4,), (5,), (6,), (7,)])
 
-        assert_pyspark_df_equal(c.inputs({b: df}).run(spark, parallel=False), expected_df, check_dtype=False)
+        assert_pyspark_df_equal(c.run(spark, inputs={b: df}, parallel=False), expected_df, check_dtype=False)
