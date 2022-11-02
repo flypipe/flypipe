@@ -30,7 +30,7 @@ class GraphHTML:
         for key, position in self._node_positions.items():
             graph_node = self.graph.get_node(key)
             node_name = graph_node['transformation'].__name__
-            print(node_name, list(unique_names.values()))
+
             if node_name not in list(unique_names.values()):
                 unique_names[key] = node_name
             else:
