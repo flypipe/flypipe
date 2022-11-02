@@ -1,12 +1,12 @@
 import pytest
 
-from flypipe.data_type import String
 from flypipe.datasource.spark import Spark
 from flypipe.converter.dataframe import DataFrameConverter
 import pandas as pd
 from flypipe.node import node, Node
 from pandas.testing import assert_frame_equal
 from flypipe.schema import Schema, Column
+from flypipe.schema.types import String
 from flypipe.utils import DataFrameType, dataframe_type
 
 
@@ -62,15 +62,7 @@ class TestNode:
         def b(a):
             return a
 
-        @node(
-            type='pandas',
-            dependencies=[a.select('color')]
-        )
-        def c(a):
-            return a
-
         assert_frame_equal(b.run(spark, parallel=False), data[['fruit']])
-        assert_frame_equal(c.run(spark, parallel=False), data[['color']])
 
     def test_conversion_after_output_column_filter(self, spark, mocker):
         """

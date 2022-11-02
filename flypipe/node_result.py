@@ -21,9 +21,10 @@ class NodeResult:
         """
         # TODO- implement check to error out if there's a column in the schema which isn't in the output
         # TODO- implement code to select only columns that are in the schema
-        self.df_wrapper = self.df_wrapper.select_columns(schema.columns)
-        for column in schema.columns:
-            self.df_wrapper.cast_column(column.name, column.type)
+        if schema:
+            self.df_wrapper = self.df_wrapper.select_columns([column.name for column in schema.columns])
+            for column in schema.columns:
+                self.df_wrapper.cast_column(column.name, column.type)
         return None
 
     def select_columns(self, *columns):
@@ -35,7 +36,7 @@ class NodeResult:
         return self.cached_conversions[df_type]
 
     def _as_type(self, df_type: DataFrameType):
-        if self.df_wrapper.TYPE == df_type:
+        if self.df_wrapper.DF_TYPE == df_type:
             dataframe = self.df_wrapper
         else:
             # TODO- is this a good idea? We are having to reach into self.df_wrapper to grab the df, this usually is a mark of a design issue

@@ -78,9 +78,6 @@ class NodeGraph:
     def get_node(self, name: str):
         return self.graph.nodes[name]
 
-    def get_node_output_columns(self, name: str):
-        return self.graph.nodes[name]['output_columns']
-
     def get_edges(self):
         return self.graph.edges
 

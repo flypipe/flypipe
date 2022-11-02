@@ -102,7 +102,7 @@ class Node:
         inputs = {}
         for input_node in self.input_nodes:
             node_input_value = outputs[input_node.key].as_type(self.input_dataframe_type)
-            inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns)
+            inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns).df
 
         return inputs
 
@@ -149,9 +149,6 @@ class Node:
                         runnable_node['output_columns']
                     )
                 )
-                output_columns = self.node_graph.get_node_output_columns(runnable_node['transformation'].key)
-                if output_columns:
-                    result.select_columns(*output_columns)
 
                 outputs[runnable_node['transformation'].key] = result
 
@@ -164,11 +161,15 @@ class Node:
         set of columns selected by descendant nodes.
         """
         if output_schema:
-            return output_schema
-        columns = []
-        for output_column in output_columns:
-            columns.append(Column(output_column, Unknown(), ''))
-        return Schema(columns)
+            schema = output_schema
+        elif output_columns is not None:
+            columns = []
+            for output_column in output_columns:
+                columns.append(Column(output_column, Unknown(), ''))
+            schema = Schema(columns)
+        else:
+            schema = None
+        return schema
 
 
     def process_transformation(self, spark, **inputs):

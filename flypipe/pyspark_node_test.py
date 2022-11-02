@@ -2,17 +2,18 @@ import pandas
 import pandas as pd
 import pyspark.pandas
 import pytest
+from pyspark.sql.types import StructType, StructField, IntegerType
 from pyspark_test import assert_pyspark_df_equal
 
 from tabulate import tabulate
 
-from flypipe.data_type import Decimals, String
 from flypipe.exceptions import SelectionNotFoundInDataFrame
 from flypipe.datasource.spark import Spark
 from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node import node
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
+from flypipe.schema.types import Decimal, Integer
 from tests.utils.spark import drop_database
 
 
@@ -35,7 +36,7 @@ class TestPySparkNode:
     def test_exception_invalid_node_type(self, spark):
         with pytest.raises(NodeTypeInvalidError) as e_info:
             @node(type='anything', output=Schema([
-                Column('balance', Decimals(16, 2), 'dummy')
+                Column('balance', Decimal(16, 2), 'dummy')
             ]))
             def dummy():
                 pass
@@ -45,8 +46,8 @@ class TestPySparkNode:
         @node(type='pyspark',
               dependencies=[Spark('dummy_table').select('c1')],
               output=Schema([
-                  Column('c1', Decimals(16, 2), 'dummy'),
-                  Column('c2', Decimals(16, 2), 'dummy')
+                  Column('c1', Decimal(16, 2), 'dummy'),
+                  Column('c2', Decimal(16, 2), 'dummy')
               ]))
         def t1(dummy_table):
             raise Exception('I shouldnt be run!')
@@ -54,7 +55,7 @@ class TestPySparkNode:
         @node(type='pyspark',
               dependencies=[t1.select('c1')],
               output=Schema([
-                  Column('c1', Decimals(16, 2), 'dummy')
+                  Column('c1', Decimal(16, 2), 'dummy')
               ]))
         def t2(t1):
             return t1.withColumn('c1', t1.c1 + 1)
@@ -68,8 +69,8 @@ class TestPySparkNode:
         @node(type='pyspark',
               dependencies=[Spark('dummy_table').select('c1')],
               output=Schema([
-                  Column('c1', Decimals(16, 2), 'dummy'),
-                  Column('c2', Decimals(16, 2), 'dummy'),
+                  Column('c1', Decimal(16, 2), 'dummy'),
+                  Column('c2', Decimal(16, 2), 'dummy'),
               ]))
         def t1(dummy_table):
             raise Exception('I shouldnt be run!')
@@ -77,25 +78,27 @@ class TestPySparkNode:
         @node(type='pyspark',
               dependencies=[t1.select('c1')],
               output=Schema([
-                  Column('c1', Decimals(16, 2), 'dummy')
+                  Column('c1', Integer(), 'dummy')
               ]))
         def t2(t1):
             return t1.withColumn('c1', t1.c1 + 1)
 
         df = spark.createDataFrame(schema=('c1',), data=[(1,)])
-        expected_df = spark.createDataFrame(schema=('c1',), data=[(2,)])
+        expected_df = spark.createDataFrame(schema=StructType([
+            StructField('c1', IntegerType()),
+        ]), data=[(2,)])
 
         assert_pyspark_df_equal(t2
                                 .inputs({t1: df})
                                 .run(spark, parallel=False),
-                                expected_df)
+                                expected_df, check_dtype=False)
 
     def test_end_to_end_full(self, spark):
         @node(type='pyspark',
               dependencies=[Spark('dummy_table').select('c1', 'c2')],
               output=Schema([
-                  Column('c1', Decimals(16, 2), 'dummy'),
-                  Column('c2', Decimals(16, 2), 'dummy')
+                  Column('c1', Integer(), 'dummy'),
+                  Column('c2', Integer(), 'dummy')
               ]))
         def t1(dummy_table):
             return dummy_table
@@ -103,13 +106,13 @@ class TestPySparkNode:
         @node(type='pyspark',
               dependencies=[t1.select('c1')],
               output=Schema([
-                  Column('c1', Decimals(16, 2), 'dummy')
+                  Column('c1', Integer(), 'dummy')
               ]))
         def t2(t1):
             return t1.withColumn('c1', t1.c1 + 1)
 
         expected_df = spark.createDataFrame(schema=('c1',), data=[(2,)])
-        assert_pyspark_df_equal(t2.run(spark, parallel=False), expected_df)
+        assert_pyspark_df_equal(t2.run(spark, parallel=False), expected_df, check_dtype=False)
 
     def test_skip_datasource(self, spark, mocker):
         """
@@ -123,8 +126,8 @@ class TestPySparkNode:
         @node(type='pyspark',
               dependencies=[spark_dummy_table.select('c1', 'c2')],
               output=Schema([
-                  Column('c1', Decimals(16, 2), 'dummy'),
-                  Column('c2', Decimals(16, 2), 'dummy')
+                  Column('c1', Integer(), 'dummy'),
+                  Column('c2', Integer(), 'dummy')
               ]))
         def t1(dummy_table):
             return dummy_table
@@ -138,7 +141,7 @@ class TestPySparkNode:
         output_df = t1.inputs({Spark('dummy_table'): df}).run(spark, parallel=False)
         spy.assert_not_called()
         assert_pyspark_df_equal(output_df,
-                                spark.createDataFrame(schema=('c1', 'c2',), data=[(1, 2,)]))
+                                spark.createDataFrame(schema=('c1', 'c2',), data=[(1, 2,)]), check_dtype=False)
 
     def test_skip_upstream(self, spark):
         """
@@ -156,14 +159,14 @@ class TestPySparkNode:
         @node(type='pyspark',
               dependencies=[Spark('dummy_table').select('c1')],
               output=Schema([
-                  Column('c1', Decimals(16, 2), 'dummy'),
-                  Column('c2', Decimals(16, 2), 'dummy')
+                  Column('c1', Integer(), 'dummy'),
+                  Column('c2', Integer(), 'dummy')
               ]))
         def a(dummy_table):
             raise Exception('I shouldnt be run!')
 
         @node(type='pyspark', dependencies=[a.select('c1')], output=Schema([
-            Column('c1', Decimals(16, 2), 'dummy')
+            Column('c1', Integer(), 'dummy')
         ]))
         def b(a):
             return a.withColumn('c1', a.c1 + 1)
@@ -171,21 +174,21 @@ class TestPySparkNode:
         @node(type='pyspark',
               dependencies=[],
               output=Schema([
-                  Column('c1', Decimals(16, 2), 'dummy')
+                  Column('c1', Integer(), 'dummy')
               ]))
         def d():
             return spark.createDataFrame(schema=('c1',), data=[(6,), (7,)])
 
         @node(type='pyspark',
               dependencies=[b.select('c1'), d.select('c1')],
-              output=Schema([Column('c1', Decimals(16, 2), 'dummy')]))
+              output=Schema([Column('c1', Integer(), 'dummy')]))
         def c(b, d):
             return b.union(d)
 
         df = spark.createDataFrame(schema=('c1',), data=[(4,), (5,)])
         expected_df = spark.createDataFrame(schema=('c1',), data=[(4,), (5,), (6,), (7,)])
 
-        assert_pyspark_df_equal(c.inputs({b: df}).run(spark, parallel=False), expected_df)
+        assert_pyspark_df_equal(c.inputs({b: df}).run(spark, parallel=False), expected_df, check_dtype=False)
 
     def test_datasource_basic(self, spark):
         stored_df = spark.createDataFrame(schema=('c1',), data=[(1,)])
@@ -196,14 +199,14 @@ class TestPySparkNode:
                 Spark("dummy_table").select('c1')
             ],
             output=Schema([
-                Column('c1', Decimals(10, 2), 'dummy')
+                Column('c1', Decimal(10, 2), 'dummy')
             ])
         )
         def t1(dummy_table):
             return dummy_table
 
         df = t1.run(spark, parallel=False)
-        assert_pyspark_df_equal(df, stored_df)
+        assert_pyspark_df_equal(df, stored_df, check_dtype=False)
 
     def test_datasource_consolidate_columns(self, spark, mocker):
         """
@@ -222,7 +225,7 @@ class TestPySparkNode:
                 spark_dummy_table.select('c1')
             ],
             output=Schema([
-                Column('c1', Decimals(10, 2), 'dummy')
+                Column('c1', Decimal(10, 2), 'dummy')
             ])
         )
         def t1(dummy_table):
@@ -235,7 +238,7 @@ class TestPySparkNode:
                 spark_dummy_table_2.select('c2')
             ],
             output=Schema([
-                Column('c2', Decimals(10, 2), 'dummy')
+                Column('c2', Decimal(10, 2), 'dummy')
             ])
         )
         def t2(dummy_table):
@@ -245,8 +248,8 @@ class TestPySparkNode:
             type="pyspark",
             dependencies=[t1.select('c1'), t2.select('c2')],
             output=Schema([
-                Column('c1', Decimals(10, 2), 'dummy'),
-                Column('c2', Decimals(10, 2), 'dummy')
+                Column('c1', Decimal(10, 2), 'dummy'),
+                Column('c2', Decimal(10, 2), 'dummy')
             ])
         )
         def t3(t1, t2):
@@ -265,7 +268,7 @@ class TestPySparkNode:
         t3.run(spark, parallel=False)
         spy.assert_called_once()
         spy2.assert_not_called()
-        assert_pyspark_df_equal(spy.spy_return, spark.createDataFrame(schema=('c1', 'c2', 'c3'), data=[(1, 2, 3)]))
+        assert_pyspark_df_equal(spy.spy_return, spark.createDataFrame(schema=('c1', 'c2', 'c3'), data=[(1, 2, 3)]), check_dtype=False)
 
     def test_conversion_to_pandas(self, spark):
 
@@ -275,7 +278,7 @@ class TestPySparkNode:
                 Spark("dummy_table").select('c1')
             ],
             output=Schema([
-                Column('c1', Decimals(10, 2), 'dummy')
+                Column('c1', Decimal(10, 2), 'dummy')
             ])
         )
         def t1(dummy_table):
@@ -287,7 +290,7 @@ class TestPySparkNode:
                 t1.select('c1')
             ],
             output=Schema([
-                Column('c1', Decimals(10, 2), 'dummy')
+                Column('c1', Decimal(10, 2), 'dummy')
             ])
         )
         def t2(t1):
@@ -302,7 +305,7 @@ class TestPySparkNode:
                 Spark("dummy_table").select('c1')
             ],
             output=Schema([
-                Column('c1', Decimals(10, 2), 'dummy')
+                Column('c1', Decimal(10, 2), 'dummy')
             ])
         )
         def t1(dummy_table):
@@ -319,7 +322,7 @@ class TestPySparkNode:
                 Spark("dummy_table").select('c1')
             ],
             output=Schema([
-                Column('c1', Decimals(10, 2), 'dummy')
+                Column('c1', Decimal(10, 2), 'dummy')
             ])
         )
         def t1(dummy_table):
@@ -331,7 +334,7 @@ class TestPySparkNode:
                 t1.select('c1')
             ],
             output=Schema([
-                Column('c1', Decimals(10, 2), 'dummy')
+                Column('c1', Decimal(10, 2), 'dummy')
             ])
         )
         def t2(t1):
@@ -346,7 +349,7 @@ class TestPySparkNode:
                 Spark("dummy_table").select('c1')
             ],
             output=Schema([
-                Column('c1', Decimals(10, 2), 'dummy')
+                Column('c1', Decimal(10, 2), 'dummy')
             ])
         )
         def t1(dummy_table):
@@ -476,7 +479,7 @@ class TestPySparkNode:
             assert len(node_['output_columns']) == len(set(node_['output_columns']))
 
         df = t4.run(spark, parallel=False)
-        assert_pyspark_df_equal(df, spark.createDataFrame(schema=('c2',), data=[("2",)]))
+        assert_pyspark_df_equal(df, spark.createDataFrame(schema=('c2',), data=[("2",)]), check_dtype=False)
 
     def test_dataframes_are_isolated_from_nodes(self, spark):
         import  pyspark.sql.functions as F
