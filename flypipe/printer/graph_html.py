@@ -23,6 +23,21 @@ class GraphHTML:
         self.width = width
         self.height = height
         self._node_positions = self.get_node_positions()
+        self._unique_node_names = self.get_unique_node_names()
+
+    def get_unique_node_names(self):
+        unique_names = {}
+        for key, position in self._node_positions.items():
+            graph_node = self.graph.get_node(key)
+            node_name = graph_node['transformation'].__name__
+
+            if node_name not in list(unique_names.values()):
+                unique_names[key] = node_name
+            else:
+                unique_names[key] = graph_node['transformation'].__module__
+
+        return unique_names
+
 
     def html(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -51,6 +66,7 @@ class GraphHTML:
             js_scripts['offcanvas'] = f.read()
         with open(os.path.join(dir_path, "tags.js"), 'r') as f:
             js_scripts['tags'] = f.read()
+
         return get_template("index.html").render(height=self.height, css_scripts=css_scripts, js_scripts=js_scripts)
 
     def get_node_positions(self):
@@ -78,19 +94,22 @@ class GraphHTML:
     @property
     def nodes(self):
         nodes = []
+
+
         for node_name, position in self._node_positions.items():
             graph_node = self.graph.get_node(node_name)
 
             successors = sorted(list(self.graph.graph.successors(node_name)))
-            successors_names = [self.graph.get_node(successor)['transformation'].__name__ for successor in successors]
+            successors_names = [self._unique_node_names[self.graph.get_node(successor)['transformation'].key] for successor in successors]
 
             dependencies = sorted(list(self.graph.graph.predecessors(node_name)))
-            dependencies_names = [self.graph.get_node(dependency)['transformation'].__name__ for dependency in dependencies]
-
+            dependencies_names = [self._unique_node_names[self.graph.get_node(dependency)['transformation'].key] for dependency in dependencies]
 
             node_attributes = {
                 'key': graph_node['transformation'].key,
-                'name': graph_node['transformation'].__name__,
+                'name': self._unique_node_names[graph_node['transformation'].key],
+                'python_import': None,
+                'file_location': None,
                 'position': position,
                 'active': RunStatus.ACTIVE==graph_node['run_status'],
                 'run_status': GraphHTML.CSS_MAP[graph_node['run_status']],
@@ -131,7 +150,12 @@ class GraphHTML:
                     "table": graph_node['transformation'].__name__,
                     "columns": graph_node['output_columns']
                 }
+            else:
+                if graph_node['transformation'].__package__:
+                    node_attributes['python_import'] = f"from {graph_node['transformation'].__module__} " \
+                                                       f"import {graph_node['transformation'].__name__}"
 
+                node_attributes['file_location'] = graph_node['transformation'].__file__
             nodes.append(node_attributes)
         return nodes
 
@@ -145,11 +169,11 @@ class GraphHTML:
             edge_data = self.graph.get_edge_data(source_node_name, target_node_name)
 
             edges.append({'source': source_node['transformation'].key,
-                          'source_name': source_node['transformation'].__name__,
+                          'source_name': self._unique_node_names[source_node['transformation'].key],
                           'source_position': self._node_positions[source_node['transformation'].key],
                           'source_selected_columns': edge_data['selected_columns'],
                           'target': target_node['transformation'].key,
-                          'target_name': target_node['transformation'].__name__,
+                          'target_name': self._unique_node_names[target_node['transformation'].key],
                           'target_position': self._node_positions[target_node['transformation'].key],
                           'active': (source_node['run_status'] != RunStatus.SKIP and target_node['run_status'] != RunStatus.SKIP)
                           })
