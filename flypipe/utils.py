@@ -69,7 +69,7 @@ def dataframe_type(df) -> DataFrameType:
             if isinstance(df, sql.DataFrame):
                 return DataFrameType.PYSPARK
 
-    raise DataframeTypeNotSupportedError
+    raise DataframeTypeNotSupportedError(type(df))
 
 
 # TODO: add tests to get_schema

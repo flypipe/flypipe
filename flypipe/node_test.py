@@ -1,4 +1,5 @@
 import pytest
+from tabulate import tabulate
 
 from flypipe.data_type import String
 from flypipe.datasource.spark import Spark
@@ -201,35 +202,45 @@ class TestNode:
                 return my_fruits
 
 
-    def test_(self, spark):
+    def test_alias_run_with_keys_and_alias_in_function(self):
         """
-        Ensure throw exception if selected duplicated columns
+        Ensure that node graph is processed with node keys and alias is used for arguments
         """
+        from tests.transformations.group_1.t1 import t1
+        from tests.transformations.group_2.t1 import t1 as t1_group2
 
         @node(
-            type='pandas_on_spark',
-            output=Schema([
-                Column('fruit', String(), 'dummy'),
-                Column('color', String(), 'dummy'),
+            type="pandas",
+            dependencies=[
+                t1.select("c1"),
+                t1_group2.select("c1").alias("t1_group2")
+            ],
+            output = Schema([
+                Column("c1_group1_t1", String(), 'dummy'),
+                Column("c1_group2_t1", String(), 'dummy'),
             ])
         )
-        def t1():
-            return spark.createDataFrame(
-                pd.DataFrame({'fruit': ['banana', 'apple'], 'color': ['yellow', 'red']})
-            ).to_pandas_on_spark()
+        def t3(t1, t1_group2):
+            t1['c1_group1_t1'] = t1['c1']
+            t1['c1_group2_t1'] = t1_group2['c1']
 
-
-        @node(
-            type='pandas',
-            dependencies=[t1.select('color')],
-            output=Schema([
-                Column('another_color', String(), 'dummy'),
-            ])
-        )
-        def t2(t1):
-            t1['another_color'] = t1['color']
             return t1
 
-        t2.run(spark, parallel=False)
+        df = t3.run(parallel=False)
+        assert df.loc[0, 'c1_group1_t1'] == "t0 group_1_t1"
+        assert df.loc[0, 'c1_group2_t1'] == "t0 group_2_t1"
 
+        t1_df = pd.DataFrame(data={'c1': ['t0 group_1_t1']})
+        t1_group2_df = pd.DataFrame(data={'c1': ['t0 group_2_t1']})
 
+        df = (
+            t3
+            .inputs({
+                t1: t1_df,
+                t1_group2: t1_group2_df
+            })
+            .run(parallel=False)
+        )
+
+        assert df.loc[0, 'c1_group1_t1'] == "t0 group_1_t1"
+        assert df.loc[0, 'c1_group2_t1'] == "t0 group_2_t1"
