@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 import pytest
-from pandas.testing import assert_frame_equal
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from pyspark_test import assert_pyspark_df_equal
+from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.schema.types import Boolean, Decimal
+from pyspark_test import assert_pyspark_df_equal
 
 
 @pytest.fixture
@@ -14,6 +15,41 @@ def spark():
 
 
 class TestSparkDataFrameWrapper:
+
+    def test_select_column_1(self, spark):
+        df = spark.createDataFrame(schema=('col1', 'col2', 'col3'), data=[
+            (True, 'Hello', 'Banana'),
+            (False, 'World', 'Apple'),
+        ])
+        expected_df = spark.createDataFrame(schema=('col1', 'col2'), data=[
+            (True, 'Hello'),
+            (False, 'World'),
+        ])
+        df_wrapper = DataFrameWrapper.get_instance(None, df)
+
+        assert_pyspark_df_equal(df_wrapper.select_columns('col1', 'col2').df, expected_df)
+
+    def test_select_column_2(self, spark):
+        df = spark.createDataFrame(schema=('col1', 'col2', 'col3'), data=[
+            (True, 'Hello', 'Banana'),
+            (False, 'World', 'Apple'),
+        ])
+        expected_df = spark.createDataFrame(schema=('col1', 'col2'), data=[
+            (True, 'Hello'),
+            (False, 'World'),
+        ])
+        df_wrapper = DataFrameWrapper.get_instance(None, df)
+        assert_pyspark_df_equal(df_wrapper.select_columns(['col1', 'col2']).df, expected_df)
+
+    def test_select_column_missing_column(self, spark):
+        df = spark.createDataFrame(schema=('col1', 'col2', 'col3'), data=[
+            (True, 'Hello', 'Banana'),
+            (False, 'World', 'Apple'),
+        ])
+        df_wrapper = DataFrameWrapper.get_instance(None, df)
+
+        with pytest.raises(DataFrameMissingColumns):
+            df_wrapper.select_columns(['col1', 'col4'])
 
     def test_cast_column(self, spark):
         df = spark.createDataFrame(schema=('col1',), data=[

@@ -18,8 +18,6 @@ class NodeResult:
         The raw dataframe that a node returns might be markedly different from the schema, we need to apply the schema
         to bring the dataframe into line.
         """
-        # TODO- implement check to error out if there's a column in the schema which isn't in the output
-        # TODO- implement code to select only columns that are in the schema
         if schema:
             self.df_wrapper = self.df_wrapper.select_columns([column.name for column in schema.columns])
             for column in schema.columns:

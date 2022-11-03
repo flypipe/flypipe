@@ -1,7 +1,7 @@
-import numpy as np
 import pyspark.pandas as ps
 from numpy import dtype
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
+from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.schema.types import Boolean, Byte, Binary, Integer, Short, Long, Float, Double, String, Decimal, Type
 from flypipe.utils import DataFrameType
 
@@ -25,7 +25,10 @@ class PandasOnSparkDataFrameWrapper(DataFrameWrapper):
     }
 
     def _select_columns(self, columns):
-        return self.df[list(columns)]
+        try:
+            return self.df[list(columns)]
+        except KeyError:
+            raise DataFrameMissingColumns(self.df.columns, list(columns))
 
     def _cast_column(self, column, flypipe_type, df_type):
         rows = self.df[column].notnull()

@@ -7,7 +7,7 @@ from pyspark_test import assert_pyspark_df_equal
 
 from tabulate import tabulate
 
-from flypipe.exceptions import SelectionNotFoundInDataFrame
+from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.datasource.spark import Spark
 from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node import node
@@ -229,7 +229,7 @@ class TestPySparkNode:
             df = df.rename(columns={'my_col__x': 'my_col'})
             return df
 
-        with pytest.raises(SelectionNotFoundInDataFrame) as exc_info:
+        with pytest.raises(DataFrameMissingColumns) as exc_info:
             (
                 my_col
                     .clear_inputs()

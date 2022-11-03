@@ -39,6 +39,7 @@ class DataFrameWrapper(ABC):
         dataframe_wrapper.select_columns(['col1', 'col2', ...])
 
         Returns a dataframe with just those specific columns selected.
+        Throw a KeyError if any of the requested columns do not exist in the underlying dataframe.
         """
         if columns and isinstance(columns[0], list):
             columns = columns[0]

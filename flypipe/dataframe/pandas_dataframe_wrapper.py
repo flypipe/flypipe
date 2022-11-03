@@ -3,6 +3,7 @@ import pandas as pd
 from numpy import dtype
 
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
+from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.schema.types import Boolean, Byte, Binary, Integer, Short, Long, Float, Double, String, Decimal, Type
 from flypipe.utils import DataFrameType
 
@@ -22,7 +23,10 @@ class PandasDataFrameWrapper(DataFrameWrapper):
     }
 
     def _select_columns(self, columns):
-        return self.df[list(columns)]
+        try:
+            return self.df[list(columns)]
+        except KeyError:
+            raise DataFrameMissingColumns(self.df.columns, list(columns))
 
     def _get_rows_for_cast(self, column, flypipe_type):
         rows = self.df[column].notnull()
