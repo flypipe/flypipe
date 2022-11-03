@@ -8,9 +8,9 @@ class Type:
     def name(self):
         return self.__class__.__name__
 
-    @classmethod
-    def is_valid_value(cls, value):
-        return True
+    @property
+    def valid_values(self):
+        return None
 
 
 class Unknown(Type):
@@ -20,9 +20,9 @@ class Unknown(Type):
 class Boolean(Type):
     VALID_VALUES = {True, False, 1, 0}
 
-    @classmethod
-    def is_valid_value(cls, value):
-        return value in cls.VALID_VALUES
+    @property
+    def valid_values(self):
+        return self.VALID_VALUES
 
 
 class Byte(Type):

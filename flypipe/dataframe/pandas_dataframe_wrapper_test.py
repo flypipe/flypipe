@@ -31,7 +31,7 @@ class TestPandasDataFrameWrapper:
         an appropriate error.
         """
         df = pd.DataFrame({
-            'col1': [True, 'rubbish'],
+            'col1': [True, 'rubbish', True, False],
         })
         df_wrapper = DataFrameWrapper.get_instance(None, df)
         with pytest.raises(ValueError) as ex:

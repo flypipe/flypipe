@@ -25,17 +25,20 @@ class PandasDataFrameWrapper(DataFrameWrapper):
         return self.df[list(columns)]
 
     def _get_rows_for_cast(self, column, flypipe_type):
-        # TODO: get rid of this, try to do the cast + identify non null rows in the same action otherwise we are iterating twice through the df
         rows = self.df[column].notnull()
 
-        # TODO: change is_valid_value to be a set of allowed values and hard code isin
-        # self.df[~self.df[column].isin([....])].head(1).shape[0] == 0
-        invalid_value_indexes = np.flatnonzero(
-            ~self.df[column].loc[rows].apply(lambda row: flypipe_type.is_valid_value(row)))
-        if invalid_value_indexes.any():
-            raise ValueError(
-                f'Invalid type {flypipe_type.name} for column {column}, found incompatible row value '
-                f'"{self.df[column].loc[invalid_value_indexes[0]]}"')
+        if flypipe_type.valid_values:
+            # Get the first index of any invalid, non-null row value for the column
+            invalid_values = ~self.df[column].loc[rows].isin(flypipe_type.valid_values)
+            first_invalid_value = self.df[column].iloc[
+                invalid_values.argmax()
+            ]
+            # This is a bit hacky, but if all values are valid then argmax returns the first index, so we need to
+            # double check that the first invalid value is actually invalid.
+            if first_invalid_value and first_invalid_value not in flypipe_type.valid_values:
+                raise ValueError(
+                    f'Invalid type {flypipe_type.name} for column {column}, found incompatible row value '
+                    f'"{first_invalid_value}"')
         return rows
 
     def _cast_column(self, column, flypipe_type, df_type):
