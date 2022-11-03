@@ -93,7 +93,9 @@ class NodeGraph:
     def set_run_status(self, name: str, run_status: RunStatus):
         self.graph.nodes[name]['run_status'] = run_status
 
-    def calculate_graph_run_status(self, node_name, skipped_node_names):
+    def calculate_graph_run_status(self, node_name, skipped_node_names=None):
+        if skipped_node_names is None:
+            skipped_node_names = []
         skipped_node_names = set(skipped_node_names)
 
         frontier = [(node_name, RunStatus.SKIP if node_name in skipped_node_names else RunStatus.ACTIVE)]

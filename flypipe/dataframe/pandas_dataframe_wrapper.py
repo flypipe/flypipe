@@ -49,8 +49,7 @@ class PandasDataFrameWrapper(DataFrameWrapper):
     def _cast_column_decimal(self, column, flypipe_type):
         rows = self._get_rows_for_cast(column, flypipe_type)
 
-        self.df[column].loc[rows] = self.df[column].loc[rows].astype(dtype('float64'))
-        self.df[column].loc[rows] = self.df[column].loc[rows].round(flypipe_type.scale)
+        self.df[column].loc[rows] = self.df[column].loc[rows].astype(dtype('float64')).round(flypipe_type.scale)
 
     def _cast_column_date(self, column, flypipe_type):
         return self._cast_column_date_or_timestamp(column, flypipe_type)
