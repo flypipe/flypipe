@@ -182,7 +182,7 @@ class TestPySparkNode:
         df = t1.run(spark, parallel=False)
         assert isinstance(df, pyspark.pandas.DataFrame)
 
-    @pytest.mark.skip('This test is failing to save the table, I\'m not certain why. It also fails in main branch')
+    # @pytest.mark.skip('This test is failing to save the table, I\'m not certain why. It also fails in main branch')
     def test_datasource_case_sensitive_columns(self, spark):
         """
         Test columns case sensitive
@@ -232,7 +232,6 @@ class TestPySparkNode:
         with pytest.raises(DataFrameMissingColumns) as exc_info:
             (
                 my_col
-                    .clear_inputs()
                     .run(spark, parallel=False)
             )
         expected_error_df = pd.DataFrame(data = {
