@@ -82,10 +82,12 @@ class Node:
         """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
         return self.function.__doc__
 
-    def _create_graph(self, skipped_node_names=None, pandas_on_spark_use_pandas=False):
+    def _create_graph(self, skipped_node_keys=None, pandas_on_spark_use_pandas=False):
         from flypipe.node_graph import NodeGraph
         self.node_graph = NodeGraph(self, pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
-        self.node_graph.calculate_graph_run_status(self.key, skipped_node_names)
+        if not skipped_node_keys:
+            skipped_node_keys = []
+        self.node_graph.calculate_graph_run_status(self.key, skipped_node_keys)
 
     def select(self, *columns):
         # TODO- if self.output_schema is defined then we should ensure each of the columns is in it.
@@ -179,9 +181,10 @@ class Node:
     def plot(self):
         self.node_graph.plot()
 
-    def html(self, width=-1, height=1000, skipped_node_names=None, pandas_on_spark_use_pandas=False):
+    def html(self, width=-1, height=1000, skipped_nodes=None, pandas_on_spark_use_pandas=False):
         from flypipe.printer.graph_html import GraphHTML
-        self._create_graph(skipped_node_names, pandas_on_spark_use_pandas)
+        skipped_nodes = skipped_nodes or []
+        self._create_graph([node.key for node in skipped_nodes], pandas_on_spark_use_pandas)
         return GraphHTML(self.node_graph, width=width, height=height).html()
 
 
