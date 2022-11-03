@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import pyspark.pandas as ps
 from numpy import dtype
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
@@ -47,5 +46,5 @@ class PandasOnSparkDataFrameWrapper(DataFrameWrapper):
 
     def _cast_column_date_or_timestamp(self, column, flypipe_type):
         rows = self.df[column].notnull()
-        self.df[column].loc[rows] = pd.to_datetime(
+        self.df[column].loc[rows] = ps.to_datetime(
             self.df[column].loc[rows], format=flypipe_type.fmt).astype(dtype("datetime64[ns]"))

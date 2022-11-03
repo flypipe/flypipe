@@ -181,9 +181,9 @@ class Node:
     def plot(self):
         self.node_graph.plot()
 
-    def html(self, width=-1, height=1000, skipped_nodes=None, pandas_on_spark_use_pandas=False):
+    def html(self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False):
         from flypipe.printer.graph_html import GraphHTML
-        skipped_nodes = skipped_nodes or []
+        skipped_nodes = inputs or []
         self._create_graph([node.key for node in skipped_nodes], pandas_on_spark_use_pandas)
         return GraphHTML(self.node_graph, width=width, height=height).html()
 
