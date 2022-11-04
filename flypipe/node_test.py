@@ -2,9 +2,6 @@ import pytest
 import pandas as pd
 import pyspark.pandas as ps
 from pyspark_test import assert_pyspark_df_equal
-from pandas.testing import assert_frame_equal
-from tabulate import tabulate
-from flypipe.data_type import String
 from flypipe.datasource.spark import Spark
 from flypipe.converter.dataframe import DataFrameConverter
 from flypipe.exceptions import DataFrameMissingColumns
@@ -245,12 +242,10 @@ class TestNode:
         t1_group2_df = pd.DataFrame(data={'c1': ['t0 group_2_t1']})
 
         df = (
-            t3
-                .inputs({
+            t3.run(parallel=False, inputs={
                 t1: t1_df,
                 t1_group2: t1_group2_df
             })
-                .run(parallel=False)
         )
 
         assert df.loc[0, 'c1_group1_t1']=="t0 group_1_t1"
