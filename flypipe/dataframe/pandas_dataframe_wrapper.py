@@ -4,13 +4,14 @@ from numpy import dtype
 
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from flypipe.exceptions import DataFrameMissingColumns
-from flypipe.schema.types import Boolean, Byte, Binary, Integer, Short, Long, Float, Double, String, Decimal, Type
+from flypipe.schema.types import Boolean, Byte, Binary, Integer, Short, Long, Float, Double, String, Decimal, Type, \
+    Unknown, DateTime, Date
 from flypipe.utils import DataFrameType
 
 
 class PandasDataFrameWrapper(DataFrameWrapper):
     DF_TYPE = DataFrameType.PANDAS
-    _TYPE_MAP = {
+    FLYPIPE_TYPE_TO_DF_TYPE_MAP = {
         Boolean.key(): dtype('bool'),
         Byte.key(): dtype('int8'),
         Binary.key(): dtype('S'),
@@ -21,12 +22,32 @@ class PandasDataFrameWrapper(DataFrameWrapper):
         Double.key(): dtype('float64'),
         String.key(): dtype("<U0"),
     }
+    DF_TYPE_TO_FLYPIPE_TYPE_MAP = {
+        'boolean': Boolean(),
+        'byte': Byte(),
+        'binary': Binary(),
+        'integer': Integer(),
+        'short': Short(),
+        'long': Long(),
+        'floating': Float(),
+        'double': Double(),
+        'string': String(),
+        'date': Date(),
+        'datetime': DateTime(),
+    }
 
     def _select_columns(self, columns):
         try:
             return self.df[list(columns)]
         except KeyError:
             raise DataFrameMissingColumns(self.df.columns, list(columns))
+
+    def get_column_flypipe_type(self, target_column):
+        try:
+            df_type_name = pd.api.types.infer_dtype(self.df[target_column], skipna=True)
+            return self.DF_TYPE_TO_FLYPIPE_TYPE_MAP[df_type_name]
+        except KeyError:
+            return Unknown()
 
     def _get_rows_for_cast(self, column, flypipe_type):
         rows = self.df[column].notnull()

@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 import pytest
+import datetime
 
 from flypipe.exceptions import DataFrameMissingColumns
-from flypipe.schema.types import Boolean, Decimal, Date, DateTime
+from flypipe.schema.types import Boolean, Decimal, Date, DateTime, Integer, Float, String
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from pandas.testing import assert_frame_equal
 
@@ -46,6 +47,15 @@ class TestPandasDataFrameWrapper:
 
         with pytest.raises(DataFrameMissingColumns):
             df_wrapper.select_columns(['col1', 'col4'])
+
+    def test_get_column_flypipe_type(self, spark):
+        df = pd.DataFrame({'c1': [True], 'c2': [1], 'c3': [1.1], 'c4': 'bla', 'c5': datetime.date(2022, 11, 4)})
+        df_wrapper = DataFrameWrapper.get_instance(spark, df)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c1'), Boolean)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c2'), Integer)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c3'), Float)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c4'), String)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c5'), Date)
 
     def test_cast_column(self):
         """

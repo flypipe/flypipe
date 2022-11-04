@@ -1,10 +1,13 @@
 import pandas as pd
 import numpy as np
 import pytest
+from pyspark.sql.types import StructType, StructField, BooleanType, ByteType, BinaryType, IntegerType, ShortType, \
+    LongType, FloatType, DoubleType, StringType
+
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from pyspark_test import assert_pyspark_df_equal
 from flypipe.exceptions import DataFrameMissingColumns
-from flypipe.schema.types import Boolean, Decimal
+from flypipe.schema.types import Boolean, Decimal, Byte, Binary, Integer, Short, Long, Float, Double, String
 from pyspark_test import assert_pyspark_df_equal
 
 
@@ -50,6 +53,30 @@ class TestSparkDataFrameWrapper:
 
         with pytest.raises(DataFrameMissingColumns):
             df_wrapper.select_columns(['col1', 'col4'])
+
+    def test_get_column_flypipe_type(self, spark):
+        df = spark.createDataFrame(schema=StructType([
+            StructField('c1', BooleanType()),
+            StructField('c2', ByteType()),
+            StructField('c3', BinaryType()),
+            StructField('c4', IntegerType()),
+            StructField('c5', ShortType()),
+            StructField('c6', LongType()),
+            StructField('c7', FloatType()),
+            StructField('c8', DoubleType()),
+            StructField('c9', StringType()),
+        ]), data=[])
+        df_wrapper = DataFrameWrapper.get_instance(spark, df)
+
+        assert isinstance(df_wrapper.get_column_flypipe_type('c1'), Boolean)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c2'), Byte)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c3'), Binary)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c4'), Integer)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c5'), Short)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c6'), Long)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c7'), Float)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c8'), Double)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c9'), String)
 
     def test_cast_column(self, spark):
         df = spark.createDataFrame(schema=('col1',), data=[

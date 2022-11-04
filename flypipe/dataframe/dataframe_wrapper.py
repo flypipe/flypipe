@@ -9,7 +9,7 @@ class DataFrameWrapper(ABC):
     exact concrete dataframe type it's storing is.
     """
     DF_TYPE = None
-    _TYPE_MAP = {}
+    FLYPIPE_TYPE_TO_DF_TYPE_MAP = {}
 
     def __init__(self, spark, df):
         self.spark = spark
@@ -50,9 +50,16 @@ class DataFrameWrapper(ABC):
         """Return a copy of the underlying dataframe with only the supplied columns selected"""
         raise NotImplementedError
 
+    @abstractmethod
+    def get_column_flypipe_type(self, column):
+        raise NotImplementedError
+
     def cast_column(self, column: str, flypipe_type: Type):
-        if flypipe_type.key() in self._TYPE_MAP:
-            df_type = self._TYPE_MAP[flypipe_type.key()]
+        if self.get_column_flypipe_type(column).name == flypipe_type.name:
+            # The column already has the requested type, do nothing
+            return
+        if flypipe_type.key() in self.FLYPIPE_TYPE_TO_DF_TYPE_MAP:
+            df_type = self.FLYPIPE_TYPE_TO_DF_TYPE_MAP[flypipe_type.key()]
             return self._cast_column(column, flypipe_type, df_type)
         else:
             try:

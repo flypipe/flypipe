@@ -12,7 +12,7 @@ from tests.utils.spark import spark
 
 
 class DummyDataFrameWrapper(DataFrameWrapper):
-    _TYPE_MAP = {
+    FLYPIPE_TYPE_TO_DF_TYPE_MAP = {
         Boolean.key(): np.dtype('bool')
     }
 
