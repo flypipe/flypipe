@@ -58,15 +58,16 @@ class DataFrameWrapper(ABC):
         if self.get_column_flypipe_type(column).name == flypipe_type.name:
             # The column already has the requested type, do nothing
             return
-        if flypipe_type.key() in self.FLYPIPE_TYPE_TO_DF_TYPE_MAP:
-            df_type = self.FLYPIPE_TYPE_TO_DF_TYPE_MAP[flypipe_type.key()]
-            return self._cast_column(column, flypipe_type, df_type)
-        else:
-            try:
-                return getattr(self, f'_cast_column_{flypipe_type.key()}')(column, flypipe_type)
-            except AttributeError:
+        try:
+            return getattr(self, f'_cast_column_{flypipe_type.key()}')(column, flypipe_type)
+        except AttributeError:
+            if flypipe_type.key() in self.FLYPIPE_TYPE_TO_DF_TYPE_MAP:
+                df_type = self.FLYPIPE_TYPE_TO_DF_TYPE_MAP[flypipe_type.key()]
+                return self._cast_column(column, flypipe_type, df_type)
+            else:
                 raise TypeError(
                     f'Unable to cast to flypipe type {flypipe_type.name}- no dataframe type registered')
+
 
     @abstractmethod
     def _cast_column(self, column: str, flypipe_type: Type, df_type):

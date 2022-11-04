@@ -2,12 +2,13 @@ import pandas as pd
 import numpy as np
 import pytest
 from pyspark.sql.types import StructType, StructField, BooleanType, ByteType, BinaryType, IntegerType, ShortType, \
-    LongType, FloatType, DoubleType, StringType
+    LongType, FloatType, DoubleType, StringType, DecimalType, TimestampType, DateType
 
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from pyspark_test import assert_pyspark_df_equal
 from flypipe.exceptions import DataFrameMissingColumns
-from flypipe.schema.types import Boolean, Decimal, Byte, Binary, Integer, Short, Long, Float, Double, String
+from flypipe.schema.types import Boolean, Decimal, Byte, Binary, Integer, Short, Long, Float, Double, String, DateTime, \
+    Date
 from pyspark_test import assert_pyspark_df_equal
 
 
@@ -65,6 +66,9 @@ class TestSparkDataFrameWrapper:
             StructField('c7', FloatType()),
             StructField('c8', DoubleType()),
             StructField('c9', StringType()),
+            StructField('c10', DecimalType(13, 2)),
+            StructField('c11', TimestampType()),
+            StructField('c12', DateType()),
         ]), data=[])
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
 
@@ -77,6 +81,12 @@ class TestSparkDataFrameWrapper:
         assert isinstance(df_wrapper.get_column_flypipe_type('c7'), Float)
         assert isinstance(df_wrapper.get_column_flypipe_type('c8'), Double)
         assert isinstance(df_wrapper.get_column_flypipe_type('c9'), String)
+        c10_type = df_wrapper.get_column_flypipe_type('c10')
+        assert isinstance(c10_type, Decimal)
+        assert c10_type.precision == 13
+        assert c10_type.scale == 2
+        assert isinstance(df_wrapper.get_column_flypipe_type('c11'), DateTime)
+        assert isinstance(df_wrapper.get_column_flypipe_type('c12'), Date)
 
     def test_cast_column(self, spark):
         df = spark.createDataFrame(schema=('col1',), data=[

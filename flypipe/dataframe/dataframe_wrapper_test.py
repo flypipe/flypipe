@@ -7,7 +7,7 @@ from flypipe.dataframe.pandas_dataframe_wrapper import PandasDataFrameWrapper
 from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import PandasOnSparkDataFrameWrapper
 from flypipe.dataframe.spark_dataframe_wrapper import SparkDataFrameWrapper
 from flypipe.schema import Schema, Column
-from flypipe.schema.types import Boolean, Decimal, String
+from flypipe.schema.types import Boolean, Decimal, String, Unknown
 from tests.utils.spark import spark
 
 
@@ -18,6 +18,9 @@ class DummyDataFrameWrapper(DataFrameWrapper):
 
     def _select_columns(self, columns):
         pass
+
+    def get_column_flypipe_type(self, column):
+        return Unknown()
 
     def _cast_column(self, column, flypipe_type, df_type):
         pass

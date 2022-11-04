@@ -34,6 +34,7 @@ class PandasDataFrameWrapper(DataFrameWrapper):
         'string': String(),
         'date': Date(),
         'datetime': DateTime(),
+        'datetime64': DateTime(),
     }
 
     def _select_columns(self, columns):
