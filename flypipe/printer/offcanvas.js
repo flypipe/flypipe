@@ -26,15 +26,25 @@ function query_html(node){
 
     }
 
+
+
     return body;
 }
 
 function show_raw_queries(nodes){
     body = ""
+    has_query = false;
     for (let i = 0; i < nodes.length; i++) {
-        body += query_html(nodes[i]);
+
+        if ( nodes[i].definition.hasOwnProperty('query') ){
+            has_query = true;
+            body += query_html(nodes[i]);
+        }
     }
     title = "Raw Queries";
+    if ( has_query == false){
+        body = "No queries defined by this graph";
+    }
     show_offcanvas(title, body);
 
 }
@@ -51,6 +61,19 @@ function show_transformation(node){
     body += '<p class="text-break fw-lighter font-monospace mb-5">' +
                 node.definition.description +
            '</p>';
+
+    if (node.file_location){
+        body += "<h5 class='mb-4'>Location</h5>";
+        body += '<p class="text-break fw-lighter font-monospace mb-5">' +
+                    node.file_location +
+                '</p>';
+    }
+
+    if (node.python_import){
+        body += "<h5 class='mb-4'>Python import</h5>";
+        body += '<p class="text-break fw-lighter font-monospace mb-5 text-bg-light"><div class="bg-light vstack gap-1 p-3">';
+        body += "<code>" + node.python_import + "</code></div></p>";
+    }
 
     body += "<h5 class='mt-5 mb-3'>Tags</h5>";
     for (let i = 0; i < node.definition.tags.length; i++) {
