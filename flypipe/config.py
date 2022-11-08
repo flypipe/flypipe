@@ -1,11 +1,21 @@
 import os
 from contextlib import contextmanager
+from enum import Enum
+
+
+class RunMode(Enum):
+    PARALLEL = 1
+    SEQUENTIAL = 2
 
 
 class _Config:
-    _OPTIONS = [
-        'require_node_description',
-    ]
+    OPTIONS = {
+        'require_node_description': False,
+        'require_schema_description': False,
+        'require_node_dependency_column_selection': False,
+        'default_run_mode': RunMode.PARALLEL.value,
+    }
+    VALID_OPTIONS = set(config_name for config_name in OPTIONS.keys())
     ACTIVE_CONFIGS = []
 
     def __init__(self):
@@ -13,13 +23,17 @@ class _Config:
 
     @classmethod
     def get_config(cls, config_name):
-        if config_name not in cls._OPTIONS:
-            raise KeyError(f'Config option "{config_name}" is invalid, available options are {cls._OPTIONS}')
+        if config_name not in cls.OPTIONS:
+            raise KeyError(f'Config option "{config_name}" is invalid, available options are {cls.VALID_OPTIONS}')
         active_config = cls.get_active_config()
         if active_config:
             return active_config._get_config(config_name)
         else:
-            return cls._get_config_from_environment_variables(config_name)
+            environment_config = cls._get_config_from_environment_variables(config_name)
+            if environment_config is not None:
+                return environment_config
+            else:
+                return cls.OPTIONS[config_name]
 
     @classmethod
     def _get_config_from_environment_variables(cls, config_name):
@@ -37,8 +51,8 @@ class _Config:
         return self.config.get(config_name)
 
     def set_config(self, config_name, value):
-        if config_name not in self._OPTIONS:
-            raise KeyError(f'Config option "{config_name}" is invalid, available options are {cls._OPTIONS}')
+        if config_name not in self.OPTIONS:
+            raise KeyError(f'Config option "{config_name}" is invalid, available options are {self.VALID_OPTIONS}')
         self.config[config_name] = value
 
     @classmethod

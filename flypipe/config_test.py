@@ -1,15 +1,15 @@
 import os
-from flypipe.config import get_config, config_context
+from flypipe.config import get_config, config_context, RunMode
 
 
 class TestConfig:
 
-    def test_set_config_by_environment(self):
+    def test_get_config_by_environment(self):
         os.environ["FLYPIPE_REQUIRE_NODE_DESCRIPTION"] = 'True'
 
         assert get_config('require_node_description') is True
 
-    def test_set_config_by_context_manager(self):
+    def test_get_config_by_context_manager(self):
         """
         Here we ensure that:
         a) we can set a config var via context manager
@@ -20,3 +20,6 @@ class TestConfig:
         with config_context(require_node_description=False):
             assert get_config('require_node_description') is False
         assert get_config('require_node_description') is True
+
+    def test_get_config_default(self):
+        assert get_config('default_run_mode') == RunMode.PARALLEL.value
