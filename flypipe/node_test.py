@@ -2,6 +2,8 @@ import pytest
 import pandas as pd
 import pyspark.pandas as ps
 from pyspark_test import assert_pyspark_df_equal
+
+from flypipe.config import config_context
 from flypipe.datasource.spark import Spark
 from flypipe.converter.dataframe import DataFrameConverter
 from flypipe.exceptions import DataFrameMissingColumns
@@ -455,3 +457,13 @@ class TestNode:
         with pytest.raises(DataFrameMissingColumns):
             t1.run(parallel=False)
 
+    def test_node_mandatory_description(self):
+        with pytest.raises(ValueError) as ex, \
+                config_context(require_node_description=True):
+            @node(
+                type='pandas',
+            )
+            def transformation():
+                return
+        assert str(ex.value) == (
+            'Node description configured as mandatory but no description provided for node transformation')
