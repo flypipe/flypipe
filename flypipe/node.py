@@ -65,11 +65,19 @@ class Node:
 
     @property
     def __package__(self):
-        return sys.modules[self.function.__module__].__package__
+        # When running a pipeline of node declared in the same
+        # notebook, it throws an error as it not finds __package
+        # in that case, returns nothing
+        if hasattr(sys.modules[self.function.__module__], '__package'):
+            return sys.modules[self.function.__module__].__package__
 
     @property
     def __file__(self):
-        return sys.modules[self.function.__module__].__file__
+        # When running a pipeline of node declared in the same
+        # notebook, it throws an error as it not finds __file__
+        # in that case, returns nothing
+        if hasattr(sys.modules[self.function.__module__], '__file__'):
+            return sys.modules[self.function.__module__].__file__
 
     @property
     def __module__(self):
