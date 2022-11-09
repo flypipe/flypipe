@@ -1,6 +1,8 @@
 import re
 import sys
 from typing import Mapping, List
+
+from flypipe.config import get_config
 from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
@@ -33,7 +35,9 @@ class Node:
         except KeyError:
             raise NodeTypeInvalidError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
 
-        # TODO: enforce tags for now, later validation can be set as optional via environment variable
+        if not description and get_config('require_node_description'):
+            raise ValueError(
+                f'Node description configured as mandatory but no description provided for node {self.__name__}')
         self.description = description or "No description"
 
         # TODO: enforce tags for now, later validation can be set as optional via environment variable
