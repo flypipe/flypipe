@@ -5,6 +5,8 @@ from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
 from flypipe.node_type import NodeType
+from flypipe.schema import Schema, Column
+from flypipe.schema.types import Unknown
 from flypipe.utils import DataFrameType
 
 
@@ -59,11 +61,19 @@ class Node:
 
     @property
     def __package__(self):
-        return sys.modules[self.function.__module__].__package__
+        # When running a pipeline of node declared in the same
+        # notebook, it throws an error as it not finds __package
+        # in that case, returns nothing
+        if hasattr(sys.modules[self.function.__module__], '__package'):
+            return sys.modules[self.function.__module__].__package__
 
     @property
     def __file__(self):
-        return sys.modules[self.function.__module__].__file__
+        # When running a pipeline of node declared in the same
+        # notebook, it throws an error as it not finds __file__
+        # in that case, returns nothing
+        if hasattr(sys.modules[self.function.__module__], '__file__'):
+            return sys.modules[self.function.__module__].__file__
 
     @property
     def __module__(self):
@@ -89,10 +99,12 @@ class Node:
         """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
         return self.function.__doc__
 
-    def _create_graph(self, pandas_on_spark_use_pandas=False):
+    def _create_graph(self, skipped_node_keys=None, pandas_on_spark_use_pandas=False):
         from flypipe.node_graph import NodeGraph
         self.node_graph = NodeGraph(self, pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
-        self.node_graph.calculate_graph_run_status(self.key, self._provided_inputs)
+        if not skipped_node_keys:
+            skipped_node_keys = []
+        self.node_graph.calculate_graph_run_status(self.key, skipped_node_keys)
 
     def select(self, *columns):
         # TODO- if self.output_schema is defined then we should ensure each of the columns is in it.
@@ -109,35 +121,31 @@ class Node:
         inputs = {}
         for input_node in self.input_nodes:
             node_input_value = outputs[input_node.key].as_type(self.input_dataframe_type)
-            inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns)
+            inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns).df
 
         return inputs
-
-    def inputs(self, inputs):
-        for node, df in inputs.items():
-            self._provided_inputs[node.key] = df
-        return self
-
-    def clear_inputs(self):
-        self._provided_inputs = {}
-        return self
 
     def __call__(self, *args):
         return self.function(*args)
 
-    def run(self, spark=None, parallel=True, pandas_on_spark_use_pandas=False):
-        self._create_graph(pandas_on_spark_use_pandas)
+    def run(self, spark=None, parallel=True, inputs=None, pandas_on_spark_use_pandas=False):
+        if not inputs:
+            inputs = {}
+        provided_inputs = {node.key: df for node, df in inputs.items()}
+        self._create_graph(list(provided_inputs.keys()), pandas_on_spark_use_pandas)
         if parallel:
             raise NotImplementedError
         else:
-            return self._run_sequential(spark)
+            return self._run_sequential(spark, provided_inputs)
 
     @property
     def input_dataframe_type(self):
         return self.type
 
-    def _run_sequential(self, spark=None):
-        outputs = {k: NodeResult(spark, df, schema=None, selected_columns=None) for k, df in self._provided_inputs.items()}
+    def _run_sequential(self, spark=None, provided_inputs=None):
+        if provided_inputs is None:
+            provided_inputs = {}
+        outputs = {key: NodeResult(spark, df, schema=None) for key, df in provided_inputs.items()}
         execution_graph = self.node_graph.copy()
 
         while not execution_graph.is_empty():
@@ -151,17 +159,32 @@ class Node:
                 result = NodeResult(
                     spark,
                     runnable_node['transformation'].process_transformation(spark, **dependency_values),
-                    runnable_node['transformation'].output_schema,
-                    runnable_node['output_columns']
+                    schema=self._get_consolidated_output_schema(
+                        runnable_node['transformation'].output_schema,
+                        runnable_node['output_columns']
+                    )
                 )
-                output_columns = self.node_graph.get_node_output_columns(runnable_node['transformation'].key)
-                if output_columns:
-                    result.select_columns(*output_columns)
 
                 outputs[runnable_node['transformation'].key] = result
 
         return outputs[self.key].as_type(self.type).df
 
+    @classmethod
+    def _get_consolidated_output_schema(cls, output_schema, output_columns):
+        """
+        The output schema for a transformation is currently optional. If not provided, we create a simple one from the
+        set of columns selected by descendant nodes.
+        """
+        if output_schema:
+            schema = output_schema
+        elif output_columns is not None:
+            columns = []
+            for output_column in output_columns:
+                columns.append(Column(output_column, Unknown(), ''))
+            schema = Schema(columns)
+        else:
+            schema = None
+        return schema
 
     def process_transformation(self, spark, **inputs):
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
@@ -175,9 +198,10 @@ class Node:
     def plot(self):
         self.node_graph.plot()
 
-    def html(self, width=-1, height=1000, pandas_on_spark_use_pandas=False):
+    def html(self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False):
         from flypipe.printer.graph_html import GraphHTML
-        self._create_graph(pandas_on_spark_use_pandas)
+        skipped_nodes = inputs or []
+        self._create_graph([node.key for node in skipped_nodes], pandas_on_spark_use_pandas)
         return GraphHTML(self.node_graph, width=width, height=height).html()
 
 

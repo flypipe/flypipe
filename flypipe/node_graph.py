@@ -78,9 +78,6 @@ class NodeGraph:
     def get_node(self, name: str):
         return self.graph.nodes[name]
 
-    def get_node_output_columns(self, name: str):
-        return self.graph.nodes[name]['output_columns']
-
     def get_edges(self):
         return self.graph.edges
 
@@ -96,16 +93,16 @@ class NodeGraph:
     def set_run_status(self, name: str, run_status: RunStatus):
         self.graph.nodes[name]['run_status'] = run_status
 
-    def calculate_graph_run_status(self, node_name, skipped_node_names):
-        skipped_node_names = set(skipped_node_names)
+    def calculate_graph_run_status(self, node_name, skipped_node_keys):
+        skipped_node_keys = set(skipped_node_keys)
 
-        frontier = [(node_name, RunStatus.SKIP if node_name in skipped_node_names else RunStatus.ACTIVE)]
+        frontier = [(node_name, RunStatus.SKIP if node_name in skipped_node_keys else RunStatus.ACTIVE)]
         while len(frontier) != 0:
             current_node_name, descendent_run_status = frontier.pop()
             if descendent_run_status == RunStatus.ACTIVE:
                 self.set_run_status(current_node_name, RunStatus.ACTIVE)
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    if ancestor_name in skipped_node_names:
+                    if ancestor_name in skipped_node_keys:
                         frontier.append((ancestor_name, RunStatus.SKIP))
                     else:
                         frontier.append((ancestor_name, RunStatus.ACTIVE))

@@ -43,7 +43,8 @@ class ColumnNotInDataframeError(Exception):
             f"The following columns {non_existing_columns} do not exist in the dataframe"
         )
 
-class SelectionNotFoundInDataFrame(Exception):
+
+class DataFrameMissingColumns(Exception):
 
     def __init__(self, source_columns, selected_columns):
 

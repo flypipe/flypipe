@@ -1,6 +1,6 @@
-from flypipe.data_type import String
 from flypipe.node import node
 from flypipe.schema import Schema, Column
+from flypipe.schema.types import String
 
 from tests.transformations.data import t0
 

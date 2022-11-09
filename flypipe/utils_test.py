@@ -9,13 +9,6 @@ from flypipe.exceptions import (
 from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
 
 
-@pytest.fixture
-def spark():
-    from tests.utils.spark import spark
-
-    return spark
-
-
 class TestUtils:
     def test_assert_dataframes_equals(self, spark):
         df1 = spark.createDataFrame(
