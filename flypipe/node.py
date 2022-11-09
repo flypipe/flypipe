@@ -1,6 +1,8 @@
 import re
 import sys
 from typing import Mapping, List
+
+from flypipe.config import get_config, RunMode
 from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
@@ -33,7 +35,9 @@ class Node:
         except KeyError:
             raise NodeTypeInvalidError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
 
-        # TODO: enforce tags for now, later validation can be set as optional via environment variable
+        if not description and get_config('require_node_description'):
+            raise ValueError(
+                f'Node description configured as mandatory but no description provided for node {self.__name__}')
         self.description = description or "No description"
 
         # TODO: enforce tags for now, later validation can be set as optional via environment variable
@@ -120,11 +124,13 @@ class Node:
     def __call__(self, *args):
         return self.function(*args)
 
-    def run(self, spark=None, parallel=True, inputs=None, pandas_on_spark_use_pandas=False):
+    def run(self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False):
         if not inputs:
             inputs = {}
         provided_inputs = {node.key: df for node, df in inputs.items()}
         self._create_graph(list(provided_inputs.keys()), pandas_on_spark_use_pandas)
+        if parallel is None:
+            parallel = (get_config('default_run_mode') == RunMode.PARALLEL.value)
         if parallel:
             raise NotImplementedError
         else:

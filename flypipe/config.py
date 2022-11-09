@@ -12,7 +12,6 @@ class _Config:
     OPTIONS = {
         'require_node_description': False,
         'require_schema_description': False,
-        'require_node_dependency_column_selection': False,
         'default_run_mode': RunMode.PARALLEL.value,
     }
     VALID_OPTIONS = set(config_name for config_name in OPTIONS.keys())
@@ -41,10 +40,11 @@ class _Config:
         config = os.environ.get(environment_name)
         # Environment variables only support strings so we have to manually cast booleans from appropriate string
         # representations
-        if config == 'True':
-            config = True
-        elif config == 'False':
-            config = False
+        if config:
+            if config.lower() == 'true':
+                config = True
+            elif config.lower() == 'false':
+                config = False
         return config
 
     def _get_config(self, config_name):
@@ -81,5 +81,7 @@ def config_context(**kwargs):
     for k, v in kwargs.items():
         config.set_config(k, v)
     _Config.register(config)
-    yield
-    _Config.deregister()
+    try:
+        yield
+    finally:
+        _Config.deregister()
