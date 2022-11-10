@@ -45,7 +45,8 @@ class PandasDataFrameWrapper(DataFrameWrapper):
 
     def get_column_flypipe_type(self, target_column):
         try:
-            df_type_name = pd.api.types.infer_dtype(self.df[target_column], skipna=True)
+            df_non_null = self.df[self.df[target_column].notnull()]
+            df_type_name = pd.api.types.infer_dtype(df_non_null[target_column], skipna=True)
             return self.DF_TYPE_TO_FLYPIPE_TYPE_MAP[df_type_name]
         except KeyError:
             return Unknown()

@@ -34,7 +34,7 @@ class TestDataFrameWrapper:
     @pytest.mark.parametrize('df,expected_class', [
         (pd.DataFrame({'column': [1]}), PandasDataFrameWrapper),
         (spark.createDataFrame(schema=['column'], data=[[1]]), SparkDataFrameWrapper),
-        (spark.createDataFrame(schema=['column'], data=[[1]]).to_pandas_on_spark(), PandasOnSparkDataFrameWrapper),
+        (spark.createDataFrame(schema=['column'], data=[[1]]).pandas_api(), PandasOnSparkDataFrameWrapper),
     ])
     def test_get_instance(self, df, expected_class):
         assert isinstance(DataFrameWrapper.get_instance(spark, df), expected_class)
@@ -42,7 +42,7 @@ class TestDataFrameWrapper:
     @pytest.mark.parametrize('df', [
         pd.DataFrame({'col1': [1], 'col2': [2]}),
         spark.createDataFrame(schema=('col1', 'col2'), data=[[1, 2]]),
-        spark.createDataFrame(schema=('col1', 'col2'), data=[[1, 2]]).to_pandas_on_spark(),
+        spark.createDataFrame(schema=('col1', 'col2'), data=[[1, 2]]).pandas_api(),
     ])
     def test_select_columns_out_of_place(self, df):
         """

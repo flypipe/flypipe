@@ -50,7 +50,7 @@ class TestUtils:
         df = spark.createDataFrame(df)
         assert dataframe_type(df) == DataFrameType.PYSPARK
 
-        df = df.to_pandas_on_spark()
+        df = df.pandas_api()
         assert dataframe_type(df) == DataFrameType.PANDAS_ON_SPARK
 
         with pytest.raises(DataframeTypeNotSupportedError):

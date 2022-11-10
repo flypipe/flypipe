@@ -182,7 +182,6 @@ class TestPySparkNode:
         df = t1.run(spark, parallel=False)
         assert isinstance(df, pyspark.pandas.DataFrame)
 
-    # @pytest.mark.skip('This test is failing to save the table, I\'m not certain why. It also fails in main branch')
     def test_datasource_case_sensitive_columns(self, spark):
         """
         Test columns case sensitive
@@ -208,17 +207,11 @@ class TestPySparkNode:
                              data=[("dummy","dummy","dummy",)])
         )
 
-        spark.sql(f"create database if not exists {db_name}")
-        (
-            my_data
-            .write.mode("overwrite")
-            .saveAsTable(f"{db_name}.dummy_table__anything_c")
-        )
-
+        my_data.createOrReplaceTempView("dummy_table__anything_c")
 
         @node(type='pandas_on_spark',
               dependencies=[
-                  Spark(f"{db_name}.dummy_table__anything_c")
+                  Spark(f"dummy_table__anything_c")
                     .select('Id', 'my_col__x', 'My_Col__z')
               ],
               output=Schema([
