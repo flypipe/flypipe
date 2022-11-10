@@ -33,20 +33,20 @@ class PandasOnSparkDataFrameWrapper(SparkDataFrameWrapper):
     def _cast_column(self, column, flypipe_type, df_type):
         spark_df = self.df.to_spark()
         spark_df = spark_df.withColumn(column, spark_df[column].cast(df_type))
-        self.df = spark_df.to_pandas_on_spark()
+        self.df = spark_df.pandas_api()
 
     def _cast_column_decimal(self, column, flypipe_type):
         spark_df = self.df.to_spark()
         df_type = DecimalType(precision=flypipe_type.precision, scale=flypipe_type.scale)
         spark_df = spark_df.withColumn(column, spark_df[column].cast(df_type))
-        self.df = spark_df.to_pandas_on_spark()
+        self.df = spark_df.pandas_api()
 
     def _cast_column_date(self, column, flypipe_type):
         spark_df = self.df.to_spark()
         spark_df = spark_df.withColumn(column, F.to_date(F.col(column), flypipe_type.fmt))
-        self.df = spark_df.to_pandas_on_spark()
+        self.df = spark_df.pandas_api()
 
     def _cast_column_datetime(self, column, flypipe_type):
         spark_df = self.df.to_spark()
         spark_df = spark_df.withColumn(column, F.to_date(F.col(column), flypipe_type.fmt))
-        self.df = spark_df.to_pandas_on_spark()
+        self.df = spark_df.pandas_api()

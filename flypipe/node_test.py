@@ -266,7 +266,7 @@ class TestNode:
             ])
         )
         def t1():
-            return spark.createDataFrame(pd.DataFrame(data={'c1': [1], 'c2': [2], 'c3': [3]})).to_pandas_on_spark()
+            return spark.createDataFrame(pd.DataFrame(data={'c1': [1], 'c2': [2], 'c3': [3]})).pandas_api()
 
         @node(
             type="pandas",

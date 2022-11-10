@@ -24,7 +24,7 @@ def pyspark_df(spark, pandas_df):
 
 @pytest.fixture(scope="function")
 def pandas_on_spark_df(pyspark_df):
-    return pyspark_df.to_pandas_on_spark()
+    return pyspark_df.pandas_api()
 
 
 class TestDataFrameConverter:

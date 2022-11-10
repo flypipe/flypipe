@@ -55,7 +55,7 @@ class TestPandasOnSparkDataFrameWrapper:
     def test_get_column_flypipe_type(self, spark):
         df = spark.createDataFrame(schema=StructType([
             StructField('c1', BooleanType()),
-        ]), data=[]).to_pandas_on_spark()
+        ]), data=[]).pandas_api()
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
 
         assert isinstance(df_wrapper.get_column_flypipe_type('c1'), Boolean)
@@ -73,7 +73,7 @@ class TestPandasOnSparkDataFrameWrapper:
             'col1': [True, False, None, np.nan, np.NAN, pd.NA, pd.NaT],
             'col2': [1, 1, 0, 1, 1, 1, 1],
         })
-        df = spark.createDataFrame(pd_df).to_pandas_on_spark()
+        df = spark.createDataFrame(pd_df).pandas_api()
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
         df_wrapper.cast_column('col1', Boolean())
         assert_frame_equal(df_wrapper.df.to_pandas(), expected_pd_df)
