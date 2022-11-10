@@ -75,7 +75,9 @@ class TestPandasDataFrameWrapper:
             'col1': [True, False, True, False, None, np.nan, np.NAN, pd.NA, pd.NaT],
             'col2': [1, 1, 0, 0, 0, 1, 1, 1, 1],
         }))
-        assert pd.api.types.infer_dtype(df_wrapper.df['col1'], skipna=True) == 'boolean'
+
+        df = df_wrapper.df[df_wrapper.df['col1'].notnull()]
+        assert pd.api.types.infer_dtype(df['col1'], skipna=True) == 'boolean'
 
     def test_cast_column_invalid_value(self):
         """
