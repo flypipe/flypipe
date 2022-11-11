@@ -467,3 +467,56 @@ class TestNode:
                 return
         assert str(ex.value) == (
             'Node description configured as mandatory but no description provided for node transformation')
+
+    def test_node_requested_columns(self, mocker):
+        """
+        Ensure we can get access to the set of requested columns from descendant nodes via the 'requested_columns'
+        parameter.
+        """
+        very_expensive_operation = mocker.stub()
+
+        @node(
+            type='pandas',
+            requested_columns=True,
+        )
+        def t1(requested_columns):
+            raw = pd.DataFrame({
+                'c1': [],
+                'c2': [],
+                'c3': [],
+                'c4': [],
+                'c5': [],
+                'c6': [],
+                'c7': [],
+                'c8': [],
+                'c9': [],
+            })
+            for column in requested_columns:
+                very_expensive_operation(column)
+            return raw
+
+        @node(
+            type='pandas',
+            dependencies=[t1.select('c5')]
+        )
+        def t2(t1):
+            return t1
+
+        @node(
+            type='pandas',
+            dependencies=[t1.select('c6')]
+        )
+        def t3(t1):
+            return t1
+
+        @node(
+            type='pandas',
+            dependencies=[t2.select('c5'), t3.select('c6')]
+        )
+        def t4(t2, t3):
+            return pd.DataFrame()
+
+        t4.run(parallel=False)
+        # The set of requested columns is c5, c6, let's ensure that this is the actual set passed to t1
+        assert very_expensive_operation.call_count == 2
+        assert [call_args.args for call_args in very_expensive_operation.call_args_list] == [('c5',), ('c6',)]

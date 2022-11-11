@@ -27,7 +27,8 @@ class Node:
                  tags=None,
                  dependencies: List[InputNode] = None,
                  output=None,
-                 spark_context=False):
+                 spark_context=False,
+                 requested_columns=False):
         self._key = None
         self.function = function
         try:
@@ -53,6 +54,7 @@ class Node:
         self.output_schema = output
 
         self.spark_context = spark_context
+        self.requested_columns = requested_columns
         self.node_graph = None
 
     @property
@@ -164,7 +166,7 @@ class Node:
 
                 result = NodeResult(
                     spark,
-                    runnable_node['transformation'].process_transformation(spark, **dependency_values),
+                    runnable_node['transformation'].process_transformation(spark, runnable_node['output_columns'], **dependency_values),
                     schema=self._get_consolidated_output_schema(
                         runnable_node['transformation'].output_schema,
                         runnable_node['output_columns']
@@ -192,12 +194,13 @@ class Node:
             schema = None
         return schema
 
-    def process_transformation(self, spark, **inputs):
+    def process_transformation(self, spark, output_columns, **inputs):
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
+        parameters = inputs
         if self.spark_context:
-            parameters = {'spark': spark, **inputs}
-        else:
-            parameters = inputs
+            parameters = {'spark': spark, **parameters}
+        if self.requested_columns:
+            parameters = {'requested_columns': output_columns, **parameters}
 
         return self.function(**parameters)
 
