@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 import pandas as pd
 import pyspark.pandas as ps
@@ -520,3 +521,142 @@ class TestNode:
         # The set of requested columns is c5, c6, let's ensure that this is the actual set passed to t1
         assert very_expensive_operation.call_count == 2
         assert [call_args.args for call_args in very_expensive_operation.call_args_list] == [('c5',), ('c6',)]
+
+    def test_node_generator(self, spark):
+
+        (
+            spark
+                .createDataFrame(
+                    pd.DataFrame(data={
+                        'raw_col1': [1],
+                        'raw_col2': [2],
+                        'raw_col3': [3],
+                        'raw_col4': [4],
+                    })
+                )
+                .createOrReplaceTempView('dummy_table_generator')
+        )
+
+
+        renamed_columns = {
+            'raw_col1': 'col1',
+            'raw_col2': 'col2',
+            'raw_col3': 'col3',
+            'raw_col4': 'col4',
+        }
+
+        schema = [
+            Column("col1", Integer(), 'dummy'),
+            Column("col2", Integer(), 'dummy'),
+            Column("col3", Integer(), 'dummy'),
+            Column("col4", Integer(), 'dummy'),
+        ]
+
+        def transform(df, col, value):
+            df[col] = df[col] + value
+            return df
+
+
+        transformations = {
+            'col1': lambda df: transform(df, 'col1', 10),
+            'col2': lambda df: transform(df, 'col2', 20),
+            'col3': lambda df: transform(df, 'col3', 30),
+            'col4': lambda df: transform(df, 'col4', 40)
+        }
+
+        @node(
+            type='generator'
+        )
+        def clean(requested_columns):
+            assert requested_columns == ['col1', 'col2', 'col3']
+            requested_columns = requested_columns or list(renamed_columns.values())
+            raw_table_select_columns = [raw_col for raw_col, renamed_col in renamed_columns.items() if renamed_col in requested_columns]
+            output_schema = Schema([col for col in schema if col.name in requested_columns])
+
+            @node(type='pandas_on_spark',
+                  description="Renaming columns",
+                  tags=['data'],
+                  dependencies=[
+                      Spark("dummy_table_generator").select(raw_table_select_columns).alias("df")
+                  ],
+                  output=output_schema)
+            def rename(df):
+                df = df.rename(columns=renamed_columns)
+                assert sorted(list(df.columns)) == ['col1', 'col2', 'col3']
+                return df
+
+            last_transformation = rename
+            for col_name, function in transformations.items():
+
+                if col_name in requested_columns:
+                    def create_transformation(function_=function, col_name_=col_name):
+                        @node(type='pandas_on_spark',
+                              dependencies=[
+                                  last_transformation.select(requested_columns).alias("df")
+                              ],
+                              output=output_schema)
+                        def transform(df):
+                            return function_(df)
+                        return transform
+
+                    last_transformation = create_transformation()
+                    last_transformation.function.__name__ = f"transform_{col_name}"
+
+            @node(type='pandas_on_spark',
+                  dependencies=[
+                      last_transformation.select(requested_columns).alias("df")
+                  ],
+                  output=output_schema)
+            def clean(df):
+                return df
+
+            return clean
+
+        @node(
+            type="pandas",
+            dependencies=[
+                clean.select("col3").alias("df")
+            ],
+            output=Schema([
+                Column("col3", Integer(), "dummy"),
+            ]))
+        def t1(df):
+            return df
+
+        @node(
+            type="pandas",
+            dependencies=[
+                clean.select("col1", "col3").alias("df")
+            ],
+            output=Schema([
+                Column("col1", Integer(), "dummy"),
+                Column("col3", Integer(), "dummy"),
+            ]))
+        def t2(df):
+            return df
+
+        @node(
+            type="pandas",
+            dependencies=[
+                clean.select("col2"),
+                t1.select("col3"),
+                t2.select("col1", "col3")
+            ],
+            output=Schema([
+                Column("col1", Integer(), "dummy"),
+                Column("col2", Integer(), "dummy"),
+                Column("col3", Integer(), "dummy"),
+            ]))
+        def t3(clean, t1, t2):
+            t2['col2'] = clean['col2']
+            return t2
+
+        df = t3.run(spark, parallel=False)
+
+        expected_df = pd.DataFrame(data={
+            'col1': [np.int32(11)],
+            'col2': [np.int32(22)],
+            'col3': [np.int32(33)],
+        })
+
+        assert_frame_equal(expected_df, df)
