@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 import pandas as pd
 import pyspark.pandas as ps
@@ -468,55 +469,63 @@ class TestNode:
         assert str(ex.value) == (
             'Node description configured as mandatory but no description provided for node transformation')
 
-    def test_node_requested_columns(self, mocker):
+    def test_node_generator(self):
         """
-        Ensure we can get access to the set of requested columns from descendant nodes via the 'requested_columns'
-        parameter.
+        Where we use a node generator we expect it to be replaced with the nodes it returns.
+
+        Also, the node generator should function with the requested_columns parameter. If requested_columns is set to
+        true then we expect the generator to receive the superset of requested columns from the generator. This is very
+        important as it will allow creation of dynamic nodes that adjusts functionality based on what columns have been
+        requested.
         """
-        very_expensive_operation = mocker.stub()
+        df = pd.DataFrame({
+            'fruit': ['mango', 'strawberry', 'banana', 'pear'],
+            'category': ['tropical', 'temperate', 'tropical', 'temperate'],
+            'color': ['yellow', 'red', 'yellow', 'green'],
+            'size': ['medium', 'small', 'medium', 'medium'],
+        })
 
         @node(
             type='pandas',
-            requested_columns=True,
         )
-        def t1(requested_columns):
-            raw = pd.DataFrame({
-                'c1': [],
-                'c2': [],
-                'c3': [],
-                'c4': [],
-                'c5': [],
-                'c6': [],
-                'c7': [],
-                'c8': [],
-                'c9': [],
-            })
-            for column in requested_columns:
-                very_expensive_operation(column)
-            return raw
+        def t1():
+            return df
+
+        @node(
+            type='generator',
+            requested_columns=True
+        )
+        def get_fruit_columns(requested_columns):
+            @node(
+                type='pandas',
+                dependencies=[t1.select(requested_columns)]
+            )
+            def t2(t1):
+                return t1
+
+            assert set(requested_columns) == {'fruit', 'category', 'color'}
+            return t2
 
         @node(
             type='pandas',
-            dependencies=[t1.select('c5')]
+            dependencies=[get_fruit_columns.select('fruit', 'category')]
         )
-        def t2(t1):
-            return t1
+        def fruit_category(t2):
+            return t2
 
         @node(
             type='pandas',
-            dependencies=[t1.select('c6')]
+            dependencies=[get_fruit_columns.select('fruit', 'color')]
         )
-        def t3(t1):
-            return t1
+        def fruit_color(t2):
+            return t2
 
         @node(
             type='pandas',
-            dependencies=[t2.select('c5'), t3.select('c6')]
+            dependencies=[fruit_category.select('fruit', 'category'), fruit_color.select('fruit', 'color')]
         )
-        def t4(t2, t3):
-            return pd.DataFrame()
+        def fruit_details(fruit_category, fruit_color):
+            return fruit_category.merge(fruit_color)
 
-        t4.run(parallel=False)
-        # The set of requested columns is c5, c6, let's ensure that this is the actual set passed to t1
-        assert very_expensive_operation.call_count == 2
-        assert [call_args.args for call_args in very_expensive_operation.call_args_list] == [('c5',), ('c6',)]
+        results = fruit_details.run(parallel=False)
+        assert_frame_equal(results, df[['fruit', 'category', 'color']])

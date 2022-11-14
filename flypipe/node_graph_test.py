@@ -73,7 +73,7 @@ class TestNodeGraph:
             return
 
         graph = NodeGraph(t6)
-        graph.calculate_graph_run_status(t6.key, [t4.key])
+        graph.calculate_graph_run_status([t4.key])
 
         assert graph.get_node(t1.key)['run_status'] == RunStatus.SKIP
         assert graph.get_node(t2.key)['run_status'] == RunStatus.ACTIVE
@@ -112,7 +112,7 @@ class TestNodeGraph:
             return
 
         graph = NodeGraph(t6)
-        graph.calculate_graph_run_status(t6.key, [t4.key])
+        graph.calculate_graph_run_status([t4.key])
 
         assert graph.get_node(t1.key)['run_status']==RunStatus.SKIP
         assert graph.get_node(t2.key)['run_status']==RunStatus.ACTIVE

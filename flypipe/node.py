@@ -13,11 +13,10 @@ from flypipe.utils import DataFrameType
 
 
 class Node:
-    node_type = NodeType.TRANSFORMATION
     TYPE_MAP = {
         'pyspark': DataFrameType.PYSPARK,
         'pandas': DataFrameType.PANDAS,
-        'pandas_on_spark': DataFrameType.PANDAS_ON_SPARK,
+        'pandas_on_spark': DataFrameType.PANDAS_ON_SPARK
     }
 
     def __init__(self,
@@ -31,6 +30,14 @@ class Node:
                  requested_columns=False):
         self._key = None
         self.function = function
+
+        self.node_type = NodeType.TRANSFORMATION
+        if type == "generator":
+            self.node_type = NodeType.GENERATOR
+
+            # Setting type to anything as it is going to be overwritten by the node ouput by the generator
+            type = 'pandas'
+
         try:
             self.type = self.TYPE_MAP[type]
         except KeyError:
@@ -54,7 +61,7 @@ class Node:
         self.output_schema = output
 
         self.spark_context = spark_context
-        self.requested_columns = requested_columns
+        self.requested_columns=requested_columns
         self.node_graph = None
 
     @property
@@ -108,9 +115,10 @@ class Node:
     def _create_graph(self, skipped_node_keys=None, pandas_on_spark_use_pandas=False):
         from flypipe.node_graph import NodeGraph
         self.node_graph = NodeGraph(self, pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
+        self.node_graph.generate_nodes(pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
         if not skipped_node_keys:
             skipped_node_keys = []
-        self.node_graph.calculate_graph_run_status(self.key, skipped_node_keys)
+        self.node_graph.calculate_graph_run_status(skipped_node_keys)
 
     def select(self, *columns):
         # TODO- if self.output_schema is defined then we should ensure each of the columns is in it.
@@ -156,6 +164,7 @@ class Node:
         outputs = {key: NodeResult(spark, df, schema=None) for key, df in provided_inputs.items()}
         execution_graph = self.node_graph.copy()
 
+        runnable_node = None
         while not execution_graph.is_empty():
             runnable_nodes = execution_graph.pop_runnable_transformations()
             for runnable_node in runnable_nodes:
@@ -166,7 +175,7 @@ class Node:
 
                 result = NodeResult(
                     spark,
-                    runnable_node['transformation'].process_transformation(spark, runnable_node['output_columns'], **dependency_values),
+                    runnable_node['transformation'].process_transformation(spark, **dependency_values),
                     schema=self._get_consolidated_output_schema(
                         runnable_node['transformation'].output_schema,
                         runnable_node['output_columns']
@@ -175,7 +184,7 @@ class Node:
 
                 outputs[runnable_node['transformation'].key] = result
 
-        return outputs[self.key].as_type(self.type).df
+        return outputs[runnable_node['transformation'].key].as_type(runnable_node['transformation'].type).df
 
     @classmethod
     def _get_consolidated_output_schema(cls, output_schema, output_columns):
@@ -194,13 +203,12 @@ class Node:
             schema = None
         return schema
 
-    def process_transformation(self, spark, output_columns, **inputs):
+    def process_transformation(self, spark, **inputs):
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
-        parameters = inputs
         if self.spark_context:
-            parameters = {'spark': spark, **parameters}
-        if self.requested_columns:
-            parameters = {'requested_columns': output_columns, **parameters}
+            parameters = {'spark': spark, **inputs}
+        else:
+            parameters = inputs
 
         return self.function(**parameters)
 
