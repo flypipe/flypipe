@@ -9,7 +9,7 @@ class InputNode:
 
     def __init__(self, node, selected_columns):
         self.node = node
-        self.selected_columns = selected_columns
+        self._selected_columns = selected_columns
         self._alias = None
 
     @property
@@ -19,6 +19,22 @@ class InputNode:
     @property
     def key(self):
         return self.node.key
+
+    def select(self, *columns):
+        # TODO- if self.output_schema is defined then we should ensure each of the columns is in it.
+        # otherwise if self.output_schema is not defined then we won't know the ultimate output schema
+        # so can't do any validation
+
+        cols = columns[0] if isinstance(columns[0], list) else list(columns)
+
+        if len(cols) != len(set(cols)):
+            raise ValueError(f"Duplicated columns in selection of {self.__name__}")
+        self._selected_columns = sorted(cols)
+        return self
+
+    @property
+    def selected_columns(self):
+        return self._selected_columns
 
     def get_alias(self):
         if self._alias:

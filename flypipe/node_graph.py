@@ -6,6 +6,7 @@ import networkx as nx
 
 from flypipe.node import Node
 from flypipe.node_type import NodeType
+from flypipe.output_column_set import OutputColumnSet
 from flypipe.utils import DataFrameType
 
 
@@ -41,7 +42,7 @@ class NodeGraph:
             transformation.key,
             transformation=transformation,
             run_status=RunStatus.UNKNOWN,
-            output_columns=None,
+            output_columns=OutputColumnSet(transformation.output_schema),
         )
 
         frontier = [transformation]
@@ -61,12 +62,9 @@ class NodeGraph:
                             input_node.key,
                             transformation=input_node.node,
                             run_status=RunStatus.UNKNOWN,
-                            output_columns=sorted(list(input_node.selected_columns)),
+                            output_columns=OutputColumnSet(input_node.node.output_schema)
                         )
-                    else:
-                        graph.nodes[input_node.key]['output_columns'] = sorted(list(
-                            set(graph.nodes[input_node.key]['output_columns'])
-                            .union(set(input_node.selected_columns))))
+                    graph.nodes[input_node.key]['output_columns'].add_columns(input_node.selected_columns)
 
                     graph.add_edge(
                         input_node.key,
@@ -88,7 +86,7 @@ class NodeGraph:
                 generator_key = node['transformation'].key
 
                 if node['transformation'].requested_columns:
-                    generated_node = node['transformation'].function(node['output_columns'])
+                    generated_node = node['transformation'].function(node['output_columns'].columns)
                 else:
                     generated_node = node['transformation'].function()
 

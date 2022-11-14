@@ -34,55 +34,64 @@ class TestNode:
     def test_get_class(self, node_type, expected_class):
         assert type(Node(None, node_type)) == expected_class
 
-    def test_select(self):
+    def test_dependencies(self):
         """
-        Ensure that when we call select on a node we get a wrapped object containing the node and the selected columns.
-        Make sure the selected columns are local to the instance being queried and don't leak into sibling nodes.
+        We have a few considerations when invoking dependencies:
+        - Dependency by itself (should select all output columns implicitly from the dependency without any aliasing)
+        - Dependency with alias
+        - Dependency with select
+        - Dependency with select and alias
+        - Dependency with alias and select
+        This test just makes sure they all work as expected.
         """
+        df = pd.DataFrame({'fruit': ['banana', 'apple'], 'color': ['yellow', 'red'], 'size': ['medium', 'medium']})
+
         @node(
             type='pandas'
         )
-        def a():
-            return
-
-        node_input1 = a.select('c1', 'c2')
-        node_input2 = a.select('c3')
-        assert node_input1.__name__ == 'a'
-        assert node_input2.__name__ == 'a'
-        assert node_input1.selected_columns == ['c1', 'c2']
-        assert node_input2.selected_columns == ['c3']
-
-    def test_select_column(self, spark):
-        """
-        Ensure that:
-        a) when we select a subset of columns from a parent transformation we only receive those columns in the
-        transformation to be run.
-        b) when we have multiple nodes selecting different columns from the same parent node the columns don't leak
-        into other transformations.
-        """
-        data = pd.DataFrame({'fruit': ['apple', 'banana'], 'color': ['red', 'yellow']})
-        @node(
-            type='pandas',
-        )
-        def a():
-            return data
+        def t1():
+            return df
 
         @node(
             type='pandas',
-            dependencies=[a.select('fruit')]
+            dependencies=[t1]
         )
-        def b(a):
-            return a
+        def t2(t1):
+            return t1
 
         @node(
             type='pandas',
-            dependencies=[a.select('color')]
+            dependencies=[t1.alias('nonsense')]
         )
-        def c(a):
-            return a
+        def t3(nonsense):
+            return nonsense
 
-        assert_frame_equal(b.run(spark, parallel=False), data[['fruit']])
-        assert_frame_equal(c.run(spark, parallel=False), data[['color']])
+        @node(
+            type='pandas',
+            dependencies=[t1.select('fruit', 'color')]
+        )
+        def t4(t1):
+            return t1
+
+        @node(
+            type='pandas',
+            dependencies=[t1.select('fruit', 'color').alias('nonsense')]
+        )
+        def t5(nonsense):
+            return nonsense
+
+        @node(
+            type='pandas',
+            dependencies=[t1.alias('nonsense').select('fruit', 'color')]
+        )
+        def t6(nonsense):
+            return nonsense
+
+        assert_frame_equal(t2.run(parallel=False), df)
+        assert_frame_equal(t3.run(parallel=False), df)
+        assert_frame_equal(t4.run(parallel=False), df[['color', 'fruit']])
+        assert_frame_equal(t5.run(parallel=False), df[['color', 'fruit']])
+        assert_frame_equal(t6.run(parallel=False), df[['color', 'fruit']])
 
     def test_conversion_after_output_column_filter(self, spark, mocker):
         """
@@ -529,3 +538,19 @@ class TestNode:
 
         results = fruit_details.run(parallel=False)
         assert_frame_equal(results, df[['fruit', 'category', 'color']])
+
+    def test_freestyle(self):
+        @node(
+            type='pandas'
+        )
+        def t1():
+            return pd.DataFrame({'a': [1, 2, 3]})
+
+        @node(
+            type='pandas',
+            dependencies=[t1]
+        )
+        def t2(t1):
+            return t1
+
+        t2.run(parallel=False)

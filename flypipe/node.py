@@ -53,7 +53,7 @@ class Node:
         if tags:
             self.tags.extend(tags)
 
-        self.input_nodes = dependencies or []
+        self.input_nodes = self._get_input_nodes(dependencies)
 
         self._provided_inputs = {}
 
@@ -63,6 +63,21 @@ class Node:
         self.spark_context = spark_context
         self.requested_columns=requested_columns
         self.node_graph = None
+
+    def _get_input_nodes(self, dependencies):
+        input_nodes = []
+        if dependencies is None:
+            dependencies = []
+        for dependency in dependencies:
+            if isinstance(dependency, Node):
+                input_nodes.append(InputNode(dependency, None))
+            elif isinstance(dependency, InputNode):
+                input_nodes.append(dependency)
+            else:
+                raise ValueError(
+                    f'Expected all dependencies of node {self.__name__} to be of format node/node.alias(...)/node.'
+                    f'select(...) but received {dependency} of type {type(dependency)}')
+        return input_nodes
 
     @property
     def __name__(self):
@@ -121,21 +136,19 @@ class Node:
         self.node_graph.calculate_graph_run_status(skipped_node_keys)
 
     def select(self, *columns):
-        # TODO- if self.output_schema is defined then we should ensure each of the columns is in it.
-        # otherwise if self.output_schema is not defined then we won't know the ultimate output schema
-        # so can't do any validation
+        return InputNode(self, None).select(*columns)
 
-        cols = columns[0] if isinstance(columns[0], list) else list(columns)
-
-        if len(cols) != len(set(cols)):
-            raise ValueError(f"Duplicated columns in selection of {self.__name__}")
-        return InputNode(self, cols)
+    def alias(self, value):
+        return InputNode(self, None).alias(value)
 
     def get_node_inputs(self, outputs: Mapping[str, NodeResult]):
         inputs = {}
         for input_node in self.input_nodes:
             node_input_value = outputs[input_node.key].as_type(self.input_dataframe_type)
-            inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns).df
+            if input_node.selected_columns:
+                inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns).df
+            else:
+                inputs[input_node.get_alias()] = node_input_value.df
 
         return inputs
 
@@ -176,32 +189,12 @@ class Node:
                 result = NodeResult(
                     spark,
                     runnable_node['transformation'].process_transformation(spark, **dependency_values),
-                    schema=self._get_consolidated_output_schema(
-                        runnable_node['transformation'].output_schema,
-                        runnable_node['output_columns']
-                    )
+                    schema=runnable_node['output_columns'].schema
                 )
 
                 outputs[runnable_node['transformation'].key] = result
 
         return outputs[runnable_node['transformation'].key].as_type(runnable_node['transformation'].type).df
-
-    @classmethod
-    def _get_consolidated_output_schema(cls, output_schema, output_columns):
-        """
-        The output schema for a transformation is currently optional. If not provided, we create a simple one from the
-        set of columns selected by descendant nodes.
-        """
-        if output_schema:
-            schema = output_schema
-        elif output_columns is not None:
-            columns = []
-            for output_column in output_columns:
-                columns.append(Column(output_column, Unknown(), ''))
-            schema = Schema(columns)
-        else:
-            schema = None
-        return schema
 
     def process_transformation(self, spark, **inputs):
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
