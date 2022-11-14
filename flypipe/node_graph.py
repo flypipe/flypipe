@@ -105,6 +105,13 @@ class NodeGraph:
                 # the order when compose graph matters as we want new_node_graph
                 # to take precedent over attributes from self.graph
                 # more info see https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.operators.binary.compose.html
+                # save graph requested columns from the graph to the generated output node
+                node_data = {}
+                for n in new_node_graph.nodes:
+                    if n in self.graph:
+                        node_data[n] = self.graph.nodes[n]['output_columns']
+                nx.set_node_attributes(new_node_graph, node_data, 'output_columns')
+
                 self.graph = nx.compose(self.graph, new_node_graph)
 
         # update any node input of node_type genrator with the node generatated
