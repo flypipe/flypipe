@@ -630,10 +630,10 @@ class TestNode:
             "dummy_table_generator": ['raw_c1', 'raw_c2', 'raw_c3'],
         }
 
+        t3._create_graph()
         for node_name in t3.node_graph.graph:
             node_graph = t3.node_graph.get_node(node_name)
             assert expected_output_columns[node_graph['transformation'].__name__] == node_graph['output_columns']
-
 
         # Assert Transformations
         df = t3.run(spark, parallel=False)
