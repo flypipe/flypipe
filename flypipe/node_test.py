@@ -512,7 +512,8 @@ class TestNode:
         }
 
         @node(
-            type='generator'
+            type='generator',
+            requested_columns=True
         )
         def clean(requested_columns):
             assert requested_columns == ['col1', 'col2', 'col3']

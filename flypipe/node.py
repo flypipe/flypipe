@@ -26,7 +26,8 @@ class Node:
                  tags=None,
                  dependencies: List[InputNode] = None,
                  output=None,
-                 spark_context=False):
+                 spark_context=False,
+                 requested_columns=False):
         self._key = None
         self.function = function
 
@@ -60,6 +61,7 @@ class Node:
         self.output_schema = output
 
         self.spark_context = spark_context
+        self.requested_columns=requested_columns
         self.node_graph = None
 
     @property
