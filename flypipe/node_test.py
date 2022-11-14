@@ -488,6 +488,17 @@ class TestNode:
                                                                           c1,c3\     /
                                                                                   T2
 
+        With expected selected columns from each node:
+
+        "t3": None
+        "clean": ['c1', 'c2', 'c3']
+        "t1": ['c3']
+        "t2": ['c1', 'c3']
+        "transform_c3": ['c1', 'c2', 'c3']
+        "transform_c2": ['c1', 'c2', 'c3']
+        "transform_c1": ['c1', 'c2', 'c3']
+        "rename": ['c1', 'c2', 'c3']
+        "dummy_table_generator": ['raw_c1', 'raw_c2', 'raw_c3']
         """
 
         (
