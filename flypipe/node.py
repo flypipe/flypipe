@@ -2,6 +2,8 @@ import re
 import sys
 from typing import Mapping, List
 
+import pandas as pd
+
 from flypipe.config import get_config, RunMode
 from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
