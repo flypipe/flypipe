@@ -5,22 +5,14 @@ from typing import List
 import networkx as nx
 
 from flypipe.node import Node
+from flypipe.node_run_data import NodeRunData, RunStatus
 from flypipe.node_type import NodeType
-from flypipe.output_column_set import OutputColumnSet
 from flypipe.utils import DataFrameType
-
-
-class RunStatus(Enum):
-    UNKNOWN = 0
-    ACTIVE = 1
-    SKIP = 2
-
-
 
 
 class NodeGraph:
 
-    def __init__(self, transformation: Node, graph=None, pandas_on_spark_use_pandas=False):
+    def __init__(self, transformation: Node, graph=None, skipped_node_keys=None, pandas_on_spark_use_pandas=False):
         """
         Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
         this.
@@ -29,6 +21,12 @@ class NodeGraph:
             self.graph = graph
         else:
             self.graph = self._build_graph(transformation, pandas_on_spark_use_pandas)
+
+        if not skipped_node_keys:
+            skipped_node_keys = []
+        self.skipped_node_keys = skipped_node_keys
+        self.generate_nodes(pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
+        self.calculate_graph_run_status()
 
     def _build_graph(self, transformation: Node, pandas_on_spark_use_pandas: bool) -> nx.DiGraph:
         graph = nx.DiGraph()
@@ -41,9 +39,10 @@ class NodeGraph:
         graph.add_node(
             transformation.key,
             transformation=transformation,
-            run_status=RunStatus.UNKNOWN,
-            output_columns=OutputColumnSet(transformation.output_schema),
+            run_data=NodeRunData(transformation.output_schema),
         )
+        # We implicitly select all of the available output columns for the final node
+        graph.nodes[transformation.key]['run_data'].add_output_columns(None)
 
         frontier = [transformation]
         while frontier:
@@ -61,10 +60,9 @@ class NodeGraph:
                         graph.add_node(
                             input_node.key,
                             transformation=input_node.node,
-                            run_status=RunStatus.UNKNOWN,
-                            output_columns=OutputColumnSet(input_node.node.output_schema)
+                            run_data=NodeRunData(input_node.node.output_schema),
                         )
-                    graph.nodes[input_node.key]['output_columns'].add_columns(input_node.selected_columns)
+                    graph.nodes[input_node.key]['run_data'].add_output_columns(input_node.selected_columns)
 
                     graph.add_edge(
                         input_node.key,
@@ -86,7 +84,7 @@ class NodeGraph:
                 generator_key = node['transformation'].key
 
                 if node['transformation'].requested_columns:
-                    generated_node = node['transformation'].function(node['output_columns'].columns)
+                    generated_node = node['transformation'].function(node['run_data'].output_columns)
                 else:
                     generated_node = node['transformation'].function()
 
@@ -107,8 +105,8 @@ class NodeGraph:
                 node_data = {}
                 for n in new_node_graph.nodes:
                     if n in self.graph:
-                        node_data[n] = self.graph.nodes[n]['output_columns']
-                nx.set_node_attributes(new_node_graph, node_data, 'output_columns')
+                        node_data[n] = self.graph.nodes[n]['run_data']
+                nx.set_node_attributes(new_node_graph, node_data, 'run_data')
 
                 self.graph = nx.compose(self.graph, new_node_graph)
 
@@ -132,38 +130,32 @@ class NodeGraph:
     def get_transformation(self, name: str) -> Node:
         return self.get_node(name)['transformation']
 
-    def get_run_status(self, name: str) -> RunStatus:
-        return self.get_node(name)['run_status']
-
-    def set_run_status(self, name: str, run_status: RunStatus):
-        self.graph.nodes[name]['run_status'] = run_status
-
     def get_end_node_name(self):
         for name in self.graph:
             if self.graph.out_degree[name] == 0:
                 return name
 
-    def calculate_graph_run_status(self, skipped_node_keys):
-
+    def calculate_graph_run_status(self):
         # because the last node can be a generator, we have to get the last node node
         # after building the graph
         node_name = self.get_end_node_name()
-        skipped_node_keys = set(skipped_node_keys)
+        skipped_node_keys = set(self.skipped_node_keys)
 
         frontier = [(node_name, RunStatus.SKIP if node_name in skipped_node_keys else RunStatus.ACTIVE)]
         while len(frontier) != 0:
-            current_node_name, descendent_run_status = frontier.pop()
-            if descendent_run_status == RunStatus.ACTIVE:
-                self.set_run_status(current_node_name, RunStatus.ACTIVE)
+            current_node_name, descendent_status = frontier.pop()
+            current_node = self.graph.nodes[current_node_name]
+            if descendent_status == RunStatus.ACTIVE:
+                current_node['run_data'].status = RunStatus.ACTIVE
                 for ancestor_name in self.graph.predecessors(current_node_name):
                     if ancestor_name in skipped_node_keys:
                         frontier.append((ancestor_name, RunStatus.SKIP))
                     else:
                         frontier.append((ancestor_name, RunStatus.ACTIVE))
             else:
-                self.set_run_status(current_node_name, RunStatus.SKIP)
+                current_node['run_data'].status = RunStatus.SKIP
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    if self.get_run_status(ancestor_name) != RunStatus.ACTIVE:
+                    if self.graph.nodes[ancestor_name]['run_data'].status != RunStatus.ACTIVE:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
 
@@ -202,7 +194,7 @@ class NodeGraph:
 
     def pop_runnable_transformations(self) -> List[Node]:
         candidate_node_names = [node_name for node_name in self.graph if self.graph.in_degree(node_name)==0]
-        runnable_node_names = filter(lambda node_name: self.get_run_status(node_name) == RunStatus.ACTIVE,
+        runnable_node_names = filter(lambda node_name: self.graph.nodes[node_name]['run_data'].status == RunStatus.ACTIVE,
                                      candidate_node_names)
         runnable_nodes = [self.get_node(node_name) for node_name in runnable_node_names]
         for node_name in candidate_node_names:
@@ -221,4 +213,4 @@ class NodeGraph:
         plt.show()
 
     def copy(self):
-        return NodeGraph(None, graph=self.graph.copy())
+        return NodeGraph(None, graph=self.graph.copy(), skipped_node_keys=self.skipped_node_keys)

@@ -129,11 +129,7 @@ class Node:
 
     def _create_graph(self, skipped_node_keys=None, pandas_on_spark_use_pandas=False):
         from flypipe.node_graph import NodeGraph
-        self.node_graph = NodeGraph(self, pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
-        self.node_graph.generate_nodes(pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
-        if not skipped_node_keys:
-            skipped_node_keys = []
-        self.node_graph.calculate_graph_run_status(skipped_node_keys)
+        self.node_graph = NodeGraph(self, skipped_node_keys=skipped_node_keys, pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
 
     def select(self, *columns):
         return InputNode(self, None).select(*columns)
@@ -189,7 +185,7 @@ class Node:
                 result = NodeResult(
                     spark,
                     runnable_node['transformation'].process_transformation(spark, **dependency_values),
-                    schema=runnable_node['output_columns'].schema
+                    schema=runnable_node['run_data'].output_schema
                 )
 
                 outputs[runnable_node['transformation'].key] = result

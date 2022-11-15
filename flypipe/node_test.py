@@ -404,7 +404,7 @@ class TestNode:
             expected_df
         )
 
-    def test_run_skip_input_2(self, spark):
+    def test_run_skip_input_2(self):
         """
         When we provide a dependency input to a node, not only does that node not need to be run but we also expect any
         dependencies of the provided node not to be run.
@@ -417,39 +417,38 @@ class TestNode:
         When b is provided and we process c, only c and d should be run.
         """
 
-        @node(type='pyspark',
-              dependencies=[Spark('dummy_table').select('c1')],
+        @node(type='pandas',
               output=Schema([
                   Column('c1', Integer(), 'dummy'),
                   Column('c2', Integer(), 'dummy')
               ]))
-        def a(dummy_table):
+        def a():
             raise Exception('I shouldnt be run!')
 
-        @node(type='pyspark', dependencies=[a.select('c1')], output=Schema([
+        @node(type='pandas', dependencies=[a.select('c1')], output=Schema([
             Column('c1', Integer(), 'dummy')
         ]))
         def b(a):
-            return a.withColumn('c1', a.c1 + 1)
+            a['c1'] = a['c1'] + 1
+            return a
 
-        @node(type='pyspark',
-              dependencies=[],
+        @node(type='pandas',
               output=Schema([
                   Column('c1', Integer(), 'dummy')
               ]))
         def d():
-            return spark.createDataFrame(schema=('c1',), data=[(6,), (7,)])
+            return pd.DataFrame({'c1': [6,7]})
 
-        @node(type='pyspark',
+        @node(type='pandas',
               dependencies=[b.select('c1'), d.select('c1')],
-              output=Schema([Column('c1', Integer(), 'dummy')]))
+              output=Schema([Column('c1', Integer())]))
         def c(b, d):
-            return b.union(d)
+            return pd.concat([b, d], ignore_index=True)
 
-        df = spark.createDataFrame(schema=('c1',), data=[(4,), (5,)])
-        expected_df = spark.createDataFrame(schema=('c1',), data=[(4,), (5,), (6,), (7,)])
+        df = pd.DataFrame({'c1': [4, 5]})
+        expected_df = pd.DataFrame({'c1': [4, 5, 6, 7]})
 
-        assert_pyspark_df_equal(c.run(spark, inputs={b: df}, parallel=False), expected_df, check_dtype=False)
+        assert_frame_equal(c.run(spark, inputs={b: df}, parallel=False), expected_df, check_dtype=False)
 
     def test_run_missing_column(self):
         """
@@ -537,7 +536,7 @@ class TestNode:
             return fruit_category.merge(fruit_color)
 
         results = fruit_details.run(parallel=False)
-        assert_frame_equal(results, df[['fruit', 'category', 'color']])
+        assert_frame_equal(results, df[['category', 'fruit', 'color']])
 
     def test_freestyle(self):
         @node(

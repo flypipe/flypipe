@@ -4,6 +4,10 @@ from flypipe.schema import Schema, Column
 from flypipe.schema.types import Unknown
 
 
+class RunStatus(Enum):
+    UNKNOWN = 0
+    ACTIVE = 1
+    SKIP = 2
 ALL_OUTPUT_COLUMNS = -1
 
 
@@ -16,6 +20,7 @@ class NodeRunData:
     def __init__(self, output_schema=None):
         self._output_schema = output_schema
         self._output_columns = set()
+        self.status = RunStatus.UNKNOWN
 
     def add_output_columns(self, columns):
         if columns is None:

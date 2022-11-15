@@ -293,7 +293,7 @@ class TestPySparkNode:
             node_ = t4.node_graph.get_node(node_name)
             if node_['transformation'].__name__ == "t4":
                 continue
-            assert len(node_['output_columns']) == len(set(node_['output_columns']))
+            assert len(node_['run_data'].output_columns) == len(set(node_['run_data'].output_columns))
 
         df = t4.run(spark, parallel=False)
         assert_pyspark_df_equal(df, spark.createDataFrame(schema=('c2',), data=[("2",)]), check_dtype=False)
