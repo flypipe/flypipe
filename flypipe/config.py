@@ -4,8 +4,8 @@ from enum import Enum
 
 
 class RunMode(Enum):
-    PARALLEL = 1
-    SEQUENTIAL = 2
+    PARALLEL = 'parallel'
+    SEQUENTIAL = 'sequential'
 
 
 class _Config:
