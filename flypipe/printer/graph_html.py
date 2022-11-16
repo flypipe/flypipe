@@ -34,7 +34,7 @@ class GraphHTML:
             if node_name not in list(unique_names.values()):
                 unique_names[key] = node_name
             else:
-                unique_names[key] = graph_node['transformation'].__module__
+                unique_names[key] = f"{graph_node['transformation'].__module__}.{graph_node['transformation'].__name__}"
 
         return unique_names
 
