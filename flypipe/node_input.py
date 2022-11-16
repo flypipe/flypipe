@@ -7,9 +7,9 @@ class InputNode:
     name is used.
     """
 
-    def __init__(self, node, selected_columns):
+    def __init__(self, node):
         self.node = node
-        self._selected_columns = selected_columns
+        self._selected_columns = None
         self._alias = None
 
     @property

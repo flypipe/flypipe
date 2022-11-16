@@ -72,7 +72,7 @@ class Node:
             dependencies = []
         for dependency in dependencies:
             if isinstance(dependency, Node):
-                input_nodes.append(InputNode(dependency, None))
+                input_nodes.append(InputNode(dependency))
             elif isinstance(dependency, InputNode):
                 input_nodes.append(dependency)
             else:
@@ -134,10 +134,10 @@ class Node:
         self.node_graph = NodeGraph(self, skipped_node_keys=skipped_node_keys, pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
 
     def select(self, *columns):
-        return InputNode(self, None).select(*columns)
+        return InputNode(self).select(*columns)
 
     def alias(self, value):
-        return InputNode(self, None).alias(value)
+        return InputNode(self).alias(value)
 
     def get_node_inputs(self, outputs: Mapping[str, NodeResult]):
         inputs = {}
