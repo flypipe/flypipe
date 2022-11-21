@@ -481,12 +481,11 @@ class TestNode:
 
     def test_node_function(self):
         """
-        Where we use a node generator we expect it to be replaced with the nodes it returns.
+        Where we use a node function we expect it to be replaced with the node it returns.
 
-        Also, the node generator should function with the requested_columns parameter. If requested_columns is set to
-        true then we expect the generator to receive the superset of requested columns from the generator. This is very
-        important as it will allow creation of dynamic nodes that adjusts functionality based on what columns have been
-        requested.
+        Also, the node function should function with the requested_columns parameter. If requested_columns is set to
+        true then we expect the node function to receive the superset of requested columns. This is very important as
+        it will allow creation of dynamic nodes that adjusts functionality based on what columns have been requested.
         """
         df = pd.DataFrame({
             'fruit': ['mango', 'strawberry', 'banana', 'pear'],
