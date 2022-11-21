@@ -2,8 +2,6 @@ import re
 import sys
 from typing import Mapping, List
 
-import pandas as pd
-
 from flypipe.config import get_config, RunMode
 from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
@@ -63,7 +61,7 @@ class Node:
         self.output_schema = output
 
         self.spark_context = spark_context
-        self.requested_columns=requested_columns
+        self.requested_columns = requested_columns
         self.node_graph = None
 
     def _get_input_nodes(self, dependencies):
@@ -146,7 +144,7 @@ class Node:
             if input_node.selected_columns:
                 inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns).df
             else:
-                inputs[input_node.get_alias()] = node_input_value.df
+                inputs[input_node.get_alias()] = node_input_value.copy().df
 
         return inputs
 
@@ -186,20 +184,41 @@ class Node:
 
                 result = NodeResult(
                     spark,
-                    runnable_node['transformation'].process_transformation(spark, **dependency_values),
-                    schema=runnable_node['run_data'].output_schema
+                    runnable_node['transformation'].process_transformation(spark, runnable_node['output_columns'], **dependency_values),
+                    schema=self._get_consolidated_output_schema(
+                        runnable_node['transformation'].output_schema,
+                        runnable_node['output_columns']
+                    )
                 )
 
                 outputs[runnable_node['transformation'].key] = result
 
         return outputs[runnable_node['transformation'].key].as_type(runnable_node['transformation'].type).df
 
-    def process_transformation(self, spark, **inputs):
-        # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
-        if self.spark_context:
-            parameters = {'spark': spark, **inputs}
+    @classmethod
+    def _get_consolidated_output_schema(cls, output_schema, output_columns):
+        """
+        The output schema for a transformation is currently optional. If not provided, we create a simple one from the
+        set of columns selected by descendant nodes.
+        """
+        if output_schema:
+            schema = output_schema
+        elif output_columns is not None:
+            columns = []
+            for output_column in output_columns:
+                columns.append(Column(output_column, Unknown(), ''))
+            schema = Schema(columns)
         else:
-            parameters = inputs
+            schema = None
+        return schema
+
+    def process_transformation(self, spark, requested_columns, **inputs):
+        # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
+        parameters = inputs
+        if self.spark_context:
+            parameters['spark'] = spark
+        if self.requested_columns:
+            parameters['requested_columns'] = requested_columns
 
         return self.function(**parameters)
 

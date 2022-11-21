@@ -51,6 +51,10 @@ class DataFrameWrapper(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def copy(self):
+        raise NotImplementedError
+
+    @abstractmethod
     def get_column_flypipe_type(self, column):
         raise NotImplementedError
 

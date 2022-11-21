@@ -111,8 +111,8 @@ class GraphHTML:
                 'python_import': None,
                 'file_location': None,
                 'position': position,
-                'active': RunStatus.ACTIVE==graph_node['run_data'].status,
-                'run_status': GraphHTML.CSS_MAP[graph_node['run_data'].status],
+                'active': RunStatus.ACTIVE==graph_node['status'],
+                'run_status': GraphHTML.CSS_MAP[graph_node['status']],
                 'type': GraphHTML.CSS_MAP[graph_node['transformation'].type],
                 'node_type': graph_node['transformation'].node_type.value,
                 'dependencies': dependencies,
@@ -143,12 +143,12 @@ class GraphHTML:
                         'type': None,
                         'description': None
                     }
-                    for column in graph_node['run_data'].output_columns
+                    for column in graph_node['output_columns']
                 ]
 
                 node_attributes['definition']['query'] = {
                     "table": graph_node['transformation'].__name__,
-                    "columns": graph_node['run_data'].output_columns
+                    "columns": graph_node['output_columns']
                 }
             else:
                 if graph_node['transformation'].__package__:
@@ -175,6 +175,6 @@ class GraphHTML:
                           'target': target_node['transformation'].key,
                           'target_name': self._unique_node_names[target_node['transformation'].key],
                           'target_position': self._node_positions[target_node['transformation'].key],
-                          'active': (source_node['run_data'].status != RunStatus.SKIP and target_node['run_data'].status != RunStatus.SKIP)
+                          'active': (source_node['status'] != RunStatus.SKIP and target_node['status'] != RunStatus.SKIP)
                           })
         return edges

@@ -27,6 +27,9 @@ class NodeResult:
     def select_columns(self, *columns):
         return self.df_wrapper.select_columns(*columns)
 
+    def copy(self):
+        return self.df_wrapper.copy()
+
     def as_type(self, df_type: DataFrameType):
         if df_type not in self.cached_conversions:
             self.cached_conversions[df_type] = self._as_type(df_type)

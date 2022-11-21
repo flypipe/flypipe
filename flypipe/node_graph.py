@@ -5,9 +5,16 @@ from typing import List
 import networkx as nx
 
 from flypipe.node import Node
-from flypipe.node_run_data import NodeRunData, RunStatus
+from flypipe.node_generator import NodeGenerator
 from flypipe.node_type import NodeType
+from flypipe.output_column_set import OutputColumnSet
 from flypipe.utils import DataFrameType
+
+
+class RunStatus(Enum):
+    UNKNOWN = 0
+    ACTIVE = 1
+    SKIP = 2
 
 
 class NodeGraph:
@@ -20,56 +27,62 @@ class NodeGraph:
         if graph:
             self.graph = graph
         else:
+            self.nodes = None
+            self.node_output_columns = None
+            self.edges = None
             self.graph = self._build_graph(transformation, pandas_on_spark_use_pandas)
 
         if not skipped_node_keys:
             skipped_node_keys = []
         self.skipped_node_keys = skipped_node_keys
-        self.generate_nodes(pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
+        # self.generate_nodes(pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
         self.calculate_graph_run_status()
 
-    def _build_graph(self, transformation: Node, pandas_on_spark_use_pandas: bool) -> nx.DiGraph:
+    def _build_graph(self, transformation: Node, pandas_on_spark_use_pandas: bool):
         graph = nx.DiGraph()
 
-        # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
-        # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
-        if pandas_on_spark_use_pandas and transformation.type == DataFrameType.PANDAS_ON_SPARK:
-            transformation.type = DataFrameType.PANDAS
-
-        graph.add_node(
-            transformation.key,
-            transformation=transformation,
-            run_data=NodeRunData(transformation.output_schema),
-        )
-        # We implicitly select all of the available output columns for the final node
-        graph.nodes[transformation.key]['run_data'].add_output_columns(None)
-
+        # Parse the graph, extracting the nodes, edges and selected_columns
+        self.node_output_columns = {transformation.key: OutputColumnSet(None)}
+        self.edges = []
         frontier = [transformation]
         while frontier:
             current_transformation = frontier.pop()
 
-            if current_transformation.input_nodes:
-                for input_node in current_transformation.input_nodes:
-                    if input_node.key not in graph.nodes:
+            if isinstance(current_transformation, NodeGenerator):
+                current_transformation = current_transformation.expand(
+                    requested_columns=self.node_output_columns[current_transformation.key].get_columns())
 
-                        # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
-                        # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
-                        if pandas_on_spark_use_pandas and input_node.node.type == DataFrameType.PANDAS_ON_SPARK:
-                            input_node.node.type = DataFrameType.PANDAS
+            # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
+            # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
+            if pandas_on_spark_use_pandas and current_transformation.type==DataFrameType.PANDAS_ON_SPARK:
+                current_transformation.type = DataFrameType.PANDAS
 
-                        graph.add_node(
-                            input_node.key,
-                            transformation=input_node.node,
-                            run_data=NodeRunData(input_node.node.output_schema),
-                        )
-                    graph.nodes[input_node.key]['run_data'].add_output_columns(input_node.selected_columns)
+            output_columns = self.node_output_columns[current_transformation.key].get_columns()
+            if current_transformation.key not in graph.nodes:
+                graph.add_node(
+                    current_transformation.key,
+                    transformation=current_transformation,
+                    output_columns=output_columns,
+                    status=RunStatus.UNKNOWN,
+                )
+            for input_node in current_transformation.input_nodes:
+                if input_node.node.key in self.node_output_columns:
+                    self.node_output_columns[input_node.node.key].add_columns(input_node.selected_columns)
+                else:
+                    self.node_output_columns[input_node.node.key] = OutputColumnSet(input_node.selected_columns)
 
-                    graph.add_edge(
-                        input_node.key,
-                        current_transformation.key,
-                        selected_columns=input_node.selected_columns
-                    )
-                    frontier.insert(0, input_node.node)
+                # At the point where we process the inputs for a node the input node doesn't yet exist in the graph,
+                # thus we cannot create edges. Instead, we hold a collection of edge data and create the edges after all
+                # the nodes are added.
+                self.edges.append((input_node.node.key, current_transformation.key, input_node.selected_columns))
+                frontier.insert(0, input_node.node)
+
+        for source_node_key, dest_node_key, selected_columns in self.edges:
+            graph.add_edge(
+                source_node_key,
+                dest_node_key,
+                selected_columns=selected_columns
+            )
         return graph
 
     def generate_nodes(self, pandas_on_spark_use_pandas: bool):
@@ -116,7 +129,7 @@ class NodeGraph:
             for i, input_node in enumerate(input_nodes):
                 if input_node.node.node_type == NodeType.GENERATOR:
                     self.graph.nodes[node_name]['transformation'].input_nodes[i].node = \
-                    nodes_generated[input_node.node.key]
+                        nodes_generated[input_node.node.key]
 
     def get_node(self, name: str):
         return self.graph.nodes[name]
@@ -146,16 +159,16 @@ class NodeGraph:
             current_node_name, descendent_status = frontier.pop()
             current_node = self.graph.nodes[current_node_name]
             if descendent_status == RunStatus.ACTIVE:
-                current_node['run_data'].status = RunStatus.ACTIVE
+                current_node['status'] = RunStatus.ACTIVE
                 for ancestor_name in self.graph.predecessors(current_node_name):
                     if ancestor_name in skipped_node_keys:
                         frontier.append((ancestor_name, RunStatus.SKIP))
                     else:
                         frontier.append((ancestor_name, RunStatus.ACTIVE))
             else:
-                current_node['run_data'].status = RunStatus.SKIP
+                current_node['status'] = RunStatus.SKIP
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    if self.graph.nodes[ancestor_name]['run_data'].status != RunStatus.ACTIVE:
+                    if self.graph.nodes[ancestor_name]['status'] != RunStatus.ACTIVE:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
 
@@ -194,7 +207,7 @@ class NodeGraph:
 
     def pop_runnable_transformations(self) -> List[Node]:
         candidate_node_names = [node_name for node_name in self.graph if self.graph.in_degree(node_name)==0]
-        runnable_node_names = filter(lambda node_name: self.graph.nodes[node_name]['run_data'].status == RunStatus.ACTIVE,
+        runnable_node_names = filter(lambda node_name: self.graph.nodes[node_name]['status'] == RunStatus.ACTIVE,
                                      candidate_node_names)
         runnable_nodes = [self.get_node(node_name) for node_name in runnable_node_names]
         for node_name in candidate_node_names:

@@ -10,6 +10,8 @@ from flypipe.converter.dataframe import DataFrameConverter
 from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.node import node, Node
 from pandas.testing import assert_frame_equal
+
+from flypipe.node_generator import node_generator
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String, Decimal, Integer
 from flypipe.utils import DataFrameType, dataframe_type
@@ -499,8 +501,7 @@ class TestNode:
         def t1():
             return df
 
-        @node(
-            type='generator',
+        @node_generator(
             requested_columns=True
         )
         def get_fruit_columns(requested_columns):
@@ -518,15 +519,15 @@ class TestNode:
             type='pandas',
             dependencies=[get_fruit_columns.select('fruit', 'category')]
         )
-        def fruit_category(t2):
-            return t2
+        def fruit_category(get_fruit_columns):
+            return get_fruit_columns
 
         @node(
             type='pandas',
             dependencies=[get_fruit_columns.select('fruit', 'color')]
         )
-        def fruit_color(t2):
-            return t2
+        def fruit_color(get_fruit_columns):
+            return get_fruit_columns
 
         @node(
             type='pandas',
@@ -538,18 +539,43 @@ class TestNode:
         results = fruit_details.run(parallel=False)
         assert_frame_equal(results, df[['category', 'fruit', 'color']])
 
-    def test_freestyle(self):
-        @node(
-            type='pandas'
-        )
-        def t1():
-            return pd.DataFrame({'a': [1, 2, 3]})
+    def test_node_generator_nested(self):
+        """
+        Node functions should be able to be nested i.e depend on other node functions without issue.
+        """
+        @node_generator()
+        def g1():
+            @node(
+                type='pandas'
+            )
+            def t1():
+                return pd.DataFrame({'c1': [1, 2, 3]})
 
-        @node(
-            type='pandas',
-            dependencies=[t1]
-        )
-        def t2(t1):
             return t1
 
-        t2.run(parallel=False)
+        @node_generator()
+        def g2():
+            @node(
+                type='pandas',
+                dependencies=[g1]
+            )
+            def t2(g1):
+                g1['c1'] *= 2
+                return g1
+
+            return t2
+
+        @node_generator()
+        def g3():
+            @node(
+                type='pandas',
+                dependencies=[g1, g2]
+            )
+            def t3(g1, g2):
+                g2['c1'] = g1['c1'] + g2['c1']
+                return g2
+
+            return t3
+
+        assert_frame_equal(g3.run(parallel=False), pd.DataFrame({'c1': [3, 6, 9]}))
+

@@ -41,7 +41,7 @@ class TestNodeGraph:
         assert set(graph.get_edges()) == {(t1.key, t2.key), (t1.key, t3.key), (t2.key, t4.key), (t3.key, t4.key)}
         assert graph.get_edge_data(t1.key, t2.key)['selected_columns'] == ['fruit']
         assert graph.get_edge_data(t1.key, t3.key)['selected_columns'] == ['color']
-        assert graph.get_node(t1.key)['run_data'].output_columns == ['color', 'fruit']
+        assert graph.get_node(t1.key)['output_columns'] == ['color', 'fruit']
 
     def test_calculate_graph_run_status_1(self):
         @node(type="pandas")
@@ -74,12 +74,12 @@ class TestNodeGraph:
 
         graph = NodeGraph(t6, skipped_node_keys=[t4.key])
 
-        assert graph.get_node(t1.key)['run_data'].status == RunStatus.SKIP
-        assert graph.get_node(t2.key)['run_data'].status == RunStatus.ACTIVE
-        assert graph.get_node(t3.key)['run_data'].status == RunStatus.ACTIVE
-        assert graph.get_node(t4.key)['run_data'].status == RunStatus.SKIP
-        assert graph.get_node(t5.key)['run_data'].status == RunStatus.ACTIVE
-        assert graph.get_node(t6.key)['run_data'].status == RunStatus.ACTIVE
+        assert graph.get_node(t1.key)['status'] == RunStatus.SKIP
+        assert graph.get_node(t2.key)['status'] == RunStatus.ACTIVE
+        assert graph.get_node(t3.key)['status'] == RunStatus.ACTIVE
+        assert graph.get_node(t4.key)['status'] == RunStatus.SKIP
+        assert graph.get_node(t5.key)['status'] == RunStatus.ACTIVE
+        assert graph.get_node(t6.key)['status'] == RunStatus.ACTIVE
 
     def test_calculate_graph_run_status_2(self):
         @node(type="pandas")
@@ -112,12 +112,12 @@ class TestNodeGraph:
 
         graph = NodeGraph(t6, skipped_node_keys=[t4.key])
 
-        assert graph.get_node(t1.key)['run_data'].status == RunStatus.SKIP
-        assert graph.get_node(t2.key)['run_data'].status == RunStatus.ACTIVE
-        assert graph.get_node(t3.key)['run_data'].status == RunStatus.ACTIVE
-        assert graph.get_node(t4.key)['run_data'].status == RunStatus.SKIP
-        assert graph.get_node(t5.key)['run_data'].status == RunStatus.ACTIVE
-        assert graph.get_node(t6.key)['run_data'].status == RunStatus.ACTIVE
+        assert graph.get_node(t1.key)['status'] == RunStatus.SKIP
+        assert graph.get_node(t2.key)['status'] == RunStatus.ACTIVE
+        assert graph.get_node(t3.key)['status'] == RunStatus.ACTIVE
+        assert graph.get_node(t4.key)['status'] == RunStatus.SKIP
+        assert graph.get_node(t5.key)['status'] == RunStatus.ACTIVE
+        assert graph.get_node(t6.key)['status'] == RunStatus.ACTIVE
 
     def test_get_nodes_depth(self):
         """

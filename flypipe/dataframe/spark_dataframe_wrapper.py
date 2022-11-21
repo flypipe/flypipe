@@ -51,6 +51,9 @@ class SparkDataFrameWrapper(DataFrameWrapper):
 
         return self.df.select(list(columns))
 
+    def copy(self):
+        return self.__class__(self.spark, self.df.select('*'))
+
     def get_column_flypipe_type(self, target_column):
         return self._get_column_flypipe_type(self.df, target_column)
 
