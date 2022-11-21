@@ -5,7 +5,7 @@ from typing import List
 import networkx as nx
 
 from flypipe.node import Node
-from flypipe.node_generator import NodeGenerator
+from flypipe.node_function import NodeFunction
 from flypipe.node_type import NodeType
 from flypipe.output_column_set import OutputColumnSet
 from flypipe.utils import DataFrameType
@@ -48,7 +48,7 @@ class NodeGraph:
         while frontier:
             current_transformation = frontier.pop()
 
-            if isinstance(current_transformation, NodeGenerator):
+            if isinstance(current_transformation, NodeFunction):
                 current_transformation = current_transformation.expand(
                     requested_columns=self.node_output_columns[current_transformation.key].get_columns())
 

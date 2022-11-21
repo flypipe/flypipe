@@ -32,12 +32,6 @@ class Node:
         self.function = function
 
         self.node_type = NodeType.TRANSFORMATION
-        if type == "generator":
-            self.node_type = NodeType.GENERATOR
-
-            # Setting type to anything as it is going to be overwritten by the node ouput by the generator
-            type = 'pandas'
-
         try:
             self.type = self.TYPE_MAP[type]
         except KeyError:

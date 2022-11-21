@@ -11,7 +11,7 @@ from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.node import node, Node
 from pandas.testing import assert_frame_equal
 
-from flypipe.node_generator import node_generator
+from flypipe.node_function import node_function
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String, Decimal, Integer
 from flypipe.utils import DataFrameType, dataframe_type
@@ -479,7 +479,7 @@ class TestNode:
         assert str(ex.value) == (
             'Node description configured as mandatory but no description provided for node transformation')
 
-    def test_node_generator(self):
+    def test_node_function(self):
         """
         Where we use a node generator we expect it to be replaced with the nodes it returns.
 
@@ -501,7 +501,7 @@ class TestNode:
         def t1():
             return df
 
-        @node_generator(
+        @node_function(
             requested_columns=True
         )
         def get_fruit_columns(requested_columns):
@@ -539,11 +539,11 @@ class TestNode:
         results = fruit_details.run(parallel=False)
         assert_frame_equal(results, df[['category', 'fruit', 'color']])
 
-    def test_node_generator_nested(self):
+    def test_node_function_nested(self):
         """
         Node functions should be able to be nested i.e depend on other node functions without issue.
         """
-        @node_generator()
+        @node_function()
         def g1():
             @node(
                 type='pandas'
@@ -553,7 +553,7 @@ class TestNode:
 
             return t1
 
-        @node_generator()
+        @node_function()
         def g2():
             @node(
                 type='pandas',
@@ -565,7 +565,7 @@ class TestNode:
 
             return t2
 
-        @node_generator()
+        @node_function()
         def g3():
             @node(
                 type='pandas',

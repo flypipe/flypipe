@@ -1,7 +1,9 @@
 from flypipe.node import Node
+from flypipe.node_type import NodeType
 
 
-class NodeGenerator(Node):
+class NodeFunction(Node):
+    NODE_TYPE = NodeType.NODE_FUNCTION
 
     def __init__(
         self,
@@ -30,12 +32,12 @@ class NodeGenerator(Node):
         return self.expand(requested_columns).run(spark, parallel, inputs, pandas_on_spark_use_pandas)
 
 
-def node_generator(*args, **kwargs):
+def node_function(*args, **kwargs):
     """
     Decorator factory that returns the given function wrapped inside a Node class
     """
 
     def decorator(func):
-        return NodeGenerator(func, *args, **kwargs)
+        return NodeFunction(func, *args, **kwargs)
 
     return decorator
