@@ -3,6 +3,7 @@ import pytest
 import pandas as pd
 import pyspark.pandas as ps
 from pyspark_test import assert_pyspark_df_equal
+import pyspark.sql.functions as F
 
 from flypipe.config import config_context
 from flypipe.datasource.spark import Spark
@@ -10,6 +11,8 @@ from flypipe.converter.dataframe import DataFrameConverter
 from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.node import node, Node
 from pandas.testing import assert_frame_equal
+
+from flypipe.node_function import node_function
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String, Decimal, Integer
 from flypipe.utils import DataFrameType, dataframe_type
@@ -477,14 +480,13 @@ class TestNode:
         assert str(ex.value) == (
             'Node description configured as mandatory but no description provided for node transformation')
 
-    def test_node_generator(self):
+    def test_node_function(self):
         """
-        Where we use a node generator we expect it to be replaced with the nodes it returns.
+        Where we use a node function we expect it to be replaced with the node it returns.
 
-        Also, the node generator should function with the requested_columns parameter. If requested_columns is set to
-        true then we expect the generator to receive the superset of requested columns from the generator. This is very
-        important as it will allow creation of dynamic nodes that adjusts functionality based on what columns have been
-        requested.
+        Also, the node function should function with the requested_columns parameter. If requested_columns is set to
+        true then we expect the node function to receive the superset of requested columns. This is very important as
+        it will allow creation of dynamic nodes that adjusts functionality based on what columns have been requested.
         """
         df = pd.DataFrame({
             'fruit': ['mango', 'strawberry', 'banana', 'pear'],
@@ -499,8 +501,7 @@ class TestNode:
         def t1():
             return df
 
-        @node(
-            type='generator',
+        @node_function(
             requested_columns=True
         )
         def get_fruit_columns(requested_columns):
@@ -518,15 +519,15 @@ class TestNode:
             type='pandas',
             dependencies=[get_fruit_columns.select('fruit', 'category')]
         )
-        def fruit_category(t2):
-            return t2
+        def fruit_category(get_fruit_columns):
+            return get_fruit_columns
 
         @node(
             type='pandas',
             dependencies=[get_fruit_columns.select('fruit', 'color')]
         )
-        def fruit_color(t2):
-            return t2
+        def fruit_color(get_fruit_columns):
+            return get_fruit_columns
 
         @node(
             type='pandas',
@@ -538,18 +539,140 @@ class TestNode:
         results = fruit_details.run(parallel=False)
         assert_frame_equal(results, df[['category', 'fruit', 'color']])
 
-    def test_freestyle(self):
+    def test_node_function_nested(self):
+        """
+        Node functions should be able to be nested i.e depend on other node functions without issue.
+        """
+        @node_function()
+        def g1():
+            @node(
+                type='pandas'
+            )
+            def t1():
+                return pd.DataFrame({'c1': [1, 2, 3]})
+
+            return t1
+
+        @node_function()
+        def g2():
+            @node(
+                type='pandas',
+                dependencies=[g1]
+            )
+            def t2(g1):
+                g1['c1'] *= 2
+                return g1
+
+            return t2
+
+        @node_function()
+        def g3():
+            @node(
+                type='pandas',
+                dependencies=[g1, g2]
+            )
+            def t3(g1, g2):
+                g2['c1'] = g1['c1'] + g2['c1']
+                return g2
+
+            return t3
+
+        assert_frame_equal(g3.run(parallel=False), pd.DataFrame({'c1': [3, 6, 9]}))
+
+    def test_run_isolated_dependencies_pandas(self):
+        """
+        When we pass a dataframe dependency from an ancestor node to a child node the dataframe should be completely
+        isolated. That is, any changes to the input dataframe should not modify the output of the parent node.
+        """
         @node(
             type='pandas'
         )
         def t1():
-            return pd.DataFrame({'a': [1, 2, 3]})
+            return pd.DataFrame({'c1': [1]})
 
         @node(
             type='pandas',
             dependencies=[t1]
         )
         def t2(t1):
+            t1['c1'] += 1
             return t1
 
-        t2.run(parallel=False)
+        @node(
+            type='pandas',
+            dependencies=[t1, t2]
+        )
+        def t3(t1, t2):
+            # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
+            # output of t1
+            assert t1.loc[0, 'c1'] == 1
+            assert t2.loc[0, 'c1'] == 2
+            return t1
+
+        t3.run(parallel=False)
+
+    def test_run_isolated_dependencies_pandas_on_spark(self, spark):
+        """
+        When we pass a dataframe dependency from an ancestor node to a child node the dataframe should be completely
+        isolated. That is, any changes to the input dataframe should not modify the output of the parent node.
+        """
+        @node(
+            type='pandas_on_spark'
+        )
+        def t1():
+            return spark.createDataFrame(data=[{'c1': 1}]).pandas_api()
+
+        @node(
+            type='pandas_on_spark',
+            dependencies=[t1]
+        )
+        def t2(t1):
+            t1['c1'] += 1
+            return t1
+
+        @node(
+            type='pandas_on_spark',
+            dependencies=[t1, t2]
+        )
+        def t3(t1, t2):
+            # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
+            # output of t1
+            assert t1.loc[0, 'c1']==1
+            assert t2.loc[0, 'c1']==2
+            return t1
+
+        t3.run(parallel=False)
+
+    def test_run_isolated_dependencies_spark(self, spark):
+        """
+        When we pass a dataframe dependency from an ancestor node to a child node the dataframe should be completely
+        isolated. That is, any changes to the input dataframe should not modify the output of the parent node.
+        """
+        @node(
+            type='pyspark',
+        )
+        def t1():
+            return spark.createDataFrame(data=[{'c1': 1}])
+
+        @node(
+            type='pyspark',
+            dependencies=[t1]
+        )
+        def t2(t1):
+            t1 = t1.withColumn('c1', F.col('c1') + 1)
+            return t1
+
+        @node(
+            type='pyspark',
+            dependencies=[t1, t2]
+        )
+        def t3(t1, t2):
+            # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
+            # output of t1
+            assert t1.collect()[0].c1 == 1
+            assert t2.collect()[0].c1 == 2
+            return t1
+
+        t3.run(parallel=False)
+
+

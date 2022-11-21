@@ -32,6 +32,9 @@ class DataFrameWrapper(ABC):
             raise ValueError(f'No flypipe dataframe type found for dataframe {df_type}')
         return df_instance(spark, df)
 
+    def get_df(self):
+        return self.df
+
     def select_columns(self, *columns):
         """
         Accepts either a collection of columns either as *args or a list:

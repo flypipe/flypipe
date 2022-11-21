@@ -19,6 +19,9 @@ class DummyDataFrameWrapper(DataFrameWrapper):
     def _select_columns(self, columns):
         pass
 
+    def copy(self):
+        pass
+
     def get_column_flypipe_type(self, column):
         return Unknown()
 

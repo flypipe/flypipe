@@ -181,5 +181,6 @@ class TestSparkDataSource:
         t3.run(spark, parallel=False)
         spy.assert_called_once()
         spy2.assert_not_called()
+
         assert_pyspark_df_equal(spy.spy_return, spark.createDataFrame(schema=('c0', 'c1'), data=[(0, 1)]), check_dtype=False)
 

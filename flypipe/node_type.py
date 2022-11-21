@@ -2,6 +2,6 @@ from enum import Enum
 
 
 class NodeType(Enum):
-    DATASOURCE = "DataSource"
+    DATASOURCE = "Datasource"
     TRANSFORMATION = "Transformation"
-    GENERATOR = "Generator"
+    NODE_FUNCTION = "Node Function"
