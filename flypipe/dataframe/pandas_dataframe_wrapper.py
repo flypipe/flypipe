@@ -43,8 +43,8 @@ class PandasDataFrameWrapper(DataFrameWrapper):
         except KeyError:
             raise DataFrameMissingColumns(self.df.columns, list(columns))
 
-    def copy(self):
-        return self.__class__(None, self.df.copy())
+    def get_df(self):
+        return self.df.copy()
 
     def get_column_flypipe_type(self, target_column):
         try:

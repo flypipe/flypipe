@@ -3,6 +3,7 @@ import pytest
 import pandas as pd
 import pyspark.pandas as ps
 from pyspark_test import assert_pyspark_df_equal
+import pyspark.sql.functions as F
 
 from flypipe.config import config_context
 from flypipe.datasource.spark import Spark
@@ -577,4 +578,98 @@ class TestNode:
             return t3
 
         assert_frame_equal(g3.run(parallel=False), pd.DataFrame({'c1': [3, 6, 9]}))
+
+    def test_run_isolated_dependencies_pandas(self):
+        """
+        When we pass a dataframe dependency from an ancestor node to a child node the dataframe should be completely
+        isolated. That is, any changes to the input dataframe should not modify the output of the parent node.
+        """
+        @node(
+            type='pandas'
+        )
+        def t1():
+            return pd.DataFrame({'c1': [1]})
+
+        @node(
+            type='pandas',
+            dependencies=[t1]
+        )
+        def t2(t1):
+            t1['c1'] += 1
+            return t1
+
+        @node(
+            type='pandas',
+            dependencies=[t1, t2]
+        )
+        def t3(t1, t2):
+            t1['c1'] += t2['c1']
+            return t1
+
+        # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
+        # output of t1, and the final output should be 1 + 2 = 3.
+        assert_frame_equal(t3.run(parallel=False), pd.DataFrame({'c1': [3]}))
+
+    def test_run_isolated_dependencies_pandas_on_spark(self, spark):
+        """
+        When we pass a dataframe dependency from an ancestor node to a child node the dataframe should be completely
+        isolated. That is, any changes to the input dataframe should not modify the output of the parent node.
+        """
+        @node(
+            type='pandas_on_spark'
+        )
+        def t1():
+            return spark.createDataFrame(data=[{'c1': 1}]).to_pandas_on_spark()
+
+        @node(
+            type='pandas_on_spark',
+            dependencies=[t1]
+        )
+        def t2(t1):
+            t1['c1'] += 1
+            return t1
+
+        @node(
+            type='pandas_on_spark',
+            dependencies=[t1, t2]
+        )
+        def t3(t1, t2):
+            t1['c1'] += t2['c1']
+            return t1
+
+        # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
+        # output of t1, and the final output should be 1 + 2 = 3.
+        assert_frame_equal(t3.run(parallel=False).to_pandas(), pd.DataFrame({'c1': [3]}))
+
+    def test_run_isolated_dependencies_spark(self, spark):
+        """
+        When we pass a dataframe dependency from an ancestor node to a child node the dataframe should be completely
+        isolated. That is, any changes to the input dataframe should not modify the output of the parent node.
+        """
+        @node(
+            type='pyspark',
+        )
+        def t1():
+            return spark.createDataFrame(data=[{'c1': 1}])
+
+        @node(
+            type='pyspark',
+            dependencies=[t1]
+        )
+        def t2(t1):
+            t1 = t1.withColumn('c1', F.col('c1') + 1)
+            return t1
+
+        @node(
+            type='pyspark',
+            dependencies=[t1, t2]
+        )
+        def t3(t1, t2):
+            t1 = t1.join(t2.withColumnRenamed('c1', 'c2')).withColumn('c1', F.col('c1') + F.col('c2'))
+            return t1.select('c1')
+
+        # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
+        # output of t1, and the final output should be 1 + 2 = 3.
+        assert_pyspark_df_equal(t3.run(spark, parallel=False), spark.createDataFrame(data=[{'c1': 3}]))
+
 

@@ -136,9 +136,9 @@ class Node:
         for input_node in self.input_nodes:
             node_input_value = outputs[input_node.key].as_type(self.input_dataframe_type)
             if input_node.selected_columns:
-                inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns).df
+                inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns).get_df()
             else:
-                inputs[input_node.get_alias()] = node_input_value.copy().df
+                inputs[input_node.get_alias()] = node_input_value.get_df()
 
         return inputs
 
@@ -187,7 +187,7 @@ class Node:
 
                 outputs[runnable_node['transformation'].key] = result
 
-        return outputs[runnable_node['transformation'].key].as_type(runnable_node['transformation'].type).df
+        return outputs[runnable_node['transformation'].key].as_type(runnable_node['transformation'].type).get_df()
 
     @classmethod
     def _get_consolidated_output_schema(cls, output_schema, output_columns):
