@@ -603,12 +603,13 @@ class TestNode:
             dependencies=[t1, t2]
         )
         def t3(t1, t2):
-            t1['c1'] += t2['c1']
+            # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
+            # output of t1
+            assert t1.loc[0, 'c1'] == 1
+            assert t2.loc[0, 'c1'] == 2
             return t1
 
-        # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
-        # output of t1, and the final output should be 1 + 2 = 3.
-        assert_frame_equal(t3.run(parallel=False), pd.DataFrame({'c1': [3]}))
+        t3.run(parallel=False)
 
     def test_run_isolated_dependencies_pandas_on_spark(self, spark):
         """
@@ -619,7 +620,7 @@ class TestNode:
             type='pandas_on_spark'
         )
         def t1():
-            return spark.createDataFrame(data=[{'c1': 1}]).to_pandas_on_spark()
+            return spark.createDataFrame(data=[{'c1': 1}]).pandas_api()
 
         @node(
             type='pandas_on_spark',
@@ -634,12 +635,13 @@ class TestNode:
             dependencies=[t1, t2]
         )
         def t3(t1, t2):
-            t1['c1'] += t2['c1']
+            # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
+            # output of t1
+            assert t1.loc[0, 'c1']==1
+            assert t2.loc[0, 'c1']==2
             return t1
 
-        # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
-        # output of t1, and the final output should be 1 + 2 = 3.
-        assert_frame_equal(t3.run(parallel=False).to_pandas(), pd.DataFrame({'c1': [3]}))
+        t3.run(parallel=False)
 
     def test_run_isolated_dependencies_spark(self, spark):
         """
@@ -665,11 +667,12 @@ class TestNode:
             dependencies=[t1, t2]
         )
         def t3(t1, t2):
-            t1 = t1.join(t2.withColumnRenamed('c1', 'c2')).withColumn('c1', F.col('c1') + F.col('c2'))
-            return t1.select('c1')
+            # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
+            # output of t1
+            assert t1.collect()[0].c1 == 1
+            assert t2.collect()[0].c1 == 2
+            return t1
 
-        # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
-        # output of t1, and the final output should be 1 + 2 = 3.
-        assert_pyspark_df_equal(t3.run(spark, parallel=False), spark.createDataFrame(data=[{'c1': 3}]))
+        t3.run(parallel=False)
 
 

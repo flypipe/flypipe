@@ -24,7 +24,7 @@ class PandasOnSparkDataFrameWrapper(SparkDataFrameWrapper):
             raise DataFrameMissingColumns(self.df.columns, list(columns))
 
     def get_df(self):
-        return self.df.to_spark().to_pandas_on_spark()
+        return self.df.to_spark().pandas_api()
 
     def get_column_flypipe_type(self, target_column):
         # Pandas on Spark is a Pandas API wrapper around an actual spark dataframe, this means converting the pandas on
