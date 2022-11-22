@@ -1,13 +1,9 @@
-import pyspark.pandas as ps
 import pyspark.sql.functions as F
 from pyspark.sql.types import DecimalType
 
 from flypipe.dataframe.spark_dataframe_wrapper import SparkDataFrameWrapper
 from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.utils import DataFrameType
-
-# TODO: is there a better place to put this?
-ps.set_option("compute.ops_on_diff_frames", True)
 
 
 class PandasOnSparkDataFrameWrapper(SparkDataFrameWrapper):

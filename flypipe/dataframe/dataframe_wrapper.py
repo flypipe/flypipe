@@ -19,19 +19,17 @@ class DataFrameWrapper(ABC):
 
     @classmethod
     def get_instance(cls, spark, df):
-        # Avoid circular imports by doing local imports here
-        from flypipe.dataframe.pandas_dataframe_wrapper import PandasDataFrameWrapper
-        from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import (
-            PandasOnSparkDataFrameWrapper,
-        )
-        from flypipe.dataframe.spark_dataframe_wrapper import SparkDataFrameWrapper
-
         df_type = dataframe_type(df)
         if df_type == DataFrameType.PANDAS:
+            from flypipe.dataframe.pandas_dataframe_wrapper import PandasDataFrameWrapper
             df_instance = PandasDataFrameWrapper
+
         elif df_type == DataFrameType.PYSPARK:
+            from flypipe.dataframe.spark_dataframe_wrapper import SparkDataFrameWrapper
             df_instance = SparkDataFrameWrapper
+
         elif df_type == DataFrameType.PANDAS_ON_SPARK:
+            from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import PandasOnSparkDataFrameWrapper
             df_instance = PandasOnSparkDataFrameWrapper
         else:
             raise ValueError(f"No flypipe dataframe type found for dataframe {df_type}")
@@ -86,39 +84,3 @@ class DataFrameWrapper(ABC):
     def _cast_column_unknown(self, column: str, flypipe_type: Type):
         """If we don't know the type let's do nothing"""
         return
-
-    # def as_pandas(self):
-    #     # FIXME: return deep copy of dataframe
-    #     if self.pandas_data is None:
-    #         df = self.pyspark_data if self.pandas_on_spark_data is None else self.pandas_on_spark_data
-    #         self.pandas_data = self.dataframe_converter.convert(df, DataFrameType.PANDAS)
-    #         if self.schema:
-    #             self.pandas_data = SchemaConverter.cast(self.pandas_data, DataFrameType.PANDAS, self.schema)
-    #     # FIXME: implement tests
-    #     return self.pandas_data.copy(deep=True)
-    #
-    # def as_pandas_on_spark(self):
-    #     # FIXME: convert to spark and then back again to pandas on spark
-    #     if self.pandas_on_spark_data is None:
-    #
-    #         if self.pandas_data is None:
-    #             df = self.pyspark_data
-    #             self.pandas_on_spark_data = self.dataframe_converter.convert(df, DataFrameType.PANDAS_ON_SPARK)
-    #         else:
-    #             df = self.pandas_data
-    #             self.pandas_on_spark_data = df
-    #
-    #         if self.schema:
-    #             self.pandas_on_spark_data = SchemaConverter.cast(self.pandas_on_spark_data,
-    #                                                              dataframe_type(self.pandas_on_spark_data),
-    #                                                              self.schema)
-    #     # FIXME: implement tests
-    #     return self.pandas_on_spark_data.copy(deep=True)
-    #
-    # def as_pyspark(self):
-    #     if self.pyspark_data is None:
-    #         df = self.pandas_on_spark_data if self.pandas_data is None else self.pandas_data
-    #         self.pyspark_data = self.dataframe_converter.convert(df, DataFrameType.PYSPARK)
-    #         if self.schema:
-    #             self.pyspark_data = SchemaConverter.cast(self.pyspark_data, DataFrameType.PYSPARK, self.schema)
-    #     return self.pyspark_data
