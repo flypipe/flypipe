@@ -1,5 +1,4 @@
 class Type:
-
     @classmethod
     def key(cls):
         return cls.__name__.lower()
@@ -58,20 +57,17 @@ class String(Type):
 
 
 class Decimal(Type):
-
     def __init__(self, precision: int = 13, scale: int = 2):
         self.precision = precision
         self.scale = scale
 
 
 class Date(Type):
-
     def __init__(self, fmt: str = "%Y-%m-%d"):
         self.fmt = fmt
 
 
 class DateTime(Date):
-
     def __init__(self, fmt: str = "%Y-%m-%d %H:%M:%S"):
         self.fmt = fmt
         super().__init__(fmt=self.fmt)

@@ -41,7 +41,7 @@ class InputNode:
             return self._alias
         # Sometimes the node name will have periods in it, for example if it's coming from a spark table datasource,
         # periods are not valid argument names so let's replace them with underscores.
-        return self.__name__.replace('.', '_').replace('<', '').replace('>', '')
+        return self.__name__.replace(".", "_").replace("<", "").replace(">", "")
 
     def alias(self, value):
         self._alias = value

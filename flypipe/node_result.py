@@ -4,7 +4,6 @@ from flypipe.utils import DataFrameType
 
 
 class NodeResult:
-
     def __init__(self, spark, df, schema):
         self.spark = spark
         self.df_wrapper = DataFrameWrapper.get_instance(spark, df)
@@ -19,7 +18,9 @@ class NodeResult:
         to bring the dataframe into line.
         """
         if schema:
-            self.df_wrapper = self.df_wrapper.select_columns([column.name for column in schema.columns])
+            self.df_wrapper = self.df_wrapper.select_columns(
+                [column.name for column in schema.columns]
+            )
             for column in schema.columns:
                 self.df_wrapper.cast_column(column.name, column.type)
         return None
@@ -40,6 +41,8 @@ class NodeResult:
             dataframe = self.df_wrapper
         else:
             # TODO- is this a good idea? We are having to reach into self.df_wrapper to grab the df, this usually is a mark of a design issue
-            dataframe = DataFrameWrapper.get_instance(self.spark,
-                                                      self.dataframe_converter.convert(self.df_wrapper.df, df_type))
+            dataframe = DataFrameWrapper.get_instance(
+                self.spark,
+                self.dataframe_converter.convert(self.df_wrapper.df, df_type),
+            )
         return dataframe

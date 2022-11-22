@@ -4,7 +4,7 @@ _instance = None
 # TODO- we should investigate if global variables like _instance are going to pose problems for us in spark before
 # using this.
 class NodeRunContext:
-    VALID_KEYS = set(['pandas_on_spark_use_pandas'])
+    VALID_KEYS = set(["pandas_on_spark_use_pandas"])
 
     def __init__(self, **kwargs):
         self.data = {k: None for k in self.VALID_KEYS}
@@ -19,7 +19,7 @@ class NodeRunContext:
         if _instance:
             return _instance
         else:
-            raise Exception('Unable to retrieve run context')
+            raise Exception("Unable to retrieve run context")
 
     def get_value(self, key):
         return self.data[key]

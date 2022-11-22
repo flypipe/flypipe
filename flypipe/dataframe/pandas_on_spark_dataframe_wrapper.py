@@ -1,17 +1,13 @@
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
-
 from pyspark.sql.types import DecimalType
-from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
+
 from flypipe.dataframe.spark_dataframe_wrapper import SparkDataFrameWrapper
 from flypipe.exceptions import DataFrameMissingColumns
-from flypipe.schema.types import Boolean, Byte, Binary, Integer, Short, Long, Float, Double, String, Decimal, Type, \
-    Unknown
 from flypipe.utils import DataFrameType
 
-
-#TODO: is there a better place to put this?
-ps.set_option('compute.ops_on_diff_frames', True)
+# TODO: is there a better place to put this?
+ps.set_option("compute.ops_on_diff_frames", True)
 
 
 class PandasOnSparkDataFrameWrapper(SparkDataFrameWrapper):
@@ -40,16 +36,22 @@ class PandasOnSparkDataFrameWrapper(SparkDataFrameWrapper):
 
     def _cast_column_decimal(self, column, flypipe_type):
         spark_df = self.df.to_spark()
-        df_type = DecimalType(precision=flypipe_type.precision, scale=flypipe_type.scale)
+        df_type = DecimalType(
+            precision=flypipe_type.precision, scale=flypipe_type.scale
+        )
         spark_df = spark_df.withColumn(column, spark_df[column].cast(df_type))
         self.df = spark_df.pandas_api()
 
     def _cast_column_date(self, column, flypipe_type):
         spark_df = self.df.to_spark()
-        spark_df = spark_df.withColumn(column, F.to_date(F.col(column), flypipe_type.fmt))
+        spark_df = spark_df.withColumn(
+            column, F.to_date(F.col(column), flypipe_type.fmt)
+        )
         self.df = spark_df.pandas_api()
 
     def _cast_column_datetime(self, column, flypipe_type):
         spark_df = self.df.to_spark()
-        spark_df = spark_df.withColumn(column, F.to_date(F.col(column), flypipe_type.fmt))
+        spark_df = spark_df.withColumn(
+            column, F.to_date(F.col(column), flypipe_type.fmt)
+        )
         self.df = spark_df.pandas_api()

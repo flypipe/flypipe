@@ -1,5 +1,4 @@
 class OutputColumnSet:
-
     def __init__(self, columns):
         self.columns = set()
         self.add_columns(columns)
