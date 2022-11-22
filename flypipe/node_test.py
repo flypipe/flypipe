@@ -3,6 +3,7 @@ import pytest
 import pandas as pd
 import pyspark.pandas as ps
 from pyspark_test import assert_pyspark_df_equal
+from tabulate import tabulate
 
 from flypipe.config import config_context
 from flypipe.datasource.spark import Spark
@@ -553,3 +554,85 @@ class TestNode:
             return t1
 
         t2.run(parallel=False)
+
+    def test_node_generator_parameter(self):
+        df = pd.DataFrame({
+            'fruit': ['mango']
+        })
+
+        @node(
+            type='pandas',
+        )
+        def t1():
+            return df
+
+        @node(
+            type='generator',
+            requested_columns=True
+        )
+        def get_fruit_columns(requested_columns, param1=False, param2=1, param3=None):
+
+            requested_columns = requested_columns or list(df.columns)
+            @node(
+                type='pandas',
+                dependencies=[t1.select(requested_columns)]
+            )
+            def t2(t1):
+                return pd.DataFrame(data={
+                    'param1': [param1],
+                    'param2': [param2],
+                    'param3': [param3],
+                })
+
+            return t2
+
+
+        df_output = get_fruit_columns.run(parallel=False,
+                                   parameters={get_fruit_columns: {'param1': True}})
+        assert_frame_equal(df_output,
+                           pd.DataFrame(data={
+                               'param1': [True],
+                               'param2': [1],
+                               'param3': [None],
+                           }))
+
+        df_output = get_fruit_columns.run(parallel=False,
+                                   parameters={get_fruit_columns: {'param1': True, 'param2': "fruit", 'param3': "color"}})
+        assert_frame_equal(df_output,
+                           pd.DataFrame(data={
+                               'param1': [True],
+                               'param2': ["fruit"],
+                               'param3': ["color"],
+                           }))
+
+    def test_node_parameter(self):
+        df = pd.DataFrame({
+            'fruit': ['mango'],
+            'color': ['yellow']
+        })
+
+        @node(
+            type='pandas',
+        )
+        def t1(column_name=None):
+            if not column_name:
+                return df
+            return df[[column_name]]
+
+        df_output = t1.run(
+            parallel=False,)
+        assert_frame_equal(df_output, df)
+
+        df_output = t1.run(
+            parallel=False,
+            parameters={
+            t1: {'column_name': 'fruit'}
+        })
+        assert_frame_equal(df_output, df[['fruit']])
+
+        df_output = t1.run(
+            parallel=False,
+            parameters={
+                t1: {'column_name': 'color'}
+            })
+        assert_frame_equal(df_output, df[['color']])

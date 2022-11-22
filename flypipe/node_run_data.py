@@ -17,9 +17,10 @@ class NodeRunData:
     information in this model rather than the Node model which holds the static definition model for the Node.
     """
 
-    def __init__(self, output_schema=None):
+    def __init__(self, output_schema=None, parameters=None):
         self._output_schema = output_schema
         self._output_columns = set()
+        self._parameters = {} or parameters
         self.status = RunStatus.UNKNOWN
 
     def add_output_columns(self, columns):
@@ -40,6 +41,13 @@ class NodeRunData:
             self._output_columns = set(self._output_schema.get_column_names())
         else:
             self._output_columns = ALL_OUTPUT_COLUMNS
+
+    @property
+    def parameters(self):
+        return self._parameters
+
+    def clear_parameters(self):
+        self._parameters = {}
 
     @property
     def output_columns(self):
