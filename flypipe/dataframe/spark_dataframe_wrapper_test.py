@@ -37,7 +37,7 @@ from flypipe.schema.types import (
 
 @pytest.fixture
 def spark():
-    from tests.utils.spark import spark
+    from flypipe.tests.spark import spark
 
     return spark
 

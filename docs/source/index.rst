@@ -14,11 +14,12 @@ Welcome to FlyPipe's documentation!
    Project <project>
    Quick Start <quick-start>
    Installation <installation>
-   Tutorial <tutorials>
+   Tutorials <tutorials>
    How-to Guides <how-to-guides>
    Contribute <contribute>
    License <license>
    API <modules/modules>
+
 
 
 Indices and tables

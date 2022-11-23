@@ -9,7 +9,7 @@ from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import (
 )
 from flypipe.dataframe.spark_dataframe_wrapper import SparkDataFrameWrapper
 from flypipe.schema.types import Boolean, Decimal, String, Unknown
-from tests.utils.spark import spark
+from flypipe.tests.spark import spark
 
 
 class DummyDataFrameWrapper(DataFrameWrapper):

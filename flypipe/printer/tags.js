@@ -4,7 +4,7 @@ function action_tag(tag, action){
         for (let i = 0; i < nodes.length; i++) {
             node = nodes[i];
             if (node.definition.tags.includes(tag)){
-                highlight_node(node.name);
+                highlight_node(node.key);
             }
         }
     }
@@ -14,7 +14,8 @@ function action_tag(tag, action){
         for (let i = 0; i < nodes.length; i++) {
             node = nodes[i];
 
-            if (node.definition.tags.includes(tag) & highlighted_nodes.has(node.name)){
+            if (node.definition.tags.includes(tag) &
+                highlighted_nodes.has(node.key)){
 
                 still_contain_tag = (still_selected_tags.length > 0) ? false : true;
 
@@ -27,7 +28,7 @@ function action_tag(tag, action){
                 }
 
                 if (!still_contain_tag){
-                    suppress_node(node.name);
+                    suppress_node(node.key);
                 }
 
 

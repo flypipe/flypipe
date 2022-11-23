@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 
 project = 'FlyPipe'
 copyright = f'2022, {project}'
-author = 'Jose Helio de Brum Muller'
+author = 'Jose Helio de Brum Muller & Chris Marwick'
 
 # The full version, including alpha/beta/rc tags
 release = '0.0.1'
@@ -37,6 +37,8 @@ extensions = [
     'myst_parser',
     'sphinxcontrib.mermaid',
     'sphinx_substitution_extensions',
+    'nbsphinx',
+    'IPython.sphinxext.ipython_console_highlighting',
 ]
 
 myst_enable_extensions = [
@@ -64,23 +66,19 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["setup.py"]
-
-
+exclude_patterns = ["setup.py", "**.ipynb_checkpoints"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
-html_css_files = ['style.css']
-
-
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ['_static']
+
+html_static_path = ['_static']
+html_css_files = ['style.css']
 
 source_suffix = {
     '.rst': 'restructuredtext',
@@ -92,4 +90,18 @@ suppress_warnings = ["myst.header"]
 
 myst_substitutions = {
     'project': project
+}
+
+# html_extra_path = ["notebooks/html"]
+
+# html_additional_pages = {
+#     'example': '_static/html/example2.html',
+# }
+
+html_context = {
+    "display_github": True,  # Integrate GitHub
+    "github_user": "jose.muller",  # Username
+    "github_repo": "flypipe/flypipe",  # Repo name
+    "github_version": "feat/documentation",  # Version
+    "conf_py_path": "/docs/",  # Path in the checkout to the docs root
 }

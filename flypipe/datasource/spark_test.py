@@ -12,7 +12,7 @@ from flypipe.schema.types import Decimal
 
 @pytest.fixture(scope="function")
 def spark():
-    from tests.utils.spark import spark
+    from flypipe.tests.spark import spark
 
     (
         spark.createDataFrame(

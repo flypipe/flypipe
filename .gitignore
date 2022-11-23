@@ -140,6 +140,5 @@ dmypy.json
 /data/
 /tests/utils/spark-warehouse/
 spark-warehouse/
-/docs/source/readmes/contributors.md
 /docs/source/modules/
 /flypipe/printer/test.html

@@ -3,17 +3,16 @@ from flypipe.node import node
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
 from flypipe.schema.types import Decimal
-from tests.utils.spark import spark
+from flypipe.tests.spark import spark
 
-spark.sql("create database if not exists raw")
 spark.sql(
-    "create view raw.table1 as select 1 as col1, 2 as col2, 3 as col3, 4 as col4, 5 as col5"
+    "create or replace temporary view table1 as select 1 as col1, 2 as col2, 3 as col3, 4 as col4, 5 as col5"
 )
 
 
 @node(
     type="pyspark",
-    dependencies=[Spark("raw.table1").select("col1", "col2").alias("table")],
+    dependencies=[Spark("table1").select("col1", "col2").alias("table")],
     output=Schema(
         [
             Column("col1", Decimal(10, 2), "dummy"),
@@ -27,7 +26,7 @@ def t1(table):
 
 @node(
     type="pyspark",
-    dependencies=[Spark("raw.table1").select("col2", "col3").alias("table")],
+    dependencies=[Spark("table1").select("col2", "col3").alias("table")],
     output=Schema(
         [
             Column("col2", Decimal(10, 2), "dummy"),
@@ -41,7 +40,7 @@ def t2(table):
 
 @node(
     type="pyspark",
-    dependencies=[Spark("raw.table1").select("col5").alias("table")],
+    dependencies=[Spark("table1").select("col5").alias("table")],
     output=Schema(
         [
             Column("col5", Decimal(10, 2), "dummy"),

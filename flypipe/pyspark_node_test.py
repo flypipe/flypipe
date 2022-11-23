@@ -12,12 +12,11 @@ from flypipe.node import node
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
 from flypipe.schema.types import Decimal, Integer, String
-from tests.utils.spark import drop_database
 
 
 @pytest.fixture(scope="function")
 def spark():
-    from tests.utils.spark import spark
+    from flypipe.tests.spark import spark
 
     (
         spark.createDataFrame(
@@ -171,8 +170,7 @@ class TestPySparkNode:
 
 
         """
-        db_name = "test_pyspark_node"
-        drop_database(spark, db_name)
+
         my_data = spark.createDataFrame(
             schema=(
                 "My_Col__x",

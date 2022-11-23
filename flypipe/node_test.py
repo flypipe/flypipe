@@ -18,7 +18,7 @@ from flypipe.utils import DataFrameType, dataframe_type
 
 @pytest.fixture(scope="function")
 def spark():
-    from tests.utils.spark import spark
+    from flypipe.tests.spark import spark
 
     spark.createDataFrame(
         schema=("c0", "c1"),
@@ -230,8 +230,8 @@ class TestNode:
         """
         Ensure that node graph is processed with node keys and alias is used for arguments
         """
-        from tests.transformations.group_1.t1 import t1
-        from tests.transformations.group_2.t1 import t1 as t1_group2
+        from flypipe.tests.transformations.group_1.t1 import t1
+        from flypipe.tests.transformations.group_2.t1 import t1 as t1_group2
 
         @node(
             type="pandas",

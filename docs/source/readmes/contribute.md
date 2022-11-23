@@ -1,8 +1,5 @@
 # Contributors
 
-```{include} readmes/contributors.md
-```
-
 For the full list of contributors, take a look at {{project}}'s [GitHub Contributor](https://github.com/flypipe/flypipe/graphs/contributors) page.
 
 # Development
