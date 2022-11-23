@@ -100,8 +100,7 @@ myst_substitutions = {
 
 html_context = {
     "display_github": True,  # Integrate GitHub
-    "github_user": "jose.muller",  # Username
     "github_repo": "flypipe/flypipe",  # Repo name
     "github_version": "feat/documentation",  # Version
-    "conf_py_path": "/docs/",  # Path in the checkout to the docs root
+    "conf_py_path": "/docs/source/",  # Path in the checkout to the docs root
 }
