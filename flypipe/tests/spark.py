@@ -27,7 +27,7 @@ def get_spark():
 
     thrift_url = "thrift://hive-metastore:9083"
     thrift_server_available = url_ok(thrift_url)
-    print("thrift_server_available=>", thrift_server_available)
+
     if thrift_server_available:
         configs = (
             configs

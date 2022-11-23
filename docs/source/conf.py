@@ -66,7 +66,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["setup.py", "**.ipynb_checkpoints"]
+exclude_patterns = ["setup.py", "**.ipynb_checkpoints", "**_test.py"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -92,15 +92,21 @@ myst_substitutions = {
     'project': project
 }
 
-# html_extra_path = ["notebooks/html"]
-
-# html_additional_pages = {
-#     'example': '_static/html/example2.html',
-# }
-
 html_context = {
     "display_github": True,  # Integrate GitHub
     "github_repo": "flypipe/flypipe",  # Repo name
     "github_version": "feat/documentation",  # Version
     "conf_py_path": "/docs/source/",  # Path in the checkout to the docs root
 }
+
+
+# This is the expected signature of the handler for this event, cf doc
+def autodoc_skip_member_handler(app, what, name, obj, skip, options):
+    # Basic approach; you might want a regex instead
+    return name.endswith("_test")
+
+
+# Automatically called by sphinx at startup
+def setup(app):
+    # Connect the autodoc-skip-member event from apidoc to the callback
+    app.connect('autodoc-skip-member', autodoc_skip_member_handler)

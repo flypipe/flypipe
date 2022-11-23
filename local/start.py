@@ -5,14 +5,17 @@ if 'ipython' in globals():
     ipython.magic('load_ext autoreload')
     ipython.magic('autoreload 2')
 
+html_width = "100%"
+html_height = "1000"
+
 
 def displayHTML(html):
     from html import escape
     html_to_display = f"""
     <iframe 
         srcdoc="{escape(html)}" 
-        width="100%" 
-        height=1000"
+        width="{html_width}" 
+        height={html_height}"
         scrolling="no"
         style="border: none; overflow:hidden; overflow-y:hidden;"
     ></iframe>

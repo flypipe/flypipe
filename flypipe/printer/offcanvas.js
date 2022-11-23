@@ -97,9 +97,11 @@ function show_transformation(node){
         body += '<li class="list-group-item"><a style="cursor: pointer;" class="link-dark" onclick="show_transformation(' + dependency_key + ');">' + dependency_name + '</a></li>';
         link = get_link(node.dependencies[i], node.key);
 
-        for (let i = 0; i < link.source_selected_columns.length; i++) {
-            selected_column = link.source_selected_columns[i];
-            body += '<li class="list-group-item"><span class="ms-3">' + selected_column + '</span></li>';
+        if (link.source_selected_columns) {
+            for (let i = 0; i < link.source_selected_columns.length; i++) {
+                selected_column = link.source_selected_columns[i];
+                body += '<li class="list-group-item"><span class="ms-3">' + selected_column + '</span></li>';
+            }
         }
 
     }
