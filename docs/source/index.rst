@@ -11,11 +11,11 @@ Welcome to FlyPipe's documentation!
    :maxdepth: 3
 
    Concept <readme>
-   Project <project>
-   Quick Start <quick-start>
    Installation <installation>
+   Quick Start <quick-start>
    Tutorials <tutorials>
    How-to Guides <how-to-guides>
+   Project <project>
    Contribute <contribute>
    License <license>
    API <modules/modules>
