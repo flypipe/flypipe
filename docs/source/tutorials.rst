@@ -5,7 +5,6 @@ Tutorials
    :maxdepth: 1
 
    Nodes <./notebooks/tutorial/node>
-   Minimal Example <./notebooks/tutorial/minimal_example>
 
 
 
