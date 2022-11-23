@@ -15,6 +15,7 @@ Welcome to FlyPipe's documentation!
    Quick Start <quick-start>
    Tutorials <tutorials>
    How-to Guides <how-to-guides>
+   Data Design Patterns (DDP) <ddp>
    Project <project>
    Contribute <contribute>
    License <license>
