@@ -1,4 +1,7 @@
+# noinspection PyUnresolvedReferences
 import IPython
+
+from flypipe.tests.spark import spark
 
 ipython = IPython.get_ipython()
 if 'ipython' in globals():
@@ -7,6 +10,7 @@ if 'ipython' in globals():
 
 html_width = "100%"
 html_height = "1000"
+
 
 def displayHTML(html):
     from html import escape

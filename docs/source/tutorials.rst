@@ -5,10 +5,5 @@ Tutorials
    :maxdepth: 1
 
    Nodes <./notebooks/tutorial/node>
+   Testing <./notebooks/tutorial/unittests>
 
-
-
-Organize your project
----------------------
-.. include:: ./readmes/organise-your-project.md
-   :parser: myst_parser.sphinx_

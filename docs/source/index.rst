@@ -10,8 +10,9 @@ Welcome to FlyPipe's documentation!
 .. toctree::
    :maxdepth: 3
 
-   Concept <readme>
+   Concept <concept>
    Installation <installation>
+   Configuration <configuration>
    Quick Start <quick-start>
    Tutorials <tutorials>
    How-to Guides <how-to-guides>
@@ -20,7 +21,6 @@ Welcome to FlyPipe's documentation!
    Contribute <contribute>
    License <license>
    API <modules/modules>
-
 
 
 Indices and tables
