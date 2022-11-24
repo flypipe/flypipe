@@ -63,6 +63,10 @@ class Node:
         self.requested_columns = requested_columns
         self.node_graph = None
 
+    @property
+    def output(self):
+        return self.output_schema
+
     def _get_input_nodes(self, dependencies):
         input_nodes = []
         if dependencies is None:

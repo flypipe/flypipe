@@ -1,7 +1,11 @@
 # noinspection PyUnresolvedReferences
+import warnings
+
 import IPython
 
 from flypipe.tests.spark import spark
+
+warnings.filterwarnings("ignore")
 
 ipython = IPython.get_ipython()
 if 'ipython' in globals():

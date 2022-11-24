@@ -2,6 +2,11 @@ class Schema:
     def __init__(self, *columns):
         self.columns = columns[0] if isinstance(columns[0], list) else list(columns)
 
+    def get(self, column):
+        for col in self.columns:
+            if col.name == column:
+                return col
+
     def get_column_names(self):
         return [column.name for column in self.columns]
 

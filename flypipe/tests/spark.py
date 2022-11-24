@@ -39,7 +39,9 @@ def get_spark():
                 .enableHiveSupport()
         )
 
-    return configs.getOrCreate()
+    spark = configs.getOrCreate()
+    spark.sparkContext.setLogLevel("ERROR")
+    return spark
 
 
 spark = get_spark()
