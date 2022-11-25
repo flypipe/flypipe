@@ -130,6 +130,14 @@ d3.select("svg")
     .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
     ;
 
+var tooltip = d3.select("body")
+    .append("div")
+    .style("position", "absolute")
+    .style("z-index", "10")
+    .style("visibility", "hidden")
+    .style("background", "#000")
+    .html("a simple tooltip");
+
 // Adding the circle nodes
 d3.select("g")
     .selectAll("path.horizontal")
@@ -146,10 +154,24 @@ d3.select("g")
     .style("stroke", "black")
     .style("stroke-width", circle_stroke)
     .call(d3.drag().on('drag', dragging))
-    .on('mouseover', function (d, i) { highlight_path(d,i); })
-    .on('mouseout', function (d, i) { suppress(d,i); })
+    .on("mouseover", function(d){
+        tooltip.html("<strong>" + d.name + "</strong><br/>(" + d.type.text + ")");
+        return tooltip.style("visibility", "visible");
+    })
+    .on("mousemove", function(){
+        return tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+    })
+    .on("mouseout", function(){
+        return tooltip.style("visibility", "hidden");
+    })
     .on('click', function(d,i){ show_transformation(d);  });
 
+
+
+function show_node_tooltip(d,i){
+    tooltip.text(d);
+    return tooltip.style("visibility", "visible");
+}
 
 // Adding the text nodes
 d3.select("g")
@@ -261,14 +283,14 @@ function highlight_link(d,i){
 
 }
 
-function highlight_path(d,i){
-
-    d3.selectAll('path.link')
-      .filter(function(d_, i) {
-        return d_['source'] == d['name'] | d_['target'] == d['name'];;
-      })
-      .attr("stroke", highlight_color);
-}
+//function highlight_path(d,i){
+//
+//    d3.selectAll('path.link')
+//      .filter(function(d_, i) {
+//        return d_['source'] == d['name'] | d_['target'] == d['name'];;
+//      })
+//      .attr("stroke", highlight_color);
+//}
 
 function move_parent_links(d, dragged_node){
 

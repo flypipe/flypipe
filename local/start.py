@@ -3,8 +3,6 @@ import warnings
 
 import IPython
 
-from flypipe.tests.spark import spark
-
 warnings.filterwarnings("ignore")
 
 ipython = IPython.get_ipython()
@@ -22,7 +20,7 @@ def displayHTML(html):
     <iframe 
         srcdoc="{escape(html)}" 
         width="{html_width}" 
-        height={html_height}"
+        height="{html_height}"
         scrolling="no"
         style="border: none; overflow:hidden; overflow-y:hidden;"
     ></iframe>

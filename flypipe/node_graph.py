@@ -65,6 +65,11 @@ class NodeGraph:
                     and current_transformation.type == DataFrameType.PANDAS_ON_SPARK
             ):
                 current_transformation.type = DataFrameType.PANDAS
+                current_transformation.original_type = DataFrameType.PANDAS_ON_SPARK
+
+            # FIXME: Ticket DATA-3700
+            elif not pandas_on_spark_use_pandas and hasattr(current_transformation, "original_type"):
+                current_transformation.type = current_transformation.original_type
 
             output_columns = self.node_output_columns[
                 current_transformation.key

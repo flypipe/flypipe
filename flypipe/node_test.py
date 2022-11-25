@@ -646,3 +646,20 @@ class TestNode:
             return t1
 
         t3.run(parallel=False)
+
+    def test_pandas_on_spark_use_pandas(self, spark):
+        """
+        When running a graph with pandas_on_spark_use_pandas=True, all pandas_on_spark nodes types should be of type pandas
+        If running straigth after, but with pandas_on_spark_use_pandas=False, all pandas_on_spark nodes types should be of type pandas_on_spark
+        """
+
+        @node(type="pandas_on_spark",
+              dependencies=[Spark("dummy_table1").select("c1")])
+        def t1(dummy_table1):
+            return dummy_table1
+
+        t1.run(spark, pandas_on_spark_use_pandas=True)
+        assert t1.type == DataFrameType.PANDAS
+
+        t1.run(spark, pandas_on_spark_use_pandas=False)
+        assert t1.type == DataFrameType.PANDAS_ON_SPARK

@@ -38,7 +38,7 @@ https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page
 
 ## Rebuilding documents
 
-from `/flypipe/docs` run `sh docs_build.sh`
+from `/flypipe/docs` run `sh build_docs.sh`
 
 ## Other useful commands
 
