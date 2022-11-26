@@ -6,21 +6,9 @@ TODO
 
 ### Nodes
 
-**Parameters**:
-
-- mode (default `pypsark`): defines the type of the inputs
-    - pyspark: convert every argument to pyspark dataframe
-    - pandas: convert every argument to a pandas dataframe
-    - pandas_on_spark: convert every argument to a Pandas on Spark dataframe (
-      see [Pandas API](https://spark.apache.org/docs/latest/api/python/user_guide/pandas_on_spark/index.html)
-      and [this blog](https://www.databricks.com/blog/2021/10/04/pandas-api-on-upcoming-apache-spark-3-2.html))
-    - spark_sql: convert every argument to a view to be used in a [Spark Sql](#spark-sql-transformation)
-- cache (default `None`): caches the **inputs** dataframes
-    - `Flypipe.Cache`: defines the method you want to [Cache](#node-cache)
-- inputs: List of other node transformations or a [datasources](#datasources)
-- output: defines the schema of the node transformation
-- persist (default `None`): saves the output dataframe from the transformation
-    - `DataSource`: datasource to be [saved](#save)
+```{eval-rst}  
+.. autoclass:: flypipe.node
+```
 
 ### Node Cache
 

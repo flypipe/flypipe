@@ -19,6 +19,7 @@ class Node:
         "pandas_on_spark": DataFrameType.PANDAS_ON_SPARK,
     }
 
+
     def __init__(
             self,
             function,
@@ -30,6 +31,7 @@ class Node:
             spark_context=False,
             requested_columns=False,
     ):
+
         self._key = None
         self.function = function
 
@@ -266,6 +268,78 @@ class Node:
 def node(type, *args, **kwargs):
     """
     Decorator factory that returns the given function wrapped inside a Node class
+
+    >>> # Syntax
+        @node(
+            type="pyspark" or "pandas_on_spark" or "pandas",
+            description="this is a description of what this node does",
+            tags=["a", "list", "of", "tags"],
+            dependencies=[other_node_1, other_node_2, ...],
+            output=Schema(
+                Column("col_name", String(), "a description of the column"),
+            ),
+            spark_context = True or False
+        )
+        def your_function_name(other_node_1, other_node_2, ...):
+            # YOUR TRANSFORMATION LOGIC HERE
+            return dataframe
+
+    >>> # Node without dependency
+        from flypipe.node import node
+        from flypipe.schema import Schema, Column
+        from flypipe.schema.types import String
+        import pandas as pd
+        @node(
+            type="pandas",
+            description="Only outputs a pandas dataframe",
+            output=Schema([
+                Column("fruit", String(), "this is a description of the column fruit"),
+            ])
+        )
+        def t0():
+            return pd.DataFrame(data={"fruit": ["mango", "lemon"]})
+
+    >>> # Node with dependency
+        from flypipe.node import node
+        from flypipe.schema import Schema, Column
+        from flypipe.schema.types import String
+        import pandas as pd
+        @node(
+            type="pyspark",
+            description="Only outputs a pandas dataframe",
+            dependencies = [
+                t0.select("fruit").alias("df")
+            ]
+            output=Schema(
+                t0.schema.get("fruit"),
+            )
+        )
+        def t1(df):
+            return df
+
+
+
+    Parameters
+    ----------
+    type : str
+            Type of the node transformation "pandas", "pandas_on_spark", "pyspark"
+    kwargs:
+        description : str, optional
+            Description of the node (default is None)
+        tags : List[str], optional
+            List of tags for the node (default is None)
+        dependencies: List[Node], optional
+            List of other dependent nodes
+        output : Schema, optional
+            Defines the ouput schema of the node (default is None)
+        spark_context: bool, optional
+            True, returns spark context as argument to the funtion (default is False)
+
+
+
+
+
+
     """
 
     def decorator(func):
