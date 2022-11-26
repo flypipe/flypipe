@@ -1,3 +1,4 @@
+import pyspark
 import pandas as pd
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
@@ -663,3 +664,63 @@ class TestNode:
 
         t1.run(spark, pandas_on_spark_use_pandas=False)
         assert t1.type == DataFrameType.PANDAS_ON_SPARK
+
+    def test_function_argument_signature(self, spark):
+        """
+        Independent of the order of the argument that the user types for a function,
+        it should be given accordingly to what has been specified in the function
+
+        Example:
+
+            @node(...)
+            def t(arg3, arg1, arg1):
+                ...
+
+            Should be the same as
+
+            @node(...)
+            def t(arg1, arg2, arg3):
+                ...
+        """
+
+        @node(
+            type='pyspark'
+        )
+        def t1():
+            return spark.createDataFrame(data=[{'c1': 1, 'c2': 2}])
+
+        @node(
+            type='pyspark',
+            dependencies=[
+                t1.select("c1")
+            ],
+            requested_columns=True,
+            spark_context=True
+        )
+        def t2(t1, requested_columns, spark):
+            assert requested_columns == ['c1']
+            assert dataframe_type(t1) == DataFrameType.PYSPARK
+            assert t1.columns == ['c1']
+            assert isinstance(spark, pyspark.sql.session.SparkSession)
+            return t1
+
+        @node(
+            type='pyspark',
+            dependencies=[
+                t1.select("c1", "c2"),
+                t2.select("c1"),
+            ],
+            spark_context=True
+        )
+        def t3(t2, t1, spark):
+            assert dataframe_type(t1) == DataFrameType.PYSPARK
+            assert t1.columns == ['c1', 'c2']
+
+            assert dataframe_type(t2) == DataFrameType.PYSPARK
+            assert t2.columns == ['c1']
+
+            assert isinstance(spark, pyspark.sql.session.SparkSession)
+
+            return t1
+
+        t3.run(spark, parallel=False)
