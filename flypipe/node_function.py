@@ -38,19 +38,9 @@ def node_function(*args, **kwargs):
 
     Parameters
     ----------
-    kwargs:
-        description : str, optional
-            Description of the node (default is None)
-        tags : List[str], optional
-            List of tags for the node (default is None)
-        dependencies: List[Node], optional
-            List of other dependent nodes
-        output : Schema, optional
-            Defines the ouput schema of the node (default is None)
-        spark_context: bool, optional
-            True, returns spark context as argument to the funtion (default is False)
-        requested_columns : bool, optional
-            True, returns a list of requested columns from the graph to the node as an arugment requested_columns (default is False)
+
+    requested_columns : bool, optional
+        True, returns a list of requested columns from the graph to the node as an arugment requested_columns (default is False)
 
     """
 

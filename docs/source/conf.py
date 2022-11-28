@@ -70,8 +70,6 @@ templates_path = ['_templates']
 exclude_patterns = [
     "setup.py",
     "**.ipynb_checkpoints",
-    "**_test.py",
-    "*config_test*"
 ]
 
 # -- Options for HTML output -------------------------------------------------

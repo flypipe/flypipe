@@ -17,6 +17,7 @@ html_height = "1000"
 
 def displayHTML(html):
     from html import escape
+
     html_to_display = f"""
     <iframe 
         srcdoc="{escape(html)}" 

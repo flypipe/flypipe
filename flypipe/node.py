@@ -269,6 +269,23 @@ def node(type, *args, **kwargs):
     """
     Decorator factory that returns the given function wrapped inside a Node class
 
+    Parameters
+    ----------
+
+    type : str
+            Type of the node transformation "pandas", "pandas_on_spark", "pyspark"
+    description : str, optional
+        Description of the node (default is None)
+    tags : List[str], optional
+        List of tags for the node (default is None)
+    dependencies : List[Node], optional
+        List of other dependent nodes
+    output : Schema, optional
+        Defines the ouput schema of the node (default is None)
+    spark_context : bool, optional
+        True, returns spark context as argument to the funtion (default is False)
+
+
     >>> # Syntax
         @node(
             type="pyspark" or "pandas_on_spark" or "pandas",
@@ -316,30 +333,6 @@ def node(type, *args, **kwargs):
         )
         def t1(df):
             return df
-
-
-
-    Parameters
-    ----------
-    type : str
-            Type of the node transformation "pandas", "pandas_on_spark", "pyspark"
-    kwargs:
-        description : str, optional
-            Description of the node (default is None)
-        tags : List[str], optional
-            List of tags for the node (default is None)
-        dependencies: List[Node], optional
-            List of other dependent nodes
-        output : Schema, optional
-            Defines the ouput schema of the node (default is None)
-        spark_context: bool, optional
-            True, returns spark context as argument to the funtion (default is False)
-
-
-
-
-
-
     """
 
     def decorator(func):

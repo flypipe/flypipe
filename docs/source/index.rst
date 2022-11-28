@@ -20,7 +20,6 @@ Welcome to FlyPipe's documentation!
    Project <project>
    Contribute <contribute>
    License <license>
-   API <modules/modules>
 
 
 Indices and tables
