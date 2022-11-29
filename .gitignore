@@ -142,3 +142,6 @@ dmypy.json
 spark-warehouse/
 /docs/source/modules/
 /flypipe/printer/test.html
+mlruns/
+artifacts/
+tmp/

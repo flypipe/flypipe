@@ -309,12 +309,19 @@ def node(type, *args, **kwargs):
         @node(
             type="pandas",
             description="Only outputs a pandas dataframe",
-            output=Schema([
-                Column("fruit", String(), "this is a description of the column fruit"),
-            ])
+            dependencies = [
+                t0.select("fruit").alias("df")
+            ],
+            output=Schema(
+                t0.output.get("fruit"),
+                Column("flavour", String(), "fruit flavour")
+            )
         )
-        def t0():
-            return pd.DataFrame(data={"fruit": ["mango", "lemon"]})
+        def t1(df):
+            categories = {'mango': 'sweet', 'lemon': 'citric'}
+            df['flavour'] = df['fruit']
+            df = df.replace({'flavour': categories})
+            return df
 
     >>> # Node with dependency
         from flypipe.node import node
@@ -322,16 +329,20 @@ def node(type, *args, **kwargs):
         from flypipe.schema.types import String
         import pandas as pd
         @node(
-            type="pyspark",
+            type="pandas",
             description="Only outputs a pandas dataframe",
             dependencies = [
                 t0.select("fruit").alias("df")
-            ]
+            ],
             output=Schema(
-                t0.schema.get("fruit"),
+                t0.output.get("fruit"),
+                Column("flavour", String(), "fruit flavour")
             )
         )
         def t1(df):
+            categories = {'mango': 'sweet', 'lemon': 'citric'}
+            df['flavour'] = df['fruit']
+            df = df.replace({'flavour': categories})
             return df
     """
 

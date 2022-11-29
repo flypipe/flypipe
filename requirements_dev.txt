@@ -16,9 +16,12 @@ sphinxcontrib-mermaid==0.7.1
 linkify-it-py==2.0.0
 ipython==8.6.0
 
+
 #Development
 jupyterlab==3.4.5
 pythonping==1.1.4
 ipytest==0.13.0
 matplotlib==3.6.2
 seaborn==0.12.1
+delta-spark==2.1.1
+mlflow==2.0.1
