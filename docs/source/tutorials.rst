@@ -1,16 +1,13 @@
 Tutorials
 =========
 
-.. include:: ./readmes/node.md
-   :parser: myst_parser.sphinx_
-
-
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
 
-   Adding your own data source <./notebooks/tutorial/add_datasource>
+   Node <./node>
+   Node Function <./node_function>
+   Data Sources <./data_sources>
    Graph <./notebooks/tutorial/creating_graph>
    Multi Node Type Graphs <./notebooks/tutorial/multiple_node_types>
-   Node Function <./notebooks/tutorial/node_function>
    Testing <./notebooks/tutorial/unittests>
 

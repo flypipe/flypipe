@@ -1,6 +1,14 @@
 How-to Guides
 =============
 
-.. include:: ./readmes/organise-your-project.md
-   :parser: myst_parser.sphinx_
+.. toctree::
+   :maxdepth: 3
+
+   ML Graphs (with mlflow) <./notebooks/how_to/ml_graphs>
+   Spark Streaming <./notebooks/how_to/spark_streaming>
+   API Integration <./notebooks/how_to/api_integration>
+   Organise your project <./organise_your_project>
+
+
+
 
