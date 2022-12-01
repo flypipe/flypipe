@@ -51,6 +51,6 @@
 ```
 
 * **notebooks**: module containing Databricks notebooks
-    * *streams*: `Spark Streaming </notebooks/how-to/spark_streaming>` notebooks
-    * *dlts*: : `Spark Streaming </notebooks/how-to/spark_streaming>` notebooks
+  * *streams*: `Spark Streaming </notebooks/how-to/spark-streaming>` notebooks
+  * *dlts*: : `Databricks DLTs </notebooks/how-to/databricks-dlt>` notebooks
 * **api**: ML models REST API, endpoints can import the Flypipe nodes within `pipeline` 
