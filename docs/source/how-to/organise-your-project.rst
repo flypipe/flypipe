@@ -7,4 +7,4 @@ Organise your Project
 .. toctree::
    :maxdepth: 2
 
-   Example <../notebooks/how-to/ml-model-with-imports>
+   Example of /project/notebooks/models <../notebooks/how-to/ml-model-with-imports>

@@ -50,7 +50,8 @@
 |  |  |  |  |  |--graph_test.py
 ```
 
-* **notebooks**: module containing Databricks notebooks
-  * *streams*: `Spark Streaming </notebooks/how-to/spark-streaming>` notebooks
-  * *dlts*: : `Databricks DLTs </notebooks/how-to/databricks-dlt>` notebooks
-* **api**: ML models REST API, endpoints can import the Flypipe nodes within `pipeline` 
+
+
+
+
+
