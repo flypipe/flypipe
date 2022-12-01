@@ -10,16 +10,16 @@ Welcome to FlyPipe's documentation!
 .. toctree::
    :maxdepth: 3
 
-   Concept <concept>
-   Installation <installation>
-   Configuration <configuration>
-   Quick Start <quick-start>
-   Tutorials <tutorials>
-   How-to Guides <how-to-guides>
-   Data Design Patterns (DDP) <ddp>
-   Project <project>
-   Contribute <contribute>
-   License <license>
+   Concept <concept/concept>
+   Installation <installation/installation>
+   Configuration <configuration/configuration>
+   Quick Start <quick-start/quick-start>
+   Tutorials <tutorials/tutorials>
+   How-to Guides <how-to/how-to>
+   Data Design Patterns (DDP) <data-design-patterns/data-design-patterns>
+   Project <project/project>
+   Contribute <contribute/contribute>
+   License <license/license>
 
 
 Indices and tables

@@ -7,14 +7,16 @@ from flypipe.schema import Schema, Column
 from flypipe.schema.types import String
 from sklearn.preprocessing import StandardScaler
 
+from flypipe.examples.pipeline.model.demo.config import config
 from flypipe.examples.pipeline.model.demo.train.split import split
 
 
 @node(
     type="pandas",
     description="Fits a standard scaler",
-    tags=["data", "train", "scaler"],
+    tags=["model_training", "scaler"],
     dependencies=[
+        config.select("artifact_location"),
         split.select(
             'data_type',
             'sepal_length',
@@ -32,7 +34,7 @@ from flypipe.examples.pipeline.model.demo.train.split import split
         split.output.get("petal_width"),
         split.output.get("target"),
     ))
-def fit_scale(split):
+def fit_scale(config, split):
     X_cols = [
         'sepal_length',
         'sepal_width',
@@ -44,11 +46,12 @@ def fit_scale(split):
     scaler = scaler.fit(split[split['data_type'] == 'train'][X_cols])
 
     if mlflow.active_run():
-        artifact_path = f"./artifacts/{mlflow.active_run().info.run_id}/model"
-        if not os.path.exists(artifact_path):
-            os.makedirs(artifact_path, exist_ok=True)
+        artifact_location = config.loc[0, "artifact_location"]
+        artifact_location = f"{artifact_location}/{mlflow.active_run().info.run_id}/model"
+        if not os.path.exists(artifact_location):
+            os.makedirs(artifact_location, exist_ok=True)
 
-        pickle.dump(scaler, open(os.path.join(artifact_path, 'scaler.pkl'), 'wb'))
+        pickle.dump(scaler, open(os.path.join(artifact_location, 'scaler.pkl'), 'wb'))
 
     split[X_cols] = scaler.transform(split[X_cols])
 

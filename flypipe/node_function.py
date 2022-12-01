@@ -43,17 +43,17 @@ def node_function(*args, **kwargs):
         True, returns a list of requested columns from the graph to the node as an argument `requested_columns` (default is False)
 
 
-    >>> # Syntax
+    .. highlight:: python
+    .. code-block:: python
+
+        # Syntax
         @node_function(
             requested_columns=True
         )
         def my_node_function(requested_columns):
-
             @node(type="pandas")
             def my_node():
-
                 return dataframe
-
             return my_node
 
     """

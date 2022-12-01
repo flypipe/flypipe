@@ -7,5 +7,5 @@ Node Function
 .. toctree::
    :maxdepth: 3
 
-   Examples <./notebooks/tutorial/node_function_examples>
+   Examples <../notebooks/tutorial/node-function>
 

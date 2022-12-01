@@ -7,4 +7,4 @@ Data Sources
 .. toctree::
    :maxdepth: 3
 
-   Examples <./notebooks/tutorial/data_source_examples>
+   Examples <../notebooks/tutorial/data-source>

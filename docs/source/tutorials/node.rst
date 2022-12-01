@@ -7,4 +7,4 @@ Node
 .. toctree::
    :maxdepth: 3
 
-   Examples <./notebooks/tutorial/node_examples>
+   Examples <../notebooks/tutorial/node>

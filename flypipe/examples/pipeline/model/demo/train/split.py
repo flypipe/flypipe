@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 @node(
     type="pandas",
     description="Split train (70%) and test (30%) data",
-    tags=["data", "split"],
+    tags=["model_training"],
     dependencies=[
         data.select(
             'sepal_length',

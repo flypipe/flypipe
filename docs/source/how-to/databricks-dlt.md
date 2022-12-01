@@ -6,7 +6,7 @@ Once finished, any node can be exposed to DLTs workflows.
 
 <a href="_static/html/flypipe_databricks_dlt.html" target="_blank" title="Download Notebook" style="float: right;">
 Download Notebook</a>
-<iframe style="border:none;" src="_static/html/flypipe_databricks_dlt.html" width="100%" height="600px"></iframe>
+<iframe style="border:none;" src="../_static/html/flypipe-databricks-dlt.html" width="100%" height="600px"></iframe>
 
 **Create and run a pipeline**
 

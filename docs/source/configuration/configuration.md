@@ -1,11 +1,15 @@
+# Configuration Reference
+
 This page contains the list of all the available Flypipe configurations that you can set using environment variables.
 
 [Governance](#Governance)
-: [FLYPIPE_REQUIRE_NODE_DESCRIPTION](#FLYPIPE_REQUIRE_NODE_DESCRIPTION)
-: [FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION](#FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION)
+
+* [FLYPIPE_REQUIRE_NODE_DESCRIPTION](#FLYPIPE_REQUIRE_NODE_DESCRIPTION)
+* [FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION](#FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION)
 
 [Execution](#Execution)
-: [FLYPIPE_DEFAULT_RUN_MODE](#tFLYPIPE_DEFAULT_RUN_MODE)
+
+* [FLYPIPE_DEFAULT_RUN_MODE](#tFLYPIPE_DEFAULT_RUN_MODE)
 
 ## Governance
 
@@ -15,7 +19,7 @@ Enforces declaration of node **description**
 :type: string
 :default: `false`
 
-#### FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION
+### FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION
 
 Enforces declaration of node **output** schema
 :type: string

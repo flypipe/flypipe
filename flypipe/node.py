@@ -286,7 +286,10 @@ def node(type, *args, **kwargs):
         True, returns spark context as argument to the funtion (default is False)
 
 
-    >>> # Syntax
+    .. highlight:: python
+    .. code-block:: python
+
+        # Syntax
         @node(
             type="pyspark" or "pandas_on_spark" or "pandas",
             description="this is a description of what this node does",
@@ -301,7 +304,11 @@ def node(type, *args, **kwargs):
             # YOUR TRANSFORMATION LOGIC HERE
             return dataframe
 
-    >>> # Node without dependency
+
+    .. highlight:: python
+    .. code-block:: python
+
+        # Node without dependency
         from flypipe.node import node
         from flypipe.schema import Schema, Column
         from flypipe.schema.types import String
@@ -323,7 +330,11 @@ def node(type, *args, **kwargs):
             df = df.replace({'flavour': categories})
             return df
 
-    >>> # Node with dependency
+
+    .. highlight:: python
+    .. code-block:: python
+
+        # Node with dependency
         from flypipe.node import node
         from flypipe.schema import Schema, Column
         from flypipe.schema.types import String

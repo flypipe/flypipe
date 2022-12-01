@@ -10,7 +10,7 @@ from sklearn.metrics import f1_score
 @node(
     type="pandas",
     description="Model training using SVM",
-    tags=["model", "svm"],
+    tags=["model_training", "svm"],
     dependencies=[
         train_svm_model.select(
             'data_type',
