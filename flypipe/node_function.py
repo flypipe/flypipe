@@ -35,6 +35,8 @@ class NodeFunction(Node):
         # nodes[-1].key = self.key
 
         for node in nodes:
+            if isinstance(node, NodeFunction):
+                raise ValueError('Illegal operation- node functions cannot be returned from node functions')
             for dependency in node.input_nodes:
                 if dependency not in nodes and dependency not in self.node_dependencies:
                     raise ValueError(
@@ -43,14 +45,15 @@ class NodeFunction(Node):
 
         return list(nodes)
 
-    def run(self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False):
-        # TODO: would be nice not to have to copy paste this code from Node.run
-        if not inputs:
-            inputs = {}
-        provided_inputs = {node.key: df for node, df in inputs.items()}
-        self._create_graph(list(provided_inputs.keys()), pandas_on_spark_use_pandas)
-        requested_columns = self.node_graph.node_output_columns[self.key].get_columns()
-        return self.expand(requested_columns).run(spark, parallel, inputs, pandas_on_spark_use_pandas)
+    # def run(self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False):
+    #     # TODO: would be nice not to have to copy paste this code from Node.run
+    #     if not inputs:
+    #         inputs = {}
+    #     provided_inputs = {node.key: df for node, df in inputs.items()}
+    #     # self._create_graph(list(provided_inputs.keys()), pandas_on_spark_use_pandas)
+    #     # requested_columns = self.node_graph.graph.nodes[self.key]['output_columns']
+    #     return self.node_graph.get_end_node().run(spark, parallel, inputs, pandas_on_spark_use_pandas)
+    #     # return self.expand(requested_columns).run(spark, parallel, inputs, pandas_on_spark_use_pandas)
 
     def copy(self):
         return NodeFunction(

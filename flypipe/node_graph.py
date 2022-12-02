@@ -74,20 +74,27 @@ class NodeGraph:
 
         graph = self._compute_edge_selected_columns(graph)
 
+        # for node_key in graph.nodes:
+        #     transformation = graph.nodes[node_key]['transformation']
+        #     # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
+        #     # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
+        #     if (
+        #             pandas_on_spark_use_pandas
+        #             and transformation.type == DataFrameType.PANDAS_ON_SPARK
+        #     ):
+        #         transformation.type = DataFrameType.PANDAS
+        #         transformation.original_type = DataFrameType.PANDAS_ON_SPARK
+        #
+        #     # FIXME: Ticket DATA-3700
+        #     elif not pandas_on_spark_use_pandas and hasattr(transformation, "original_type"):
+        #         transformation.type = transformation.original_type
+
         for node_key in graph.nodes:
             transformation = graph.nodes[node_key]['transformation']
             # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
             # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
-            if (
-                    pandas_on_spark_use_pandas
-                    and transformation.type == DataFrameType.PANDAS_ON_SPARK
-            ):
+            if pandas_on_spark_use_pandas and transformation.type == DataFrameType.PANDAS_ON_SPARK:
                 transformation.type = DataFrameType.PANDAS
-                transformation.original_type = DataFrameType.PANDAS_ON_SPARK
-
-            # FIXME: Ticket DATA-3700
-            elif not pandas_on_spark_use_pandas and hasattr(transformation, "original_type"):
-                transformation.type = transformation.original_type
 
         return graph
 
@@ -134,7 +141,11 @@ class NodeGraph:
                     # Any successors of the node function need to be repointed to point to the end node that got returned
                     for node_key in list(graph.nodes):
                         node = graph.nodes[node_key]
-                        for input_node in node['transformation'].input_nodes:
+                        if isinstance(node['transformation'], NodeFunction):
+                            input_nodes = node['transformation'].node_dependencies
+                        else:
+                            input_nodes = node['transformation'].input_nodes
+                        for input_node in input_nodes:
                             if input_node.key == node_function_key:
                                 input_node.node = graph.nodes[node_function_key]['transformation']
 
@@ -185,6 +196,7 @@ class NodeGraph:
         end_node_name = [node_name for node_name in expanded_graph if expanded_graph.out_degree(node_name) == 0][0]
         end_node = expanded_graph.nodes[end_node_name]
         end_node['transformation'].key = node_function._key
+        end_node['transformation'].name = node_function.function.__name__
         return nx.relabel_nodes(expanded_graph, {end_node_name: node_function._key})
 
 

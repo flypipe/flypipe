@@ -29,6 +29,7 @@ class Node:
                  spark_context=False,
                  requested_columns=False):
         self._key = None
+        self.name = None
         self.function = function
 
         self.node_type = NodeType.TRANSFORMATION
@@ -78,6 +79,8 @@ class Node:
 
     @property
     def __name__(self):
+        if self.name:
+            return self.name
         return self.function.__name__
 
     @property
@@ -237,7 +240,7 @@ class Node:
 
     def copy(self):
         # Note this is a DEEP copy and will copy all ancestor nodes by extension
-        return Node(
+        node = Node(
             self.function,
             self.type,
             description=self.description,
@@ -247,6 +250,9 @@ class Node:
             spark_context=self.spark_context,
             requested_columns=self.requested_columns
         )
+        node.name = self.name
+        node._key = self._key
+        return node
 
 
 def node(type, *args, **kwargs):
