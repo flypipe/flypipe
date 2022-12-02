@@ -174,6 +174,7 @@ class Node:
         while not execution_graph.is_empty():
             runnable_nodes = execution_graph.pop_runnable_transformations()
             for runnable_node in runnable_nodes:
+
                 if runnable_node['transformation'].key in outputs:
                     continue
 

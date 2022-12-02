@@ -20,12 +20,16 @@ class RunStatus(Enum):
 
 class NodeGraph:
 
-    def __init__(self, transformation: Node, graph=None, skipped_node_keys=None, pandas_on_spark_use_pandas=False):
+    def __init__(self,
+                 transformation: Node,
+                 graph=None,
+                 skipped_node_keys=None,
+                 pandas_on_spark_use_pandas=False):
         """
         Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
         this.
         """
-        transformation = transformation.copy()
+
         if graph:
             self.graph = graph
         else:
@@ -40,7 +44,7 @@ class NodeGraph:
         self.calculate_graph_run_status()
 
     def _build_graph(self, transformation: Node, pandas_on_spark_use_pandas: bool):
-
+        transformation = transformation.copy()
         graph = nx.DiGraph()
 
         frontier = [transformation]
@@ -65,10 +69,10 @@ class NodeGraph:
                     dependency.key,
                     current_transformation.key
                 )
-        self._compute_requested_columns(graph)
-        self._expand_node_functions(graph)
+        graph = self._compute_requested_columns(graph)
+        graph = self._expand_node_functions(graph)
 
-        self._compute_edge_selected_columns(graph)
+        graph = self._compute_edge_selected_columns(graph)
 
         for node_key in graph.nodes:
             transformation = graph.nodes[node_key]['transformation']
@@ -76,7 +80,7 @@ class NodeGraph:
             # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
             if (
                     pandas_on_spark_use_pandas
-                    and transformation.type==DataFrameType.PANDAS_ON_SPARK
+                    and transformation.type == DataFrameType.PANDAS_ON_SPARK
             ):
                 transformation.type = DataFrameType.PANDAS
                 transformation.original_type = DataFrameType.PANDAS_ON_SPARK
@@ -90,11 +94,11 @@ class NodeGraph:
     def _compute_edge_selected_columns(self, graph):
         for node_key in graph.nodes:
             node = graph.nodes[node_key]
+
             for input_node in node['transformation'].input_nodes:
-                try:
-                    graph.edges[(input_node.key, node_key)]['selected_columns'] = input_node.selected_columns
-                except KeyError:
-                    pass
+                graph.edges[(input_node.key, node_key)]['selected_columns'] = input_node.selected_columns
+
+        return graph
 
     def _expand_node_functions(self, graph: DiGraph):
         """
@@ -116,22 +120,19 @@ class NodeGraph:
                 if is_runnable_node_function:
                     found_node_function = True
                     node_function_key = node_function['transformation']._key
-                    node_function_graph = self._expand_node_function(node_function['transformation'], node_function['output_columns'])
 
-                    node_function_end_node_name = [node_name for node_name in node_function_graph if node_function_graph.out_degree(node_name)==0][0]
-                    graph = nx.relabel_nodes(graph, {node_function_key: node_function_end_node_name})
+                    expanded_graph = self._expand_node_function(node_function['transformation'],
+                                                                node_function['output_columns'])
 
                     # The edges created from the node function node_dependencies are now irrelevant and should be removed
                     for edge in list(graph.in_edges(node_function_key)):
                         graph.remove_edge(edge[0], edge[1])
-                    graph = nx.compose(graph, node_function_graph)
 
+                    graph = nx.compose(graph, expanded_graph)
 
 
                     # Any successors of the node function need to be repointed to point to the end node that got returned
                     for node_key in list(graph.nodes):
-                        if node_key == :
-                            graph = nx.relabel_nodes(expanded_graph, {end_node: node_function._key})
                         node = graph.nodes[node_key]
                         for input_node in node['transformation'].input_nodes:
                             if input_node.key == node_function_key:
@@ -141,8 +142,11 @@ class NodeGraph:
                     self._compute_requested_columns(graph)
 
                     break
+
             if not found_node_function and node_functions:
                 raise Exception('Unexpected error- unable to expand all node functions in the graph')
+
+        return graph
 
     def _expand_node_function(self, node_function, requested_columns):
         """
@@ -174,54 +178,14 @@ class NodeGraph:
                     )
 
                 expanded_graph.add_edge(
-                    node.key,
-                    dependency.key
+                    dependency.key,
+                    node.key
                 )
 
-        return expanded_graph
-
-
-
-
-
-    # def _expand_node_function(self, graph, node_function, requested_columns):
-    #     """
-    #     Expand a node function in the graph and replace it with the nodes it returns. There are a few additional steps:
-    #     - The end node of the nodes that the node function returns is renamed to have the same key as the node function.
-    #     """
-    #     new_nodes = node_function.expand(requested_columns=requested_columns)
-    #
-    #     edges_to_add = []
-    #     # Add the nodes to the graph
-    #     for node in new_nodes:
-    #         # TODO: if the node key exists then we should tweak the key with something like an incrementing counter
-    #         graph.add_node(
-    #             node.key,
-    #             transformation=node,
-    #             status=RunStatus.UNKNOWN
-    #         )
-    #         for dependency in node.input_nodes:
-    #             edges_to_add.append((dependency.key, node.key))
-    #
-    #     # Add the edges, this needs to be done after all the nodes have been added
-    #     for edge_origin, edge_destination in edges_to_add:
-    #         graph.add_edge(
-    #             edge_origin,
-    #             edge_destination
-    #         )
-    #
-    #     # The edges created from the node function node_dependencies are now irrelevant and should be removed
-    #     for edge in graph.in_edges(node_function._key):
-    #         graph.remove_edge(edge[0], edge[1])
-    #
-    #     # Rename the end node to inherit the key of the node function. This allows existing dependencies onto the node
-    #     # function to naturally fall on the end node that the node function returns
-    #     end_node = [node.key for node in new_nodes if graph.out_degree(node.key)==0][0]
-    #     nx.relabel_nodes(graph, {end_node.key: node_function._key})
-    #     graph.nodes[node_function._key] = graph.nodes[end_node.key]
-    #
-    #     # Recompute the requested columns in the graph as they may have changed after running this
-    #     self._compute_requested_columns(graph)
+        end_node_name = [node_name for node_name in expanded_graph if expanded_graph.out_degree(node_name) == 0][0]
+        end_node = expanded_graph.nodes[end_node_name]
+        end_node['transformation'].key = node_function._key
+        return nx.relabel_nodes(expanded_graph, {end_node_name: node_function._key})
 
 
     def _get_successor_nodes(self, graph, node_key):
@@ -245,6 +209,7 @@ class NodeGraph:
         for node_key, output_columns in requested_columns.items():
             graph.nodes[node_key]['output_columns'] = output_columns.get_columns()
 
+        return graph
     # def _build_graph(self, transformation: Node, pandas_on_spark_use_pandas: bool):
     #     graph = nx.DiGraph()
     #
