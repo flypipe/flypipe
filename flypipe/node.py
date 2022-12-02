@@ -32,10 +32,13 @@ class Node:
         self.function = function
 
         self.node_type = NodeType.TRANSFORMATION
-        try:
-            self.type = self.TYPE_MAP[type]
-        except KeyError:
-            raise NodeTypeInvalidError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
+        if isinstance(type, DataFrameType):
+            self.type = type
+        else:
+            try:
+                self.type = self.TYPE_MAP[type]
+            except KeyError:
+                raise NodeTypeInvalidError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
 
         if not description and get_config('require_node_description'):
             raise ValueError(
@@ -224,6 +227,25 @@ class Node:
         skipped_nodes = inputs or []
         self._create_graph([node.key for node in skipped_nodes], pandas_on_spark_use_pandas)
         return GraphHTML(self.node_graph, width=width, height=height).html()
+
+    def __eq__(self, other):
+        return self.key == other.key
+
+    def __hash__(self):
+        return hash(self.key)
+
+    def copy(self):
+        # Note this is a DEEP copy and will copy all ancestor nodes by extension
+        return Node(
+            self.function,
+            self.type,
+            description=self.description,
+            tags=list(self.tags),
+            dependencies=[input_node.copy() for input_node in self.input_nodes],
+            output=None if self.output_schema is None else self.output_schema.copy(),
+            spark_context=self.spark_context,
+            requested_columns=self.requested_columns
+        )
 
 
 def node(type, *args, **kwargs):

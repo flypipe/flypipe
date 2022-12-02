@@ -501,7 +501,8 @@ class TestNode:
             return df
 
         @node_function(
-            requested_columns=True
+            requested_columns=True,
+            node_dependencies=[t1]
         )
         def get_fruit_columns(requested_columns):
             @node(
@@ -733,3 +734,47 @@ class TestNode:
             return t1
 
         t3.run(spark, parallel=False)
+
+    def test_run_one_dependency_multiple_instances(self):
+        """
+        If our graph has multiple instances of the same dependency then they should be treated as seperate copies.
+            b
+          /   \
+        a - - - c
+        """
+
+        @node(
+            type='pandas'
+        )
+        def a():
+            return pd.DataFrame({
+                'c1': [1],
+                'c2': [1]
+            })
+
+        @node(
+            type='pandas',
+            dependencies=[a.select('c1')]
+        )
+        def b(a):
+            return a
+
+        @node(
+            type='pandas',
+            dependencies=[a.select('c2'), b]
+        )
+        def c(a, b):
+            return a
+
+        c.run(parallel=False)
+
+
+"""
+dependencies=[n1]
+dependencies=[n1]
+We actually want the dependency to be saved
+
+n1.select(c1,c2,c3)
+n1.select(c1,c2)
+We want the 1st dependency to be saved
+"""
