@@ -40,27 +40,20 @@ class NodeFunction(Node):
             for dependency in node.input_nodes:
                 if dependency not in nodes and dependency not in self.node_dependencies:
                     raise ValueError(
-                        f'Unknown node {dependency.key} in node function {self._key}, all external dependencies must '
+                        f'Unknown node {dependency.key} in node function {self._key} dependencies {[n._key for n in self.node_dependencies]}, all external dependencies must '
                         f'be defined in node function parameter node_dependencies')
 
         return list(nodes)
 
-    # def run(self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False):
-    #     # TODO: would be nice not to have to copy paste this code from Node.run
-    #     if not inputs:
-    #         inputs = {}
-    #     provided_inputs = {node.key: df for node, df in inputs.items()}
-    #     # self._create_graph(list(provided_inputs.keys()), pandas_on_spark_use_pandas)
-    #     # requested_columns = self.node_graph.graph.nodes[self.key]['output_columns']
-    #     return self.node_graph.get_end_node().run(spark, parallel, inputs, pandas_on_spark_use_pandas)
-    #     # return self.expand(requested_columns).run(spark, parallel, inputs, pandas_on_spark_use_pandas)
-
     def copy(self):
-        return NodeFunction(
+        node_function = NodeFunction(
             self.function,
             [dependency.copy() for dependency in self.node_dependencies],
             self.requested_columns
         )
+
+        node_function._key = self._key
+        return node_function
 
 
 def node_function(*args, **kwargs):
