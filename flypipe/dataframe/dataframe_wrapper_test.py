@@ -11,7 +11,6 @@ from flypipe.dataframe.spark_dataframe_wrapper import SparkDataFrameWrapper
 from flypipe.schema.types import Boolean, Decimal, String, Unknown
 from flypipe.tests.spark import spark
 
-
 class DummyDataFrameWrapper(DataFrameWrapper):
     FLYPIPE_TYPE_TO_DF_TYPE_MAP = {Boolean.key(): np.dtype("bool")}
 

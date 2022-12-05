@@ -23,10 +23,6 @@ def get_spark():
             .config("spark.sql.repl.eagerEval.enabled", "true")
             .config("spark.sql.execution.arrow.pyspark.enabled", "true")
             .config("spark.ui.enabled", "false")
-            .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-            .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
-            .config("spark.jars.repositories", "https://mvnrepository.com")
-            .config("spark.jars.packages", "io.delta:delta-core_2.13:2.1.1")
             .config("spark.ui.liveUpdate.period", "-1")
             .master("local[1]")
             .config("spark.submit.deployMode", "client")
@@ -40,6 +36,10 @@ def get_spark():
         configs = (
             configs
                 .config("hive.metastore.uris", thrift_url)
+                .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+                .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+                .config("spark.jars.repositories", "https://mvnrepository.com")
+                .config("spark.jars.packages", "io.delta:delta-core_2.13:2.1.1")
                 .enableHiveSupport()
         )
 

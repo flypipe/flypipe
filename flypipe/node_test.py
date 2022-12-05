@@ -491,37 +491,46 @@ class TestNode:
         true then we expect the node function to receive the superset of requested columns. This is very important as
         it will allow creation of dynamic nodes that adjusts functionality based on what columns have been requested.
         """
-        df = pd.DataFrame(
-            {
-                "fruit": ["mango", "strawberry", "banana", "pear"],
-                "category": ["tropical", "temperate", "tropical", "temperate"],
-                "color": ["yellow", "red", "yellow", "green"],
-                "size": ["medium", "small", "medium", "medium"],
-            }
-        )
+        df = pd.DataFrame({
+            'fruit': ['mango', 'strawberry', 'banana', 'pear'],
+            'category': ['tropical', 'temperate', 'tropical', 'temperate'],
+            'color': ['yellow', 'red', 'yellow', 'green'],
+            'size': ['medium', 'small', 'medium', 'medium'],
+            'misc': ['bla', 'bla', 'bla', 'bla'],
+        })
 
         @node(
-            type="pandas",
+            type='pandas',
         )
         def t1():
             return df
 
-        @node_function(requested_columns=True)
+        @node_function(
+            requested_columns=True,
+            node_dependencies=[t1]
+        )
         def get_fruit_columns(requested_columns):
-            @node(type="pandas", dependencies=[t1.select(requested_columns)])
+            @node(
+                type='pandas',
+                dependencies=[t1.select(requested_columns)]
+            )
             def t2(t1):
                 return t1
 
-            assert set(requested_columns) == {"fruit", "category", "color"}
+            assert set(requested_columns) == {'fruit', 'category', 'color'}
             return t2
 
         @node(
-            type="pandas", dependencies=[get_fruit_columns.select("fruit", "category")]
+            type='pandas',
+            dependencies=[get_fruit_columns.select('fruit', 'category')]
         )
         def fruit_category(get_fruit_columns):
             return get_fruit_columns
 
-        @node(type="pandas", dependencies=[get_fruit_columns.select("fruit", "color")])
+        @node(
+            type='pandas',
+            dependencies=[get_fruit_columns.select('fruit', 'color')]
+        )
         def fruit_color(get_fruit_columns):
             return get_fruit_columns
 
@@ -539,38 +548,50 @@ class TestNode:
         results = fruit_details.run(parallel=False)
         assert_frame_equal(results, df[['category', 'fruit', 'color', 'misc']])
 
-    def test_node_function_nested(self):
+    def test_node_function_series(self):
         """
-        Node functions should be able to be nested i.e depend on other node functions without issue.
+        Node functions should be able to be dependent on other node functions without issue.
         """
 
         @node_function()
         def g1():
-            @node(type="pandas")
+            @node(
+                type='pandas'
+            )
             def t1():
-                return pd.DataFrame({"c1": [1, 2, 3]})
+                return pd.DataFrame({'c1': [1, 2, 3]})
 
             return t1
 
-        @node_function()
+        @node_function(
+            node_dependencies=[g1]
+        )
         def g2():
-            @node(type="pandas", dependencies=[g1])
+            @node(
+                type='pandas',
+                dependencies=[g1]
+            )
             def t2(g1):
-                g1["c1"] *= 2
+                g1['c1'] *= 2
                 return g1
 
             return t2
 
-        @node_function()
+        @node_function(
+            node_dependencies=[g1, g2]
+        )
         def g3():
-            @node(type="pandas", dependencies=[g1, g2])
+            @node(
+                type='pandas',
+                dependencies=[g1, g2]
+            )
             def t3(g1, g2):
-                g2["c1"] = g1["c1"] + g2["c1"]
+                g2['c1'] = g1['c1'] + g2['c1']
                 return g2
 
             return t3
 
-        assert_frame_equal(g3.run(parallel=False), pd.DataFrame({"c1": [3, 6, 9]}))
+        assert_frame_equal(g3.run(parallel=False), pd.DataFrame({'c1': [3, 6, 9]}))
 
     def test_node_function_nested(self):
         """
@@ -707,10 +728,15 @@ class TestNode:
             return dummy_table1
 
         t1.run(spark, pandas_on_spark_use_pandas=True)
-        assert t1.type == DataFrameType.PANDAS
+        assert t1.type == DataFrameType.PANDAS_ON_SPARK
 
         t1.run(spark, pandas_on_spark_use_pandas=False)
         assert t1.type == DataFrameType.PANDAS_ON_SPARK
+
+        t1._create_graph(pandas_on_spark_use_pandas=True)
+        for n in t1.node_graph.graph.nodes:
+            if t1.node_graph.graph.nodes[n]['transformation'].__name__ == "t1":
+                assert t1.node_graph.graph.nodes[n]['transformation'].type == DataFrameType.PANDAS
 
     def test_function_argument_signature(self, spark):
         """

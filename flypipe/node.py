@@ -37,12 +37,6 @@ class Node:
         self.function = function
 
         self.node_type = NodeType.TRANSFORMATION
-        try:
-            self.type = self.TYPE_MAP[type]
-        except KeyError:
-            raise NodeTypeInvalidError(
-                f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}'
-            )
         if isinstance(type, DataFrameType):
             self.type = type
         else:

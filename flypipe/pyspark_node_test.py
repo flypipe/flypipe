@@ -205,7 +205,8 @@ class TestPySparkNode:
             return df
 
         with pytest.raises(DataFrameMissingColumns) as exc_info:
-            (my_col.run(spark, parallel=False))
+            my_col.run(spark, parallel=False)
+
         expected_error_df = pd.DataFrame(
             data={
                 "dataframe": ["", "My_Col__x ", "My_Col__z"],
@@ -213,33 +214,11 @@ class TestPySparkNode:
                 "error": ["not found", "Did you mean `My_Col__x`?", "found"],
             }
         )
+
         expected_error_df = expected_error_df.sort_values(
             ["selection", "dataframe"]
         ).reset_index(drop=True)
-        assert (
-                str(exc_info.value)
-                == f"Flypipe: could not find some columns in the dataframe"
-                   f"\n\n{tabulate(expected_error_df, headers='keys', tablefmt='mixed_outline')}\n"
-        )
-            (
-                my_col
-                    .run(spark, parallel=False)
-            )
-        expected_error_df = pd.DataFrame(data = {
-            'dataframe': [
-               '',  'My_Col__x ', 'My_Col__z'
-            ],
-            'selection': [
-                'Id', 'my_col__x', 'My_Col__z'
-            ],
-            'error': [
-                'not found','Did you mean `My_Col__x`?','found'
-            ]
-        })
-        expected_error_df = expected_error_df.sort_values([
-            'selection',
-            'dataframe'
-        ]).reset_index(drop=True)
+
         assert str(exc_info.value) == \
                f"Flypipe: could not find some columns in the dataframe" \
                f"\n\nOutput Dataframe columns: ['My_Col__x', 'My_Col__y', 'My_Col__z']" \
