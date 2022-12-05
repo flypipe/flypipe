@@ -492,6 +492,7 @@ class TestNode:
             'category': ['tropical', 'temperate', 'tropical', 'temperate'],
             'color': ['yellow', 'red', 'yellow', 'green'],
             'size': ['medium', 'small', 'medium', 'medium'],
+            'misc': ['bla', 'bla', 'bla', 'bla'],
         })
 
         @node(
@@ -501,7 +502,8 @@ class TestNode:
             return df
 
         @node_function(
-            requested_columns=True
+            requested_columns=True,
+            node_dependencies=[t1]
         )
         def get_fruit_columns(requested_columns):
             @node(
@@ -530,17 +532,21 @@ class TestNode:
 
         @node(
             type='pandas',
-            dependencies=[fruit_category.select('fruit', 'category'), fruit_color.select('fruit', 'color')]
+            dependencies=[
+                fruit_category.select('fruit', 'category'),
+                fruit_color.select('fruit', 'color'),
+                t1.select('fruit', 'misc'),
+            ]
         )
-        def fruit_details(fruit_category, fruit_color):
-            return fruit_category.merge(fruit_color)
+        def fruit_details(fruit_category, fruit_color, t1):
+            return fruit_category.merge(fruit_color).merge(t1)
 
         results = fruit_details.run(parallel=False)
-        assert_frame_equal(results, df[['category', 'fruit', 'color']])
+        assert_frame_equal(results, df[['category', 'fruit', 'color', 'misc']])
 
-    def test_node_function_nested(self):
+    def test_node_function_series(self):
         """
-        Node functions should be able to be nested i.e depend on other node functions without issue.
+        Node functions should be able to be dependent on other node functions without issue.
         """
         @node_function()
         def g1():
@@ -552,7 +558,9 @@ class TestNode:
 
             return t1
 
-        @node_function()
+        @node_function(
+            node_dependencies=[g1]
+        )
         def g2():
             @node(
                 type='pandas',
@@ -564,7 +572,9 @@ class TestNode:
 
             return t2
 
-        @node_function()
+        @node_function(
+            node_dependencies=[g1, g2]
+        )
         def g3():
             @node(
                 type='pandas',
@@ -577,6 +587,52 @@ class TestNode:
             return t3
 
         assert_frame_equal(g3.run(parallel=False), pd.DataFrame({'c1': [3, 6, 9]}))
+
+    def test_node_function_nested(self):
+        """
+        Ensure we can do nested node functions- i.e node functions that return other node functions without issue.
+        """
+        df = pd.DataFrame({
+            'c1': ['Bob', 'Fred'],
+            'c2': [10, 20]
+        })
+        @node(
+            type='pandas'
+        )
+        def t1():
+            return df
+
+
+
+
+        @node_function(
+            node_dependencies=[t1]
+        )
+        def nf1():
+            @node_function(
+                node_dependencies=[t1]
+            )
+            def nf2():
+                @node(
+                    type='pandas',
+                    dependencies=[t1.select('c1')]
+                )
+                def t2(t1):
+                    return t1
+
+                return t2
+            return nf2
+
+        @node(
+          type='pandas',
+          dependencies=[nf1]
+        )
+        def t3(nf1):
+            return nf1
+
+        with pytest.raises(ValueError):
+            t3.run()
+
 
     def test_run_isolated_dependencies_pandas(self):
         """
@@ -733,3 +789,47 @@ class TestNode:
             return t1
 
         t3.run(spark, parallel=False)
+
+    def test_run_one_dependency_multiple_instances(self):
+        """
+        If our graph has multiple instances of the same dependency then they should be treated as seperate copies.
+            b
+          /   \
+        a - - - c
+        """
+
+        @node(
+            type='pandas'
+        )
+        def a():
+            return pd.DataFrame({
+                'c1': [1],
+                'c2': [1]
+            })
+
+        @node(
+            type='pandas',
+            dependencies=[a.select('c1')]
+        )
+        def b(a):
+            return a
+
+        @node(
+            type='pandas',
+            dependencies=[a.select('c2'), b]
+        )
+        def c(a, b):
+            return a
+
+        c.run(parallel=False)
+
+
+"""
+dependencies=[n1]
+dependencies=[n1]
+We actually want the dependency to be saved
+
+n1.select(c1,c2,c3)
+n1.select(c1,c2)
+We want the 1st dependency to be saved
+"""

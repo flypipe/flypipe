@@ -46,3 +46,9 @@ class InputNode:
     def alias(self, value):
         self._alias = value
         return self
+
+    def copy(self):
+        input_node_copy = InputNode(self.node.copy())
+        input_node_copy._selected_columns = self._selected_columns
+        input_node_copy._alias = self._alias
+        return input_node_copy

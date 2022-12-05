@@ -50,4 +50,4 @@ class TestConfig:
             assert get_config('require_node_description') is True
 
     def test_get_config_default(self):
-        assert get_config('default_run_mode') == RunMode.PARALLEL.value
+        assert get_config('default_run_mode') == RunMode.SEQUENTIAL.value

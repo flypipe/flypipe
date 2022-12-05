@@ -149,4 +149,3 @@ class TestNodeGraph:
         assert graph.get_nodes_depth() == {1: [t2.key, t1.key], 2: [t3.key], 3: [t4.key], 4: [t5.key]}
 
 
-
