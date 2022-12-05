@@ -74,21 +74,6 @@ class NodeGraph:
 
         graph = self._compute_edge_selected_columns(graph)
 
-        # for node_key in graph.nodes:
-        #     transformation = graph.nodes[node_key]['transformation']
-        #     # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
-        #     # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
-        #     if (
-        #             pandas_on_spark_use_pandas
-        #             and transformation.type == DataFrameType.PANDAS_ON_SPARK
-        #     ):
-        #         transformation.type = DataFrameType.PANDAS
-        #         transformation.original_type = DataFrameType.PANDAS_ON_SPARK
-        #
-        #     # FIXME: Ticket DATA-3700
-        #     elif not pandas_on_spark_use_pandas and hasattr(transformation, "original_type"):
-        #         transformation.type = transformation.original_type
-
         for node_key in graph.nodes:
             transformation = graph.nodes[node_key]['transformation']
             # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
@@ -222,56 +207,6 @@ class NodeGraph:
             graph.nodes[node_key]['output_columns'] = output_columns.get_columns()
 
         return graph
-    # def _build_graph(self, transformation: Node, pandas_on_spark_use_pandas: bool):
-    #     graph = nx.DiGraph()
-    #
-    #     # Parse the graph, extracting the nodes, edges and selected_columns
-    #     self.node_output_columns = {transformation.key: OutputColumnSet(None)}
-    #     self.edges = []
-    #     frontier = [transformation]
-    #     visited = set([transformation.key])
-    #     while frontier:
-    #         current_transformation = frontier.pop()
-    #
-    #         if isinstance(current_transformation, NodeFunction):
-    #             current_transformation = current_transformation.expand(
-    #                 requested_columns=self.node_output_columns[current_transformation.key].get_columns())
-    #
-    #         # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
-    #         # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
-    #         if pandas_on_spark_use_pandas and current_transformation.type==DataFrameType.PANDAS_ON_SPARK:
-    #             current_transformation.type = DataFrameType.PANDAS
-    #
-    #         graph.add_node(
-    #             current_transformation.key,
-    #             transformation=current_transformation,
-    #             output_columns=None,
-    #             status=RunStatus.UNKNOWN,
-    #         )
-    #         for input_node in current_transformation.input_nodes:
-    #             if input_node.node.key in self.node_output_columns:
-    #                 self.node_output_columns[input_node.node.key].add_columns(input_node.selected_columns)
-    #             else:
-    #                 self.node_output_columns[input_node.node.key] = OutputColumnSet(input_node.selected_columns)
-    #
-    #             # At the point where we process the inputs for a node the input node doesn't yet exist in the graph,
-    #             # thus we cannot create edges. Instead, we hold a collection of edge data and create the edges after all
-    #             # the nodes are added.
-    #             self.edges.append((input_node.node.key, current_transformation.key, input_node.selected_columns))
-    #             if input_node.node.key not in visited:
-    #                 frontier.insert(0, input_node.node)
-    #                 visited.add(input_node.node.key)
-    #
-    #     for node_key, output_columns in self.node_output_columns.items():
-    #         graph.nodes[node_key]['output_columns'] = output_columns.get_columns()
-    #
-    #     for source_node_key, dest_node_key, selected_columns in self.edges:
-    #         graph.add_edge(
-    #             source_node_key,
-    #             dest_node_key,
-    #             selected_columns=selected_columns
-    #         )
-    #     return graph
 
     def get_node(self, name: str):
         return self.graph.nodes[name]
@@ -359,12 +294,12 @@ class NodeGraph:
     def is_empty(self):
         return nx.number_of_nodes(self.graph) == 0
 
-    def plot(self):
-
+    def plot(self, graph=None):
+        graph = graph or self.graph
         from matplotlib import pyplot as plt
 
         plt.title(f'Transformation Graph')
-        nx.draw(self.graph, with_labels=True)
+        nx.draw(graph, with_labels=True)
         plt.show()
 
     def copy(self):
