@@ -90,10 +90,10 @@ class DataFrameMissingColumns(Exception):
             drop=True
         )
 
-        msg_error = (
-            f"Flypipe: could not find some columns in the dataframe"
-            f"\n\n{tabulate(error_df, headers='keys', tablefmt='mixed_outline')}\n"
-        )
+        msg_error = f"Flypipe: could not find some columns in the dataframe" \
+                    f"\n\nOutput Dataframe columns: {source_columns}" \
+                    f"\nGraph selected columns: {selected_columns}" \
+                    f"\n\n\n{tabulate(error_df, headers='keys', tablefmt='mixed_outline')}\n"
 
         print(msg_error)
 

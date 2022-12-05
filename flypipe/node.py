@@ -33,6 +33,7 @@ class Node:
     ):
 
         self._key = None
+        self.name = None
         self.function = function
 
         self.node_type = NodeType.TRANSFORMATION
@@ -42,6 +43,13 @@ class Node:
             raise NodeTypeInvalidError(
                 f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}'
             )
+        if isinstance(type, DataFrameType):
+            self.type = type
+        else:
+            try:
+                self.type = self.TYPE_MAP[type]
+            except KeyError:
+                raise NodeTypeInvalidError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
 
         if not description and get_config("require_node_description"):
             raise ValueError(
@@ -87,6 +95,8 @@ class Node:
 
     @property
     def __name__(self):
+        if self.name:
+            return self.name
         return self.function.__name__
 
     @property
@@ -166,9 +176,7 @@ class Node:
     def __call__(self, *args):
         return self.function(*args)
 
-    def run(
-            self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False
-    ):
+    def run(self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False):
         if not inputs:
             inputs = {}
         provided_inputs = {node.key: df for node, df in inputs.items()}
@@ -197,6 +205,7 @@ class Node:
         while not execution_graph.is_empty():
             runnable_nodes = execution_graph.pop_runnable_transformations()
             for runnable_node in runnable_nodes:
+
                 if runnable_node["transformation"].key in outputs:
                     continue
 
@@ -253,16 +262,35 @@ class Node:
     def plot(self):
         self.node_graph.plot()
 
-    def html(
-            self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False
-    ):
+    def html(self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False):
         from flypipe.printer.graph_html import GraphHTML
-
         skipped_nodes = inputs or []
         self._create_graph(
             [node.key for node in skipped_nodes], pandas_on_spark_use_pandas
         )
         return GraphHTML(self.node_graph, width=width, height=height).html()
+
+    def __eq__(self, other):
+        return self.key == other.key
+
+    def __hash__(self):
+        return hash(self.key)
+
+    def copy(self):
+        # Note this is a DEEP copy and will copy all ancestor nodes by extension
+        node = Node(
+            self.function,
+            self.type,
+            description=self.description,
+            tags=list(self.tags),
+            dependencies=[input_node.copy() for input_node in self.input_nodes],
+            output=None if self.output_schema is None else self.output_schema.copy(),
+            spark_context=self.spark_context,
+            requested_columns=self.requested_columns
+        )
+        node.name = self.name
+        node._key = self._key
+        return node
 
 
 def node(type, *args, **kwargs):

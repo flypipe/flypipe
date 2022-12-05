@@ -16,3 +16,6 @@ class Schema:
 
         cols = [str(col) for col in self.columns]
         return "Schema([\n\t" + ",\n\t".join(cols) + "\n])"
+
+    def copy(self):
+        return Schema([Column(column.name, column.type, column.description) for column in self.columns])
