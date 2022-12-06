@@ -6,6 +6,7 @@ from networkx import DiGraph
 
 from flypipe.node import Node
 from flypipe.node_function import NodeFunction
+from flypipe.node_run_context import NodeRunContext
 from flypipe.output_column_set import OutputColumnSet
 from flypipe.utils import DataFrameType
 
@@ -29,7 +30,7 @@ class NodeGraph:
         Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
         this.
         """
-
+        parameters = parameters or {}
         if graph:
             self.graph = graph
         else:
@@ -43,6 +44,21 @@ class NodeGraph:
         self.skipped_node_keys = skipped_node_keys
         self.calculate_graph_run_status()
 
+    def add_node(self, graph, node_name: str, transformation: Node, run_status: RunStatus = None, output_columns=None,
+                 run_context=None):
+        run_status = run_status or RunStatus.UNKNOWN
+        run_context = run_context or NodeRunContext()
+
+        graph.add_node(
+            node_name,
+            transformation=transformation,
+            status=run_status,
+            output_columns=output_columns,
+            run_context=run_context,
+        )
+
+        return graph
+
     def _build_graph(self, transformation: Node, pandas_on_spark_use_pandas: bool, parameters: dict):
         transformation = transformation.copy()
         graph = nx.DiGraph()
@@ -51,12 +67,14 @@ class NodeGraph:
         while frontier:
             current_transformation = frontier.pop()
 
-            graph.add_node(
-                current_transformation.key,
-                transformation=current_transformation,
-                status=RunStatus.UNKNOWN,
-                output_columns=None,
-            )
+            node_run_context = NodeRunContext()
+            if current_transformation.key in parameters:
+                node_run_context.parameters = parameters[current_transformation.key]
+
+            graph = self.add_node(graph,
+                                  current_transformation.key,
+                                  transformation=current_transformation,
+                                  run_context=node_run_context)
 
             if isinstance(current_transformation, NodeFunction):
                 dependencies = current_transformation.node_dependencies
@@ -128,7 +146,7 @@ class NodeGraph:
                     node_function_key = node_function["transformation"]._key
 
                     expanded_graph = self._expand_node_function(
-                        node_function["transformation"], node_function["output_columns"]
+                        node_function["transformation"], node_function["output_columns"], node_function["run_context"]
                     )
 
                     # The edges created from the node function node_dependencies are now irrelevant and should be removed
@@ -162,33 +180,27 @@ class NodeGraph:
 
         return graph
 
-    def _expand_node_function(self, node_function, requested_columns):
+    def _expand_node_function(self, node_function: NodeFunction, requested_columns: list, run_context: NodeRunContext):
         """
         Expand a node function in the graph and replace it with the nodes it returns. There are a few additional steps:
         - The end node of the nodes that the node function returns is renamed to have the same key as the node function.
         """
 
-        nodes = node_function.expand(requested_columns=requested_columns)
+        nodes = node_function.expand(requested_columns=requested_columns, parameters=run_context.parameters)
 
         expanded_graph = nx.DiGraph()
         for node in nodes:
-            expanded_graph.add_node(
-                node.key,
-                transformation=node,
-                status=RunStatus.UNKNOWN,
-                output_columns=None,
-            )
+            expanded_graph = self.add_node(expanded_graph,
+                                           node.key,
+                                           transformation=node)
 
         for node in nodes:
             for dependency in node.input_nodes:
 
                 if dependency.key not in expanded_graph.nodes:
-                    expanded_graph.add_node(
-                        dependency.key,
-                        transformation=dependency.node,
-                        status=RunStatus.UNKNOWN,
-                        output_columns=None,
-                    )
+                    expanded_graph = self.add_node(expanded_graph,
+                                                   dependency.key,
+                                                   transformation=dependency.node)
 
                 expanded_graph.add_edge(dependency.key, node.key)
 

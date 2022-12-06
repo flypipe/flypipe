@@ -6,6 +6,7 @@ from flypipe.config import get_config, RunMode
 from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
+from flypipe.node_run_context import NodeRunContext
 from flypipe.node_type import NodeType
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import Unknown
@@ -173,12 +174,13 @@ class Node:
         return self.function(*args)
 
     def run(
-            self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False
+            self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False, parameters=None
     ):
         if not inputs:
             inputs = {}
+
         provided_inputs = {node.key: df for node, df in inputs.items()}
-        self._create_graph(list(provided_inputs.keys()), pandas_on_spark_use_pandas)
+        self._create_graph(list(provided_inputs.keys()), pandas_on_spark_use_pandas, parameters)
         if parallel is None:
             parallel = get_config("default_run_mode") == RunMode.PARALLEL.value
         if parallel:
@@ -214,7 +216,10 @@ class Node:
                 result = NodeResult(
                     spark,
                     runnable_node["transformation"].process_transformation(
-                        spark, runnable_node["output_columns"], **dependency_values
+                        spark, runnable_node["output_columns"],
+                        runnable_node["run_context"],
+                        **dependency_values,
+
                     ),
                     schema=self._get_consolidated_output_schema(
                         runnable_node["transformation"].output_schema,
@@ -247,13 +252,17 @@ class Node:
             schema = None
         return schema
 
-    def process_transformation(self, spark, requested_columns, **inputs):
+    def process_transformation(self, spark, requested_columns: list, run_context: NodeRunContext, **inputs):
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
         parameters = inputs
         if self.spark_context:
             parameters["spark"] = spark
+
         if self.requested_columns:
             parameters["requested_columns"] = requested_columns
+
+        if run_context.parameters:
+            parameters = {**parameters, **run_context.parameters}
 
         return self.function(**parameters)
 
