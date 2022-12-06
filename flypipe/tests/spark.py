@@ -17,9 +17,7 @@ def url_ok(url):
 
 def get_spark():
     configs = (
-        SparkSession
-            .builder
-            .config("spark.sql.warehouse.dir", "/spark-warehouse")
+        SparkSession.builder.config("spark.sql.warehouse.dir", "/spark-warehouse")
             .config("spark.sql.repl.eagerEval.enabled", "true")
             .config("spark.sql.execution.arrow.pyspark.enabled", "true")
             .config("spark.ui.enabled", "false")
@@ -34,10 +32,12 @@ def get_spark():
 
     if thrift_server_available:
         configs = (
-            configs
-                .config("hive.metastore.uris", thrift_url)
+            configs.config("hive.metastore.uris", thrift_url)
                 .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-                .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+                .config(
+                "spark.sql.catalog.spark_catalog",
+                "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+            )
                 .config("spark.jars.repositories", "https://mvnrepository.com")
                 .config("spark.jars.packages", "io.delta:delta-core_2.13:2.1.1")
                 .enableHiveSupport()

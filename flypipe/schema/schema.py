@@ -1,5 +1,3 @@
-from typing import List
-
 from flypipe.schema.column import Column
 
 
@@ -23,4 +21,9 @@ class Schema:
         return "Schema([\n\t" + ",\n\t".join(cols) + "\n])"
 
     def copy(self):
-        return Schema([Column(column.name, column.type, column.description) for column in self.columns])
+        return Schema(
+            [
+                Column(column.name, column.type, column.description)
+                for column in self.columns
+            ]
+        )

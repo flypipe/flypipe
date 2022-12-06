@@ -1,4 +1,5 @@
 import pandas as pd
+
 from flypipe import node
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String
@@ -15,11 +16,27 @@ _config = {
     type="pandas",
     description="demo model configurations",
     output=Schema(
-        Column("artifact_location", String(), f"artifacts path location (default `{_config['artifact_location']}`)"),
-        Column("experiment_name", String(), f"name of the mlflow experiment (default `{_config['experiment_name']}`)"),
-        Column("experiment_path", String(), f"path of the experiment (default `{_config['experiment_path']}`)"),
-        Column("production_run_id", String(), f"production run id (default `{_config['production_run_id']}`)"),
-    )
+        Column(
+            "artifact_location",
+            String(),
+            f"artifacts path location (default `{_config['artifact_location']}`)",
+        ),
+        Column(
+            "experiment_name",
+            String(),
+            f"name of the mlflow experiment (default `{_config['experiment_name']}`)",
+        ),
+        Column(
+            "experiment_path",
+            String(),
+            f"path of the experiment (default `{_config['experiment_path']}`)",
+        ),
+        Column(
+            "production_run_id",
+            String(),
+            f"production run id (default `{_config['production_run_id']}`)",
+        ),
+    ),
 )
 def config():
     return pd.DataFrame(data=[_config])

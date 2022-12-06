@@ -21,17 +21,25 @@ class DataFrameWrapper(ABC):
     def get_instance(cls, spark, df):
         df_type = dataframe_type(df)
         if df_type == DataFrameType.PANDAS:
-            from flypipe.dataframe.pandas_dataframe_wrapper import PandasDataFrameWrapper
+            from flypipe.dataframe.pandas_dataframe_wrapper import (
+                PandasDataFrameWrapper,
+            )
+
             df_instance = PandasDataFrameWrapper
 
         elif df_type == DataFrameType.PYSPARK:
             from flypipe.dataframe.spark_dataframe_wrapper import SparkDataFrameWrapper
+
             df_instance = SparkDataFrameWrapper
 
         elif df_type == DataFrameType.PANDAS_ON_SPARK:
             import pyspark.pandas as ps
+
             ps.set_option("compute.ops_on_diff_frames", True)
-            from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import PandasOnSparkDataFrameWrapper
+            from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import (
+                PandasOnSparkDataFrameWrapper,
+            )
+
             df_instance = PandasOnSparkDataFrameWrapper
         else:
             raise ValueError(f"No flypipe dataframe type found for dataframe {df_type}")

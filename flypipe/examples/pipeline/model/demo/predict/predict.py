@@ -12,22 +12,19 @@ from flypipe.schema.types import Integer
     description="Split train (70%) and test (30%) data",
     tags=["prediction"],
     dependencies=[
-        config.select('production_run_id'),
+        config.select("production_run_id"),
         scale.select(
-            'sepal_length',
-            'sepal_width',
-            'petal_length',
-            'petal_width'
-        ).alias("df")
+            "sepal_length", "sepal_width", "petal_length", "petal_width"
+        ).alias("df"),
     ],
     output=Schema(
-        Column('prediction', Integer(), 'prediction'),
-
-    ))
+        Column("prediction", Integer(), "prediction"),
+    ),
+)
 def predict(config, df):
-    RUN_ID = config.loc[0, 'production_run_id']
-    model_path = f'runs:/{RUN_ID}/model'
+    RUN_ID = config.loc[0, "production_run_id"]
+    model_path = f"runs:/{RUN_ID}/model"
     loaded_model = mlflow.pyfunc.load_model(model_path)
 
-    df['prediction'] = loaded_model.predict(df)
+    df["prediction"] = loaded_model.predict(df)
     return df

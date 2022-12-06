@@ -149,7 +149,8 @@ class GraphHTML:
                 "successors_names": successors_names,
                 "definition": {
                     "description": graph_node["transformation"].description,
-                    "tags": graph_node["transformation"].tags + [graph_node["transformation"].__name__],
+                    "tags": graph_node["transformation"].tags
+                            + [graph_node["transformation"].__name__],
                     "columns": [],
                 },
             }

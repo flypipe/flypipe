@@ -6,24 +6,17 @@ from flypipe.node_function import node_function
 
 
 class TestNodeFunction:
-
     def test_node_dependencies_type(self):
         """
         For simplicity we want to limit the node dependencies on node functions to only have dependent nodes and not the column selection which is what we normally do on regular nodes. Let's throw an appropriate error if the user attempts to make the node dependent with columns
         """
-        @node(
-            type='pandas'
-        )
+
+        @node(type="pandas")
         def test():
-            return pd.DataFrame({
-                'c1': [1, 2],
-                'c2': ['Joe', 'John']
-            })
+            return pd.DataFrame({"c1": [1, 2], "c2": ["Joe", "John"]})
 
         with pytest.raises(TypeError):
-            @node_function(
-                node_dependencies=[test.select('c1')]
-            )
+            @node_function(node_dependencies=[test.select("c1")])
             def func():
                 pass
 
@@ -33,56 +26,35 @@ class TestNodeFunction:
         node_dependencies then throw an error.
         """
 
-        @node(
-            type='pandas'
-        )
+        @node(type="pandas")
         def b():
-            return pd.DataFrame({
-                'c1': [1, 2],
-                'c2': ['Joe', 'John']
-            })
+            return pd.DataFrame({"c1": [1, 2], "c2": ["Joe", "John"]})
 
         @node_function()
         def func():
-            @node(
-                type='pandas',
-                dependencies=[b]
-            )
+            @node(type="pandas", dependencies=[b])
             def a(b):
                 return b
+
             return a
 
         with pytest.raises(ValueError):
             func.expand(None)
 
     def test_expand(self):
-
-        @node(
-            type='pandas'
-        )
+        @node(type="pandas")
         def c():
-            return pd.DataFrame({
-                'c1': [1, 2],
-                'c2': ['Joe', 'John']
-            })
+            return pd.DataFrame({"c1": [1, 2], "c2": ["Joe", "John"]})
 
-        @node(
-            type='pandas',
-            dependencies=[c]
-        )
+        @node(type="pandas", dependencies=[c])
         def b(c):
             return c
 
-        @node(
-            type='pandas',
-            dependencies=[b, c.select('c2')]
-        )
+        @node(type="pandas", dependencies=[b, c.select("c2")])
         def a(b, c):
             return b
 
-        @node_function(
-            node_dependencies=[c]
-        )
+        @node_function(node_dependencies=[c])
         def func():
             return a, b
 
@@ -90,36 +62,19 @@ class TestNodeFunction:
 
         assert nodes == [a, b]
 
-
-
     def test_bla(self):
-
-        @node(
-            type='pandas'
-        )
+        @node(type="pandas")
         def c():
-            return pd.DataFrame({
-                'c1': [1, 2],
-                'c2': ['Joe', 'John']
-            })
+            return pd.DataFrame({"c1": [1, 2], "c2": ["Joe", "John"]})
 
-        @node_function(
-            node_dependencies=[c]
-        )
+        @node_function(node_dependencies=[c])
         def func():
-            @node(
-                type='pandas',
-                dependencies=[c]
-            )
+            @node(type="pandas", dependencies=[c])
             def b(c):
                 return c
 
-            @node(
-                type='pandas',
-                dependencies=[b, c.select('c2')]
-            )
+            @node(type="pandas", dependencies=[b, c.select("c2")])
             def a(b, c):
                 return b
+
             return a
-
-

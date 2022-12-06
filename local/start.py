@@ -7,9 +7,9 @@ import IPython
 warnings.filterwarnings("ignore")
 
 ipython = IPython.get_ipython()
-if 'ipython' in globals():
-    ipython.magic('load_ext autoreload')
-    ipython.magic('autoreload 2')
+if "ipython" in globals():
+    ipython.magic("load_ext autoreload")
+    ipython.magic("autoreload 2")
 
 html_width = "100%"
 html_height = "1000"

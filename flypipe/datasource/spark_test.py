@@ -1,5 +1,6 @@
-import pytest
 from decimal import Decimal as PythonDecimal
+
+import pytest
 from pyspark.sql.types import StructType, StructField, DecimalType
 from pyspark_test import assert_pyspark_df_equal
 
@@ -186,5 +187,8 @@ class TestSparkDataSource:
         spy.assert_not_called()
         spy2.assert_called_once()
 
-        assert_pyspark_df_equal(spy2.spy_return, spark.createDataFrame(schema=('c0', 'c1'), data=[(0, 1)]), check_dtype=False)
-
+        assert_pyspark_df_equal(
+            spy2.spy_return,
+            spark.createDataFrame(schema=("c0", "c1"), data=[(0, 1)]),
+            check_dtype=False,
+        )

@@ -19,7 +19,6 @@ class Node:
         "pandas_on_spark": DataFrameType.PANDAS_ON_SPARK,
     }
 
-
     def __init__(
             self,
             function,
@@ -43,7 +42,9 @@ class Node:
             try:
                 self.type = self.TYPE_MAP[type]
             except KeyError:
-                raise NodeTypeInvalidError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
+                raise NodeTypeInvalidError(
+                    f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}'
+                )
 
         if not description and get_config("require_node_description"):
             raise ValueError(
@@ -170,7 +171,9 @@ class Node:
     def __call__(self, *args):
         return self.function(*args)
 
-    def run(self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False):
+    def run(
+            self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False
+    ):
         if not inputs:
             inputs = {}
         provided_inputs = {node.key: df for node, df in inputs.items()}
@@ -256,8 +259,11 @@ class Node:
     def plot(self):
         self.node_graph.plot()
 
-    def html(self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False):
+    def html(
+            self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False
+    ):
         from flypipe.printer.graph_html import GraphHTML
+
         skipped_nodes = inputs or []
         self._create_graph(
             [node.key for node in skipped_nodes], pandas_on_spark_use_pandas
@@ -280,7 +286,7 @@ class Node:
             dependencies=[input_node.copy() for input_node in self.input_nodes],
             output=None if self.output_schema is None else self.output_schema.copy(),
             spark_context=self.spark_context,
-            requested_columns=self.requested_columns
+            requested_columns=self.requested_columns,
         )
         node.name = self.name
         node._key = self._key

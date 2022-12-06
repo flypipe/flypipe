@@ -6,13 +6,13 @@ from flypipe.schema.types import String
 
 
 @node(
-    type='pandas',
+    type="pandas",
     dependencies=[],
-    output=Schema([
-        Column('c1', String(), 'dummy'),
-    ])
+    output=Schema(
+        [
+            Column("c1", String(), "dummy"),
+        ]
+    ),
 )
 def t0():
-    return pd.DataFrame(data={
-        'c1': ['t0']
-    })
+    return pd.DataFrame(data={"c1": ["t0"]})

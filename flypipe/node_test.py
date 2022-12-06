@@ -473,6 +473,7 @@ class TestNode:
         with pytest.raises(ValueError) as ex, config_context(
                 require_node_description=True
         ):
+
             @node(
                 type="pandas",
             )
@@ -491,62 +492,54 @@ class TestNode:
         true then we expect the node function to receive the superset of requested columns. This is very important as
         it will allow creation of dynamic nodes that adjusts functionality based on what columns have been requested.
         """
-        df = pd.DataFrame({
-            'fruit': ['mango', 'strawberry', 'banana', 'pear'],
-            'category': ['tropical', 'temperate', 'tropical', 'temperate'],
-            'color': ['yellow', 'red', 'yellow', 'green'],
-            'size': ['medium', 'small', 'medium', 'medium'],
-            'misc': ['bla', 'bla', 'bla', 'bla'],
-        })
+        df = pd.DataFrame(
+            {
+                "fruit": ["mango", "strawberry", "banana", "pear"],
+                "category": ["tropical", "temperate", "tropical", "temperate"],
+                "color": ["yellow", "red", "yellow", "green"],
+                "size": ["medium", "small", "medium", "medium"],
+                "misc": ["bla", "bla", "bla", "bla"],
+            }
+        )
 
         @node(
-            type='pandas',
+            type="pandas",
         )
         def t1():
             return df
 
-        @node_function(
-            requested_columns=True,
-            node_dependencies=[t1]
-        )
+        @node_function(requested_columns=True, node_dependencies=[t1])
         def get_fruit_columns(requested_columns):
-            @node(
-                type='pandas',
-                dependencies=[t1.select(requested_columns)]
-            )
+            @node(type="pandas", dependencies=[t1.select(requested_columns)])
             def t2(t1):
                 return t1
 
-            assert set(requested_columns) == {'fruit', 'category', 'color'}
+            assert set(requested_columns) == {"fruit", "category", "color"}
             return t2
 
         @node(
-            type='pandas',
-            dependencies=[get_fruit_columns.select('fruit', 'category')]
+            type="pandas", dependencies=[get_fruit_columns.select("fruit", "category")]
         )
         def fruit_category(get_fruit_columns):
             return get_fruit_columns
 
-        @node(
-            type='pandas',
-            dependencies=[get_fruit_columns.select('fruit', 'color')]
-        )
+        @node(type="pandas", dependencies=[get_fruit_columns.select("fruit", "color")])
         def fruit_color(get_fruit_columns):
             return get_fruit_columns
 
         @node(
-            type='pandas',
+            type="pandas",
             dependencies=[
-                fruit_category.select('fruit', 'category'),
-                fruit_color.select('fruit', 'color'),
-                t1.select('fruit', 'misc'),
-            ]
+                fruit_category.select("fruit", "category"),
+                fruit_color.select("fruit", "color"),
+                t1.select("fruit", "misc"),
+            ],
         )
         def fruit_details(fruit_category, fruit_color, t1):
             return fruit_category.merge(fruit_color).merge(t1)
 
         results = fruit_details.run(parallel=False)
-        assert_frame_equal(results, df[['category', 'fruit', 'color', 'misc']])
+        assert_frame_equal(results, df[["category", "fruit", "color", "misc"]])
 
     def test_node_function_series(self):
         """
@@ -555,89 +548,60 @@ class TestNode:
 
         @node_function()
         def g1():
-            @node(
-                type='pandas'
-            )
+            @node(type="pandas")
             def t1():
-                return pd.DataFrame({'c1': [1, 2, 3]})
+                return pd.DataFrame({"c1": [1, 2, 3]})
 
             return t1
 
-        @node_function(
-            node_dependencies=[g1]
-        )
+        @node_function(node_dependencies=[g1])
         def g2():
-            @node(
-                type='pandas',
-                dependencies=[g1]
-            )
+            @node(type="pandas", dependencies=[g1])
             def t2(g1):
-                g1['c1'] *= 2
+                g1["c1"] *= 2
                 return g1
 
             return t2
 
-        @node_function(
-            node_dependencies=[g1, g2]
-        )
+        @node_function(node_dependencies=[g1, g2])
         def g3():
-            @node(
-                type='pandas',
-                dependencies=[g1, g2]
-            )
+            @node(type="pandas", dependencies=[g1, g2])
             def t3(g1, g2):
-                g2['c1'] = g1['c1'] + g2['c1']
+                g2["c1"] = g1["c1"] + g2["c1"]
                 return g2
 
             return t3
 
-        assert_frame_equal(g3.run(parallel=False), pd.DataFrame({'c1': [3, 6, 9]}))
+        assert_frame_equal(g3.run(parallel=False), pd.DataFrame({"c1": [3, 6, 9]}))
 
     def test_node_function_nested(self):
         """
         Ensure we can do nested node functions- i.e node functions that return other node functions without issue.
         """
-        df = pd.DataFrame({
-            'c1': ['Bob', 'Fred'],
-            'c2': [10, 20]
-        })
-        @node(
-            type='pandas'
-        )
+        df = pd.DataFrame({"c1": ["Bob", "Fred"], "c2": [10, 20]})
+
+        @node(type="pandas")
         def t1():
             return df
 
-
-
-
-        @node_function(
-            node_dependencies=[t1]
-        )
+        @node_function(node_dependencies=[t1])
         def nf1():
-            @node_function(
-                node_dependencies=[t1]
-            )
+            @node_function(node_dependencies=[t1])
             def nf2():
-                @node(
-                    type='pandas',
-                    dependencies=[t1.select('c1')]
-                )
+                @node(type="pandas", dependencies=[t1.select("c1")])
                 def t2(t1):
                     return t1
 
                 return t2
+
             return nf2
 
-        @node(
-          type='pandas',
-          dependencies=[nf1]
-        )
+        @node(type="pandas", dependencies=[nf1])
         def t3(nf1):
             return nf1
 
         with pytest.raises(ValueError):
             t3.run()
-
 
     def test_run_isolated_dependencies_pandas(self):
         """
@@ -722,8 +686,7 @@ class TestNode:
         If running straigth after, but with pandas_on_spark_use_pandas=False, all pandas_on_spark nodes types should be of type pandas_on_spark
         """
 
-        @node(type="pandas_on_spark",
-              dependencies=[Spark("dummy_table1").select("c1")])
+        @node(type="pandas_on_spark", dependencies=[Spark("dummy_table1").select("c1")])
         def t1(dummy_table1):
             return dummy_table1
 
@@ -735,8 +698,11 @@ class TestNode:
 
         t1._create_graph(pandas_on_spark_use_pandas=True)
         for n in t1.node_graph.graph.nodes:
-            if t1.node_graph.graph.nodes[n]['transformation'].__name__ == "t1":
-                assert t1.node_graph.graph.nodes[n]['transformation'].type == DataFrameType.PANDAS
+            if t1.node_graph.graph.nodes[n]["transformation"].__name__ == "t1":
+                assert (
+                        t1.node_graph.graph.nodes[n]["transformation"].type
+                        == DataFrameType.PANDAS
+                )
 
     def test_function_argument_signature(self, spark):
         """
@@ -756,41 +722,37 @@ class TestNode:
                 ...
         """
 
-        @node(
-            type='pyspark'
-        )
+        @node(type="pyspark")
         def t1():
-            return spark.createDataFrame(data=[{'c1': 1, 'c2': 2}])
+            return spark.createDataFrame(data=[{"c1": 1, "c2": 2}])
 
         @node(
-            type='pyspark',
-            dependencies=[
-                t1.select("c1")
-            ],
+            type="pyspark",
+            dependencies=[t1.select("c1")],
             requested_columns=True,
-            spark_context=True
+            spark_context=True,
         )
         def t2(t1, requested_columns, spark):
-            assert requested_columns == ['c1']
+            assert requested_columns == ["c1"]
             assert dataframe_type(t1) == DataFrameType.PYSPARK
-            assert t1.columns == ['c1']
+            assert t1.columns == ["c1"]
             assert isinstance(spark, pyspark.sql.session.SparkSession)
             return t1
 
         @node(
-            type='pyspark',
+            type="pyspark",
             dependencies=[
                 t1.select("c1", "c2"),
                 t2.select("c1"),
             ],
-            spark_context=True
+            spark_context=True,
         )
         def t3(t2, t1, spark):
             assert dataframe_type(t1) == DataFrameType.PYSPARK
-            assert t1.columns == ['c1', 'c2']
+            assert t1.columns == ["c1", "c2"]
 
             assert dataframe_type(t2) == DataFrameType.PYSPARK
-            assert t2.columns == ['c1']
+            assert t2.columns == ["c1"]
 
             assert isinstance(spark, pyspark.sql.session.SparkSession)
 
@@ -806,26 +768,15 @@ class TestNode:
         a - - - c
         """
 
-        @node(
-            type='pandas'
-        )
+        @node(type="pandas")
         def a():
-            return pd.DataFrame({
-                'c1': [1],
-                'c2': [1]
-            })
+            return pd.DataFrame({"c1": [1], "c2": [1]})
 
-        @node(
-            type='pandas',
-            dependencies=[a.select('c1')]
-        )
+        @node(type="pandas", dependencies=[a.select("c1")])
         def b(a):
             return a
 
-        @node(
-            type='pandas',
-            dependencies=[a.select('c2'), b]
-        )
+        @node(type="pandas", dependencies=[a.select("c2"), b])
         def c(a, b):
             return a
 

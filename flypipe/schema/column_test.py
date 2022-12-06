@@ -9,7 +9,7 @@ from flypipe.schema.types import String
 class TestColumn:
     def test_schema_mandatory_description(self):
         with pytest.raises(ValueError) as ex, config_context(
-                require_schema_description=True
+            require_schema_description=True
         ):
             @node(
                 type="pandas",
