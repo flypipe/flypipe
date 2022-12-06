@@ -792,3 +792,12 @@ class TestNode:
         t1.run(parameters={
             t1: {'param1': 10, 'param2': 20}
         })
+
+    def test_node_parameters_missing(self):
+
+        @node(type="pandas")
+        def t1(param1):
+            return pd.DataFrame()
+
+        with pytest.raises(TypeError):
+            t1.run()

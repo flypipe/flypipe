@@ -67,10 +67,7 @@ class NodeGraph:
         while frontier:
             current_transformation = frontier.pop()
 
-            node_run_context = NodeRunContext()
-            if current_transformation in parameters:
-                node_run_context.parameters = parameters[current_transformation]
-
+            node_run_context = NodeRunContext(parameters.get(current_transformation))
             graph = self.add_node(graph,
                                   current_transformation.key,
                                   transformation=current_transformation,
