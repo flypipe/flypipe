@@ -300,6 +300,7 @@ class Node:
         )
         node.name = self.name
         node._key = self._key
+        node.node_type = self.node_type
         return node
 
 
