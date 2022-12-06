@@ -62,19 +62,16 @@ class TestNodeFunction:
 
         assert nodes == [a, b]
 
-    def test_bla(self):
-        @node(type="pandas")
-        def c():
-            return pd.DataFrame({"c1": [1, 2], "c2": ["Joe", "John"]})
+    def test_node_parameters(self):
+        @node_function()
+        def t1(param1=1, param2=2):
+            @node(type="pandas")
+            def t2():
+                assert param1 == 10 and param2 == 20
+                return pd.DataFrame()
 
-        @node_function(node_dependencies=[c])
-        def func():
-            @node(type="pandas", dependencies=[c])
-            def b(c):
-                return c
+            return t2
 
-            @node(type="pandas", dependencies=[b, c.select("c2")])
-            def a(b, c):
-                return b
-
-            return a
+        t1.run(parameters={
+            t1: {'param1': 10, 'param2': 20}
+        })

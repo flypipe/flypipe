@@ -21,10 +21,11 @@ class NodeFunction(Node):
                         f"{type(node_dependency)}"
                     )
 
-    def expand(self, requested_columns):
-        kwargs = {}
+    def expand(self, requested_columns: list, parameters: dict = None):
+        kwargs = parameters or {}
         if self.requested_columns:
             kwargs["requested_columns"] = requested_columns
+
         nodes = self.function(**kwargs)
         if isinstance(nodes, Node):
             nodes = (nodes,)

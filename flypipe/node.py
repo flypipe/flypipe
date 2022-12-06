@@ -6,6 +6,7 @@ from flypipe.config import get_config, RunMode
 from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
+from flypipe.node_run_context import NodeRunContext
 from flypipe.node_type import NodeType
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import Unknown
@@ -138,13 +139,14 @@ class Node:
         """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
         return self.function.__doc__
 
-    def _create_graph(self, skipped_node_keys=None, pandas_on_spark_use_pandas=False):
+    def _create_graph(self, skipped_node_keys=None, pandas_on_spark_use_pandas=False, parameters=None):
         from flypipe.node_graph import NodeGraph
 
         self.node_graph = NodeGraph(
             self,
             skipped_node_keys=skipped_node_keys,
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+            parameters=parameters
         )
 
     def select(self, *columns):
@@ -172,12 +174,13 @@ class Node:
         return self.function(*args)
 
     def run(
-            self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False
+            self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False, parameters=None
     ):
         if not inputs:
             inputs = {}
+
         provided_inputs = {node.key: df for node, df in inputs.items()}
-        self._create_graph(list(provided_inputs.keys()), pandas_on_spark_use_pandas)
+        self._create_graph(list(provided_inputs.keys()), pandas_on_spark_use_pandas, parameters)
         if parallel is None:
             parallel = get_config("default_run_mode") == RunMode.PARALLEL.value
         if parallel:
@@ -213,7 +216,10 @@ class Node:
                 result = NodeResult(
                     spark,
                     runnable_node["transformation"].process_transformation(
-                        spark, runnable_node["output_columns"], **dependency_values
+                        spark, runnable_node["output_columns"],
+                        runnable_node["run_context"],
+                        **dependency_values,
+
                     ),
                     schema=self._get_consolidated_output_schema(
                         runnable_node["transformation"].output_schema,
@@ -246,13 +252,17 @@ class Node:
             schema = None
         return schema
 
-    def process_transformation(self, spark, requested_columns, **inputs):
+    def process_transformation(self, spark, requested_columns: list, run_context: NodeRunContext, **inputs):
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
         parameters = inputs
         if self.spark_context:
             parameters["spark"] = spark
+
         if self.requested_columns:
             parameters["requested_columns"] = requested_columns
+
+        if run_context.parameters:
+            parameters = {**parameters, **run_context.parameters}
 
         return self.function(**parameters)
 
@@ -260,13 +270,13 @@ class Node:
         self.node_graph.plot()
 
     def html(
-            self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False
+            self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False, parameters=None
     ):
         from flypipe.printer.graph_html import GraphHTML
 
-        skipped_nodes = inputs or []
+        skipped_nodes = inputs or {}
         self._create_graph(
-            [node.key for node in skipped_nodes], pandas_on_spark_use_pandas
+            [node.key for node in skipped_nodes], pandas_on_spark_use_pandas, parameters
         )
         return GraphHTML(self.node_graph, width=width, height=height).html()
 
