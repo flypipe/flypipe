@@ -781,3 +781,14 @@ class TestNode:
             return a
 
         c.run(parallel=False)
+
+    def test_node_parameters(self):
+
+        @node(type="pandas")
+        def t1(param1=1, param2=2):
+            assert param1 == 10 and param2 == 20
+            return pd.DataFrame()
+
+        t1.run(parameters={
+            t1: {'param1': 10, 'param2': 20}
+        })
