@@ -138,13 +138,14 @@ class Node:
         """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
         return self.function.__doc__
 
-    def _create_graph(self, skipped_node_keys=None, pandas_on_spark_use_pandas=False):
+    def _create_graph(self, skipped_node_keys=None, pandas_on_spark_use_pandas=False, parameters=None):
         from flypipe.node_graph import NodeGraph
 
         self.node_graph = NodeGraph(
             self,
             skipped_node_keys=skipped_node_keys,
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+            parameters=parameters
         )
 
     def select(self, *columns):
@@ -260,13 +261,13 @@ class Node:
         self.node_graph.plot()
 
     def html(
-            self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False
+            self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False, parameters=None
     ):
         from flypipe.printer.graph_html import GraphHTML
 
-        skipped_nodes = inputs or []
+        skipped_nodes = inputs or {}
         self._create_graph(
-            [node.key for node in skipped_nodes], pandas_on_spark_use_pandas
+            [node.key for node in skipped_nodes], pandas_on_spark_use_pandas, parameters
         )
         return GraphHTML(self.node_graph, width=width, height=height).html()
 

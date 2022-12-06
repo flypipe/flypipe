@@ -23,6 +23,7 @@ class NodeGraph:
             graph=None,
             skipped_node_keys=None,
             pandas_on_spark_use_pandas=False,
+            parameters=None
     ):
         """
         Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
@@ -35,14 +36,14 @@ class NodeGraph:
             self.nodes = None
             self.node_output_columns = None
             self.edges = None
-            self.graph = self._build_graph(transformation, pandas_on_spark_use_pandas)
+            self.graph = self._build_graph(transformation, pandas_on_spark_use_pandas, parameters)
 
         if not skipped_node_keys:
             skipped_node_keys = []
         self.skipped_node_keys = skipped_node_keys
         self.calculate_graph_run_status()
 
-    def _build_graph(self, transformation: Node, pandas_on_spark_use_pandas: bool):
+    def _build_graph(self, transformation: Node, pandas_on_spark_use_pandas: bool, parameters: dict):
         transformation = transformation.copy()
         graph = nx.DiGraph()
 
