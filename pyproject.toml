@@ -20,8 +20,10 @@ classifiers = [
 dynamic = ["version", "description"]
 requires-python=">=3.8"
 dependencies  = [
+    "pyspark[sql,pandas_on_spark] >=3.3,<4",
+    "Jinja2 >=3.1,<4",
     "networkx >=2.8,<3",
-    "tabulate >=0.8,<1",
+    "tabulate >=0.9,<1",
 ]
 
 [project.urls]

@@ -1,10 +1,37 @@
 import pyspark.sql.functions as F
-from pyspark.sql.types import BooleanType, ByteType, BinaryType, IntegerType, ShortType, LongType, FloatType, \
-    DoubleType, StringType, DecimalType, DateType, TimestampType
+from pyspark.sql.types import (
+    BooleanType,
+    ByteType,
+    BinaryType,
+    IntegerType,
+    ShortType,
+    LongType,
+    FloatType,
+    DoubleType,
+    StringType,
+    DecimalType,
+    DateType,
+    TimestampType,
+)
+
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
-from flypipe.schema.types import Type, Boolean, Byte, Binary, Integer, Short, Long, Float, Double, String, Unknown, \
-    Date, DateTime, Decimal
 from flypipe.exceptions import DataFrameMissingColumns
+from flypipe.schema.types import (
+    Type,
+    Boolean,
+    Byte,
+    Binary,
+    Integer,
+    Short,
+    Long,
+    Float,
+    Double,
+    String,
+    Unknown,
+    Date,
+    DateTime,
+    Decimal,
+)
 from flypipe.utils import DataFrameType
 
 
@@ -25,21 +52,21 @@ class SparkDataFrameWrapper(DataFrameWrapper):
         DateTime.key(): TimestampType(),
     }
     DF_TYPE_TO_FLYPIPE_TYPE_MAP = {
-        'boolean': Boolean(),
-        'byte': Byte(),
-        'tinyint': Byte(),
-        'binary': Binary(),
-        'int': Integer(),
-        'integer': Integer(),
-        'short': Short(),
-        'smallint': Short(),
-        'long': Long(),
-        'bigint': Long(),
-        'float': Float(),
-        'double': Double(),
-        'string': String(),
-        'timestamp': DateTime(),
-        'date': Date(),
+        "boolean": Boolean(),
+        "byte": Byte(),
+        "tinyint": Byte(),
+        "binary": Binary(),
+        "int": Integer(),
+        "integer": Integer(),
+        "short": Short(),
+        "smallint": Short(),
+        "long": Long(),
+        "bigint": Long(),
+        "float": Float(),
+        "double": Double(),
+        "string": String(),
+        "timestamp": DateTime(),
+        "date": Date(),
     }
 
     def _select_columns(self, columns):
@@ -58,7 +85,9 @@ class SparkDataFrameWrapper(DataFrameWrapper):
         try:
             dtype = df.schema[target_column].dataType
         except KeyError:
-            raise ValueError(f'Column "{target_column}" not found in df, available columns are {df.columns}')
+            raise ValueError(
+                f'Column "{target_column}" not found in df, available columns are {df.columns}'
+            )
         if isinstance(dtype, DecimalType):
             flypipe_type = Decimal(precision=dtype.precision, scale=dtype.scale)
         else:
@@ -72,7 +101,9 @@ class SparkDataFrameWrapper(DataFrameWrapper):
         self.df = self.df.withColumn(column, self.df[column].cast(df_type))
 
     def _cast_column_decimal(self, column, flypipe_type):
-        df_type = DecimalType(precision=flypipe_type.precision, scale=flypipe_type.scale)
+        df_type = DecimalType(
+            precision=flypipe_type.precision, scale=flypipe_type.scale
+        )
         self.df = self.df.withColumn(column, self.df[column].cast(df_type))
 
     def _cast_column_date(self, column, flypipe_type):

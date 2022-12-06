@@ -7,7 +7,7 @@ from flypipe.utils import assert_dataframes_equals, DataFrameType
 
 @pytest.fixture(scope="function")
 def spark():
-    from tests.utils.spark import spark
+    from flypipe.tests.spark import spark
 
     return spark
 

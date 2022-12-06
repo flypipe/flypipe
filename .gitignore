@@ -139,7 +139,9 @@ dmypy.json
 /hdfs/
 /data/
 /tests/utils/spark-warehouse/
-/spark-warehouse/
-/docs/source/readmes/contributors.md
+spark-warehouse/
 /docs/source/modules/
 /flypipe/printer/test.html
+mlruns/
+artifacts/
+tmp/

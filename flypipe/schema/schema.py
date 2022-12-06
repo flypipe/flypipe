@@ -1,12 +1,14 @@
-from typing import List
-
 from flypipe.schema.column import Column
 
 
 class Schema:
+    def __init__(self, *columns):
+        self.columns = columns[0] if isinstance(columns[0], list) else list(columns)
 
-    def __init__(self, columns: List[Column]):
-        self.columns = columns
+    def get(self, column):
+        for col in self.columns:
+            if col.name == column:
+                return col
 
     def get_column_names(self):
         return [column.name for column in self.columns]
@@ -19,4 +21,9 @@ class Schema:
         return "Schema([\n\t" + ",\n\t".join(cols) + "\n])"
 
     def copy(self):
-        return Schema([Column(column.name, column.type, column.description) for column in self.columns])
+        return Schema(
+            [
+                Column(column.name, column.type, column.description)
+                for column in self.columns
+            ]
+        )

@@ -10,12 +10,26 @@ from flypipe.utils import DataFrameType
 class GraphHTML:
 
     CSS_MAP = {
-        DataFrameType.PANDAS: {'shape': 'circle', 'bg-class': 'success', 'bg-color': '#198754', 'text': DataFrameType.PANDAS.value},
-        DataFrameType.PYSPARK: {'shape': 'circle', 'bg-class': 'danger', 'bg-color': '#dc3545', 'text': DataFrameType.PYSPARK.value},
-        DataFrameType.PANDAS_ON_SPARK: {'shape': 'circle', 'bg-class': 'warning', 'bg-color': '#ffc107', 'text': DataFrameType.PANDAS_ON_SPARK.value},
-
-        RunStatus.ACTIVE: {'bg-class': 'info', 'bg-color': '#0dcaf0', 'text': 'ACTIVE'},
-        RunStatus.SKIP: {'bg-class': 'dark', 'bg-color': '#212529', 'text': 'SKIPPED'},
+        DataFrameType.PANDAS: {
+            "shape": "circle",
+            "bg-class": "success",
+            "bg-color": "#198754",
+            "text": DataFrameType.PANDAS.value,
+        },
+        DataFrameType.PYSPARK: {
+            "shape": "circle",
+            "bg-class": "danger",
+            "bg-color": "#dc3545",
+            "text": DataFrameType.PYSPARK.value,
+        },
+        DataFrameType.PANDAS_ON_SPARK: {
+            "shape": "circle",
+            "bg-class": "warning",
+            "bg-color": "#ffc107",
+            "text": DataFrameType.PANDAS_ON_SPARK.value,
+        },
+        RunStatus.ACTIVE: {"bg-class": "info", "bg-color": "#0dcaf0", "text": "ACTIVE"},
+        RunStatus.SKIP: {"bg-class": "dark", "bg-color": "#212529", "text": "SKIPPED"},
     }
 
     def __init__(self, graph: NodeGraph, width=-1, height=1000):
@@ -29,15 +43,16 @@ class GraphHTML:
         unique_names = {}
         for key, position in self._node_positions.items():
             graph_node = self.graph.get_node(key)
-            node_name = graph_node['transformation'].__name__
+            node_name = graph_node["transformation"].__name__
 
             if node_name not in list(unique_names.values()):
                 unique_names[key] = node_name
             else:
-                unique_names[key] = f"{graph_node['transformation'].__module__}.{graph_node['transformation'].__name__}"
+                unique_names[
+                    key
+                ] = f"{graph_node['transformation'].__module__}.{graph_node['transformation'].__name__}"
 
         return unique_names
-
 
     def html(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -45,29 +60,33 @@ class GraphHTML:
         nodes = self.nodes
         tags = set()
         for node in nodes:
-            tags.update(node['definition']['tags'])
+            tags.update(node["definition"]["tags"])
 
         css_scripts = {}
         js_scripts = {}
-        with open(os.path.join(dir_path, "amsify.suggestags.css"), 'r') as f:
-            css_scripts['amsify_suggestags'] = f.read()
-        with open(os.path.join(dir_path, "jquery.amsify.suggestags.js"), 'r') as f:
-            js_scripts['amsify_suggestags'] = f.read()
-        js_scripts['d3_graph_setup'] = f'''
+        with open(os.path.join(dir_path, "amsify.suggestags.css"), "r") as f:
+            css_scripts["amsify_suggestags"] = f.read()
+        with open(os.path.join(dir_path, "jquery.amsify.suggestags.js"), "r") as f:
+            js_scripts["amsify_suggestags"] = f.read()
+        js_scripts[
+            "d3_graph_setup"
+        ] = f"""
         var user_width = {self.width};
         var user_height = {self.height};
         var tags = {json.dumps(list(tags))};
         var nodes = {json.dumps(nodes)};
         var links = {json.dumps(self.edges)};
-        '''
-        with open(os.path.join(dir_path, "d3js.js"), 'r') as f:
-            js_scripts['d3js'] = f.read()
-        with open(os.path.join(dir_path, "offcanvas.js"), 'r') as f:
-            js_scripts['offcanvas'] = f.read()
-        with open(os.path.join(dir_path, "tags.js"), 'r') as f:
-            js_scripts['tags'] = f.read()
+        """
+        with open(os.path.join(dir_path, "d3js.js"), "r") as f:
+            js_scripts["d3js"] = f.read()
+        with open(os.path.join(dir_path, "offcanvas.js"), "r") as f:
+            js_scripts["offcanvas"] = f.read()
+        with open(os.path.join(dir_path, "tags.js"), "r") as f:
+            js_scripts["tags"] = f.read()
 
-        return get_template("index.html").render(height=self.height, css_scripts=css_scripts, js_scripts=js_scripts)
+        return get_template("index.html").render(
+            height=self.height, css_scripts=css_scripts, js_scripts=js_scripts
+        )
 
     def get_node_positions(self):
         """
@@ -85,7 +104,7 @@ class GraphHTML:
                 # Tweak the y position of nodes in different depths to avoid overlapping lines. For example if we had
                 # transformations t1, t2 and t3 with edges between t1 and t2, t1 and t3 and t2 and t3 then the line
                 # between t1 and t3 would be hidden
-                vertical_displacement = (2.5 if depth % 2 == 0 else 0.0)
+                vertical_displacement = 2.5 if depth % 2 == 0 else 0.0
                 y = float((i + 1) * vertical_padding) - vertical_displacement
                 node_positions[node] = [x, y]
 
@@ -95,67 +114,75 @@ class GraphHTML:
     def nodes(self):
         nodes = []
 
-
         for node_name, position in self._node_positions.items():
             graph_node = self.graph.get_node(node_name)
 
             successors = sorted(list(self.graph.graph.successors(node_name)))
-            successors_names = [self._unique_node_names[self.graph.get_node(successor)['transformation'].key] for successor in successors]
+            successors_names = [
+                self._unique_node_names[
+                    self.graph.get_node(successor)["transformation"].key
+                ]
+                for successor in successors
+            ]
 
             dependencies = sorted(list(self.graph.graph.predecessors(node_name)))
-            dependencies_names = [self._unique_node_names[self.graph.get_node(dependency)['transformation'].key] for dependency in dependencies]
+            dependencies_names = [
+                self._unique_node_names[
+                    self.graph.get_node(dependency)["transformation"].key
+                ]
+                for dependency in dependencies
+            ]
 
             node_attributes = {
-                'key': graph_node['transformation'].key,
-                'name': self._unique_node_names[graph_node['transformation'].key],
-                'python_import': None,
-                'file_location': None,
-                'position': position,
-                'active': RunStatus.ACTIVE==graph_node['status'],
-                'run_status': GraphHTML.CSS_MAP[graph_node['status']],
-                'type': GraphHTML.CSS_MAP[graph_node['transformation'].type],
-                'node_type': graph_node['transformation'].node_type.value,
-                'dependencies': dependencies,
-                'dependencies_names': dependencies_names,
-                'successors': successors,
-                'successors_names': successors_names,
-                'definition': {
-                    'description': graph_node['transformation'].description,
-                    'tags': graph_node['transformation'].tags,
-                    'columns': [],
-                }
+                "key": graph_node["transformation"].key,
+                "name": self._unique_node_names[graph_node["transformation"].key],
+                "python_import": None,
+                "file_location": None,
+                "position": position,
+                "active": RunStatus.ACTIVE == graph_node["status"],
+                "run_status": GraphHTML.CSS_MAP[graph_node["status"]],
+                "type": GraphHTML.CSS_MAP[graph_node["transformation"].type],
+                "node_type": graph_node["transformation"].node_type.value,
+                "dependencies": dependencies,
+                "dependencies_names": dependencies_names,
+                "successors": successors,
+                "successors_names": successors_names,
+                "definition": {
+                    "description": graph_node["transformation"].description,
+                    "tags": graph_node["transformation"].tags
+                            + [graph_node["transformation"].__name__],
+                    "columns": [],
+                },
             }
 
-            if graph_node['transformation'].output_schema:
-                node_attributes['definition']['columns'] = [
+            if graph_node["transformation"].output_schema:
+                node_attributes["definition"]["columns"] = [
                     {
-                        'name': column.name,
-                        'type': column.type.__class__.__name__,
-                        'description': column.description
+                        "name": column.name,
+                        "type": column.type.__class__.__name__,
+                        "description": column.description,
                     }
-                    for column in graph_node['transformation'].output_schema.columns
+                    for column in graph_node["transformation"].output_schema.columns
                 ]
 
-            if graph_node['transformation'].node_type==NodeType.DATASOURCE:
-                node_attributes['definition']['columns'] = [
-                    {
-                        'name': column,
-                        'type': None,
-                        'description': None
-                    }
-                    for column in graph_node['output_columns']
+            if graph_node["transformation"].node_type == NodeType.DATASOURCE:
+                node_attributes["definition"]["columns"] = [
+                    {"name": column, "type": None, "description": None}
+                    for column in graph_node["output_columns"]
                 ]
 
-                node_attributes['definition']['query'] = {
-                    "table": graph_node['transformation'].__name__,
-                    "columns": graph_node['output_columns']
+                node_attributes["definition"]["query"] = {
+                    "table": graph_node["transformation"].__name__,
+                    "columns": graph_node["output_columns"],
                 }
             else:
-                if graph_node['transformation'].__package__:
-                    node_attributes['python_import'] = f"from {graph_node['transformation'].__module__} " \
-                                                       f"import {graph_node['transformation'].__name__}"
+                if graph_node["transformation"].__package__:
+                    node_attributes["python_import"] = (
+                        f"from {graph_node['transformation'].__module__} "
+                        f"import {graph_node['transformation'].__name__}"
+                    )
 
-                node_attributes['file_location'] = graph_node['transformation'].__file__
+                node_attributes["file_location"] = graph_node["transformation"].__file__
             nodes.append(node_attributes)
         return nodes
 
@@ -163,18 +190,31 @@ class GraphHTML:
     def edges(self):
         edges = []
         for source_node_name, target_node_name in self.graph.get_edges():
-
             source_node = self.graph.get_node(source_node_name)
             target_node = self.graph.get_node(target_node_name)
             edge_data = self.graph.get_edge_data(source_node_name, target_node_name)
 
-            edges.append({'source': source_node['transformation'].key,
-                          'source_name': self._unique_node_names[source_node['transformation'].key],
-                          'source_position': self._node_positions[source_node['transformation'].key],
-                          'source_selected_columns': edge_data['selected_columns'],
-                          'target': target_node['transformation'].key,
-                          'target_name': self._unique_node_names[target_node['transformation'].key],
-                          'target_position': self._node_positions[target_node['transformation'].key],
-                          'active': (source_node['status'] != RunStatus.SKIP and target_node['status'] != RunStatus.SKIP)
-                          })
+            edges.append(
+                {
+                    "source": source_node["transformation"].key,
+                    "source_name": self._unique_node_names[
+                        source_node["transformation"].key
+                    ],
+                    "source_position": self._node_positions[
+                        source_node["transformation"].key
+                    ],
+                    "source_selected_columns": edge_data["selected_columns"],
+                    "target": target_node["transformation"].key,
+                    "target_name": self._unique_node_names[
+                        target_node["transformation"].key
+                    ],
+                    "target_position": self._node_positions[
+                        target_node["transformation"].key
+                    ],
+                    "active": (
+                            source_node["status"] != RunStatus.SKIP
+                            and target_node["status"] != RunStatus.SKIP
+                    ),
+                }
+            )
         return edges

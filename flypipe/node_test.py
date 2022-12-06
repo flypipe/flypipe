@@ -19,20 +19,30 @@ from flypipe.utils import DataFrameType, dataframe_type
 
 @pytest.fixture(scope="function")
 def spark():
-    from tests.utils.spark import spark
+    from flypipe.tests.spark import spark
 
-    spark.createDataFrame(schema=('c0', 'c1'), data=[(0, 1,)]).createOrReplaceTempView('dummy_table1')
+    spark.createDataFrame(
+        schema=("c0", "c1"),
+        data=[
+            (
+                0,
+                1,
+            )
+        ],
+    ).createOrReplaceTempView("dummy_table1")
 
     return spark
 
 
 class TestNode:
-
-    @pytest.mark.parametrize('node_type,expected_class', [
-        ('pyspark', Node),
-        ('pandas', Node),
-        ('pandas_on_spark', Node),
-    ])
+    @pytest.mark.parametrize(
+        "node_type,expected_class",
+        [
+            ("pyspark", Node),
+            ("pandas", Node),
+            ("pandas_on_spark", Node),
+        ],
+    )
     def test_get_class(self, node_type, expected_class):
         assert type(Node(None, node_type)) == expected_class
 
@@ -46,54 +56,47 @@ class TestNode:
         - Dependency with alias and select
         This test just makes sure they all work as expected.
         """
-        df = pd.DataFrame({'fruit': ['banana', 'apple'], 'color': ['yellow', 'red'], 'size': ['medium', 'medium']})
-
-        @node(
-            type='pandas'
+        df = pd.DataFrame(
+            {
+                "fruit": ["banana", "apple"],
+                "color": ["yellow", "red"],
+                "size": ["medium", "medium"],
+            }
         )
+
+        @node(type="pandas")
         def t1():
             return df
 
-        @node(
-            type='pandas',
-            dependencies=[t1]
-        )
+        @node(type="pandas", dependencies=[t1])
         def t2(t1):
             return t1
 
-        @node(
-            type='pandas',
-            dependencies=[t1.alias('nonsense')]
-        )
+        @node(type="pandas", dependencies=[t1.alias("nonsense")])
         def t3(nonsense):
             return nonsense
 
-        @node(
-            type='pandas',
-            dependencies=[t1.select('fruit', 'color')]
-        )
+        @node(type="pandas", dependencies=[t1.select("fruit", "color")])
         def t4(t1):
             return t1
 
         @node(
-            type='pandas',
-            dependencies=[t1.select('fruit', 'color').alias('nonsense')]
+            type="pandas", dependencies=[t1.select("fruit", "color").alias("nonsense")]
         )
         def t5(nonsense):
             return nonsense
 
         @node(
-            type='pandas',
-            dependencies=[t1.alias('nonsense').select('fruit', 'color')]
+            type="pandas", dependencies=[t1.alias("nonsense").select("fruit", "color")]
         )
         def t6(nonsense):
             return nonsense
 
         assert_frame_equal(t2.run(parallel=False), df)
         assert_frame_equal(t3.run(parallel=False), df)
-        assert_frame_equal(t4.run(parallel=False), df[['color', 'fruit']])
-        assert_frame_equal(t5.run(parallel=False), df[['color', 'fruit']])
-        assert_frame_equal(t6.run(parallel=False), df[['color', 'fruit']])
+        assert_frame_equal(t4.run(parallel=False), df[["color", "fruit"]])
+        assert_frame_equal(t5.run(parallel=False), df[["color", "fruit"]])
+        assert_frame_equal(t6.run(parallel=False), df[["color", "fruit"]])
 
     def test_conversion_after_output_column_filter(self, spark, mocker):
         """
@@ -105,31 +108,27 @@ class TestNode:
         original output of a node can be far bigger than the output with filtered columns, if the order of operations is wrong
         and b) happens before a) it can be extremely inefficient.
         """
-        @node(
-            type='pandas',
-            dependencies=[Spark('dummy_table1').select('c1')]
-        )
+
+        @node(type="pandas", dependencies=[Spark("dummy_table1").select("c1")])
         def t1(dummy_table1):
             return dummy_table1
 
-        spy = mocker.spy(DataFrameConverter, 'convert')
+        spy = mocker.spy(DataFrameConverter, "convert")
         t1.run(spark, parallel=False)
-        assert spy.call_args.args[1].columns == ['c1']
+        assert spy.call_args.args[1].columns == ["c1"]
 
     def test_alias(self):
         """
         Ensure we can set up a node dependency with an alias.
         """
-        @node(
-            type='pandas'
-        )
-        def t1():
-            return pd.DataFrame({'fruit': ['banana', 'apple'], 'color': ['yellow', 'red']})
 
-        @node(
-            type='pandas',
-            dependencies=[t1.select('fruit').alias('my_fruits')]
-        )
+        @node(type="pandas")
+        def t1():
+            return pd.DataFrame(
+                {"fruit": ["banana", "apple"], "color": ["yellow", "red"]}
+            )
+
+        @node(type="pandas", dependencies=[t1.select("fruit").alias("my_fruits")])
         def t2(my_fruits):
             return my_fruits
 
@@ -137,153 +136,145 @@ class TestNode:
         # won't align with what it's expecting.
         t2.run(parallel=False)
 
-    @pytest.mark.parametrize('extra_run_config,expected_df_type', [
-        ({}, DataFrameType.PANDAS_ON_SPARK),
-        ({'pandas_on_spark_use_pandas': False}, DataFrameType.PANDAS_ON_SPARK),
-        ({'pandas_on_spark_use_pandas': True}, DataFrameType.PANDAS),
-    ])
-    def test_input_dataframes_type(self, spark, mocker, extra_run_config, expected_df_type):
+    @pytest.mark.parametrize(
+        "extra_run_config,expected_df_type",
+        [
+            ({}, DataFrameType.PANDAS_ON_SPARK),
+            ({"pandas_on_spark_use_pandas": False}, DataFrameType.PANDAS_ON_SPARK),
+            ({"pandas_on_spark_use_pandas": True}, DataFrameType.PANDAS),
+        ],
+    )
+    def test_input_dataframes_type(
+            self, spark, mocker, extra_run_config, expected_df_type
+    ):
         stub = mocker.stub()
 
-        @node(
-            type='pandas'
-        )
+        @node(type="pandas")
         def t1():
-            return pd.DataFrame({'fruit': ['Banana', 'Apple'], 'color': ['Yellow', 'Red']})
+            return pd.DataFrame(
+                {"fruit": ["Banana", "Apple"], "color": ["Yellow", "Red"]}
+            )
 
-        @node(
-            type='pyspark'
-        )
+        @node(type="pyspark")
         def t2():
-            return spark.createDataFrame(schema=('name', 'fruit'), data=[('Chris', 'Banana')])
+            return spark.createDataFrame(
+                schema=("name", "fruit"), data=[("Chris", "Banana")]
+            )
 
         @node(
-            type='pandas_on_spark',
+            type="pandas_on_spark",
             dependencies=[
-                t1.select('fruit', 'color'),
-                t2.select('name', 'fruit'),
-            ]
+                t1.select("fruit", "color"),
+                t2.select("name", "fruit"),
+            ],
         )
         def t3(t1, t2):
             stub(t1, t2)
             return t1.merge(t2)
 
         t3.run(spark, parallel=False, **extra_run_config)
-        assert dataframe_type(stub.call_args[0][0])==expected_df_type
-        assert dataframe_type(stub.call_args[0][1])==expected_df_type
+        assert dataframe_type(stub.call_args[0][0]) == expected_df_type
+        assert dataframe_type(stub.call_args[0][1]) == expected_df_type
 
     def test_key(self):
         """
         Ensure that different nodes with the same function name have different keys
         """
+
         class A:
             @classmethod
-            @node(
-                type='pandas',
-                output=Schema([
-                        Column('fruit', String(), '')
-                    ])
-            )
+            @node(type="pandas", output=Schema([Column("fruit", String(), "")]))
             def test(cls):
-                return pd.DataFrame({'fruit': ['banana']})
+                return pd.DataFrame({"fruit": ["banana"]})
 
         class B:
             class C:
                 @classmethod
                 @node(
-                    type='pandas',
-                    dependencies=[A.test.select('fruit')],
-                    output=Schema([
-                        Column('fruit', String(), '')
-                    ])
+                    type="pandas",
+                    dependencies=[A.test.select("fruit")],
+                    output=Schema([Column("fruit", String(), "")]),
                 )
                 def test(cls, test):
-                    return test['fruit']
+                    return test["fruit"]
 
-        assert A.test.key == 'flypipe_node_test_function_test_TestNode_test_key__locals__A_test'
-        assert B.C.test.key == 'flypipe_node_test_function_test_TestNode_test_key__locals__B_C_test'
-
+        assert (
+                A.test.key
+                == "flypipe_node_test_function_test_TestNode_test_key__locals__A_test"
+        )
+        assert (
+                B.C.test.key
+                == "flypipe_node_test_function_test_TestNode_test_key__locals__B_C_test"
+        )
 
     def test_duplicated_selected(self):
         """
         Ensure throw exception if selected duplicated columns
         """
 
-        @node(
-            type='pandas'
-        )
+        @node(type="pandas")
         def t1():
-            return pd.DataFrame({'fruit': ['banana', 'apple'], 'color': ['yellow', 'red']})
+            return pd.DataFrame(
+                {"fruit": ["banana", "apple"], "color": ["yellow", "red"]}
+            )
 
         with pytest.raises(ValueError):
+
             @node(
-                type='pandas',
-                dependencies=[t1.select('fruit', 'fruit').alias('my_fruits')]
+                type="pandas",
+                dependencies=[t1.select("fruit", "fruit").alias("my_fruits")],
             )
             def t2(my_fruits):
                 return my_fruits
-
 
     def test_alias_run_with_keys_and_alias_in_function(self):
         """
         Ensure that node graph is processed with node keys and alias is used for arguments
         """
-        from tests.transformations.group_1.t1 import t1
-        from tests.transformations.group_2.t1 import t1 as t1_group2
+        from flypipe.tests.transformations.group_1.t1 import t1
+        from flypipe.tests.transformations.group_2.t1 import t1 as t1_group2
 
         @node(
             type="pandas",
-            dependencies=[
-                t1.select("c1"),
-                t1_group2.select("c1").alias("t1_group2")
-            ],
-            output = Schema([
-                Column("c1_group1_t1", String(), 'dummy'),
-                Column("c1_group2_t1", String(), 'dummy'),
-            ])
+            dependencies=[t1.select("c1"), t1_group2.select("c1").alias("t1_group2")],
+            output=Schema(
+                [
+                    Column("c1_group1_t1", String(), "dummy"),
+                    Column("c1_group2_t1", String(), "dummy"),
+                ]
+            ),
         )
         def t3(t1, t1_group2):
-            t1['c1_group1_t1'] = t1['c1']
-            t1['c1_group2_t1'] = t1_group2['c1']
+            t1["c1_group1_t1"] = t1["c1"]
+            t1["c1_group2_t1"] = t1_group2["c1"]
 
             return t1
 
         df = t3.run(parallel=False)
-        assert df.loc[0, 'c1_group1_t1'] == "t0 group_1_t1"
-        assert df.loc[0, 'c1_group2_t1'] == "t0 group_2_t1"
+        assert df.loc[0, "c1_group1_t1"] == "t0 group_1_t1"
+        assert df.loc[0, "c1_group2_t1"] == "t0 group_2_t1"
 
-        t1_df = pd.DataFrame(data={'c1': ['t0 group_1_t1']})
-        t1_group2_df = pd.DataFrame(data={'c1': ['t0 group_2_t1']})
+        t1_df = pd.DataFrame(data={"c1": ["t0 group_1_t1"]})
+        t1_group2_df = pd.DataFrame(data={"c1": ["t0 group_2_t1"]})
 
-        df = (
-            t3.run(parallel=False, inputs={
-                t1: t1_df,
-                t1_group2: t1_group2_df
-            })
-        )
+        df = t3.run(parallel=False, inputs={t1: t1_df, t1_group2: t1_group2_df})
 
-        assert df.loc[0, 'c1_group1_t1']=="t0 group_1_t1"
-        assert df.loc[0, 'c1_group2_t1']=="t0 group_2_t1"
-
+        assert df.loc[0, "c1_group1_t1"] == "t0 group_1_t1"
+        assert df.loc[0, "c1_group2_t1"] == "t0 group_2_t1"
 
     def test_run_dataframe_conversion(self, spark):
         """
         If a node is dependant upon a node of a different dataframe type, then we expect the output of the parent node
         to be converted when it's provided to the child node.
         """
-        @node(
-            type="pandas_on_spark",
-            output=Schema([
-                Column('c1', Decimal(10, 2))
-            ])
-        )
-        def t1():
-            return spark.createDataFrame(pd.DataFrame(data={'c1': [1], 'c2': [2], 'c3': [3]})).pandas_api()
 
-        @node(
-            type="pandas",
-            dependencies=[t1.select('c1')]
-        )
+        @node(type="pandas_on_spark", output=Schema([Column("c1", Decimal(10, 2))]))
+        def t1():
+            return spark.createDataFrame(
+                pd.DataFrame(data={"c1": [1], "c2": [2], "c3": [3]})
+            ).pandas_api()
+
+        @node(type="pandas", dependencies=[t1.select("c1")])
         def t2(t1):
             return t1
 
@@ -300,24 +291,21 @@ class TestNode:
 
         @node(
             type="pandas",
-            output=Schema([
-                Column('c1', String()),
-                Column('c2', String())
-            ])
+            output=Schema([Column("c1", String()), Column("c2", String())]),
         )
         def t1():
-            return pd.DataFrame(data={'c1': ["1"], 'c2': ["2"]})
+            return pd.DataFrame(data={"c1": ["1"], "c2": ["2"]})
 
         @node(
             type="pandas",
-            dependencies=[
-                t1.select("c1", "c2")
-            ],
-            output=Schema([
-                Column('c1', String(), 'dummy'),
-                Column('c2', String(), 'dummy'),
-                Column('c3', String(), 'dummy'),
-            ])
+            dependencies=[t1.select("c1", "c2")],
+            output=Schema(
+                [
+                    Column("c1", String(), "dummy"),
+                    Column("c2", String(), "dummy"),
+                    Column("c3", String(), "dummy"),
+                ]
+            ),
         )
         def t2(t1):
             t1["c1"] = "t2 set this value"
@@ -326,15 +314,14 @@ class TestNode:
 
         @node(
             type="pandas",
-            dependencies=[
-                t1.select("c1", "c2"),
-                t2.select("c1", "c2", "c3")
-            ],
-            output=Schema([
-                Column('c1', String()),
-                Column('c2', String()),
-                Column('c3', String()),
-            ])
+            dependencies=[t1.select("c1", "c2"), t2.select("c1", "c2", "c3")],
+            output=Schema(
+                [
+                    Column("c1", String()),
+                    Column("c2", String()),
+                    Column("c3", String()),
+                ]
+            ),
         )
         def t3(t1, t2):
             assert list(t1.columns) == ["c1", "c2"]
@@ -354,25 +341,29 @@ class TestNode:
         the passed in arguments
         """
 
-        @node(type='pyspark',
-              dependencies=[Spark('dummy_table').select('c1')],
-              output=Schema([
-                  Column('c1', Decimal(16, 2), 'dummy'),
-                  Column('c2', Decimal(16, 2), 'dummy')
-              ]))
+        @node(
+            type="pyspark",
+            dependencies=[Spark("dummy_table").select("c1")],
+            output=Schema(
+                [
+                    Column("c1", Decimal(16, 2), "dummy"),
+                    Column("c2", Decimal(16, 2), "dummy"),
+                ]
+            ),
+        )
         def t1(dummy_table):
-            raise Exception('I shouldnt be run!')
+            raise Exception("I shouldnt be run!")
 
-        @node(type='pyspark',
-              dependencies=[t1.select('c1')],
-              output=Schema([
-                  Column('c1', Decimal(16, 2), 'dummy')
-              ]))
+        @node(
+            type="pyspark",
+            dependencies=[t1.select("c1")],
+            output=Schema([Column("c1", Decimal(16, 2), "dummy")]),
+        )
         def t2(t1):
-            return t1.withColumn('c1', t1.c1 + 1)
+            return t1.withColumn("c1", t1.c1 + 1)
 
-        df = spark.createDataFrame(schema=('c1',), data=[(1,)])
-        expected_df = spark.createDataFrame(schema=('c1',), data=[(2,)])
+        df = spark.createDataFrame(schema=("c1",), data=[(1,)])
+        expected_df = spark.createDataFrame(schema=("c1",), data=[(2,)])
 
         assert_pyspark_df_equal(t2(df), expected_df)
 
@@ -381,30 +372,32 @@ class TestNode:
         If we manually provide a dataframe via the input function prior to running a node then dependent transformation
         that ordinarily generates the input dataframe should be skipped.
         """
-        @node(type='pandas',
-              output=Schema([
-                  Column('c1', Integer(), 'dummy'),
-                  Column('c2', Integer(), 'dummy'),
-              ]))
-        def t1():
-            raise Exception('I shouldnt be run!')
 
-        @node(type='pandas',
-              dependencies=[t1.select('c1')],
-              output=Schema([
-                  Column('c1', Integer(), 'dummy')
-              ]))
+        @node(
+            type="pandas",
+            output=Schema(
+                [
+                    Column("c1", Integer(), "dummy"),
+                    Column("c2", Integer(), "dummy"),
+                ]
+            ),
+        )
+        def t1():
+            raise Exception("I shouldnt be run!")
+
+        @node(
+            type="pandas",
+            dependencies=[t1.select("c1")],
+            output=Schema([Column("c1", Integer(), "dummy")]),
+        )
         def t2(t1):
-            t1['c1'] = t1['c1'] + 1
+            t1["c1"] = t1["c1"] + 1
             return t1
 
-        df = pd.DataFrame({'c1': [1]})
-        expected_df = pd.DataFrame({'c1': [2]})
+        df = pd.DataFrame({"c1": [1]})
+        expected_df = pd.DataFrame({"c1": [2]})
 
-        assert_frame_equal(
-            t2.run(inputs={t1: df}, parallel=False),
-            expected_df
-        )
+        assert_frame_equal(t2.run(inputs={t1: df}, parallel=False), expected_df)
 
     def test_run_skip_input_2(self):
         """
@@ -419,65 +412,77 @@ class TestNode:
         When b is provided and we process c, only c and d should be run.
         """
 
-        @node(type='pandas',
-              output=Schema([
-                  Column('c1', Integer(), 'dummy'),
-                  Column('c2', Integer(), 'dummy')
-              ]))
+        @node(
+            type="pandas",
+            output=Schema(
+                [Column("c1", Integer(), "dummy"), Column("c2", Integer(), "dummy")]
+            ),
+        )
         def a():
-            raise Exception('I shouldnt be run!')
+            raise Exception("I shouldnt be run!")
 
-        @node(type='pandas', dependencies=[a.select('c1')], output=Schema([
-            Column('c1', Integer(), 'dummy')
-        ]))
+        @node(
+            type="pandas",
+            dependencies=[a.select("c1")],
+            output=Schema([Column("c1", Integer(), "dummy")]),
+        )
         def b(a):
-            a['c1'] = a['c1'] + 1
+            a["c1"] = a["c1"] + 1
             return a
 
-        @node(type='pandas',
-              output=Schema([
-                  Column('c1', Integer(), 'dummy')
-              ]))
+        @node(type="pandas", output=Schema([Column("c1", Integer(), "dummy")]))
         def d():
-            return pd.DataFrame({'c1': [6,7]})
+            return pd.DataFrame({"c1": [6, 7]})
 
-        @node(type='pandas',
-              dependencies=[b.select('c1'), d.select('c1')],
-              output=Schema([Column('c1', Integer())]))
+        @node(
+            type="pandas",
+            dependencies=[b.select("c1"), d.select("c1")],
+            output=Schema([Column("c1", Integer())]),
+        )
         def c(b, d):
             return pd.concat([b, d], ignore_index=True)
 
-        df = pd.DataFrame({'c1': [4, 5]})
-        expected_df = pd.DataFrame({'c1': [4, 5, 6, 7]})
+        df = pd.DataFrame({"c1": [4, 5]})
+        expected_df = pd.DataFrame({"c1": [4, 5, 6, 7]})
 
-        assert_frame_equal(c.run(spark, inputs={b: df}, parallel=False), expected_df, check_dtype=False)
+        assert_frame_equal(
+            c.run(spark, inputs={b: df}, parallel=False), expected_df, check_dtype=False
+        )
 
     def test_run_missing_column(self):
         """
         If the schema requests a column which the output dataframe does not provide we expect it to error.
         """
+
         @node(
-            type='pandas',
-            output=Schema([
-                Column('c1', String()),
-                Column('c2', String()),
-            ])
+            type="pandas",
+            output=Schema(
+                [
+                    Column("c1", String()),
+                    Column("c2", String()),
+                ]
+            ),
         )
         def t1():
-            return pd.DataFrame({'c1': ['Hello', 'World']})
+            return pd.DataFrame({"c1": ["Hello", "World"]})
+
         with pytest.raises(DataFrameMissingColumns):
             t1.run(parallel=False)
 
     def test_node_mandatory_description(self):
-        with pytest.raises(ValueError) as ex, \
-                config_context(require_node_description=True):
+        with pytest.raises(ValueError) as ex, config_context(
+                require_node_description=True
+        ):
+
             @node(
-                type='pandas',
+                type="pandas",
             )
             def transformation():
                 return
+
         assert str(ex.value) == (
-            'Node description configured as mandatory but no description provided for node transformation')
+            "Node description configured as mandatory but no description provided for node transformation"
+        )
 
     def test_node_function(self):
         """
@@ -487,181 +492,138 @@ class TestNode:
         true then we expect the node function to receive the superset of requested columns. This is very important as
         it will allow creation of dynamic nodes that adjusts functionality based on what columns have been requested.
         """
-        df = pd.DataFrame({
-            'fruit': ['mango', 'strawberry', 'banana', 'pear'],
-            'category': ['tropical', 'temperate', 'tropical', 'temperate'],
-            'color': ['yellow', 'red', 'yellow', 'green'],
-            'size': ['medium', 'small', 'medium', 'medium'],
-            'misc': ['bla', 'bla', 'bla', 'bla'],
-        })
+        df = pd.DataFrame(
+            {
+                "fruit": ["mango", "strawberry", "banana", "pear"],
+                "category": ["tropical", "temperate", "tropical", "temperate"],
+                "color": ["yellow", "red", "yellow", "green"],
+                "size": ["medium", "small", "medium", "medium"],
+                "misc": ["bla", "bla", "bla", "bla"],
+            }
+        )
 
         @node(
-            type='pandas',
+            type="pandas",
         )
         def t1():
             return df
 
-        @node_function(
-            requested_columns=True,
-            node_dependencies=[t1]
-        )
+        @node_function(requested_columns=True, node_dependencies=[t1])
         def get_fruit_columns(requested_columns):
-            @node(
-                type='pandas',
-                dependencies=[t1.select(requested_columns)]
-            )
+            @node(type="pandas", dependencies=[t1.select(requested_columns)])
             def t2(t1):
                 return t1
 
-            assert set(requested_columns) == {'fruit', 'category', 'color'}
+            assert set(requested_columns) == {"fruit", "category", "color"}
             return t2
 
         @node(
-            type='pandas',
-            dependencies=[get_fruit_columns.select('fruit', 'category')]
+            type="pandas", dependencies=[get_fruit_columns.select("fruit", "category")]
         )
         def fruit_category(get_fruit_columns):
             return get_fruit_columns
 
-        @node(
-            type='pandas',
-            dependencies=[get_fruit_columns.select('fruit', 'color')]
-        )
+        @node(type="pandas", dependencies=[get_fruit_columns.select("fruit", "color")])
         def fruit_color(get_fruit_columns):
             return get_fruit_columns
 
         @node(
-            type='pandas',
+            type="pandas",
             dependencies=[
-                fruit_category.select('fruit', 'category'),
-                fruit_color.select('fruit', 'color'),
-                t1.select('fruit', 'misc'),
-            ]
+                fruit_category.select("fruit", "category"),
+                fruit_color.select("fruit", "color"),
+                t1.select("fruit", "misc"),
+            ],
         )
         def fruit_details(fruit_category, fruit_color, t1):
             return fruit_category.merge(fruit_color).merge(t1)
 
         results = fruit_details.run(parallel=False)
-        assert_frame_equal(results, df[['category', 'fruit', 'color', 'misc']])
+        assert_frame_equal(results, df[["category", "fruit", "color", "misc"]])
 
     def test_node_function_series(self):
         """
         Node functions should be able to be dependent on other node functions without issue.
         """
+
         @node_function()
         def g1():
-            @node(
-                type='pandas'
-            )
+            @node(type="pandas")
             def t1():
-                return pd.DataFrame({'c1': [1, 2, 3]})
+                return pd.DataFrame({"c1": [1, 2, 3]})
 
             return t1
 
-        @node_function(
-            node_dependencies=[g1]
-        )
+        @node_function(node_dependencies=[g1])
         def g2():
-            @node(
-                type='pandas',
-                dependencies=[g1]
-            )
+            @node(type="pandas", dependencies=[g1])
             def t2(g1):
-                g1['c1'] *= 2
+                g1["c1"] *= 2
                 return g1
 
             return t2
 
-        @node_function(
-            node_dependencies=[g1, g2]
-        )
+        @node_function(node_dependencies=[g1, g2])
         def g3():
-            @node(
-                type='pandas',
-                dependencies=[g1, g2]
-            )
+            @node(type="pandas", dependencies=[g1, g2])
             def t3(g1, g2):
-                g2['c1'] = g1['c1'] + g2['c1']
+                g2["c1"] = g1["c1"] + g2["c1"]
                 return g2
 
             return t3
 
-        assert_frame_equal(g3.run(parallel=False), pd.DataFrame({'c1': [3, 6, 9]}))
+        assert_frame_equal(g3.run(parallel=False), pd.DataFrame({"c1": [3, 6, 9]}))
 
     def test_node_function_nested(self):
         """
         Ensure we can do nested node functions- i.e node functions that return other node functions without issue.
         """
-        df = pd.DataFrame({
-            'c1': ['Bob', 'Fred'],
-            'c2': [10, 20]
-        })
-        @node(
-            type='pandas'
-        )
+        df = pd.DataFrame({"c1": ["Bob", "Fred"], "c2": [10, 20]})
+
+        @node(type="pandas")
         def t1():
             return df
 
-
-
-
-        @node_function(
-            node_dependencies=[t1]
-        )
+        @node_function(node_dependencies=[t1])
         def nf1():
-            @node_function(
-                node_dependencies=[t1]
-            )
+            @node_function(node_dependencies=[t1])
             def nf2():
-                @node(
-                    type='pandas',
-                    dependencies=[t1.select('c1')]
-                )
+                @node(type="pandas", dependencies=[t1.select("c1")])
                 def t2(t1):
                     return t1
 
                 return t2
+
             return nf2
 
-        @node(
-          type='pandas',
-          dependencies=[nf1]
-        )
+        @node(type="pandas", dependencies=[nf1])
         def t3(nf1):
             return nf1
 
         with pytest.raises(ValueError):
             t3.run()
 
-
     def test_run_isolated_dependencies_pandas(self):
         """
         When we pass a dataframe dependency from an ancestor node to a child node the dataframe should be completely
         isolated. That is, any changes to the input dataframe should not modify the output of the parent node.
         """
-        @node(
-            type='pandas'
-        )
-        def t1():
-            return pd.DataFrame({'c1': [1]})
 
-        @node(
-            type='pandas',
-            dependencies=[t1]
-        )
+        @node(type="pandas")
+        def t1():
+            return pd.DataFrame({"c1": [1]})
+
+        @node(type="pandas", dependencies=[t1])
         def t2(t1):
-            t1['c1'] += 1
+            t1["c1"] += 1
             return t1
 
-        @node(
-            type='pandas',
-            dependencies=[t1, t2]
-        )
+        @node(type="pandas", dependencies=[t1, t2])
         def t3(t1, t2):
             # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
             # output of t1
-            assert t1.loc[0, 'c1'] == 1
-            assert t2.loc[0, 'c1'] == 2
+            assert t1.loc[0, "c1"] == 1
+            assert t2.loc[0, "c1"] == 2
             return t1
 
         t3.run(parallel=False)
@@ -671,29 +633,22 @@ class TestNode:
         When we pass a dataframe dependency from an ancestor node to a child node the dataframe should be completely
         isolated. That is, any changes to the input dataframe should not modify the output of the parent node.
         """
-        @node(
-            type='pandas_on_spark'
-        )
-        def t1():
-            return spark.createDataFrame(data=[{'c1': 1}]).pandas_api()
 
-        @node(
-            type='pandas_on_spark',
-            dependencies=[t1]
-        )
+        @node(type="pandas_on_spark")
+        def t1():
+            return spark.createDataFrame(data=[{"c1": 1}]).pandas_api()
+
+        @node(type="pandas_on_spark", dependencies=[t1])
         def t2(t1):
-            t1['c1'] += 1
+            t1["c1"] += 1
             return t1
 
-        @node(
-            type='pandas_on_spark',
-            dependencies=[t1, t2]
-        )
+        @node(type="pandas_on_spark", dependencies=[t1, t2])
         def t3(t1, t2):
             # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
             # output of t1
-            assert t1.loc[0, 'c1']==1
-            assert t2.loc[0, 'c1']==2
+            assert t1.loc[0, "c1"] == 1
+            assert t2.loc[0, "c1"] == 2
             return t1
 
         t3.run(parallel=False)
@@ -703,24 +658,19 @@ class TestNode:
         When we pass a dataframe dependency from an ancestor node to a child node the dataframe should be completely
         isolated. That is, any changes to the input dataframe should not modify the output of the parent node.
         """
+
         @node(
-            type='pyspark',
+            type="pyspark",
         )
         def t1():
-            return spark.createDataFrame(data=[{'c1': 1}])
+            return spark.createDataFrame(data=[{"c1": 1}])
 
-        @node(
-            type='pyspark',
-            dependencies=[t1]
-        )
+        @node(type="pyspark", dependencies=[t1])
         def t2(t1):
-            t1 = t1.withColumn('c1', F.col('c1') + 1)
+            t1 = t1.withColumn("c1", F.col("c1") + 1)
             return t1
 
-        @node(
-            type='pyspark',
-            dependencies=[t1, t2]
-        )
+        @node(type="pyspark", dependencies=[t1, t2])
         def t3(t1, t2):
             # t1 returns 1, t2 adds 1 to t1 (returning 2), t3 adds t1 and t2. t2 adding 1 to t1 should not modify the
             # output of t1
@@ -729,6 +679,30 @@ class TestNode:
             return t1
 
         t3.run(parallel=False)
+
+    def test_pandas_on_spark_use_pandas(self, spark):
+        """
+        When running a graph with pandas_on_spark_use_pandas=True, all pandas_on_spark nodes types should be of type pandas
+        If running straigth after, but with pandas_on_spark_use_pandas=False, all pandas_on_spark nodes types should be of type pandas_on_spark
+        """
+
+        @node(type="pandas_on_spark", dependencies=[Spark("dummy_table1").select("c1")])
+        def t1(dummy_table1):
+            return dummy_table1
+
+        t1.run(spark, pandas_on_spark_use_pandas=True)
+        assert t1.type == DataFrameType.PANDAS_ON_SPARK
+
+        t1.run(spark, pandas_on_spark_use_pandas=False)
+        assert t1.type == DataFrameType.PANDAS_ON_SPARK
+
+        t1._create_graph(pandas_on_spark_use_pandas=True)
+        for n in t1.node_graph.graph.nodes:
+            if t1.node_graph.graph.nodes[n]["transformation"].__name__ == "t1":
+                assert (
+                        t1.node_graph.graph.nodes[n]["transformation"].type
+                        == DataFrameType.PANDAS
+                )
 
     def test_function_argument_signature(self, spark):
         """
@@ -748,41 +722,37 @@ class TestNode:
                 ...
         """
 
-        @node(
-            type='pyspark'
-        )
+        @node(type="pyspark")
         def t1():
-            return spark.createDataFrame(data=[{'c1': 1, 'c2': 2}])
+            return spark.createDataFrame(data=[{"c1": 1, "c2": 2}])
 
         @node(
-            type='pyspark',
-            dependencies=[
-                t1.select("c1")
-            ],
+            type="pyspark",
+            dependencies=[t1.select("c1")],
             requested_columns=True,
-            spark_context=True
+            spark_context=True,
         )
         def t2(t1, requested_columns, spark):
-            assert requested_columns == ['c1']
+            assert requested_columns == ["c1"]
             assert dataframe_type(t1) == DataFrameType.PYSPARK
-            assert t1.columns == ['c1']
+            assert t1.columns == ["c1"]
             assert isinstance(spark, pyspark.sql.session.SparkSession)
             return t1
 
         @node(
-            type='pyspark',
+            type="pyspark",
             dependencies=[
                 t1.select("c1", "c2"),
                 t2.select("c1"),
             ],
-            spark_context=True
+            spark_context=True,
         )
         def t3(t2, t1, spark):
             assert dataframe_type(t1) == DataFrameType.PYSPARK
-            assert t1.columns == ['c1', 'c2']
+            assert t1.columns == ["c1", "c2"]
 
             assert dataframe_type(t2) == DataFrameType.PYSPARK
-            assert t2.columns == ['c1']
+            assert t2.columns == ["c1"]
 
             assert isinstance(spark, pyspark.sql.session.SparkSession)
 
@@ -798,38 +768,16 @@ class TestNode:
         a - - - c
         """
 
-        @node(
-            type='pandas'
-        )
+        @node(type="pandas")
         def a():
-            return pd.DataFrame({
-                'c1': [1],
-                'c2': [1]
-            })
+            return pd.DataFrame({"c1": [1], "c2": [1]})
 
-        @node(
-            type='pandas',
-            dependencies=[a.select('c1')]
-        )
+        @node(type="pandas", dependencies=[a.select("c1")])
         def b(a):
             return a
 
-        @node(
-            type='pandas',
-            dependencies=[a.select('c2'), b]
-        )
+        @node(type="pandas", dependencies=[a.select("c2"), b])
         def c(a, b):
             return a
 
         c.run(parallel=False)
-
-
-"""
-dependencies=[n1]
-dependencies=[n1]
-We actually want the dependency to be saved
-
-n1.select(c1,c2,c3)
-n1.select(c1,c2)
-We want the 1st dependency to be saved
-"""

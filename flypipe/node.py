@@ -14,20 +14,23 @@ from flypipe.utils import DataFrameType
 
 class Node:
     TYPE_MAP = {
-        'pyspark': DataFrameType.PYSPARK,
-        'pandas': DataFrameType.PANDAS,
-        'pandas_on_spark': DataFrameType.PANDAS_ON_SPARK
+        "pyspark": DataFrameType.PYSPARK,
+        "pandas": DataFrameType.PANDAS,
+        "pandas_on_spark": DataFrameType.PANDAS_ON_SPARK,
     }
 
-    def __init__(self,
-                 function,
-                 type: str,
-                 description=None,
-                 tags=None,
-                 dependencies: List[InputNode] = None,
-                 output=None,
-                 spark_context=False,
-                 requested_columns=False):
+    def __init__(
+            self,
+            function,
+            type: str,
+            description=None,
+            tags=None,
+            dependencies: List[InputNode] = None,
+            output=None,
+            spark_context=False,
+            requested_columns=False,
+    ):
+
         self._key = None
         self.name = None
         self.function = function
@@ -39,11 +42,14 @@ class Node:
             try:
                 self.type = self.TYPE_MAP[type]
             except KeyError:
-                raise NodeTypeInvalidError(f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}')
+                raise NodeTypeInvalidError(
+                    f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}'
+                )
 
-        if not description and get_config('require_node_description'):
+        if not description and get_config("require_node_description"):
             raise ValueError(
-                f'Node description configured as mandatory but no description provided for node {self.__name__}')
+                f"Node description configured as mandatory but no description provided for node {self.__name__}"
+            )
         self.description = description or "No description"
 
         # TODO: enforce tags for now, later validation can be set as optional via environment variable
@@ -62,6 +68,10 @@ class Node:
         self.requested_columns = requested_columns
         self.node_graph = None
 
+    @property
+    def output(self):
+        return self.output_schema
+
     def _get_input_nodes(self, dependencies):
         input_nodes = []
         if dependencies is None:
@@ -73,8 +83,9 @@ class Node:
                 input_nodes.append(dependency)
             else:
                 raise ValueError(
-                    f'Expected all dependencies of node {self.__name__} to be of format node/node.alias(...)/node.'
-                    f'select(...) but received {dependency} of type {type(dependency)}')
+                    f"Expected all dependencies of node {self.__name__} to be of format node/node.alias(...)/node."
+                    f"select(...) but received {dependency} of type {type(dependency)}"
+                )
         return input_nodes
 
     @property
@@ -92,7 +103,7 @@ class Node:
         # When running a pipeline of node declared in the same
         # notebook, it throws an error as it not finds __package
         # in that case, returns nothing
-        if hasattr(sys.modules[self.function.__module__], '__package'):
+        if hasattr(sys.modules[self.function.__module__], "__package"):
             return sys.modules[self.function.__module__].__package__
 
     @property
@@ -100,7 +111,7 @@ class Node:
         # When running a pipeline of node declared in the same
         # notebook, it throws an error as it not finds __file__
         # in that case, returns nothing
-        if hasattr(sys.modules[self.function.__module__], '__file__'):
+        if hasattr(sys.modules[self.function.__module__], "__file__"):
             return sys.modules[self.function.__module__].__file__
 
     @property
@@ -114,8 +125,8 @@ class Node:
         with the same function name still return different keys.
         """
         if self._key is None:
-            key = f'{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}.{self.function.__qualname__}'
-            self._key = re.sub('[^\da-zA-Z]', '_', key)
+            key = f"{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}.{self.function.__qualname__}"
+            self._key = re.sub("[^\da-zA-Z]", "_", key)
         return self._key
 
     @key.setter
@@ -129,7 +140,12 @@ class Node:
 
     def _create_graph(self, skipped_node_keys=None, pandas_on_spark_use_pandas=False):
         from flypipe.node_graph import NodeGraph
-        self.node_graph = NodeGraph(self, skipped_node_keys=skipped_node_keys, pandas_on_spark_use_pandas=pandas_on_spark_use_pandas)
+
+        self.node_graph = NodeGraph(
+            self,
+            skipped_node_keys=skipped_node_keys,
+            pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+        )
 
     def select(self, *columns):
         return InputNode(self).select(*columns)
@@ -140,9 +156,13 @@ class Node:
     def get_node_inputs(self, outputs: Mapping[str, NodeResult]):
         inputs = {}
         for input_node in self.input_nodes:
-            node_input_value = outputs[input_node.key].as_type(self.input_dataframe_type)
+            node_input_value = outputs[input_node.key].as_type(
+                self.input_dataframe_type
+            )
             if input_node.selected_columns:
-                inputs[input_node.get_alias()] = node_input_value.select_columns(*input_node.selected_columns).get_df()
+                inputs[input_node.get_alias()] = node_input_value.select_columns(
+                    *input_node.selected_columns
+                ).get_df()
             else:
                 inputs[input_node.get_alias()] = node_input_value.get_df()
 
@@ -151,13 +171,15 @@ class Node:
     def __call__(self, *args):
         return self.function(*args)
 
-    def run(self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False):
+    def run(
+            self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False
+    ):
         if not inputs:
             inputs = {}
         provided_inputs = {node.key: df for node, df in inputs.items()}
         self._create_graph(list(provided_inputs.keys()), pandas_on_spark_use_pandas)
         if parallel is None:
-            parallel = (get_config('default_run_mode') == RunMode.PARALLEL.value)
+            parallel = get_config("default_run_mode") == RunMode.PARALLEL.value
         if parallel:
             raise NotImplementedError
         else:
@@ -170,7 +192,10 @@ class Node:
     def _run_sequential(self, spark=None, provided_inputs=None):
         if provided_inputs is None:
             provided_inputs = {}
-        outputs = {key: NodeResult(spark, df, schema=None) for key, df in provided_inputs.items()}
+        outputs = {
+            key: NodeResult(spark, df, schema=None)
+            for key, df in provided_inputs.items()
+        }
         execution_graph = self.node_graph.copy()
 
         runnable_node = None
@@ -178,23 +203,31 @@ class Node:
             runnable_nodes = execution_graph.pop_runnable_transformations()
             for runnable_node in runnable_nodes:
 
-                if runnable_node['transformation'].key in outputs:
+                if runnable_node["transformation"].key in outputs:
                     continue
 
-                dependency_values = runnable_node['transformation'].get_node_inputs(outputs)
+                dependency_values = runnable_node["transformation"].get_node_inputs(
+                    outputs
+                )
 
                 result = NodeResult(
                     spark,
-                    runnable_node['transformation'].process_transformation(spark, runnable_node['output_columns'], **dependency_values),
+                    runnable_node["transformation"].process_transformation(
+                        spark, runnable_node["output_columns"], **dependency_values
+                    ),
                     schema=self._get_consolidated_output_schema(
-                        runnable_node['transformation'].output_schema,
-                        runnable_node['output_columns']
-                    )
+                        runnable_node["transformation"].output_schema,
+                        runnable_node["output_columns"],
+                    ),
                 )
 
-                outputs[runnable_node['transformation'].key] = result
+                outputs[runnable_node["transformation"].key] = result
 
-        return outputs[runnable_node['transformation'].key].as_type(runnable_node['transformation'].type).get_df()
+        return (
+            outputs[runnable_node["transformation"].key]
+                .as_type(runnable_node["transformation"].type)
+                .get_df()
+        )
 
     @classmethod
     def _get_consolidated_output_schema(cls, output_schema, output_columns):
@@ -207,7 +240,7 @@ class Node:
         elif output_columns is not None:
             columns = []
             for output_column in output_columns:
-                columns.append(Column(output_column, Unknown(), ''))
+                columns.append(Column(output_column, Unknown(), ""))
             schema = Schema(columns)
         else:
             schema = None
@@ -217,19 +250,24 @@ class Node:
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
         parameters = inputs
         if self.spark_context:
-            parameters['spark'] = spark
+            parameters["spark"] = spark
         if self.requested_columns:
-            parameters['requested_columns'] = requested_columns
+            parameters["requested_columns"] = requested_columns
 
         return self.function(**parameters)
 
     def plot(self):
         self.node_graph.plot()
 
-    def html(self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False):
+    def html(
+            self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False
+    ):
         from flypipe.printer.graph_html import GraphHTML
+
         skipped_nodes = inputs or []
-        self._create_graph([node.key for node in skipped_nodes], pandas_on_spark_use_pandas)
+        self._create_graph(
+            [node.key for node in skipped_nodes], pandas_on_spark_use_pandas
+        )
         return GraphHTML(self.node_graph, width=width, height=height).html()
 
     def __eq__(self, other):
@@ -248,7 +286,7 @@ class Node:
             dependencies=[input_node.copy() for input_node in self.input_nodes],
             output=None if self.output_schema is None else self.output_schema.copy(),
             spark_context=self.spark_context,
-            requested_columns=self.requested_columns
+            requested_columns=self.requested_columns,
         )
         node.name = self.name
         node._key = self._key
@@ -258,10 +296,97 @@ class Node:
 def node(type, *args, **kwargs):
     """
     Decorator factory that returns the given function wrapped inside a Node class
+
+    Parameters
+    ----------
+
+    type : str
+            Type of the node transformation "pandas", "pandas_on_spark", "pyspark"
+    description : str, optional
+        Description of the node (default is None)
+    tags : List[str], optional
+        List of tags for the node (default is None)
+    dependencies : List[Node], optional
+        List of other dependent nodes
+    output : Schema, optional
+        Defines the ouput schema of the node (default is None)
+    spark_context : bool, optional
+        True, returns spark context as argument to the funtion (default is False)
+
+
+    .. highlight:: python
+    .. code-block:: python
+
+        # Syntax
+        @node(
+            type="pyspark" or "pandas_on_spark" or "pandas",
+            description="this is a description of what this node does",
+            tags=["a", "list", "of", "tags"],
+            dependencies=[other_node_1, other_node_2, ...],
+            output=Schema(
+                Column("col_name", String(), "a description of the column"),
+            ),
+            spark_context = True or False
+        )
+        def your_function_name(other_node_1, other_node_2, ...):
+            # YOUR TRANSFORMATION LOGIC HERE
+            return dataframe
+
+
+    .. highlight:: python
+    .. code-block:: python
+
+        # Node without dependency
+        from flypipe.node import node
+        from flypipe.schema import Schema, Column
+        from flypipe.schema.types import String
+        import pandas as pd
+        @node(
+            type="pandas",
+            description="Only outputs a pandas dataframe",
+            dependencies = [
+                t0.select("fruit").alias("df")
+            ],
+            output=Schema(
+                t0.output.get("fruit"),
+                Column("flavour", String(), "fruit flavour")
+            )
+        )
+        def t1(df):
+            categories = {'mango': 'sweet', 'lemon': 'citric'}
+            df['flavour'] = df['fruit']
+            df = df.replace({'flavour': categories})
+            return df
+
+
+    .. highlight:: python
+    .. code-block:: python
+
+        # Node with dependency
+        from flypipe.node import node
+        from flypipe.schema import Schema, Column
+        from flypipe.schema.types import String
+        import pandas as pd
+        @node(
+            type="pandas",
+            description="Only outputs a pandas dataframe",
+            dependencies = [
+                t0.select("fruit").alias("df")
+            ],
+            output=Schema(
+                t0.output.get("fruit"),
+                Column("flavour", String(), "fruit flavour")
+            )
+        )
+        def t1(df):
+            categories = {'mango': 'sweet', 'lemon': 'citric'}
+            df['flavour'] = df['fruit']
+            df = df.replace({'flavour': categories})
+            return df
     """
 
     def decorator(func):
-        kwargs['type'] = type
+        kwargs["type"] = type
         return Node(func, *args, **kwargs)
 
     return decorator
