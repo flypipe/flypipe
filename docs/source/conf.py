@@ -102,39 +102,3 @@ myst_substitutions = {"project": project}
 # }
 
 html_favicon = "_static/favicon.svg"
-
-
-# This is the expected signature of the handler for this event, cf doc
-def autodoc_skip_member_handler(app, what, name, obj, skip, options):
-    # Basic approach; you might want a regex instead
-
-    # if what == "module":
-    #     print(obj.name)
-
-    if name == "node_graph_test":
-        print("\n===========>", name)
-        print(app)
-        print(what, type(what))
-        print(obj, type(obj))
-        print(options)
-        print(obj.__file__)
-        print(obj.__package__)
-
-    # if what == "module" and obj.__package__.endswith("_test"):
-    #     return True
-
-    # if what == "module" and obj.__package__.startswith("flypipe.tests"):
-    #     return True
-    #
-    #
-    #
-    # if what == "module" and name.startswith("Test"):
-    #     return True
-
-    return False
-
-
-# Automatically called by sphinx at startup
-def setup(app):
-    # Connect the autodoc-skip-member event from apidoc to the callback
-    app.connect("autodoc-skip-member", autodoc_skip_member_handler)

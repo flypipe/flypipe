@@ -161,7 +161,6 @@ class NodeGraph:
                         if expanded_node_key in [dependency.key for dependency in
                                                  node_function["transformation"].node_dependencies]:
                             if expanded_node_key in graph.nodes:
-                                print("expanded_node_key is in GRAPH")
                                 expanded_graph.nodes[expanded_node_key]['run_context'] = \
                                     graph.nodes[expanded_node_key]['run_context']
 
