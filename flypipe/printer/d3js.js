@@ -179,9 +179,11 @@ d3.select("g")
   .data(nodes)
   .enter()
   .append("text")
+  .attr("style", "cursor: pointer")
   .attr("font-size", font_size + "px")
   .attr("text-anchor", "left")
   .attr("id", d => text_id(d.key))
+
   .attr("x", function(d) {
         return xScale(d.position[0]) - circle_radius;
         })
@@ -190,6 +192,18 @@ d3.select("g")
         })
 
   .text(d => d.name)
+  .call(d3.drag().on('drag', dragging))
+  .on("mouseover", function(d){
+        tooltip.html("<strong>" + d.name + "</strong><br/>(" + d.type.text + ")");
+        return tooltip.style("visibility", "visible");
+    })
+    .on("mousemove", function(){
+        return tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+    })
+    .on("mouseout", function(){
+        return tooltip.style("visibility", "hidden");
+    })
+    .on('click', function(d,i){ show_transformation(d);  })
     ;
 
 var zoom = d3.zoom()
@@ -324,19 +338,19 @@ function move_parent_links(d, dragged_node){
 
 function dragging(d,i,nodes){
 
-    //move Node
-    var dragged_node = d3.select(nodes[i])
-      .attr("cx", d3.event.x)
-      .attr("cy", d3.event.y)
-      ;
+    //move circle
+    d3.select("#" + node_id(d.key))
+        .attr("cx", d3.event.x)
+        .attr("cy", d3.event.y);
 
     //move text
-    d3.select("#" + text_id(dragged_node.attr('name')))
-        .attr("x", dragged_node.attr('cx') * 1  - circle_radius)
-        .attr("y", dragged_node.attr('cy') * 1  - circle_radius - 5);
+    d3.select("#" + text_id(d.key))
+        .attr("x", d3.event.x * 1  - circle_radius)
+        .attr("y", d3.event.y * 1  - circle_radius - 5);
 
     //move link
-    move_parent_links(d, dragged_node)
+    var dragged_node = d3.select("#" + node_id(d.key));
+    move_parent_links(d, dragged_node);
 
 }
 
