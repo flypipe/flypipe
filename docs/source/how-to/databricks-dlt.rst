@@ -1,7 +1,7 @@
 Databricks DLTs
 ===============
 
-.. include:: ./databricks-dlt.md
+.. include:: ./databricks.md
    :parser: myst_parser.sphinx_
 
 

@@ -8,14 +8,14 @@ twine==4.0.1
 flit==3.7.1
 
 #Documentation
-sphinx-rtd-theme==1.0.0
-Sphinx==5.1.1
-Sphinx-Substitution-Extensions
-myst-parser==0.18.0
-sphinxcontrib-mermaid==0.7.1
+sphinx-rtd-theme==1.1.1
+Sphinx==5.3.0
+Sphinx-Substitution-Extensions==2022.2.16
+myst-parser==0.18.1
 linkify-it-py==2.0.0
 ipython==8.6.0
-
+#sphinxcontrib-images==0.9.4
+#sphinxcontrib-mermaid==0.7.1
 
 #Development
 jupyterlab==3.4.5
