@@ -89,13 +89,13 @@ class PandasDataFrameWrapper(DataFrameWrapper):
     def _cast_column(self, column, flypipe_type, df_type):
         rows = self._get_rows_for_cast(column, flypipe_type)
 
-        self.df[column].loc[rows] = self.df[column].loc[rows].astype(df_type)
+        self.df.loc[rows, column] = self.df.loc[rows, column].astype(df_type)
 
     def _cast_column_decimal(self, column, flypipe_type):
         rows = self._get_rows_for_cast(column, flypipe_type)
 
-        self.df[column].loc[rows] = (
-            self.df[column].loc[rows].astype(dtype("float64")).round(flypipe_type.scale)
+        self.df.loc[rows, column] = (
+            self.df.loc[rows, column].astype(dtype("float64")).round(flypipe_type.scale)
         )
 
     def _cast_column_date(self, column, flypipe_type):
@@ -106,6 +106,6 @@ class PandasDataFrameWrapper(DataFrameWrapper):
 
     def _cast_column_date_or_timestamp(self, column, flypipe_type):
         rows = self._get_rows_for_cast(column, flypipe_type)
-        self.df[column].loc[rows] = pd.to_datetime(
-            self.df[column].loc[rows], format=flypipe_type.fmt
+        self.df.loc[rows, column] = pd.to_datetime(
+            self.df.loc[rows, column], format=flypipe_type.fmt
         ).astype(dtype("datetime64[ns]"))

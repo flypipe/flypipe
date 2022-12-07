@@ -166,10 +166,12 @@ class GraphHTML:
                 ]
 
             if graph_node["transformation"].node_type == NodeType.DATASOURCE:
-                node_attributes["definition"]["columns"] = [
-                    {"name": column, "type": None, "description": None}
-                    for column in graph_node["output_columns"]
-                ]
+
+                if "columns" in node_attributes:
+                    node_attributes["definition"]["columns"] = [
+                        {"name": column, "type": None, "description": None}
+                        for column in graph_node["output_columns"]
+                    ]
 
                 node_attributes["definition"]["query"] = {
                     "table": graph_node["transformation"].__name__,
