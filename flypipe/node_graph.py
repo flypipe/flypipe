@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List
+from typing import List, Union
 
 import networkx as nx
 from networkx import DiGraph
@@ -20,7 +20,7 @@ class RunStatus(Enum):
 class NodeGraph:
     def __init__(
             self,
-            transformation: Node,
+            transformation: Union[Node, None],
             graph=None,
             skipped_node_keys=None,
             pandas_on_spark_use_pandas=False,
@@ -31,6 +31,8 @@ class NodeGraph:
         this.
         """
         parameters = parameters or {}
+        parameters = {node.key: params for node, params in parameters.items()}
+
         if graph:
             self.graph = graph
         else:
@@ -44,8 +46,8 @@ class NodeGraph:
         self.skipped_node_keys = skipped_node_keys
         self.calculate_graph_run_status()
 
-    def add_node(self, graph, node_name: str, transformation: Node, run_status: RunStatus = None, output_columns=None,
-                 run_context=None):
+    def add_node(self, graph: DiGraph, node_name: str, transformation: Node, run_status: RunStatus = None,
+                 output_columns: list = None, run_context: NodeRunContext = None) -> DiGraph:
         run_status = run_status or RunStatus.UNKNOWN
         run_context = run_context or NodeRunContext()
 
@@ -67,7 +69,7 @@ class NodeGraph:
         while frontier:
             current_transformation = frontier.pop()
 
-            node_run_context = NodeRunContext(parameters.get(current_transformation))
+            node_run_context = NodeRunContext(parameters.get(current_transformation.key))
             graph = self.add_node(graph,
                                   current_transformation.key,
                                   transformation=current_transformation,
@@ -104,10 +106,11 @@ class NodeGraph:
         for node_key in graph.nodes:
             node = graph.nodes[node_key]
 
-            for input_node in node["transformation"].input_nodes:
-                graph.edges[(input_node.key, node_key)][
-                    "selected_columns"
-                ] = input_node.selected_columns
+            if not isinstance(node["transformation"], NodeFunction):
+                for input_node in node["transformation"].input_nodes:
+                    graph.edges[(input_node.key, node_key)][
+                        "selected_columns"
+                    ] = input_node.selected_columns
 
         return graph
 
@@ -140,7 +143,7 @@ class NodeGraph:
                 )
                 if is_runnable_node_function:
                     found_node_function = True
-                    node_function_key = node_function["transformation"]._key
+                    node_function_key = node_function["transformation"].key
 
                     expanded_graph = self._expand_node_function(
                         node_function["transformation"], node_function["output_columns"], node_function["run_context"]
@@ -149,6 +152,18 @@ class NodeGraph:
                     # The edges created from the node function node_dependencies are now irrelevant and should be removed
                     for edge in list(graph.in_edges(node_function_key)):
                         graph.remove_edge(edge[0], edge[1])
+
+                    # Expanded graph can have dependencies to nodes in graph and nodes in graph
+                    # can have attributes, such as run_context, that must remain in these nodes when composing a new graph
+                    for expanded_node_key in expanded_graph.nodes:
+
+                        # updates parameters only for those nodes in node function dependencies
+                        if expanded_node_key in [dependency.key for dependency in
+                                                 node_function["transformation"].node_dependencies]:
+                            if expanded_node_key in graph.nodes:
+                                print("expanded_node_key is in GRAPH")
+                                expanded_graph.nodes[expanded_node_key]['run_context'] = \
+                                    graph.nodes[expanded_node_key]['run_context']
 
                     graph = nx.compose(graph, expanded_graph)
 
@@ -207,9 +222,9 @@ class NodeGraph:
             if expanded_graph.out_degree(node_name) == 0
         ][0]
         end_node = expanded_graph.nodes[end_node_name]
-        end_node["transformation"].key = node_function._key
+        end_node["transformation"].key = node_function.key
         end_node["transformation"].name = node_function.function.__name__
-        return nx.relabel_nodes(expanded_graph, {end_node_name: node_function._key})
+        return nx.relabel_nodes(expanded_graph, {end_node_name: node_function.key})
 
     def _get_successor_nodes(self, graph, node_key):
         return [graph.nodes[n] for n in graph.successors(node_key)]

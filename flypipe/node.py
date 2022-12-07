@@ -91,7 +91,7 @@ class Node:
 
     @property
     def __name__(self):
-        if self.name:
+        if hasattr(self, 'name') and self.name:
             return self.name
         return self.function.__name__
 
