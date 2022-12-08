@@ -1,4 +1,4 @@
-FROM python:3.9.5
+FROM python:3.9-slim
 
 RUN apt-get update && apt-get install -y apt-utils default-jdk curl -y
 RUN pip install --upgrade pip
