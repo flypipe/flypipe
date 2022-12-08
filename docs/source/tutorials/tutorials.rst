@@ -8,7 +8,7 @@ Tutorials
    Node Parameters <../notebooks/tutorial/node-parameters>
    Node Function <./node-function>
    Data Sources <./data-sources>
-   Graph <../notebooks/tutorial/creating-graph>
+   Graph <./graph>
    Multi Node Type Graphs <../notebooks/tutorial/multiple-node-types>
    Testing <../notebooks/tutorial/unittests>
 
