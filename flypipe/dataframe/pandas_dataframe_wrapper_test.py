@@ -139,6 +139,39 @@ class TestPandasDataFrameWrapper:
                 == 'Invalid type Boolean for column col1, found incompatible row value "rubbish"'
         )
 
+    def test_cast_column_integer(self):
+        df_wrapper = DataFrameWrapper.get_instance(
+            None,
+            pd.DataFrame({'c1': [1.1]})
+        )
+        df_wrapper.cast_column('c1', Integer())
+        assert df_wrapper.df.loc[0]['c1'] == 1
+        assert df_wrapper.df.dtypes['c1'] == pd.Int64Dtype()
+
+    def test_cast_column_integer_2(self):
+        """
+        Issue from https://pandas.pydata.org/docs/user_guide/integer_na.html#integer-na
+        Pandas has a problem in that numpy.NaN is usually used to represent missing data, however it has a type of
+        float. This means that an integer column with nan values resolves to type float. We need to use the extension
+        pandas integer type to get around this.
+        """
+        df_wrapper = DataFrameWrapper.get_instance(
+            None,
+            pd.DataFrame({'c1': [1.1, np.nan, np.NAN, pd.NA, None]})
+        )
+        df_wrapper.cast_column('c1', Integer())
+        assert_frame_equal(df_wrapper.df, pd.DataFrame({'c1': [1, pd.NA, pd.NA, pd.NA, pd.NA]}), check_dtype=False)
+        assert df_wrapper.df.dtypes['c1'] == pd.Int64Dtype()
+
+    def test_cast_column_boolean(self):
+        df_wrapper = DataFrameWrapper.get_instance(
+            None,
+            pd.DataFrame({'c1': [0, 1, np.nan]})
+        )
+        df_wrapper.cast_column('c1', Boolean())
+        assert_frame_equal(df_wrapper.df, pd.DataFrame({'c1': [False, True, np.nan]}), check_dtype=False)
+        assert df_wrapper.df.dtypes['c1'] == np.dtype('O')
+
     def test_cast_column_decimal(self):
         schema = None
         df_wrapper = DataFrameWrapper.get_instance(

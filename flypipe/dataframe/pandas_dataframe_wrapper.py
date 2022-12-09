@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from numpy import dtype
 
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
@@ -26,7 +27,6 @@ class PandasDataFrameWrapper(DataFrameWrapper):
         Boolean.key(): dtype("bool"),
         Byte.key(): dtype("int8"),
         Binary.key(): dtype("S"),
-        Integer.key(): dtype("int32"),
         Short.key(): dtype("int16"),
         Long.key(): dtype("int64"),
         Float.key(): dtype("float32"),
@@ -90,6 +90,14 @@ class PandasDataFrameWrapper(DataFrameWrapper):
         rows = self._get_rows_for_cast(column, flypipe_type)
 
         self.df.loc[rows, column] = self.df.loc[rows, column].astype(df_type)
+
+    def _cast_column_integer(self, column, flypipe_type):
+        rows = self._get_rows_for_cast(column, flypipe_type)
+        integer_type = pd.Int64Dtype()
+        # Automatic casts to the pandas integer extension type from float error out, we have to manually tweak it,
+        # solution adapted from
+        # https://stackoverflow.com/questions/62899860/how-can-i-resolve-typeerror-cannot-safely-cast-non-equivalent-float64-to-int6
+        self.df[column] = np.floor(pd.to_numeric(self.df[column])).astype(integer_type)
 
     def _cast_column_decimal(self, column, flypipe_type):
         rows = self._get_rows_for_cast(column, flypipe_type)
