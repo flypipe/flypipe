@@ -20,6 +20,7 @@ Welcome to FlyPipe's documentation!
    Project <project/project>
    Contribute <contribute/contribute>
    License <license/license>
+   Questions and Suggestions <questions-suggentions/questions-suggentions>
 
 
 Indices and tables

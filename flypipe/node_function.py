@@ -33,7 +33,7 @@ class NodeFunction(Node):
         for node in nodes:
             if isinstance(node, NodeFunction):
                 raise ValueError(
-                    "Illegal operation- node functions cannot be returned from node functions"
+                    "Illegal operation - node functions cannot be returned from node functions"
                 )
             for dependency in node.input_nodes:
                 if dependency not in nodes and dependency not in self.node_dependencies:
@@ -57,7 +57,64 @@ class NodeFunction(Node):
 
 def node_function(*args, **kwargs):
     """
-    Decorator factory that returns the given function wrapped inside a Node class
+    Decorator factory that returns the given function wrapped inside a NodeFunction class
+
+    Parameters
+    ----------
+
+    requested_columns : bool, optional (default `False`)
+        List of requested columns that successors nodes are demanding from the node function.
+        if True will retrieve `requested_columns` as named argument
+    node_dependencies : List[Node or NodeFunction], optional
+        List of external nodes that the node function is dependent on.
+        Any node retrieved by the node function (called internal node) can only be dependent on any internal node or any anode inside
+        `node_dependencies`.
+        True, returns spark context as argument to the funtion (default is False)
+
+    Returns
+    -------
+    List[Node]
+        a list of nodes created internally
+
+    Raises
+    ------
+    ValueError
+        If any internal node is of type NodeFunction; if any internal node has a dependency that is not to another internal node and not declared in node_dependencies
+
+
+    .. highlight:: python
+    .. code-block:: python
+
+        # Syntax
+        @node_function(
+            requested_columns=True,
+            node_dependencies=[
+                Spark("table")
+            ]
+        )
+        def my_node_function(requested_columns):
+
+            @node(
+                type="pandas",
+                dependencies=[
+                    Spark("table").select(requested_columns).alias("df")
+                ]
+            )
+            def internal_node_1(df):
+                return df
+
+
+            @node(
+                type="pandas",
+                dependencies=[
+                    internal_node_1.alias("df")
+                ]
+            )
+            def internal_node_2(df):
+                return df
+
+            return internal_node_1, internal_node_2 # <-- ALL INTERNAL NODES CREATED MUST BE RETURNED
+
     """
 
     def decorator(func):

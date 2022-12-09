@@ -270,10 +270,35 @@ class Node:
         self.node_graph.plot()
 
     def html(
-            self, width=-1, height=1000, inputs=None, pandas_on_spark_use_pandas=False, parameters=None
+            self, width=None, height=1000, inputs=None, pandas_on_spark_use_pandas=False, parameters=None
     ):
-        from flypipe.printer.graph_html import GraphHTML
+        """
+        Retrieves html string of the graph to be executed.
 
+        Parameters
+        ----------
+
+        width : int, default None
+            viewport width in pixels
+        height : int, default 1000
+            viewport height in pixels
+        inputs : dict, default None
+            dictionary where keys are Nodes and values dataframes, these dataframes will skip the nodes executions as
+            they have been provided
+        pandas_on_spark_use_pandas : bool, default False
+            If True, convert and runs `pandas_on_spark` as `pandas`
+        parameters : dict, default None
+            dictionary dict(Node,dict(str,obj)) of parameters to be given to the nodes when executing them.
+
+        Returns
+        -------
+        str
+            html of the graph
+
+        """
+
+        from flypipe.printer.graph_html import GraphHTML
+        width = width or -1
         skipped_nodes = inputs or {}
         self._create_graph(
             [node.key for node in skipped_nodes], pandas_on_spark_use_pandas, parameters
@@ -341,6 +366,8 @@ def node(type, *args, **kwargs):
         )
         def your_function_name(other_node_1, other_node_2, ...):
             # YOUR TRANSFORMATION LOGIC HERE
+            # use pandas syntax if type is `pandas` or `pandas_on_spark`
+            # use PySpark syntax if type is `pyspark`
             return dataframe
 
 

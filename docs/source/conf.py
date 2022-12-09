@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath("../../"))
 
 # -- Project information -----------------------------------------------------
 
-project = "FlyPipe"
+project = "Flypipe"
 copyright = f"2022, {project}"
 author = "Jose Helio de Brum Muller & Chris Marwick"
 
@@ -28,6 +28,7 @@ release = "0.0.1"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    "sphinxcontrib.images",
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
     "sphinxcontrib.napoleon",
@@ -35,7 +36,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autosectionlabel",
     "myst_parser",
-    "sphinxcontrib.mermaid",
+    # "sphinxcontrib.mermaid",
     "sphinx_substitution_extensions",
     "nbsphinx",
     "IPython.sphinxext.ipython_console_highlighting",
@@ -92,7 +93,9 @@ source_suffix = {
 
 suppress_warnings = ["myst.header"]
 
-myst_substitutions = {"project": project}
+myst_substitutions = {
+    "project": project,
+}
 
 # html_context = {
 #     "display_github": True,  # Integrate GitHub
@@ -102,3 +105,7 @@ myst_substitutions = {"project": project}
 # }
 
 html_favicon = "_static/favicon.svg"
+
+images_config = {
+    'override_image_directive': True,
+}

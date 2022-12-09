@@ -1,6 +1,6 @@
 FROM python:3.9-slim
 
-RUN apt-get update && apt-get install -y apt-utils default-jdk curl -y
+RUN apt-get update && apt-get install -y apt-utils default-jdk curl wget -y
 RUN pip install --upgrade pip
 COPY ./wait-for-it.sh .
 
