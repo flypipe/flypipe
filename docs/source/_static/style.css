@@ -1,0 +1,18 @@
+.wy-nav-content {
+    max-width: 100%
+}
+
+html {
+    font-size: 20px !important;
+}
+
+.wy-side-nav-search {
+    display: block;
+    width: 300px;
+    padding: 0.809em;
+    margin-bottom: 0.809em;
+    z-index: 200;
+    background-color: #6EACE7;
+    text-align: center;
+    color: #fcfcfc;
+}
