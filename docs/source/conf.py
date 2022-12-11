@@ -11,6 +11,8 @@
 #
 import os
 import sys
+from flypipe import __version__
+from datetime import datetime
 
 sys.path.append(os.path.abspath("./_ext"))
 sys.path.insert(0, os.path.abspath("../../"))
@@ -18,11 +20,11 @@ sys.path.insert(0, os.path.abspath("../../"))
 # -- Project information -----------------------------------------------------
 
 project = "Flypipe"
-copyright = f"2022, {project}"
+copyright = f"{datetime.year}, {project}"
 author = "Jose Helio de Brum Muller & Chris Marwick"
 
 # The full version, including alpha/beta/rc tags
-release = "0.0.1"
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -36,7 +38,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autosectionlabel",
     "myst_parser",
-    # "sphinxcontrib.mermaid",
+    "sphinx_multiversion",
     "sphinx_substitution_extensions",
     "nbsphinx",
     "IPython.sphinxext.ipython_console_highlighting",
@@ -64,6 +66,12 @@ myst_all_links_external = True
 myst_number_code_blocks = ["python"]
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
+
+html_sidebars = {
+    '**': [
+        'versions.html',
+    ],
+}
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -106,6 +114,7 @@ myst_substitutions = {
 
 html_favicon = "_static/favicon.svg"
 
-images_config = {
-    'override_image_directive': True,
-}
+# smv_outputdir_format = '{config.version}/{ref.name}'
+smv_tag_whitelist = r'^dev\d+\.\d+$'
+
+smv_released_pattern = r'^tags/.*$'

@@ -13,8 +13,7 @@ Sphinx-Substitution-Extensions==2022.2.16
 myst-parser==0.18.1
 linkify-it-py==2.0.0
 ipython==8.6.0
-#sphinxcontrib-images==0.9.4
-#sphinxcontrib-mermaid==0.7.1
+sphinx-multiversion==0.2.4
 
 #Development
 jupyterlab==3.4.5
