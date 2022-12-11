@@ -114,7 +114,11 @@ myst_substitutions = {
 
 html_favicon = "_static/favicon.svg"
 
-# smv_outputdir_format = '{config.version}/{ref.name}'
-smv_tag_whitelist = r'^dev\d+\.\d+$'
+smv_branch_whitelist = r'^dev\d+\.\d+$'
+smv_remote_whitelist = None
+smv_prefer_remote_refs = True
+smv_outputdir_format = 'versions/{config.release}'
 
-smv_released_pattern = r'^tags/.*$'
+from pygit2 import Repository
+
+print(Repository('.').head.shorthand)  # 'master'
