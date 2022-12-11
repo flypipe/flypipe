@@ -1,16 +1,13 @@
-.. FlyPipe documentation master file, created by
-   sphinx-quickstart on Thu Sep  8 04:24:37 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to FlyPipe's documentation!
 ===================================
+
+.. include:: ./concept.md
+   :parser: myst_parser.sphinx_
 
 
 .. toctree::
    :maxdepth: 3
 
-   Concept <concept/concept>
    Installation <installation/installation>
    Configuration <configuration/configuration>
    Quick Start <quick-start/quick-start>

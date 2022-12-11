@@ -13,4 +13,4 @@ Download Notebook</a>
 See how to create
 a [pipline](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-quickstart.html#create-a-pipeline)
 
-![DLT](_static/images/databricks_dlt.svg)
+![DLT](../_static/images/databricks_dlt.svg)
