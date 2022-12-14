@@ -114,7 +114,10 @@ myst_substitutions = {
 
 html_favicon = "_static/favicon.svg"
 
-# smv_outputdir_format = '{config.version}/{ref.name}'
-smv_tag_whitelist = r'^dev\d+\.\d+$'
+smv_branch_whitelist = r'^release/'
 
-smv_released_pattern = r'^tags/.*$'
+# Whitelist pattern for remotes (set to None to use local branches only)
+smv_remote_whitelist = r'^.*$'
+
+# Determines whether remote or local git branches/tags are preferred if their output dirs conflict
+smv_prefer_remote_refs = True
