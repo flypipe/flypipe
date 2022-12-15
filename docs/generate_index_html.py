@@ -22,7 +22,7 @@ def get_redirect_url():
     # When running non-locally we need to include the repo name explicitly as this is part of the url.
     # However when running locally the redirect only uses the folder structure so we shouldn't include the repo name
     prefix = '' if is_local_build() else REPO_NAME
-    return f'./release/{version}/index.html'
+    return f'./html/release/{version}/index.html'
 
 
 environment = jinja2.Environment(loader=jinja2.FileSystemLoader(searchpath='./'))
