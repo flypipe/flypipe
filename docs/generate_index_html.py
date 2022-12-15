@@ -13,7 +13,7 @@ REPO_NAME = 'flypipe'
 
 
 def is_local_build():
-    return False
+    return True
 
 
 def get_redirect_url():
