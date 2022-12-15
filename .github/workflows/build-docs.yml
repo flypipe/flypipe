@@ -35,11 +35,11 @@ jobs:
       - name: Setup pandoc
         run: |
           # Script from https://nbanzyme.medium.com/install-pandoc-on-ubuntu-9cd9991735a2
-          - wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-amd64.deb
+          wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-amd64.deb
           # Install
-          - sudo dpkg -i pandoc-2.19.2-1-amd64.deb
+          sudo dpkg -i pandoc-2.19.2-1-amd64.deb
           # Check installation
-          - pandoc -v
+          pandoc -v
       - name: Install requirements
         run: python -m pip install -r requirements_dev.txt
       - name: Build Sphinx Documentation
