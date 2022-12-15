@@ -12,16 +12,9 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 REPO_NAME = 'flypipe'
 
 
-def is_local_build():
-    return True
-
-
 def get_redirect_url():
     doc_versions = os.listdir('./build/html/release')
     version = max(doc_versions)
-    # When running non-locally we need to include the repo name explicitly as this is part of the url.
-    # However when running locally the redirect only uses the folder structure so we shouldn't include the repo name
-    prefix = '' if is_local_build() else REPO_NAME
     return f'./html/release/{version}/index.html'
 
 
