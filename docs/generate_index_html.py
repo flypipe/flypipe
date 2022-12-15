@@ -27,5 +27,5 @@ def get_redirect_url():
 
 environment = jinja2.Environment(loader=jinja2.FileSystemLoader(searchpath='./'))
 template = environment.get_template('./index.html')
-with open('./build/html/index.html', 'w') as f:
+with open('./build/index.html', 'w') as f:
     f.write(template.render(redirect_url=get_redirect_url()))
