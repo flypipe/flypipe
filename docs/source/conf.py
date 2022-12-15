@@ -11,11 +11,12 @@
 #
 import os
 import sys
-from flypipe import __version__
-from datetime import datetime
 
 sys.path.append(os.path.abspath("./_ext"))
 sys.path.insert(0, os.path.abspath("../../"))
+
+from flypipe import __version__
+from datetime import datetime
 
 # -- Project information -----------------------------------------------------
 
