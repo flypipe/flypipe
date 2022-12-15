@@ -1,0 +1,24 @@
+{%- if current_version %}
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa">Version</span>
+    {{ current_version.name | replace('release/', '') }}
+    <span class="fa"></span>
+  </span>
+  {% set latest = versions | map(attribute='name') | max %}
+  <div class="rst-other-versions">
+    {%- if versions.branches %}
+    <ul style="text-align: right">
+      {%- for item in versions.branches | sort(attribute='name') | reverse %}
+      {% set version_name = item.name | replace('release/', '') %}
+      {% if item.name == latest %}
+        <li><a href="{{ item.url }}">{{ version_name }} (latest)</a></li>
+      {% else %}
+        <li><a href="{{ item.url }}">{{ version_name }}</a></li>
+      {% endif %}
+      {%- endfor %}
+    </ul>
+    {%- endif %}
+  </div>
+</div>
+{%- endif %}
