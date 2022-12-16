@@ -1,9 +1,11 @@
 # Flypipe
 
-Flypipe is a Python framework to simplify development, management and maintainance of data, feature and ML model
-pipelines.
+Flypipe is a Python framework to simplify development, management and maintenance of transformation pipelines, which are 
+commonly used in the data, feature and ML model space.
 
-Transformations are implemented in small pieces of code called `nodes` that are linked to each other in a DAG.
+Each transformation is implemented in a small, composable function, a special decorator is then used to define it as a 
+Flypipe node, which is the primary model Flypipe uses. Metadata on the node decorator allows for multiple nodes to be 
+linked together into a Directed Acyclic Graph (DAG). 
 
 ```python
 from flypipe.node import node
@@ -14,7 +16,7 @@ from flypipe.node import node
   dependencies=[t0.select("fruit").alias("df")]
 )
 def t1(df):
-  categories = {'mango': 'sweet', 'lemon': 'citric'}
+  categories = {'mango': 'sweet', 'lemon': 'sour'}
   df['flavour'] = df['fruit']
   df = df.replace({'flavour': categories})
   return df
@@ -22,28 +24,20 @@ def t1(df):
 
 ### Flypipe Pipelines
 
-As each node (transformation) is connected to its ancessors, easily see the pipeline (`my_graph.html()`) or execute it
-by invoking `my_graph.run()`
+As each node (transformation) is connected to its ancestors, we can easily view the pipeline graphically in a html page 
+(`my_graph.html()`) or execute it by invoking `my_graph.run()`
 
 ![Flypipe Graph Pipeline](/docs/source/_static/images/flypipe_pipelines.svg)
 
 ## What Flypipe aims to facilitate?
 
-- End-to-end transformations logic lineage
-- Create development standards for data and machine learning engineers and data scientist
-- Improve transformations re-usability in different pipelines
-- Faster integration and portability of pipelines to non-spark APIS
-- Low latency for on demand feature generation and predictions
-
-## Other Flypipe advantages
-
-* Break down feature transformation into smaller pieces.
-  - Composeable transformations
-  - Smaller transformations mean easier to reason about
-  - Smaller transformations and injectable dependencies make unit testing easy
-  - Injectable dependencies also make on the fly transformations possible
-  - Graph allows for lineage visibility and far better high level table views over the pipeline
-* Flexibility to use and mix up pyspark/pandas on spark/pandas in transformations
-* Write once, use in variety of contexts
-* Very lightweight, easily integratable into databricks, or can be used without databricks also
-* Framework level optimisations and cool things like dynamic transformations
+- End-to-end transformation lineage
+- Create development standards for Data Engineers, Machine Learning Engineers and Data Scientists
+- Improve re-usability of transformations in different pipelines & contexts via composable nodes
+- Faster integration and portability of pipelines to different contexts with different available technology stacks:
+  - Flexibility to use and mix up pyspark/pandas on spark/pandas in transformations seamlessly
+  - As a simple wheel package, it's very lightweight and unopinionated about runtime environment. This allows for it to 
+  be easily integrated into Databricks and independently of Databricks. 
+- Low latency for on-demand feature generation and predictions
+- Framework level optimisations and dynamic transformations help to make even complex transformation pipelines low 
+latency. This in turn allows for on-demand feature generation/predictions.
