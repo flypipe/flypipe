@@ -3,7 +3,7 @@ name: Build and Deploy Documentation via GitHub Pages
 on:
   # TODO: we should only run this when deploying a version and not on pushes to certain branches
   push:
-    branches: ["feat/documentation-graph"]
+    branches: ["main"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
