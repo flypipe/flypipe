@@ -167,7 +167,8 @@ class GraphHTML:
 
             if graph_node["transformation"].node_type == NodeType.DATASOURCE:
 
-                if "columns" in node_attributes:
+                # FIXME: Why "columns" in node_attributes?
+                if "columns" in node_attributes or ("output_columns" in graph_node and graph_node["output_columns"]):
                     node_attributes["definition"]["columns"] = [
                         {"name": column, "type": None, "description": None}
                         for column in graph_node["output_columns"]
