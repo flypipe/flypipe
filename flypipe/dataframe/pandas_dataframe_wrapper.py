@@ -115,5 +115,5 @@ class PandasDataFrameWrapper(DataFrameWrapper):
     def _cast_column_date_or_timestamp(self, column, flypipe_type):
         rows = self._get_rows_for_cast(column, flypipe_type)
         self.df.loc[rows, column] = pd.to_datetime(
-            self.df.loc[rows, column], format=flypipe_type.fmt
+            self.df.loc[rows, column], format=flypipe_type.python_format
         ).astype(dtype("datetime64[ns]"))
