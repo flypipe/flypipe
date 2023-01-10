@@ -32,7 +32,7 @@ jobs:
       - name: Run Formatter (Black)
         run: black flypipe --check
       - name: Run Linter (pylint)
-        run: pylint flypipe
+        run: python -m pylint flypipe
       - name: Run Unit Tests
         run: pytest flypipe
 
