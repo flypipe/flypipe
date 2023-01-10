@@ -14,35 +14,22 @@ on:
   # Allow pipeline to be invoked from other pipelines
   workflow_call:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-runs:
-  using: composite
-  # This workflow contains a single job called "build"
-#  build:
-#    # The type of runner that the job will run on
-#    runs-on: ubuntu-latest
+jobs:
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
   steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout
       uses: actions/checkout@v3
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.8'
-    - name: Install requirements
-      shell: bash
-      run: |
-        python -m pip install -r requirements.txt
-        python -m pip install -r requirements_dev.txt
+    - name: Setup Dependencies
+      uses: '.github/actions/setup-dependencies'
     - name: Run Formatter (Black)
-      shell: bash
       run: black flypipe --check
     - name: Run Linter (pylint)
-      shell: bash
       run: python -m pylint flypipe
     - name: Run Unit Tests
-      shell: bash
       run: pytest flypipe
 
