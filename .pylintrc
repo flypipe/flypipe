@@ -153,7 +153,12 @@ disable=raw-checker-failed,
         suppressed-message,
         useless-suppression,
         deprecated-pragma,
-        use-symbolic-message-instead
+        use-symbolic-message-instead,
+        missing-module-docstring, # I think it's reasonable to disable this, we generally have one class per module and
+                                  # the docstring for the module wouldn't be particularly different to that of the class.
+        redefined-outer-name, # Disabling this for our sanity- this will be triggered for any node dependencies that
+                              # don't use alias otherwise.
+
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -172,7 +177,7 @@ argument-naming-style=snake_case
 # naming style.
 # Pylint annoyingly complains about variables < 3 characters in length including the very common "df", this fixes this
 # as per https://github.com/PyCQA/pylint/issues/2018
-argument-rgx=^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$
+argument-rgx=^[a-zA-Z][a-zA-Z0-9]*((_[a-zA-Z0-9]+)*)?$
 
 # Naming style matching correct attribute names.
 attr-naming-style=snake_case
@@ -299,7 +304,7 @@ variable-naming-style=snake_case
 # naming style.
 # Pylint annoyingly complains about variables < 3 characters in length including the very common "df", this fixes this
 # as per https://github.com/PyCQA/pylint/issues/2018
-variable-rgx=^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$
+variable-rgx=^[a-zA-Z][a-zA-Z0-9]*((_[a-zA-Z0-9]+)*)?$
 
 
 [CLASSES]
