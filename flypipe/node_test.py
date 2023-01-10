@@ -145,7 +145,7 @@ class TestNode:
         ],
     )
     def test_input_dataframes_type(
-            self, spark, mocker, extra_run_config, expected_df_type
+        self, spark, mocker, extra_run_config, expected_df_type
     ):
         stub = mocker.stub()
 
@@ -199,12 +199,12 @@ class TestNode:
                     return test["fruit"]
 
         assert (
-                A.test.key
-                == "flypipe_node_test_function_test_TestNode_test_key__locals__A_test"
+            A.test.key
+            == "flypipe_node_test_function_test_TestNode_test_key__locals__A_test"
         )
         assert (
-                B.C.test.key
-                == "flypipe_node_test_function_test_TestNode_test_key__locals__B_C_test"
+            B.C.test.key
+            == "flypipe_node_test_function_test_TestNode_test_key__locals__B_C_test"
         )
 
     def test_duplicated_selected(self):
@@ -471,7 +471,7 @@ class TestNode:
 
     def test_node_mandatory_description(self):
         with pytest.raises(ValueError) as ex, config_context(
-                require_node_description=True
+            require_node_description=True
         ):
 
             @node(
@@ -700,8 +700,8 @@ class TestNode:
         for n in t1.node_graph.graph.nodes:
             if t1.node_graph.graph.nodes[n]["transformation"].__name__ == "t1":
                 assert (
-                        t1.node_graph.graph.nodes[n]["transformation"].type
-                        == DataFrameType.PANDAS
+                    t1.node_graph.graph.nodes[n]["transformation"].type
+                    == DataFrameType.PANDAS
                 )
 
     def test_function_argument_signature(self, spark):
@@ -783,18 +783,14 @@ class TestNode:
         c.run(parallel=False)
 
     def test_node_parameters(self):
-
         @node(type="pandas")
         def t1(param1=1, param2=2):
             assert param1 == 10 and param2 == 20
             return pd.DataFrame()
 
-        t1.run(parameters={
-            t1: {'param1': 10, 'param2': 20}
-        })
+        t1.run(parameters={t1: {"param1": 10, "param2": 20}})
 
     def test_node_parameters_missing(self):
-
         @node(type="pandas")
         def t1(param1):
             return pd.DataFrame()

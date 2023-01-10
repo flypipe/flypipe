@@ -21,15 +21,15 @@ class Node:
     }
 
     def __init__(
-            self,
-            function,
-            type: str,
-            description=None,
-            tags=None,
-            dependencies: List[InputNode] = None,
-            output=None,
-            spark_context=False,
-            requested_columns=False,
+        self,
+        function,
+        type: str,
+        description=None,
+        tags=None,
+        dependencies: List[InputNode] = None,
+        output=None,
+        spark_context=False,
+        requested_columns=False,
     ):
 
         self._key = None
@@ -91,7 +91,7 @@ class Node:
 
     @property
     def __name__(self):
-        if hasattr(self, 'name') and self.name:
+        if hasattr(self, "name") and self.name:
             return self.name
         return self.function.__name__
 
@@ -139,14 +139,16 @@ class Node:
         """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
         return self.function.__doc__
 
-    def _create_graph(self, skipped_node_keys=None, pandas_on_spark_use_pandas=False, parameters=None):
+    def _create_graph(
+        self, skipped_node_keys=None, pandas_on_spark_use_pandas=False, parameters=None
+    ):
         from flypipe.node_graph import NodeGraph
 
         self.node_graph = NodeGraph(
             self,
             skipped_node_keys=skipped_node_keys,
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
-            parameters=parameters
+            parameters=parameters,
         )
 
     def select(self, *columns):
@@ -174,13 +176,20 @@ class Node:
         return self.function(*args)
 
     def run(
-            self, spark=None, parallel=None, inputs=None, pandas_on_spark_use_pandas=False, parameters=None
+        self,
+        spark=None,
+        parallel=None,
+        inputs=None,
+        pandas_on_spark_use_pandas=False,
+        parameters=None,
     ):
         if not inputs:
             inputs = {}
 
         provided_inputs = {node.key: df for node, df in inputs.items()}
-        self._create_graph(list(provided_inputs.keys()), pandas_on_spark_use_pandas, parameters)
+        self._create_graph(
+            list(provided_inputs.keys()), pandas_on_spark_use_pandas, parameters
+        )
         if parallel is None:
             parallel = get_config("default_run_mode") == RunMode.PARALLEL.value
         if parallel:
@@ -216,10 +225,10 @@ class Node:
                 result = NodeResult(
                     spark,
                     runnable_node["transformation"].process_transformation(
-                        spark, runnable_node["output_columns"],
+                        spark,
+                        runnable_node["output_columns"],
                         runnable_node["run_context"],
                         **dependency_values,
-
                     ),
                     schema=self._get_consolidated_output_schema(
                         runnable_node["transformation"].output_schema,
@@ -231,8 +240,8 @@ class Node:
 
         return (
             outputs[runnable_node["transformation"].key]
-                .as_type(runnable_node["transformation"].type)
-                .get_df()
+            .as_type(runnable_node["transformation"].type)
+            .get_df()
         )
 
     @classmethod
@@ -252,7 +261,9 @@ class Node:
             schema = None
         return schema
 
-    def process_transformation(self, spark, requested_columns: list, run_context: NodeRunContext, **inputs):
+    def process_transformation(
+        self, spark, requested_columns: list, run_context: NodeRunContext, **inputs
+    ):
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
         parameters = inputs
         if self.spark_context:
@@ -270,7 +281,12 @@ class Node:
         self.node_graph.plot()
 
     def html(
-            self, width=None, height=1000, inputs=None, pandas_on_spark_use_pandas=False, parameters=None
+        self,
+        width=None,
+        height=1000,
+        inputs=None,
+        pandas_on_spark_use_pandas=False,
+        parameters=None,
     ):
         """
         Retrieves html string of the graph to be executed.
@@ -298,6 +314,7 @@ class Node:
         """
 
         from flypipe.printer.graph_html import GraphHTML
+
         width = width or -1
         skipped_nodes = inputs or {}
         self._create_graph(
