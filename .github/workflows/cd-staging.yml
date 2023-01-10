@@ -11,8 +11,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-  steps:
-    - name: Verification
-      uses: './ci.yml'
-    - name: Build Wheel
-      run: flit build
+    steps:
+      - name: Verification
+        uses: './ci.yml'
+      - name: Build Wheel
+        run: flit build
