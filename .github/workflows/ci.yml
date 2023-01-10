@@ -23,8 +23,12 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Setup
-        uses: ./templates/setup.yml
+      - name: Setup Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: '3.8'
+      - name: Install requirements
+        run: python -m pip install -r requirements_dev.txt
       - name: Run Formatter (Black)
         run: black flypipe --check
       - name: Run Linter (pylint)
