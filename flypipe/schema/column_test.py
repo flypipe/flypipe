@@ -11,6 +11,7 @@ class TestColumn:
         with pytest.raises(ValueError) as ex, config_context(
             require_schema_description=True
         ):
+
             @node(
                 type="pandas",
                 output=Schema(

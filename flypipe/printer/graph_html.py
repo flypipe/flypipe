@@ -150,7 +150,7 @@ class GraphHTML:
                 "definition": {
                     "description": graph_node["transformation"].description,
                     "tags": graph_node["transformation"].tags
-                            + [graph_node["transformation"].__name__],
+                    + [graph_node["transformation"].__name__],
                     "columns": [],
                 },
             }
@@ -214,8 +214,8 @@ class GraphHTML:
                         target_node["transformation"].key
                     ],
                     "active": (
-                            source_node["status"] != RunStatus.SKIP
-                            and target_node["status"] != RunStatus.SKIP
+                        source_node["status"] != RunStatus.SKIP
+                        and target_node["status"] != RunStatus.SKIP
                     ),
                 }
             )

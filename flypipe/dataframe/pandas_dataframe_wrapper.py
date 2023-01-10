@@ -77,8 +77,8 @@ class PandasDataFrameWrapper(DataFrameWrapper):
             # This is a bit hacky, but if all values are valid then argmax returns the first index, so we need to
             # double check that the first invalid value is actually invalid.
             if (
-                    first_invalid_value
-                    and first_invalid_value not in flypipe_type.valid_values
+                first_invalid_value
+                and first_invalid_value not in flypipe_type.valid_values
             ):
                 raise ValueError(
                     f"Invalid type {flypipe_type.name} for column {column}, found incompatible row value "

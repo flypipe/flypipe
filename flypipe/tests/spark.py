@@ -18,13 +18,13 @@ def url_ok(url):
 def get_spark():
     configs = (
         SparkSession.builder.config("spark.sql.warehouse.dir", "/spark-warehouse")
-            .config("spark.sql.repl.eagerEval.enabled", "true")
-            .config("spark.sql.execution.arrow.pyspark.enabled", "true")
-            .config("spark.ui.enabled", "false")
-            .config("spark.ui.liveUpdate.period", "-1")
-            .master("local[1]")
-            .config("spark.submit.deployMode", "client")
-            .appName("flypipe")
+        .config("spark.sql.repl.eagerEval.enabled", "true")
+        .config("spark.sql.execution.arrow.pyspark.enabled", "true")
+        .config("spark.ui.enabled", "false")
+        .config("spark.ui.liveUpdate.period", "-1")
+        .master("local[1]")
+        .config("spark.submit.deployMode", "client")
+        .appName("flypipe")
     )
 
     thrift_url = "thrift://hive-metastore:9083"
@@ -33,14 +33,14 @@ def get_spark():
     if thrift_server_available:
         configs = (
             configs.config("hive.metastore.uris", thrift_url)
-                .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-                .config(
+            .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+            .config(
                 "spark.sql.catalog.spark_catalog",
                 "org.apache.spark.sql.delta.catalog.DeltaCatalog",
             )
-                .config("spark.jars.repositories", "https://mvnrepository.com")
-                .config("spark.jars.packages", "io.delta:delta-core_2.13:2.1.1")
-                .enableHiveSupport()
+            .config("spark.jars.repositories", "https://mvnrepository.com")
+            .config("spark.jars.packages", "io.delta:delta-core_2.13:2.1.1")
+            .enableHiveSupport()
         )
 
     spark = configs.getOrCreate()

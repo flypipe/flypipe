@@ -135,18 +135,15 @@ class TestPandasDataFrameWrapper:
         with pytest.raises(ValueError) as ex:
             df_wrapper.cast_column("col1", Boolean())
         assert (
-                str(ex.value)
-                == 'Invalid type Boolean for column col1, found incompatible row value "rubbish"'
+            str(ex.value)
+            == 'Invalid type Boolean for column col1, found incompatible row value "rubbish"'
         )
 
     def test_cast_column_integer(self):
-        df_wrapper = DataFrameWrapper.get_instance(
-            None,
-            pd.DataFrame({'c1': [1.1]})
-        )
-        df_wrapper.cast_column('c1', Integer())
-        assert df_wrapper.df.loc[0]['c1'] == 1
-        assert df_wrapper.df.dtypes['c1'] == pd.Int64Dtype()
+        df_wrapper = DataFrameWrapper.get_instance(None, pd.DataFrame({"c1": [1.1]}))
+        df_wrapper.cast_column("c1", Integer())
+        assert df_wrapper.df.loc[0]["c1"] == 1
+        assert df_wrapper.df.dtypes["c1"] == pd.Int64Dtype()
 
     def test_cast_column_integer_2(self):
         """
@@ -156,21 +153,27 @@ class TestPandasDataFrameWrapper:
         pandas integer type to get around this.
         """
         df_wrapper = DataFrameWrapper.get_instance(
-            None,
-            pd.DataFrame({'c1': [1.1, np.nan, np.NAN, pd.NA, None]})
+            None, pd.DataFrame({"c1": [1.1, np.nan, np.NAN, pd.NA, None]})
         )
-        df_wrapper.cast_column('c1', Integer())
-        assert_frame_equal(df_wrapper.df, pd.DataFrame({'c1': [1, pd.NA, pd.NA, pd.NA, pd.NA]}), check_dtype=False)
-        assert df_wrapper.df.dtypes['c1'] == pd.Int64Dtype()
+        df_wrapper.cast_column("c1", Integer())
+        assert_frame_equal(
+            df_wrapper.df,
+            pd.DataFrame({"c1": [1, pd.NA, pd.NA, pd.NA, pd.NA]}),
+            check_dtype=False,
+        )
+        assert df_wrapper.df.dtypes["c1"] == pd.Int64Dtype()
 
     def test_cast_column_boolean(self):
         df_wrapper = DataFrameWrapper.get_instance(
-            None,
-            pd.DataFrame({'c1': [0, 1, np.nan]})
+            None, pd.DataFrame({"c1": [0, 1, np.nan]})
         )
-        df_wrapper.cast_column('c1', Boolean())
-        assert_frame_equal(df_wrapper.df, pd.DataFrame({'c1': [False, True, np.nan]}), check_dtype=False)
-        assert df_wrapper.df.dtypes['c1'] == np.dtype('O')
+        df_wrapper.cast_column("c1", Boolean())
+        assert_frame_equal(
+            df_wrapper.df,
+            pd.DataFrame({"c1": [False, True, np.nan]}),
+            check_dtype=False,
+        )
+        assert df_wrapper.df.dtypes["c1"] == np.dtype("O")
 
     def test_cast_column_decimal(self):
         schema = None
