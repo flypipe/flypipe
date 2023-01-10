@@ -9,7 +9,7 @@ on:
 
 jobs:
   verification:
-    uses: './.github/workflows/ci.yml'
+    uses: ./.github/workflows/ci.yml
 
   build-wheel:
     runs-on: ubuntu-latest
