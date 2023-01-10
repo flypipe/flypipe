@@ -47,11 +47,16 @@ class Node:
                     f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}'
                 )
 
-        if not description and get_config("require_node_description"):
-            raise ValueError(
-                f"Node description configured as mandatory but no description provided for node {self.__name__}"
-            )
-        self.description = description or "No description"
+        if description:
+            self.description = description
+        elif self.function.__doc__:
+            self.description = self.function.__doc__.strip()
+        else:
+            if get_config("require_node_description"):
+                raise ValueError(
+                    f"Node description configured as mandatory but no description provided for node {self.__name__}"
+                )
+            self.description = "No description"
 
         # TODO: enforce tags for now, later validation can be set as optional via environment variable
         self.tags = [self.type.value, self.node_type.value]
