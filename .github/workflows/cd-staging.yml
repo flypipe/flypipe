@@ -22,3 +22,8 @@ jobs:
         uses: './.github/actions/setup-dependencies'
       - name: Build Wheel
         run: flit build
+      - name: Upload Wheel
+        uses: actions/upload-artifact@v3
+        with:
+          name: flypipe-0.0.16-py3-none-any.whl
+          path: ./dist
