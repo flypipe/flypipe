@@ -15,8 +15,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: ls
-        run: ls
+        run: ls .github
       - name: Verification
-        uses: './actions/ci'
+        uses: './.github/actions/ci'
       - name: Build Wheel
         run: flit build
