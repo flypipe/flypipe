@@ -28,13 +28,13 @@ def evaluate(df):
     result.loc[result.shape[0]] = ["all", "f1_score macro", score]
 
     # Train data
-    df_ = df[df["data_type"] == "train"]
-    score = f1_score(df_["target"], df_["prediction"], average="macro")
+    train_df = df[df["data_type"] == "train"]
+    score = f1_score(train_df["target"], train_df["prediction"], average="macro")
     result.loc[result.shape[0]] = ["train", "f1_score macro", score]
 
     # Test data
-    df_ = df[df["data_type"] == "test"]
-    score = f1_score(df_["target"], df_["prediction"], average="macro")
+    test_df = df[df["data_type"] == "test"]
+    score = f1_score(test_df["target"], test_df["prediction"], average="macro")
     result.loc[result.shape[0]] = ["test", "f1_score macro", score]
 
     return result

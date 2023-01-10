@@ -469,6 +469,39 @@ class TestNode:
         with pytest.raises(DataFrameMissingColumns):
             t1.run(parallel=False)
 
+    def test_node_description_from_docstring(self):
+        """
+        The node description should use the docstring if not provided via a parameter.
+        """
+        @node(
+            type='pandas'
+        )
+        def t1():
+            """
+            This is a test
+            """
+            return
+
+        assert t1.description == 'This is a test'
+
+    def test_node_description_from_parameter(self):
+        """
+        When description is provided as a parameter to the node, we expect the node description to be set accordingly,
+        and for it to take precedence over the docstring description.
+        """
+
+        @node(
+            type='pandas',
+            description='This is another test',
+        )
+        def t1():
+            """
+            This is a test
+            """
+            return
+
+        assert t1.description=='This is another test'
+
     def test_node_mandatory_description(self):
         with pytest.raises(ValueError) as ex, config_context(
             require_node_description=True
