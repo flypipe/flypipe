@@ -12,7 +12,7 @@ jobs:
 #    uses: ./.github/workflows/ci.yml
 
   build-wheel:
-    needs: verification
+#    needs: verification
     runs-on: ubuntu-latest
 
     steps:
