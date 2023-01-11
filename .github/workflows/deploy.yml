@@ -27,4 +27,4 @@ jobs:
         with:
           name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
       - name: Create new branch
-        run: git checkout "release/${{ env.VERSION_NUMBER }}"
+        run: git checkout -b "release/${{ env.VERSION_NUMBER }}"
