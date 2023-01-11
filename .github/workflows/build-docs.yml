@@ -8,6 +8,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+  # Allow pipeline to be invoked from other pipelines
+  workflow_call:
+
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
@@ -28,10 +31,8 @@ jobs:
         uses: actions/checkout@v3
       - name: Fetch branches
         run: git fetch
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'
+      - name: Setup Dependencies
+        uses: './.github/actions/setup-dependencies'
       - name: Setup pandoc
         run: |
           # Script from https://nbanzyme.medium.com/install-pandoc-on-ubuntu-9cd9991735a2
@@ -40,8 +41,6 @@ jobs:
           sudo dpkg -i pandoc-2.19.2-1-amd64.deb
           # Check installation
           pandoc -v
-      - name: Install requirements
-        run: python -m pip install -r requirements_dev.txt
       - name: Build Sphinx Documentation
         run: sh docs/build_docs.sh
 #        run: sphinx-multiversion docs/source docs/build

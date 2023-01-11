@@ -1,4 +1,4 @@
-name: 'Calculate Version & Build Wheel'
+name: 'Calculate Version and Build Wheel'
 
 on:
   push:
