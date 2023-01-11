@@ -13,7 +13,7 @@ import os
 import sys
 
 sys.path.append(os.path.abspath("./_ext"))
-sys.path.insert(0, os.path.abspath("../../"))
+os.chdir('../..')
 
 from flypipe import __version__
 from datetime import datetime
