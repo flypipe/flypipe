@@ -1,0 +1,14 @@
+name: "Setup Dependencies"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+    - name: Install requirements
+      shell: bash
+      run: |
+        python -m pip install -r requirements.txt
+        python -m pip install -r requirements_dev.txt

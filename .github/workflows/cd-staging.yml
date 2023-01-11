@@ -1,4 +1,4 @@
-name: Deployment (Staging)
+name: 'Deployment (Staging)'
 
 on:
   push:
@@ -7,12 +7,32 @@ on:
   # Allow for manual invocation
   workflow_dispatch:
 
+  # Allow pipeline to be invoked from other pipelines
+  workflow_call:
+
 jobs:
-  build:
+#  verification:
+#    uses: ./.github/workflows/ci.yml
+
+  build-wheel:
+#    needs: verification
     runs-on: ubuntu-latest
 
     steps:
-      - name: Verification
-        uses: './ci.yml'
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Fetch branches
+        run: git fetch
+      - name: Setup Dependencies
+        uses: './.github/actions/setup-dependencies'
+      - name: Calculate new version number
+        run: echo "new_version=$(python scripts/calculate_version.py)" >> $GITHUB_ENV
+      - name: Set version
+        run: python scripts/set_version.py ${{ env.new_version }}
       - name: Build Wheel
         run: flit build
+      - name: Upload Wheel
+        uses: actions/upload-artifact@v3
+        with:
+          name: flypipe-${{ env.new_version }}-py3-none-any.whl
+          path: ./dist

@@ -473,16 +473,15 @@ class TestNode:
         """
         The node description should use the docstring if not provided via a parameter.
         """
-        @node(
-            type='pandas'
-        )
+
+        @node(type="pandas")
         def t1():
             """
             This is a test
             """
             return
 
-        assert t1.description == 'This is a test'
+        assert t1.description == "This is a test"
 
     def test_node_description_from_parameter(self):
         """
@@ -491,8 +490,8 @@ class TestNode:
         """
 
         @node(
-            type='pandas',
-            description='This is another test',
+            type="pandas",
+            description="This is another test",
         )
         def t1():
             """
@@ -500,7 +499,7 @@ class TestNode:
             """
             return
 
-        assert t1.description=='This is another test'
+        assert t1.description == "This is another test"
 
     def test_node_mandatory_description(self):
         with pytest.raises(ValueError) as ex, config_context(
