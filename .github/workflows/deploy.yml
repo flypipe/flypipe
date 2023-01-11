@@ -19,9 +19,9 @@ jobs:
       - name: Download version file
         uses: actions/download-artifact@v3
         with:
-          name: version.txt
+          name: flypipe/version.txt
       - name: Store version number
-        run: echo "VERSION_NUMBER=$(cat version.txt)" >> $GITHUB_ENV
+        run: echo "VERSION_NUMBER=$(cat flypipe/version.txt)" >> $GITHUB_ENV
       - name: Download wheel file
         uses: actions/download-artifact@v3
         with:
@@ -29,6 +29,8 @@ jobs:
       - name: Create new branch
         run: |
           git checkout -b "release/${{ env.VERSION_NUMBER }}"
+          git add flypipe/version.txt
+          git commit -m 'chore: update version file'
           git push origin "release/${{ env.VERSION_NUMBER }}"
 
   build-docs:
