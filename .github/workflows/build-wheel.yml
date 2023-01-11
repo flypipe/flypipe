@@ -28,7 +28,7 @@ jobs:
       - name: Calculate new version number
         run: echo "VERSION_NUMBER=$(python scripts/calculate_version.py)" >> $GITHUB_ENV
       - name: Set version
-        run: python scripts/set_version.py ${{ env.VERSION_NUMBER }}
+        run: echo ${{ env.VERSION_NUMBER }} > version.txt
       - name: Build Wheel
         run: flit build
       - name: Upload Wheel
@@ -36,11 +36,8 @@ jobs:
         with:
           name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
           path: ./dist/flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
-      # The below is a hack to allow us to access the version number in pipelines invoking this one
-      - name: Save version to seperate file
-        run: echo ${{ env.VERSION_NUMBER }} > flypipe/version.txt
       - name: Upload Version
         uses: actions/upload-artifact@v3
         with:
           name: version.txt
-          path: ./flypipe/version.txt
+          path: ./version.txt
