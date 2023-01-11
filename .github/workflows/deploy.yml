@@ -28,6 +28,8 @@ jobs:
           name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
       - name: Create new branch
         run: |
+          git config --global user.email "flypipe@dummy.com"
+          git config --global user.name "flypipe"
           git checkout -b "release/${{ env.VERSION_NUMBER }}"
           git add version.txt
           git commit -m 'chore: update version file'
