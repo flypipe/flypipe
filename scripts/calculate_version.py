@@ -6,7 +6,7 @@ released)
 
 import subprocess
 
-
+subprocess.run('git for-each-ref --format="%(refname:short)" refs/heads/', shell=True)
 all_branches = subprocess.check_output('git for-each-ref --format="%(refname:short)" refs/heads/', shell=True).decode('utf-8').split()
 release_branches = [branch for branch in all_branches if branch.startswith('release/')]
 if not release_branches:
