@@ -24,12 +24,12 @@ jobs:
         uses: './.github/actions/setup-dependencies'
       - name: Calculate new version number
         run: echo "new_version=$(python scripts/calculate_version.py)" >> $GITHUB_ENV
-      - name: TEMP
-        run: echo ${{ env.new_version }}
+      - name: Set version
+        run: python scripts/set_version.py ${{ env.new_version }}
       - name: Build Wheel
         run: flit build
       - name: Upload Wheel
         uses: actions/upload-artifact@v3
         with:
-          name: flypipe-0.0.16-py3-none-any.whl
+          name: flypipe-${{ env.new_version }}-py3-none-any.whl
           path: ./dist
