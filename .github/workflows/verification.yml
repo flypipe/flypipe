@@ -28,8 +28,8 @@ jobs:
         uses: ./.github/actions/setup-dependencies
       - name: Run Formatter (Black)
         run: black flypipe --check
-#      - name: Run Linter (pylint)
-#        run: python -m pylint flypipe
-#      - name: Run Unit Tests
-#        run: pytest flypipe
+      - name: Run Linter (pylint)
+        run: python -m pylint flypipe
+      - name: Run Unit Tests
+        run: pytest flypipe
 
