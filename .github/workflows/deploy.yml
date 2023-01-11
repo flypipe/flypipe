@@ -1,0 +1,31 @@
+name: 'Deploy Wheel'
+
+on:
+
+  # Allow for manual invocation
+  workflow_dispatch:
+
+jobs:
+  cd-staging:
+    uses: ./.github/workflows/build-wheel.yml
+
+  test:
+    needs: cd-staging
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download version file
+        uses: actions/download-artifact@v3
+        with:
+          name: version.txt
+      - name: Store version number
+        run: echo "VERSION_NUMBER=$(cat version.txt)" >> $GITHUB_ENV
+      - name: Download wheel file
+        uses: actions/download-artifact@v3
+        with:
+          name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
+          path: ./dist
+      - name: Create new branch
+        run: git checkout "release/${{ env.VERSION_NUMBER }}"
