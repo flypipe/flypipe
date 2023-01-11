@@ -40,6 +40,6 @@ jobs:
       - name: Save version to seperate file
         run: echo ${{ env.VERSION_NUMBER }} > version.txt
       - name: Upload Version
-          uses: actions/upload-artifact@v3
-          with:
-            name: version.txt
+        uses: actions/upload-artifact@v3
+        with:
+          name: version.txt
