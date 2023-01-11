@@ -6,17 +6,17 @@ released)
 
 import subprocess
 
-subprocess.run('git for-each-ref --format="%(refname:short)" refs/heads/', shell=True)
+print(subprocess.check_output('git branch'))
 all_branches = subprocess.check_output('git for-each-ref --format="%(refname:short)" refs/heads/', shell=True).decode('utf-8').split()
 release_branches = [branch for branch in all_branches if branch.startswith('release/')]
 if not release_branches:
     # Unable to find a previous release
     latest_version = [0, 0, 0]
-    commit_list = subprocess.check_output(f'git rev-list main --no-merges', shell=True).decode('utf-8').split()
+    commit_list = subprocess.check_output(f'git rev-list HEAD --no-merges', shell=True).decode('utf-8').split()
 else:
     latest_version_branch_name = max(release_branches)
     latest_version = [int(num) for num in latest_version_branch_name[8:].split('.')]
-    commit_list = subprocess.check_output(f'git rev-list {latest_version_branch_name}..main --no-merges', shell=True).decode('utf-8').split()
+    commit_list = subprocess.check_output(f'git rev-list {latest_version_branch_name}..HEAD --no-merges', shell=True).decode('utf-8').split()
 
 new_version = latest_version
 if not commit_list:
