@@ -11,11 +11,11 @@ on:
   workflow_call:
 
 jobs:
-#  verification:
-#    uses: ./.github/workflows/verification.yml
+  verification:
+    uses: ./.github/workflows/verification.yml
 
   build-wheel:
-#    needs: verification
+    needs: verification
     runs-on: ubuntu-latest
 
     steps:
