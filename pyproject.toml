@@ -4,6 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "flypipe"
+version = "0.0.99"
 authors = [
     {name = "Jose Helio de Brum Muller", email = "josemuller.flypipe@gmail.com"},
     {name = "Chris Marwick", email = "chrismarwick.flypipe@gmail.com"},
@@ -17,7 +18,6 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
 ]
-dynamic = ["version", "description"]
 requires-python=">=3.8"
 dependencies  = [
     "Jinja2 >=3.1,<4",

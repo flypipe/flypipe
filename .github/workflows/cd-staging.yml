@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  verification:
-    uses: ./.github/workflows/ci.yml
+#  verification:
+#    uses: ./.github/workflows/ci.yml
 
   build-wheel:
     needs: verification
@@ -20,6 +20,8 @@ jobs:
         uses: actions/checkout@v3
       - name: Setup Dependencies
         uses: './.github/actions/setup-dependencies'
+      - name: Calculate new version number
+        run: echo "new_version=$(python scripts/calculate_version.py)" >> $GITHUB_OUTPUT
       - name: Build Wheel
         run: flit build
       - name: Upload Wheel
