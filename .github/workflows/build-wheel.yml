@@ -35,7 +35,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
-          path: ./dist
+          path: ./dist/flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
       # The below is a hack to allow us to access the version number in pipelines invoking this one
       - name: Save version to seperate file
         run: echo ${{ env.VERSION_NUMBER }} > version.txt
@@ -43,4 +43,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: version.txt
-          path: .
+          path: ./version.txt

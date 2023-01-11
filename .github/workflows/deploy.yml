@@ -26,6 +26,5 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
-          path: ./dist
       - name: Create new branch
         run: git checkout "release/${{ env.VERSION_NUMBER }}"
