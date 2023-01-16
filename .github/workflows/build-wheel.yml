@@ -30,7 +30,9 @@ jobs:
       - name: Set version
         run: echo ${{ env.VERSION_NUMBER }} > flypipe/version.txt
       - name: Build Wheel
-        run: flit build
+        run: |
+          pwd
+          flit build
       - name: Upload Wheel
         uses: actions/upload-artifact@v3
         with:
