@@ -41,9 +41,10 @@ jobs:
           sudo dpkg -i pandoc-2.19.2-1-amd64.deb
           # Check installation
           pandoc -v
+      - name: Set production doc deployment flag
+        run: PRODUCTION_DOCS_DEPLOY=1
       - name: Build Sphinx Documentation
         run: sh docs/build_docs.sh
-#        run: sphinx-multiversion docs/source docs/build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
