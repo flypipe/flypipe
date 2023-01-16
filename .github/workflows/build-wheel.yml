@@ -28,7 +28,7 @@ jobs:
       - name: Calculate new version number
         run: echo "VERSION_NUMBER=$(python scripts/calculate_version.py)" >> $GITHUB_ENV
       - name: Set version
-        run: echo ${{ env.VERSION_NUMBER }} > version.txt
+        run: echo ${{ env.VERSION_NUMBER }} > flypipe/version.txt
       - name: Build Wheel
         run: flit build
       - name: Upload Wheel
@@ -40,4 +40,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: version.txt
-          path: ./version.txt
+          path: ./flypipe/version.txt
