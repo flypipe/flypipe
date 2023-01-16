@@ -1,5 +1,6 @@
 import re
 import sys
+import pandas as pd
 from typing import Mapping, List
 
 from flypipe.config import get_config, RunMode
@@ -14,10 +15,12 @@ from flypipe.utils import DataFrameType
 
 
 class Node:
-    TYPE_MAP = {
+    ALLOWED_TYPES = {'pyspark', 'pandas', 'pandas_on_spark', 'spark_sql'}
+    DATAFRAME_TYPE_MAP = {
         "pyspark": DataFrameType.PYSPARK,
         "pandas": DataFrameType.PANDAS,
         "pandas_on_spark": DataFrameType.PANDAS_ON_SPARK,
+        "spark_sql": DataFrameType.PYSPARK,
     }
 
     def __init__(
@@ -37,15 +40,9 @@ class Node:
         self.function = function
 
         self.node_type = NodeType.TRANSFORMATION
-        if isinstance(type, DataFrameType):
-            self.type = type
-        else:
-            try:
-                self.type = self.TYPE_MAP[type]
-            except KeyError:
-                raise NodeTypeInvalidError(
-                    f'Invalid type {type}, expected one of {",".join(self.TYPE_MAP.keys())}'
-                )
+        if type not in self.ALLOWED_TYPES:
+            raise ValueError(f'type set to {type} but must be one of {self.ALLOWED_TYPES}')
+        self.type = type
 
         if description:
             self.description = description
@@ -59,7 +56,7 @@ class Node:
             self.description = "No description"
 
         # TODO: enforce tags for now, later validation can be set as optional via environment variable
-        self.tags = [self.type.value, self.node_type.value]
+        self.tags = [self.type, self.node_type.value]
         if tags:
             self.tags.extend(tags)
 
@@ -166,14 +163,22 @@ class Node:
         inputs = {}
         for input_node in self.input_nodes:
             node_input_value = outputs[input_node.key].as_type(
-                self.input_dataframe_type
+                self.dataframe_type
             )
             if input_node.selected_columns:
                 inputs[input_node.get_alias()] = node_input_value.select_columns(
                     *input_node.selected_columns
                 ).get_df()
             else:
-                inputs[input_node.get_alias()] = node_input_value.get_df()
+                alias = input_node.get_alias()
+                inputs[alias] = node_input_value.get_df()
+                if self.type == 'spark_sql':
+                    # SQL doesn't work with dataframes, so we need to:
+                    # - save all incoming dataframes as unique temporary tables
+                    # - pass the names of these tables instead of the dataframes
+                    table_name = f'{self.__name__}__{alias}'
+                    inputs[alias].write.mode('overwrite').saveAsTable(table_name)
+                    inputs[alias] = table_name
 
         return inputs
 
@@ -203,8 +208,8 @@ class Node:
             return self._run_sequential(spark, provided_inputs)
 
     @property
-    def input_dataframe_type(self):
-        return self.type
+    def dataframe_type(self):
+        return self.DATAFRAME_TYPE_MAP[self.type]
 
     def _run_sequential(self, spark=None, provided_inputs=None):
         if provided_inputs is None:
@@ -245,7 +250,7 @@ class Node:
 
         return (
             outputs[runnable_node["transformation"].key]
-            .as_type(runnable_node["transformation"].type)
+            .as_type(runnable_node["transformation"].dataframe_type)
             .get_df()
         )
 
@@ -280,7 +285,14 @@ class Node:
         if run_context.parameters:
             parameters = {**parameters, **run_context.parameters}
 
-        return self.function(**parameters)
+        result = self.function(**parameters)
+        if self.type == 'spark_sql':
+            # Spark SQL functions only return the text of a SQL query, we will need to execute this command.
+            if not spark:
+                raise ValueError(
+                    'Unable to run spark_sql type node without spark being provided in the transformation.run call')
+            result = spark.sql(result)
+        return result
 
     def plot(self):
         self.node_graph.plot()
