@@ -21,5 +21,7 @@ for versions in releases_by_minor_version.values():
     doc_versions.append('(' + r'\.'.join(max(versions)) + ')')
 
 doc_versions_re = r'release/({doc_versions})'.format(doc_versions='|'.join(doc_versions))
+if 'PRODUCTION_DOCS_DEPLOY' not in os.environ or os.environ['PRODUCTION_DOCS_DEPLOY'] == '0':
+    doc_versions_re += '|main'
 subprocess.check_output([
     'sphinx-multiversion', f'-Dsmv_branch_whitelist={doc_versions_re}', './source', './build/html'])

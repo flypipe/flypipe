@@ -11,6 +11,9 @@ on:
   # Allow pipeline to be invoked from other pipelines
   workflow_call:
 
+env:
+  PRODUCTION_DOCS_DEPLOY: 1
+
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
@@ -41,8 +44,6 @@ jobs:
           sudo dpkg -i pandoc-2.19.2-1-amd64.deb
           # Check installation
           pandoc -v
-      - name: Set production doc deployment flag
-        run: PRODUCTION_DOCS_DEPLOY=1
       - name: Build Sphinx Documentation
         run: sh docs/build_docs.sh
       - name: Upload artifact
