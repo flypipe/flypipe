@@ -3,7 +3,9 @@ import pyspark
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
 import pytest
+from unittest import mock
 from pandas.testing import assert_frame_equal
+from pyspark.sql import DataFrameWriter
 from pyspark_test import assert_pyspark_df_equal
 
 from flypipe.config import config_context
@@ -35,6 +37,15 @@ def spark():
 
 
 class TestNode:
+    def test_invalid_type(self):
+        """Building a node with a type not in Node.ALLOWED_TYPES should raise an exception"""
+        with pytest.raises(ValueError):
+            @node(
+                type='dummy'
+            )
+            def t1():
+                return pd.DataFrame()
+
     @pytest.mark.parametrize(
         "node_type,expected_class",
         [
@@ -829,3 +840,70 @@ class TestNode:
 
         with pytest.raises(TypeError):
             t1.run()
+
+    def test_spark_sql_conversion(self, spark):
+        """
+        If we use a spark sql code then:
+        - any dependencies should be saved into a unique table
+        - the dataframes passed into the spark sql function should be replaced with the names of the tables they were saved into.
+        """
+        @node(
+            type='pandas'
+        )
+        def t1():
+            return pd.DataFrame({'number': [1]})
+
+        @node(
+            type='spark_sql',
+            dependencies=[t1]
+        )
+        def t2(t1):
+            return f'select number+1 from {t1}'
+
+
+        with mock.patch.object(DataFrameWriter, 'saveAsTable') as saveAsTable_mock, \
+                mock.patch.object(spark, 'sql', return_value=spark.createDataFrame(data=[{'number': 2}])) as sql_mock:
+            t2.run(spark=spark)
+        assert saveAsTable_mock.call_args[0][0] == 't2__t1'
+        assert sql_mock.call_args[0][0] == 'select number+1 from t2__t1'
+
+
+class TestNodeIntegration:
+    """
+    Higher level integration tests
+    """
+    # def test_spark_sql(self, spark):
+    #     """
+    #     Simple pipeline to check that we can flick between regular dataframe and Spark SQL transformations.
+    #     """
+    #     # # FIXME- incomplete, need to get pyspark working locally again first
+    #     # @node(
+    #     #     type='pandas'
+    #     # )
+    #     # def t1():
+    #     #     return pd.DataFrame({'name': ['Bob', 'Chris'], 'age': [10, 20]})
+    #     #
+    #     # @node(
+    #     #     type='spark_sql',
+    #     #     dependencies=[t1]
+    #     # )
+    #     # def t2(t1):
+    #     #     return f'SELECT name, age + 1 FROM {t1}'
+    #     #
+    #     # @node(
+    #     #     type='spark_sql',
+    #     #     dependencies=[t2]
+    #     # )
+    #     # def t3(t2):
+    #     #     return f'SELECT name, age + 1 FROM {t2}'
+    #     #
+    #     # @node(
+    #     #     type='pandas',
+    #     #     dependencies=[t3]
+    #     # )
+    #     # def t4(t3):
+    #     #     t3['age'] += 1
+    #     #     return t3
+    #     #
+    #     # result = t4.run(spark=spark)
+    #     # pass
