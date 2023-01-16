@@ -4,7 +4,7 @@ import os
 from git import Repo
 
 RE_BRANCH = '^release/(\d+)\.(\d)+\.(\d)+'
-print(os.environ['PRODUCTION_DOCS_DEPLOY'])
+
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 releases_by_minor_version = {}
