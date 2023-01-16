@@ -1,7 +1,8 @@
 """
 Flypipe
 """
-with open('version.txt', 'r') as f:
+import os
+with open(os.path.join(os.path.dirname(__file__), 'version.txt'), 'r') as f:
     __version__ = f.read()
 # TODO: we shouldn't need this try except, there's some weird thing that happens when we run flit build where it runs
 #  this module to get the version for the wheel file and cannot find the package flypipe. Skip for now.
