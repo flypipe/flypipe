@@ -864,8 +864,31 @@ class TestNode:
         with mock.patch.object(DataFrame, 'createOrReplaceTempView') as createOrReplaceTempView_mock, \
                 mock.patch.object(spark, 'sql', return_value=spark.createDataFrame(data=[{'number': 2}])) as sql_mock:
             t2.run(spark=spark)
+        assert sql_mock.call_args[0][0]=='select number+1 from t2__t1'
         assert createOrReplaceTempView_mock.call_args[0][0] == 't2__t1'
-        assert sql_mock.call_args[0][0] == 'select number+1 from t2__t1'
+
+    def test_spark_sql_select_column(self, spark):
+        """
+        Basic test for spark sql where the dependency has a select column in it.
+        There was a bug (DATA-3936) where this use case stacktraces.
+        """
+        @node(
+            type='pandas')
+        def t1():
+            return pd.DataFrame({'c1': ['chris']})
+
+        @node(
+            type='spark_sql',
+            dependencies=[t1.select('c1')]
+        )
+        def t2(t1):
+            return f'select * from {t1}'
+
+        with mock.patch.object(DataFrame, 'createOrReplaceTempView') as createOrReplaceTempView_mock, \
+                mock.patch.object(spark, 'sql', return_value=spark.createDataFrame(data=[{'number': 2}])) as sql_mock:
+            t2.run(spark=spark)
+        assert sql_mock.call_args[0][0]=='select * from t2__t1'
+        assert createOrReplaceTempView_mock.call_args[0][0]=='t2__t1'
 
 
 class TestNodeIntegration:
