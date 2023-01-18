@@ -19,10 +19,11 @@ os.chdir('../..')
 from flypipe import __version__
 from datetime import datetime
 
+today = datetime.today()
 # -- Project information -----------------------------------------------------
 
 project = "Flypipe"
-copyright = f"{datetime.year}, {project}"
+copyright = f"{today.year}, {project}"
 author = "Jose Helio de Brum Muller & Chris Marwick"
 
 # The full version, including alpha/beta/rc tags

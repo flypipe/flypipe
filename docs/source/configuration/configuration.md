@@ -46,7 +46,7 @@ Enforces declaration of node **output** schema
 
 ### default_run_mode
 
-Defines the default execution mode for Flypipe pipelines:\
+Defines the default execution mode for Flypipe pipelines:
 
 * **sequential**: will process nodes sequentially
 * **parallel**: permit Flypipe to schedule multiple nodes to be processed concurrently, note that for a node to be 
