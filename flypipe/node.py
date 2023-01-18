@@ -177,7 +177,7 @@ class Node:
                     # - save all incoming dataframes as unique temporary tables
                     # - pass the names of these tables instead of the dataframes
                     table_name = f'{self.__name__}__{alias}'
-                    inputs[alias].write.mode('overwrite').saveAsTable(table_name)
+                    inputs[alias].createOrReplaceTempView(table_name)
                     inputs[alias] = table_name
 
         return inputs

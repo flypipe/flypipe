@@ -5,7 +5,7 @@ import pyspark.sql.functions as F
 import pytest
 from unittest import mock
 from pandas.testing import assert_frame_equal
-from pyspark.sql import DataFrameWriter
+from pyspark.sql import DataFrameWriter, DataFrame
 from pyspark_test import assert_pyspark_df_equal
 
 from flypipe.config import config_context
@@ -861,10 +861,10 @@ class TestNode:
             return f'select number+1 from {t1}'
 
 
-        with mock.patch.object(DataFrameWriter, 'saveAsTable') as saveAsTable_mock, \
+        with mock.patch.object(DataFrame, 'createOrReplaceTempView') as createOrReplaceTempView_mock, \
                 mock.patch.object(spark, 'sql', return_value=spark.createDataFrame(data=[{'number': 2}])) as sql_mock:
             t2.run(spark=spark)
-        assert saveAsTable_mock.call_args[0][0] == 't2__t1'
+        assert createOrReplaceTempView_mock.call_args[0][0] == 't2__t1'
         assert sql_mock.call_args[0][0] == 'select number+1 from t2__t1'
 
 
