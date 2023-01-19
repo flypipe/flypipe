@@ -285,7 +285,6 @@ function highlight_link(d,i){
     if (Object.keys(source_target_columns).length == 0) {
         table_body = '<tr><td>Unknown</td><td><i class="fa fa-long-arrow-right" aria-hidden="true"></i></td><td>Unknown</td></tr>';
     } else {
-        console.log(source_target_columns);
         for (const [key, value] of Object.entries(source_target_columns)) {
             table_body += "<tr><td>" + key + "</td>";
             table_body += "<td>" + (value? '<i class="fa fa-long-arrow-right" aria-hidden="true"></i>': "") + "</td>";
