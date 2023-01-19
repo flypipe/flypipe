@@ -166,19 +166,18 @@ class Node:
                 self.dataframe_type
             )
             if input_node.selected_columns:
-                inputs[input_node.get_alias()] = node_input_value.select_columns(
+                node_input_value = node_input_value.select_columns(
                     *input_node.selected_columns
-                ).get_df()
-            else:
-                alias = input_node.get_alias()
-                inputs[alias] = node_input_value.get_df()
-                if self.type == 'spark_sql':
-                    # SQL doesn't work with dataframes, so we need to:
-                    # - save all incoming dataframes as unique temporary tables
-                    # - pass the names of these tables instead of the dataframes
-                    table_name = f'{self.__name__}__{alias}'
-                    inputs[alias].write.mode('overwrite').saveAsTable(table_name)
-                    inputs[alias] = table_name
+                )
+            alias = input_node.get_alias()
+            inputs[alias] = node_input_value.get_df()
+            if self.type == 'spark_sql':
+                # SQL doesn't work with dataframes, so we need to:
+                # - save all incoming dataframes as unique temporary tables
+                # - pass the names of these tables instead of the dataframes
+                table_name = f'{self.__name__}__{alias}'
+                inputs[alias].createOrReplaceTempView(table_name)
+                inputs[alias] = table_name
 
         return inputs
 
