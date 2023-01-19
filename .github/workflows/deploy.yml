@@ -41,10 +41,10 @@ jobs:
         with:
           FLIT_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
       - name: Upload Wheel
-          uses: actions/upload-artifact@v3
-          with:
-            name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
-            path: ./dist/flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
+        uses: actions/upload-artifact@v3
+        with:
+          name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
+          path: ./dist/flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
 
   build-docs:
     needs: deploy-pypi
