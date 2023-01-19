@@ -11,19 +11,25 @@ from flypipe.utils import DataFrameType
 class GraphHTML:
 
     CSS_MAP = {
-        DataFrameType.PANDAS: {
+        "pandas": {
             "shape": "circle",
             "bg-class": "success",
             "bg-color": "#198754",
             "text": DataFrameType.PANDAS.value,
         },
-        DataFrameType.PYSPARK: {
+        "pyspark": {
             "shape": "circle",
             "bg-class": "danger",
             "bg-color": "#dc3545",
             "text": DataFrameType.PYSPARK.value,
         },
-        DataFrameType.PANDAS_ON_SPARK: {
+        "spark_sql": {
+            "shape": "circle",
+            "bg-class": "info",
+            "bg-color": "#2272b4",
+            "text": "spark_sql",
+        },
+        "pandas_on_spark": {
             "shape": "circle",
             "bg-class": "warning",
             "bg-color": "#ffc107",
