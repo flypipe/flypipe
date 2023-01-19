@@ -1,10 +1,28 @@
 """
+This script calculates the next version number which Flypipe ought to release to. Flypipe uses semantic versioning
+(https://semver.org/) for it's releases, and conventional commits (https://www.conventionalcommits.org/en/v1.0.0/) for
+the commit format. We leverage these to get the appropriate version for new releases in the following process:
+1. Get the most recent release
+2. Scan through the commit messages of the list of commits between the most recent release and HEAD:
+    - If we encounter any commit with BREAKING CHANGE or ! after the type then we increment the major version on the
+    most recent released version and the resultant version number is our new release number.
+    - If none of the commits contained BREAKING CHANGE or ! after the type but we have at least one feature change (i.e
+    type == 'feat') then we increment the minor version on the most recent released version and the resultant version
+    number is our new release number.
+    - If neither of the above two events occurred then we increment the patch version on the most recent released
+    version and the resultant version number is our new release number.
+
 Get the diff between the latest release and the current HEAD, using the conventional commit rules we can
 calculate the offset from the latest release and thus the new version (assuming the current state of HEAD were to be
 released)
 """
 
 import subprocess
+import re
+
+# A breaking change in a commit message can either be the words BREAKING CHANGE or an exclamation mark after the type.
+# This regex handles the exclamation mark case.
+RE_BREAKING_CHANGE_EXCLAMATION_MARK = re.compile(r'^\w+(\(\w+\))?!')
 
 all_branches = (
     subprocess.check_output('git for-each-ref --format="%(refname:short)"', shell=True)
@@ -43,7 +61,7 @@ for commit_id in commit_list:
         f"git show {commit_id} -s --format=%B", shell=True
     ).decode("utf-8")
     commit_message_summary = commit_message.split("\n", maxsplit=1)[0]
-    if "BREAKING_CHANGE" in commit_message:
+    if "BREAKING_CHANGE" in commit_message or re.match(RE_BREAKING_CHANGE_EXCLAMATION_MARK, commit_message_summary):
         is_breaking_change = True
     elif commit_message.startswith("feat:"):
         is_feature_change = True
