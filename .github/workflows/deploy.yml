@@ -30,7 +30,7 @@ jobs:
       - name: Store version number
         run: echo "VERSION_NUMBER=0.0.11" >> $GITHUB_ENV
       - name: TEMP
-        run: echo "VERSION_NUMBER=0.0.11" >> flypipe/version.txt
+        run: echo "0.0.11" > flypipe/version.txt
       - name: Create new branch
         run: |
           git config --global user.email "flypipe@dummy.com"
