@@ -13,7 +13,7 @@ jobs:
 #    needs: predeploy
     runs-on: ubuntu-latest
     env:
-      FLIT_USERNAME: manager.flypipe
+      FLIT_USERNAME: __token__
       FLIT_INDEX_URL: https://test.pypi.org/legacy/
 
     steps:
