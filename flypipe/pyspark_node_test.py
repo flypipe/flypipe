@@ -7,7 +7,6 @@ from tabulate import tabulate
 
 from flypipe.datasource.spark import Spark
 from flypipe.exceptions import DataFrameMissingColumns
-from flypipe.exceptions import NodeTypeInvalidError
 from flypipe.node import node
 from flypipe.schema.column import Column
 from flypipe.schema.schema import Schema
@@ -29,7 +28,7 @@ def spark():
 
 class TestPySparkNode:
     def test_exception_invalid_node_type(self, spark):
-        with pytest.raises(NodeTypeInvalidError) as e_info:
+        with pytest.raises(ValueError) as e_info:
 
             @node(type="anything", output=Schema([Column("balance", Decimal(16, 2))]))
             def dummy():
