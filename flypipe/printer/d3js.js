@@ -264,7 +264,7 @@ function highlight_link(d,i){
     var source = nodes_map[d['source']];
     var target = nodes_map[d['target']];
 
-    source_target_columns = {};
+    var source_target_columns = {};
     if (source.definition.columns.length > 0) {
         // If a schema is defined
         for (let i = 0; i < source.definition.columns.length; i++) {
@@ -281,11 +281,16 @@ function highlight_link(d,i){
     }
 
 
-    matches = "";
-    for (const [key, value] of Object.entries(source_target_columns)) {
-        matches += "<tr><td>" + key + "</td>";
-        matches += "<td>" + (value? '<i class="fa fa-long-arrow-right" aria-hidden="true"></i>': "") + "</td>";
-        matches += "<td>" + (value? key: "") + "</td></tr>";
+    var table_body = "";
+    if (Object.keys(source_target_columns).length == 0) {
+        table_body = '<tr><td>Unknown</td><td><i class="fa fa-long-arrow-right" aria-hidden="true"></i></td><td>Unknown</td></tr>';
+    } else {
+        console.log(source_target_columns);
+        for (const [key, value] of Object.entries(source_target_columns)) {
+            table_body += "<tr><td>" + key + "</td>";
+            table_body += "<td>" + (value? '<i class="fa fa-long-arrow-right" aria-hidden="true"></i>': "") + "</td>";
+            table_body += "<td>" + (value? key: "") + "</td></tr>";
+        }
     }
     text = `
     <table class="table">
@@ -297,7 +302,7 @@ function highlight_link(d,i){
         </tr>
       </thead>
       <tbody>`
-      + matches +
+      + table_body +
       `</tbody></table>`;
 
     d3.select("#tooltip")
