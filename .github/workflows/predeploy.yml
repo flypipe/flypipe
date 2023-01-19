@@ -1,4 +1,4 @@
-name: 'Calculate Version and Build Wheel'
+name: 'Prepare for deployment by running verification and calculating the new version we will be deploying'
 
 on:
   push:
@@ -29,14 +29,7 @@ jobs:
         run: echo "VERSION_NUMBER=$(python scripts/calculate_version.py)" >> $GITHUB_ENV
       - name: Set version
         run: echo ${{ env.VERSION_NUMBER }} > flypipe/version.txt
-      - name: Build Wheel
-        run: flit build
-      - name: Upload Wheel
-        uses: actions/upload-artifact@v3
-        with:
-          name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
-          path: ./dist/flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
-      - name: Upload Version
+      - name: Upload Version File
         uses: actions/upload-artifact@v3
         with:
           name: version.txt
