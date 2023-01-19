@@ -726,7 +726,7 @@ class TestNode:
     def test_pandas_on_spark_use_pandas(self, spark):
         """
         When running a graph with pandas_on_spark_use_pandas=True, all pandas_on_spark nodes types should be of type pandas
-        If running straigth after, but with pandas_on_spark_use_pandas=False, all pandas_on_spark nodes types should be of type pandas_on_spark
+        If running straight after, but with pandas_on_spark_use_pandas=False, all pandas_on_spark nodes types should be of type pandas_on_spark
         """
 
         @node(type="pandas_on_spark", dependencies=[Spark("dummy_table1").select("c1")])
@@ -734,16 +734,16 @@ class TestNode:
             return dummy_table1
 
         t1.run(spark, pandas_on_spark_use_pandas=True)
-        assert t1.type == DataFrameType.PANDAS_ON_SPARK
+        assert t1.dataframe_type == DataFrameType.PANDAS_ON_SPARK
 
         t1.run(spark, pandas_on_spark_use_pandas=False)
-        assert t1.type == DataFrameType.PANDAS_ON_SPARK
+        assert t1.dataframe_type == DataFrameType.PANDAS_ON_SPARK
 
         t1._create_graph(pandas_on_spark_use_pandas=True)
         for n in t1.node_graph.graph.nodes:
             if t1.node_graph.graph.nodes[n]["transformation"].__name__ == "t1":
                 assert (
-                    t1.node_graph.graph.nodes[n]["transformation"].type
+                    t1.node_graph.graph.nodes[n]["transformation"].dataframe_type
                     == DataFrameType.PANDAS
                 )
 
