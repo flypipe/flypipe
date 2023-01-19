@@ -236,8 +236,8 @@ class GraphHTML:
                         target_node["transformation"].key
                     ],
                     "active": (
-                            source_node["status"] != RunStatus.SKIP
-                            and target_node["status"] != RunStatus.SKIP
+                        source_node["status"] != RunStatus.SKIP
+                        and target_node["status"] != RunStatus.SKIP
                     ),
                 }
             )

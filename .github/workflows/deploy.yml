@@ -1,0 +1,40 @@
+name: 'Deploy'
+
+on:
+
+  # Allow for manual invocation
+  workflow_dispatch:
+
+jobs:
+  build-wheel:
+    uses: ./.github/workflows/build-wheel.yml
+
+  deploy-pypi:
+    needs: build-wheel
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download version file
+        uses: actions/download-artifact@v3
+        with:
+          name: version.txt
+      - name: Store version number
+        run: echo "VERSION_NUMBER=$(cat version.txt)" >> $GITHUB_ENV
+      - name: Download wheel file
+        uses: actions/download-artifact@v3
+        with:
+          name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
+      - name: Create new branch
+        run: |
+          git config --global user.email "flypipe@dummy.com"
+          git config --global user.name "flypipe"
+          git checkout -b "release/${{ env.VERSION_NUMBER }}"
+          git add version.txt
+          git commit -m 'chore: update version file'
+          git push origin "release/${{ env.VERSION_NUMBER }}"
+
+  build-docs:
+    needs: deploy-pypi
+    uses: ./.github/workflows/build-docs.yml

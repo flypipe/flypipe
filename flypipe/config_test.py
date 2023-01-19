@@ -39,7 +39,7 @@ class TestConfig:
         casts are done where appropriate.
         """
         with self._set_environment_variable_for_test(
-                "FLYPIPE_REQUIRE_NODE_DESCRIPTION", env_value
+            "FLYPIPE_REQUIRE_NODE_DESCRIPTION", env_value
         ):
             assert get_config("require_node_description") == expected
 
@@ -51,7 +51,7 @@ class TestConfig:
         c) once the context manager is destroyed the config setting from the context manager is also destroyed
         """
         with self._set_environment_variable_for_test(
-                "FLYPIPE_REQUIRE_NODE_DESCRIPTION", "True"
+            "FLYPIPE_REQUIRE_NODE_DESCRIPTION", "True"
         ):
             with config_context(require_node_description=False):
                 assert get_config("require_node_description") is False

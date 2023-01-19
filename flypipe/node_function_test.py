@@ -16,6 +16,7 @@ class TestNodeFunction:
             return pd.DataFrame({"c1": [1, 2], "c2": ["Joe", "John"]})
 
         with pytest.raises(TypeError):
+
             @node_function(node_dependencies=[test.select("c1")])
             def func():
                 pass
@@ -72,6 +73,4 @@ class TestNodeFunction:
 
             return t2
 
-        t1.run(parameters={
-            t1: {'param1': 10, 'param2': 20}
-        })
+        t1.run(parameters={t1: {"param1": 10, "param2": 20}})
