@@ -12,7 +12,7 @@ jobs:
   deploy-pypi:
     needs: predeploy
     runs-on: ubuntu-latest
-    environment:
+    env:
       FLIT_USERNAME: manager.flypipe
       FLIT_INDEX_URL: https://test.pypi.org/legacy/
 
@@ -38,7 +38,7 @@ jobs:
       - name: Upload to pypi
         run: |
           flit publish
-        with:
+        env:
           FLIT_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
       - name: Upload Wheel
         uses: actions/upload-artifact@v3
