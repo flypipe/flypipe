@@ -265,10 +265,21 @@ function highlight_link(d,i){
     var target = nodes_map[d['target']];
 
     source_target_columns = {};
-    for (let i = 0; i < source.definition.columns.length; i++) {
-      source_column = source.definition.columns[i]['name'];
-      source_target_columns[source_column] = d.source_selected_columns.includes(source_column);
+    if (source.definition.columns.length > 0) {
+        // If a schema is defined
+        for (let i = 0; i < source.definition.columns.length; i++) {
+          source_column = source.definition.columns[i]['name'];
+          source_target_columns[source_column] = (!d.source_selected_columns) || d.source_selected_columns.includes(source_column);
+        }
+    } else {
+        // No schema defined on the node
+        if (d.source_selected_columns) {
+            for (let i = 0; i < d.source_selected_columns.length; i++) {
+                source_target_columns[d.source_selected_columns[i]] = true
+            }
+        }
     }
+
 
     matches = "";
     for (const [key, value] of Object.entries(source_target_columns)) {
