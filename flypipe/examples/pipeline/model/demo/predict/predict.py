@@ -9,7 +9,6 @@ from flypipe.schema.types import Integer
 
 @node(
     type="pandas",
-    description="Split train (70%) and test (30%) data",
     tags=["prediction"],
     dependencies=[
         config.select("production_run_id"),
@@ -22,8 +21,11 @@ from flypipe.schema.types import Integer
     ),
 )
 def predict(config, df):
-    RUN_ID = config.loc[0, "production_run_id"]
-    model_path = f"runs:/{RUN_ID}/model"
+    """
+    Split train (70%) and test (30%) data
+    """
+    run_id = config.loc[0, "production_run_id"]
+    model_path = f"runs:/{run_id}/model"
     loaded_model = mlflow.pyfunc.load_model(model_path)
 
     df["prediction"] = loaded_model.predict(df)

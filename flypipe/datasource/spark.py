@@ -35,7 +35,7 @@ def Spark(table):
     )
     def spark_datasource(spark):
         if spark is None:
-            raise ValueError('Please provide a spark session, i.e. node.run(spark)')
+            raise ValueError("Please provide a spark session, i.e. node.run(spark)")
 
         return spark.table(table)
 

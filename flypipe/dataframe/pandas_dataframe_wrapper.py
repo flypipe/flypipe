@@ -77,8 +77,8 @@ class PandasDataFrameWrapper(DataFrameWrapper):
             # This is a bit hacky, but if all values are valid then argmax returns the first index, so we need to
             # double check that the first invalid value is actually invalid.
             if (
-                    first_invalid_value
-                    and first_invalid_value not in flypipe_type.valid_values
+                first_invalid_value
+                and first_invalid_value not in flypipe_type.valid_values
             ):
                 raise ValueError(
                     f"Invalid type {flypipe_type.name} for column {column}, found incompatible row value "
@@ -115,5 +115,5 @@ class PandasDataFrameWrapper(DataFrameWrapper):
     def _cast_column_date_or_timestamp(self, column, flypipe_type):
         rows = self._get_rows_for_cast(column, flypipe_type)
         self.df.loc[rows, column] = pd.to_datetime(
-            self.df.loc[rows, column], format=flypipe_type.fmt
+            self.df.loc[rows, column], format=flypipe_type.python_format
         ).astype(dtype("datetime64[ns]"))

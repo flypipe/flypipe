@@ -221,11 +221,11 @@ class TestPySparkNode:
         ).reset_index(drop=True)
 
         assert (
-                str(exc_info.value)
-                == f"Flypipe: could not find some columns in the dataframe"
-                   f"\n\nOutput Dataframe columns: ['My_Col__x', 'My_Col__y', 'My_Col__z']"
-                   f"\nGraph selected columns: ['Id', 'My_Col__z', 'my_col__x']"
-                   f"\n\n\n{tabulate(expected_error_df, headers='keys', tablefmt='mixed_outline')}\n"
+            str(exc_info.value)
+            == f"Flypipe: could not find some columns in the dataframe"
+            f"\n\nOutput Dataframe columns: ['My_Col__x', 'My_Col__y', 'My_Col__z']"
+            f"\nGraph selected columns: ['Id', 'My_Col__z', 'my_col__x']"
+            f"\n\n\n{tabulate(expected_error_df, headers='keys', tablefmt='mixed_outline')}\n"
         )
 
     def test_duplicated_output_columns(self, spark):

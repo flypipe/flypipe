@@ -4,6 +4,7 @@ import os
 from flypipe.node_graph import RunStatus, NodeGraph
 from flypipe.node_type import NodeType
 from flypipe.printer.template import get_template
+from flypipe.schema.types import Unknown
 from flypipe.utils import DataFrameType
 
 
@@ -151,19 +152,9 @@ class GraphHTML:
                     "description": graph_node["transformation"].description,
                     "tags": graph_node["transformation"].tags
                             + [graph_node["transformation"].__name__],
-                    "columns": [],
+                    "columns": self._get_node_columns(node_name),
                 },
             }
-
-            if graph_node["transformation"].output_schema:
-                node_attributes["definition"]["columns"] = [
-                    {
-                        "name": column.name,
-                        "type": column.type.__class__.__name__,
-                        "description": column.description,
-                    }
-                    for column in graph_node["transformation"].output_schema.columns
-                ]
 
             if graph_node["transformation"].node_type == NodeType.DATASOURCE:
 
@@ -187,6 +178,37 @@ class GraphHTML:
                 node_attributes["file_location"] = graph_node["transformation"].__file__
             nodes.append(node_attributes)
         return nodes
+
+    def _get_node_columns(self, node_name):
+        graph_node = self.graph.get_node(node_name)
+        if graph_node["transformation"].output_schema:
+            columns = [
+                {
+                    "name": column.name,
+                    "type": column.type.__class__.__name__,
+                    "description": column.description,
+                }
+                for column in graph_node["transformation"].output_schema.columns
+            ]
+        else:
+            # If the node has no schema defined then we work out what columns exist based on what dependencies of the node are requesting.
+            successors = sorted(list(self.graph.graph.successors(node_name)))
+            requested_columns = set()
+            for successor in successors:
+                successor_dependency_definition = [
+                    dependency_definition for dependency_definition in self.graph.get_node(successor)['transformation'].input_nodes
+                    if dependency_definition.key == node_name
+                ][0]
+                if successor_dependency_definition.selected_columns:
+                    for column in successor_dependency_definition.selected_columns:
+                        requested_columns.add(column)
+            columns = [{
+                "name": column,
+                "type": Unknown.__name__,
+                "description": "",
+            } for column in sorted(list(requested_columns))]
+
+        return columns
 
     @property
     def edges(self):
@@ -214,8 +236,8 @@ class GraphHTML:
                         target_node["transformation"].key
                     ],
                     "active": (
-                            source_node["status"] != RunStatus.SKIP
-                            and target_node["status"] != RunStatus.SKIP
+                        source_node["status"] != RunStatus.SKIP
+                        and target_node["status"] != RunStatus.SKIP
                     ),
                 }
             )

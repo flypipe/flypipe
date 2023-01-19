@@ -14,7 +14,6 @@ _config = {
 
 @node(
     type="pandas",
-    description="demo model configurations",
     output=Schema(
         Column(
             "artifact_location",
@@ -39,4 +38,7 @@ _config = {
     ),
 )
 def config():
+    """
+    demo model configurations
+    """
     return pd.DataFrame(data=[_config])

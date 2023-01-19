@@ -3,7 +3,9 @@ import pyspark
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
 import pytest
+from unittest import mock
 from pandas.testing import assert_frame_equal
+from pyspark.sql import DataFrameWriter, DataFrame
 from pyspark_test import assert_pyspark_df_equal
 
 from flypipe.config import config_context
@@ -35,6 +37,15 @@ def spark():
 
 
 class TestNode:
+    def test_invalid_type(self):
+        """Building a node with a type not in Node.ALLOWED_TYPES should raise an exception"""
+        with pytest.raises(ValueError):
+            @node(
+                type='dummy'
+            )
+            def t1():
+                return pd.DataFrame()
+
     @pytest.mark.parametrize(
         "node_type,expected_class",
         [
@@ -145,7 +156,7 @@ class TestNode:
         ],
     )
     def test_input_dataframes_type(
-            self, spark, mocker, extra_run_config, expected_df_type
+        self, spark, mocker, extra_run_config, expected_df_type
     ):
         stub = mocker.stub()
 
@@ -199,12 +210,12 @@ class TestNode:
                     return test["fruit"]
 
         assert (
-                A.test.key
-                == "flypipe_node_test_function_test_TestNode_test_key__locals__A_test"
+            A.test.key
+            == "flypipe_node_test_function_test_TestNode_test_key__locals__A_test"
         )
         assert (
-                B.C.test.key
-                == "flypipe_node_test_function_test_TestNode_test_key__locals__B_C_test"
+            B.C.test.key
+            == "flypipe_node_test_function_test_TestNode_test_key__locals__B_C_test"
         )
 
     def test_duplicated_selected(self):
@@ -469,9 +480,41 @@ class TestNode:
         with pytest.raises(DataFrameMissingColumns):
             t1.run(parallel=False)
 
+    def test_node_description_from_docstring(self):
+        """
+        The node description should use the docstring if not provided via a parameter.
+        """
+
+        @node(type="pandas")
+        def t1():
+            """
+            This is a test
+            """
+            return
+
+        assert t1.description == "This is a test"
+
+    def test_node_description_from_parameter(self):
+        """
+        When description is provided as a parameter to the node, we expect the node description to be set accordingly,
+        and for it to take precedence over the docstring description.
+        """
+
+        @node(
+            type="pandas",
+            description="This is another test",
+        )
+        def t1():
+            """
+            This is a test
+            """
+            return
+
+        assert t1.description == "This is another test"
+
     def test_node_mandatory_description(self):
         with pytest.raises(ValueError) as ex, config_context(
-                require_node_description=True
+            require_node_description=True
         ):
 
             @node(
@@ -683,7 +726,7 @@ class TestNode:
     def test_pandas_on_spark_use_pandas(self, spark):
         """
         When running a graph with pandas_on_spark_use_pandas=True, all pandas_on_spark nodes types should be of type pandas
-        If running straigth after, but with pandas_on_spark_use_pandas=False, all pandas_on_spark nodes types should be of type pandas_on_spark
+        If running straight after, but with pandas_on_spark_use_pandas=False, all pandas_on_spark nodes types should be of type pandas_on_spark
         """
 
         @node(type="pandas_on_spark", dependencies=[Spark("dummy_table1").select("c1")])
@@ -691,17 +734,17 @@ class TestNode:
             return dummy_table1
 
         t1.run(spark, pandas_on_spark_use_pandas=True)
-        assert t1.type == DataFrameType.PANDAS_ON_SPARK
+        assert t1.dataframe_type == DataFrameType.PANDAS_ON_SPARK
 
         t1.run(spark, pandas_on_spark_use_pandas=False)
-        assert t1.type == DataFrameType.PANDAS_ON_SPARK
+        assert t1.dataframe_type == DataFrameType.PANDAS_ON_SPARK
 
         t1._create_graph(pandas_on_spark_use_pandas=True)
         for n in t1.node_graph.graph.nodes:
             if t1.node_graph.graph.nodes[n]["transformation"].__name__ == "t1":
                 assert (
-                        t1.node_graph.graph.nodes[n]["transformation"].type
-                        == DataFrameType.PANDAS
+                    t1.node_graph.graph.nodes[n]["transformation"].dataframe_type
+                    == DataFrameType.PANDAS
                 )
 
     def test_function_argument_signature(self, spark):
@@ -783,21 +826,107 @@ class TestNode:
         c.run(parallel=False)
 
     def test_node_parameters(self):
-
         @node(type="pandas")
         def t1(param1=1, param2=2):
             assert param1 == 10 and param2 == 20
             return pd.DataFrame()
 
-        t1.run(parameters={
-            t1: {'param1': 10, 'param2': 20}
-        })
+        t1.run(parameters={t1: {"param1": 10, "param2": 20}})
 
     def test_node_parameters_missing(self):
-
         @node(type="pandas")
         def t1(param1):
             return pd.DataFrame()
 
         with pytest.raises(TypeError):
             t1.run()
+
+    def test_spark_sql_conversion(self, spark):
+        """
+        If we use a spark sql code then:
+        - any dependencies should be saved into a unique table
+        - the dataframes passed into the spark sql function should be replaced with the names of the tables they were saved into.
+        """
+        @node(
+            type='pandas'
+        )
+        def t1():
+            return pd.DataFrame({'number': [1]})
+
+        @node(
+            type='spark_sql',
+            dependencies=[t1]
+        )
+        def t2(t1):
+            return f'select number+1 from {t1}'
+
+
+        with mock.patch.object(DataFrame, 'createOrReplaceTempView') as createOrReplaceTempView_mock, \
+                mock.patch.object(spark, 'sql', return_value=spark.createDataFrame(data=[{'number': 2}])) as sql_mock:
+            t2.run(spark=spark)
+        assert sql_mock.call_args[0][0]=='select number+1 from t2__t1'
+        assert createOrReplaceTempView_mock.call_args[0][0] == 't2__t1'
+
+    def test_spark_sql_select_column(self, spark):
+        """
+        Basic test for spark sql where the dependency has a select column in it.
+        There was a bug (DATA-3936) where this use case stacktraces.
+        """
+        @node(
+            type='pandas')
+        def t1():
+            return pd.DataFrame({'c1': ['chris']})
+
+        @node(
+            type='spark_sql',
+            dependencies=[t1.select('c1')]
+        )
+        def t2(t1):
+            return f'select * from {t1}'
+
+        with mock.patch.object(DataFrame, 'createOrReplaceTempView') as createOrReplaceTempView_mock, \
+                mock.patch.object(spark, 'sql', return_value=spark.createDataFrame(data=[{'number': 2}])) as sql_mock:
+            t2.run(spark=spark)
+        assert sql_mock.call_args[0][0]=='select * from t2__t1'
+        assert createOrReplaceTempView_mock.call_args[0][0]=='t2__t1'
+
+
+class TestNodeIntegration:
+    """
+    Higher level integration tests
+    """
+    # def test_spark_sql(self, spark):
+    #     """
+    #     Simple pipeline to check that we can flick between regular dataframe and Spark SQL transformations.
+    #     """
+    #     # # FIXME- incomplete, need to get pyspark working locally again first
+    #     # @node(
+    #     #     type='pandas'
+    #     # )
+    #     # def t1():
+    #     #     return pd.DataFrame({'name': ['Bob', 'Chris'], 'age': [10, 20]})
+    #     #
+    #     # @node(
+    #     #     type='spark_sql',
+    #     #     dependencies=[t1]
+    #     # )
+    #     # def t2(t1):
+    #     #     return f'SELECT name, age + 1 FROM {t1}'
+    #     #
+    #     # @node(
+    #     #     type='spark_sql',
+    #     #     dependencies=[t2]
+    #     # )
+    #     # def t3(t2):
+    #     #     return f'SELECT name, age + 1 FROM {t2}'
+    #     #
+    #     # @node(
+    #     #     type='pandas',
+    #     #     dependencies=[t3]
+    #     # )
+    #     # def t4(t3):
+    #     #     t3['age'] += 1
+    #     #     return t3
+    #     #
+    #     # result = t4.run(spark=spark)
+    #     # pass
