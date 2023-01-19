@@ -4,21 +4,21 @@ index.html that redirects to the latest version of the docs, otherwise going to 
 gives a 404 error.
 """
 
-import jinja2
 import os
 
+import jinja2
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
-REPO_NAME = 'flypipe'
+REPO_NAME = "flypipe"
 
 
 def get_redirect_url():
-    doc_versions = os.listdir('./build/html/release')
+    doc_versions = os.listdir("./build/html/release")
     version = max(doc_versions)
-    return f'./html/release/{version}/index.html'
+    return f"./html/release/{version}/index.html"
 
 
-environment = jinja2.Environment(loader=jinja2.FileSystemLoader(searchpath='./'))
-template = environment.get_template('./index.html')
-with open('./build/index.html', 'w') as f:
+environment = jinja2.Environment(loader=jinja2.FileSystemLoader(searchpath="./"))
+template = environment.get_template("./index.html")
+with open("./build/index.html", "w") as f:
     f.write(template.render(redirect_url=get_redirect_url()))
