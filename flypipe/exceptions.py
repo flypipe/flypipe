@@ -16,10 +16,6 @@ class DataframeDifferentDataError(DataframeSchemasDoNotMatchError):
     pass
 
 
-class NodeTypeInvalidError(ValueError):
-    pass
-
-
 class DependencyNoSelectedColumnsError(ValueError):
     pass
 

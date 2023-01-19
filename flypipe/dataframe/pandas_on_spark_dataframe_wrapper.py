@@ -41,13 +41,13 @@ class PandasOnSparkDataFrameWrapper(SparkDataFrameWrapper):
     def _cast_column_date(self, column, flypipe_type):
         spark_df = self.df.to_spark()
         spark_df = spark_df.withColumn(
-            column, F.to_date(F.col(column), flypipe_type.fmt)
+            column, F.to_date(F.col(column), flypipe_type.python_format)
         )
         self.df = spark_df.pandas_api()
 
     def _cast_column_datetime(self, column, flypipe_type):
         spark_df = self.df.to_spark()
         spark_df = spark_df.withColumn(
-            column, F.to_date(F.col(column), flypipe_type.fmt)
+            column, F.to_date(F.col(column), flypipe_type.python_format)
         )
         self.df = spark_df.pandas_api()

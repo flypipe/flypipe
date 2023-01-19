@@ -14,7 +14,7 @@ import sys
 
 sys.path.append(os.path.abspath("./_ext"))
 sys.path.insert(0, os.path.abspath("../../"))
-os.chdir('../..')
+os.chdir("../..")
 
 from flypipe import __version__
 from datetime import datetime
@@ -71,8 +71,8 @@ myst_number_code_blocks = ["python"]
 templates_path = ["_templates"]
 
 html_sidebars = {
-    '**': [
-        'versions.html',
+    "**": [
+        "versions.html",
     ],
 }
 
@@ -117,10 +117,10 @@ myst_substitutions = {
 
 html_favicon = "_static/favicon.svg"
 
-smv_branch_whitelist = r'^release/'
+smv_branch_whitelist = r"^release/"
 
 # Whitelist pattern for remotes (set to None to use local branches only)
-smv_remote_whitelist = r'^.*$'
+smv_remote_whitelist = r"^.*$"
 
 # Determines whether remote or local git branches/tags are preferred if their output dirs conflict
 smv_prefer_remote_refs = True

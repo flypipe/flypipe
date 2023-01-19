@@ -111,9 +111,9 @@ class NodeGraph:
             # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
             if (
                 pandas_on_spark_use_pandas
-                and transformation.type == DataFrameType.PANDAS_ON_SPARK
+                and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
             ):
-                transformation.type = DataFrameType.PANDAS
+                transformation.type = "pandas"
 
         return graph
 

@@ -264,17 +264,32 @@ function highlight_link(d,i){
     var source = nodes_map[d['source']];
     var target = nodes_map[d['target']];
 
-    source_target_columns = {};
-    for (let i = 0; i < source.definition.columns.length; i++) {
-      source_column = source.definition.columns[i]['name'];
-      source_target_columns[source_column] = d.source_selected_columns.includes(source_column);
+    var source_target_columns = {};
+    if (source.definition.columns.length > 0) {
+        // If a schema is defined
+        for (let i = 0; i < source.definition.columns.length; i++) {
+          source_column = source.definition.columns[i]['name'];
+          source_target_columns[source_column] = (!d.source_selected_columns) || d.source_selected_columns.includes(source_column);
+        }
+    } else {
+        // No schema defined on the node
+        if (d.source_selected_columns) {
+            for (let i = 0; i < d.source_selected_columns.length; i++) {
+                source_target_columns[d.source_selected_columns[i]] = true
+            }
+        }
     }
 
-    matches = "";
-    for (const [key, value] of Object.entries(source_target_columns)) {
-        matches += "<tr><td>" + key + "</td>";
-        matches += "<td>" + (value? '<i class="fa fa-long-arrow-right" aria-hidden="true"></i>': "") + "</td>";
-        matches += "<td>" + (value? key: "") + "</td></tr>";
+
+    var table_body = "";
+    if (Object.keys(source_target_columns).length == 0) {
+        table_body = '<tr><td>Unknown</td><td><i class="fa fa-long-arrow-right" aria-hidden="true"></i></td><td>Unknown</td></tr>';
+    } else {
+        for (const [key, value] of Object.entries(source_target_columns)) {
+            table_body += "<tr><td>" + key + "</td>";
+            table_body += "<td>" + (value? '<i class="fa fa-long-arrow-right" aria-hidden="true"></i>': "") + "</td>";
+            table_body += "<td>" + (value? key: "") + "</td></tr>";
+        }
     }
     text = `
     <table class="table">
@@ -286,7 +301,7 @@ function highlight_link(d,i){
         </tr>
       </thead>
       <tbody>`
-      + matches +
+      + table_body +
       `</tbody></table>`;
 
     d3.select("#tooltip")
