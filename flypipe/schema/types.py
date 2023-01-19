@@ -67,25 +67,26 @@ class Decimal(Type):
 
 class Date(Type):
     PYTHON_PYSPARK_DATETIME_SYMBOL_MAP = {
-        '%A': 'EEEE',
-        '%B': 'MMMM',
-        '%H': 'H',
-        '%I': 'h',
-        '%M': 'm',
-        '%S': 's',
-        '%Y': 'yyyy',
-        '%a': 'E',
-        '%b': 'MMM',
-        '%d': 'dd',
-        '%f': 'SSSSSS',
-        '%j': 'yyy',
-        '%m': 'MM',
-        '%p': 'a',
-        '%y': 'yy',
-        '%z': 'z'
+        "%A": "EEEE",
+        "%B": "MMMM",
+        "%H": "H",
+        "%I": "h",
+        "%M": "m",
+        "%S": "s",
+        "%Y": "yyyy",
+        "%a": "E",
+        "%b": "MMM",
+        "%d": "dd",
+        "%f": "SSSSSS",
+        "%j": "yyy",
+        "%m": "MM",
+        "%p": "a",
+        "%y": "yy",
+        "%z": "z",
     }
     PYSPARK_PYTHON_DATETIME_SYMBOL_MAP = {
-        pyspark_symbol: python_symbol for python_symbol, pyspark_symbol in PYTHON_PYSPARK_DATETIME_SYMBOL_MAP.items()
+        pyspark_symbol: python_symbol
+        for python_symbol, pyspark_symbol in PYTHON_PYSPARK_DATETIME_SYMBOL_MAP.items()
     }
 
     def __init__(self, format="yyyy-MM-dd", format_mode=DateFormat.PYSPARK):
@@ -99,33 +100,41 @@ class Date(Type):
     @property
     def pyspark_format(self):
         if not self._pyspark_format:
-            self._pyspark_format = self.convert_python_to_pyspark_datetime_format(self.python_format)
+            self._pyspark_format = self.convert_python_to_pyspark_datetime_format(
+                self.python_format
+            )
         return self._pyspark_format
 
     @property
     def python_format(self):
         if not self._python_format:
-            self._python_format = self.convert_pyspark_to_python_datetime_format(self.pyspark_format)
+            self._python_format = self.convert_pyspark_to_python_datetime_format(
+                self.pyspark_format
+            )
         return self._python_format
 
     @classmethod
     def convert_python_to_pyspark_datetime_format(cls, python_format):
         pyspark_format = []
         while python_format:
-            if python_format.startswith('%'):
+            if python_format.startswith("%"):
                 symbol = python_format[:2]
                 print(f'Extracted symbol "{symbol}"')
                 python_format = python_format[2:]
                 try:
-                    pyspark_format.append(cls.PYTHON_PYSPARK_DATETIME_SYMBOL_MAP[symbol])
+                    pyspark_format.append(
+                        cls.PYTHON_PYSPARK_DATETIME_SYMBOL_MAP[symbol]
+                    )
                 except KeyError:
-                    raise ValueError(f'Unable to convert datetime symbol {symbol} to pyspark')
+                    raise ValueError(
+                        f"Unable to convert datetime symbol {symbol} to pyspark"
+                    )
             else:
                 formatting = python_format[0]
                 print(f'Extracted formatting "{formatting}"')
                 python_format = python_format[1:]
                 pyspark_format.append(formatting)
-        return ''.join(pyspark_format)
+        return "".join(pyspark_format)
 
     @classmethod
     def convert_pyspark_to_python_datetime_format(cls, pyspark_format):
@@ -141,12 +150,14 @@ class Date(Type):
                 try:
                     python_format.append(cls.PYSPARK_PYTHON_DATETIME_SYMBOL_MAP[symbol])
                 except KeyError:
-                    raise ValueError(f'Unable to convert datetime symbol {symbol} to python/pandas datetime format')
+                    raise ValueError(
+                        f"Unable to convert datetime symbol {symbol} to python/pandas datetime format"
+                    )
             else:
                 formatting = pyspark_format[0]
                 pyspark_format = pyspark_format[1:]
                 python_format.append(formatting)
-        return ''.join(python_format)
+        return "".join(python_format)
 
 
 class DateTime(Date):

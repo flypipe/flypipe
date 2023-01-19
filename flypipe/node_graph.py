@@ -113,7 +113,7 @@ class NodeGraph:
                 pandas_on_spark_use_pandas
                 and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
             ):
-                transformation.type = 'pandas'
+                transformation.type = "pandas"
 
         return graph
 

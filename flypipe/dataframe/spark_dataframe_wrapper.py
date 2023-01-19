@@ -107,7 +107,11 @@ class SparkDataFrameWrapper(DataFrameWrapper):
         self.df = self.df.withColumn(column, self.df[column].cast(df_type))
 
     def _cast_column_date(self, column, flypipe_type):
-        self.df = self.df.withColumn(column, F.to_date(F.col(column), flypipe_type.pyspark_format))
+        self.df = self.df.withColumn(
+            column, F.to_date(F.col(column), flypipe_type.pyspark_format)
+        )
 
     def _cast_column_datetime(self, column, flypipe_type):
-        self.df = self.df.withColumn(column, F.to_date(F.col(column), flypipe_type.pyspark_format))
+        self.df = self.df.withColumn(
+            column, F.to_date(F.col(column), flypipe_type.pyspark_format)
+        )

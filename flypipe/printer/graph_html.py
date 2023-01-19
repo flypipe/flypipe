@@ -151,7 +151,7 @@ class GraphHTML:
                 "definition": {
                     "description": graph_node["transformation"].description,
                     "tags": graph_node["transformation"].tags
-                            + [graph_node["transformation"].__name__],
+                    + [graph_node["transformation"].__name__],
                     "columns": self._get_node_columns(node_name),
                 },
             }
@@ -196,17 +196,23 @@ class GraphHTML:
             requested_columns = set()
             for successor in successors:
                 successor_dependency_definition = [
-                    dependency_definition for dependency_definition in self.graph.get_node(successor)['transformation'].input_nodes
+                    dependency_definition
+                    for dependency_definition in self.graph.get_node(successor)[
+                        "transformation"
+                    ].input_nodes
                     if dependency_definition.key == node_name
                 ][0]
                 if successor_dependency_definition.selected_columns:
                     for column in successor_dependency_definition.selected_columns:
                         requested_columns.add(column)
-            columns = [{
-                "name": column,
-                "type": Unknown.__name__,
-                "description": "",
-            } for column in sorted(list(requested_columns))]
+            columns = [
+                {
+                    "name": column,
+                    "type": Unknown.__name__,
+                    "description": "",
+                }
+                for column in sorted(list(requested_columns))
+            ]
 
         return columns
 

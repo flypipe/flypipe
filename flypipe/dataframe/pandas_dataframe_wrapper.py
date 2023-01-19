@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 from numpy import dtype
 
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper

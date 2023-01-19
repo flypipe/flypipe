@@ -1,11 +1,12 @@
+from unittest import mock
+
 import pandas as pd
 import pyspark
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
 import pytest
-from unittest import mock
 from pandas.testing import assert_frame_equal
-from pyspark.sql import DataFrameWriter, DataFrame
+from pyspark.sql import DataFrame
 from pyspark_test import assert_pyspark_df_equal
 
 from flypipe.config import config_context
@@ -40,9 +41,8 @@ class TestNode:
     def test_invalid_type(self):
         """Building a node with a type not in Node.ALLOWED_TYPES should raise an exception"""
         with pytest.raises(ValueError):
-            @node(
-                type='dummy'
-            )
+
+            @node(type="dummy")
             def t1():
                 return pd.DataFrame()
 
@@ -847,54 +847,53 @@ class TestNode:
         - any dependencies should be saved into a unique table
         - the dataframes passed into the spark sql function should be replaced with the names of the tables they were saved into.
         """
-        @node(
-            type='pandas'
-        )
+
+        @node(type="pandas")
         def t1():
-            return pd.DataFrame({'number': [1]})
+            return pd.DataFrame({"number": [1]})
 
-        @node(
-            type='spark_sql',
-            dependencies=[t1]
-        )
+        @node(type="spark_sql", dependencies=[t1])
         def t2(t1):
-            return f'select number+1 from {t1}'
+            return f"select number+1 from {t1}"
 
-
-        with mock.patch.object(DataFrame, 'createOrReplaceTempView') as createOrReplaceTempView_mock, \
-                mock.patch.object(spark, 'sql', return_value=spark.createDataFrame(data=[{'number': 2}])) as sql_mock:
+        with mock.patch.object(
+            DataFrame, "createOrReplaceTempView"
+        ) as createOrReplaceTempView_mock, mock.patch.object(
+            spark, "sql", return_value=spark.createDataFrame(data=[{"number": 2}])
+        ) as sql_mock:
             t2.run(spark=spark)
-        assert sql_mock.call_args[0][0]=='select number+1 from t2__t1'
-        assert createOrReplaceTempView_mock.call_args[0][0] == 't2__t1'
+        assert sql_mock.call_args[0][0] == "select number+1 from t2__t1"
+        assert createOrReplaceTempView_mock.call_args[0][0] == "t2__t1"
 
     def test_spark_sql_select_column(self, spark):
         """
         Basic test for spark sql where the dependency has a select column in it.
         There was a bug (DATA-3936) where this use case stacktraces.
         """
-        @node(
-            type='pandas')
+
+        @node(type="pandas")
         def t1():
-            return pd.DataFrame({'c1': ['chris']})
+            return pd.DataFrame({"c1": ["chris"]})
 
-        @node(
-            type='spark_sql',
-            dependencies=[t1.select('c1')]
-        )
+        @node(type="spark_sql", dependencies=[t1.select("c1")])
         def t2(t1):
-            return f'select * from {t1}'
+            return f"select * from {t1}"
 
-        with mock.patch.object(DataFrame, 'createOrReplaceTempView') as createOrReplaceTempView_mock, \
-                mock.patch.object(spark, 'sql', return_value=spark.createDataFrame(data=[{'number': 2}])) as sql_mock:
+        with mock.patch.object(
+            DataFrame, "createOrReplaceTempView"
+        ) as createOrReplaceTempView_mock, mock.patch.object(
+            spark, "sql", return_value=spark.createDataFrame(data=[{"number": 2}])
+        ) as sql_mock:
             t2.run(spark=spark)
-        assert sql_mock.call_args[0][0]=='select * from t2__t1'
-        assert createOrReplaceTempView_mock.call_args[0][0]=='t2__t1'
+        assert sql_mock.call_args[0][0] == "select * from t2__t1"
+        assert createOrReplaceTempView_mock.call_args[0][0] == "t2__t1"
 
 
 class TestNodeIntegration:
     """
     Higher level integration tests
     """
+
     # def test_spark_sql(self, spark):
     #     """
     #     Simple pipeline to check that we can flick between regular dataframe and Spark SQL transformations.

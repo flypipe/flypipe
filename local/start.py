@@ -1,8 +1,9 @@
 # noinspection PyUnresolvedReferences
-from flypipe.tests.spark import spark
 import warnings
 
 import IPython
+
+from flypipe.tests.spark import spark
 
 warnings.filterwarnings("ignore")
 
