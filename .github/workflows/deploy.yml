@@ -10,7 +10,7 @@ jobs:
 #    uses: ./.github/workflows/predeploy.yml
 
   deploy-pypi:
-    needs: predeploy
+#    needs: predeploy
     runs-on: ubuntu-latest
     env:
       FLIT_USERNAME: manager.flypipe
