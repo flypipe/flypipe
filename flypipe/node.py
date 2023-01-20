@@ -363,13 +363,14 @@ class Node:
 
 def node(type, *args, **kwargs):
     """
-    Decorator factory that returns the given function wrapped inside a Node class
+    Nodes are the fundamental building block of Flypipe. Simply apply the node function as a decorator to a
+    transformation function in order to declare the transformation as a Flypipe node.
 
     Parameters
     ----------
 
     type : str
-            Type of the node transformation "pandas", "pandas_on_spark", "pyspark"
+            Type of the node transformation "pandas", "pandas_on_spark", "pyspark", "spark_sql"
     description : str, optional
         Description of the node (default is None)
     tags : List[str], optional

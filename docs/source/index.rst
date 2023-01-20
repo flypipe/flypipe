@@ -1,4 +1,4 @@
-Welcome to FlyPipe's documentation!
+Welcome to FlyPipe!
 ===================================
 
 .. include:: ./concept.md

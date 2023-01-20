@@ -11,6 +11,9 @@ on:
   # Allow pipeline to be invoked from other pipelines
   workflow_call:
 
+env:
+  PRODUCTION_DOCS_DEPLOY: 1
+
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
@@ -43,7 +46,6 @@ jobs:
           pandoc -v
       - name: Build Sphinx Documentation
         run: sh docs/build_docs.sh
-#        run: sphinx-multiversion docs/source docs/build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
