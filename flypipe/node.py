@@ -12,7 +12,12 @@ from flypipe.schema.types import Unknown
 from flypipe.utils import DataFrameType
 
 
-class Node:
+class Node: # pylint: disable=too-many-instance-attributes
+    """
+    Central model for Flypipe. Should be used indirectly through the `node` decorator rather than directly referencing
+    it.
+    """
+
     ALLOWED_TYPES = {"pyspark", "pandas", "pandas_on_spark", "spark_sql"}
     DATAFRAME_TYPE_MAP = {
         "pyspark": DataFrameType.PYSPARK,
@@ -21,10 +26,10 @@ class Node:
         "spark_sql": DataFrameType.PYSPARK,
     }
 
-    def __init__(
+    def __init__( # pylint: disable=too-many-arguments
         self,
         function,
-        type: str,
+        type: str, # pylint: disable=redefined-builtin
         description=None,
         tags=None,
         dependencies: List[InputNode] = None,
@@ -32,7 +37,6 @@ class Node:
         spark_context=False,
         requested_columns=False,
     ):
-
         self._key = None
         self.name = None
         self.function = function
@@ -108,6 +112,7 @@ class Node:
         # in that case, returns nothing
         if hasattr(sys.modules[self.function.__module__], "__package"):
             return sys.modules[self.function.__module__].__package__
+        return None
 
     @property
     def __file__(self):
@@ -116,6 +121,7 @@ class Node:
         # in that case, returns nothing
         if hasattr(sys.modules[self.function.__module__], "__file__"):
             return sys.modules[self.function.__module__].__file__
+        return None
 
     @property
     def __module__(self):
@@ -128,8 +134,11 @@ class Node:
         with the same function name still return different keys.
         """
         if self._key is None:
-            key = f"{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}.{self.function.__qualname__}"
-            self._key = re.sub("[^\da-zA-Z]", "_", key)
+            key = (
+                f"{self.function.__module__}.{self.function.__class__.__name__}.{self.function.__name__}."
+                f"{self.function.__qualname__}"
+            )
+            self._key = re.sub(r"[^\da-zA-Z]", "_", key)
         return self._key
 
     @key.setter
@@ -144,7 +153,8 @@ class Node:
     def _create_graph(
         self, skipped_node_keys=None, pandas_on_spark_use_pandas=False, parameters=None
     ):
-        from flypipe.node_graph import NodeGraph
+        # This import is here to avoid a circular import issue
+        from flypipe.node_graph import NodeGraph # pylint: disable=import-outside-toplevel
 
         self.node_graph = NodeGraph(
             self,
@@ -182,7 +192,7 @@ class Node:
     def __call__(self, *args):
         return self.function(*args)
 
-    def run(
+    def run(    # pylint: disable=too-many-arguments
         self,
         spark=None,
         parallel=None,
@@ -201,8 +211,7 @@ class Node:
             parallel = get_config("default_run_mode") == RunMode.PARALLEL.value
         if parallel:
             raise NotImplementedError
-        else:
-            return self._run_sequential(spark, provided_inputs)
+        return self._run_sequential(spark, provided_inputs)
 
     @property
     def dataframe_type(self):
@@ -271,7 +280,8 @@ class Node:
     def process_transformation(
         self, spark, requested_columns: list, run_context: NodeRunContext, **inputs
     ):
-        # TODO: apply output validation + rename function to transformation, select only necessary columns specified in self.dependencies_selected_columns
+        # TODO: apply output validation + rename function to transformation, select only necessary columns specified in
+        # self.dependencies_selected_columns
         parameters = inputs
         if self.spark_context:
             parameters["spark"] = spark
@@ -295,7 +305,7 @@ class Node:
     def plot(self):
         self.node_graph.plot()
 
-    def html(
+    def html(   # pylint: disable=too-many-arguments
         self,
         width=None,
         height=1000,
@@ -328,7 +338,8 @@ class Node:
 
         """
 
-        from flypipe.printer.graph_html import GraphHTML
+        # This import needs to be here to avoid a circular import issue (graph_html -> node_graph -> imports node)
+        from flypipe.printer.graph_html import GraphHTML # pylint: disable=import-outside-toplevel
 
         width = width or -1
         skipped_nodes = inputs or {}
@@ -356,12 +367,13 @@ class Node:
             requested_columns=self.requested_columns,
         )
         node.name = self.name
-        node._key = self._key
+        # Accessing protected members in a deep copy method is necessary
+        node._key = self._key   # pylint: disable=protected-access
         node.node_type = self.node_type
         return node
 
 
-def node(type, *args, **kwargs):
+def node(type, *args, **kwargs):    # pylint: disable=redefined-builtin
     """
     Nodes are the fundamental building block of Flypipe. Simply apply the node function as a decorator to a
     transformation function in order to declare the transformation as a Flypipe node.

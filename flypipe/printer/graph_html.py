@@ -9,6 +9,9 @@ from flypipe.utils import DataFrameType
 
 
 class GraphHTML:
+    """
+    Model wrapper over a node graph that is responsible of generating a HTML UI representation of the DAG graph.
+    """
 
     CSS_MAP = {
         "pandas": {
@@ -48,7 +51,7 @@ class GraphHTML:
 
     def get_unique_node_names(self):
         unique_names = {}
-        for key, position in self._node_positions.items():
+        for key in self._node_positions:
             graph_node = self.graph.get_node(key)
             node_name = graph_node["transformation"].__name__
 
@@ -71,9 +74,9 @@ class GraphHTML:
 
         css_scripts = {}
         js_scripts = {}
-        with open(os.path.join(dir_path, "amsify.suggestags.css"), "r") as f:
+        with open(os.path.join(dir_path, "amsify.suggestags.css"), "r", encoding='utf-8') as f:
             css_scripts["amsify_suggestags"] = f.read()
-        with open(os.path.join(dir_path, "jquery.amsify.suggestags.js"), "r") as f:
+        with open(os.path.join(dir_path, "jquery.amsify.suggestags.js"), "r", encoding='utf-8') as f:
             js_scripts["amsify_suggestags"] = f.read()
         js_scripts[
             "d3_graph_setup"
@@ -84,11 +87,11 @@ class GraphHTML:
         var nodes = {json.dumps(nodes)};
         var links = {json.dumps(self.edges)};
         """
-        with open(os.path.join(dir_path, "d3js.js"), "r") as f:
+        with open(os.path.join(dir_path, "d3js.js"), "r", encoding='utf-8') as f:
             js_scripts["d3js"] = f.read()
-        with open(os.path.join(dir_path, "offcanvas.js"), "r") as f:
+        with open(os.path.join(dir_path, "offcanvas.js"), "r", encoding='utf-8') as f:
             js_scripts["offcanvas"] = f.read()
-        with open(os.path.join(dir_path, "tags.js"), "r") as f:
+        with open(os.path.join(dir_path, "tags.js"), "r", encoding='utf-8') as f:
             js_scripts["tags"] = f.read()
 
         return get_template("index.html").render(
@@ -197,7 +200,8 @@ class GraphHTML:
                 for column in graph_node["transformation"].output_schema.columns
             ]
         else:
-            # If the node has no schema defined then we work out what columns exist based on what dependencies of the node are requesting.
+            # If the node has no schema defined then we work out what columns exist based on what dependencies of the
+            # node are requesting.
             successors = sorted(list(self.graph.graph.successors(node_name)))
             requested_columns = set()
             for successor in successors:
@@ -248,7 +252,7 @@ class GraphHTML:
                         target_node["transformation"].key
                     ],
                     "active": (
-                        source_node["status"] != RunStatus.SKIP
+                        source_node["status"] != RunStatus.SKIP # pylint: disable=consider-using-in
                         and target_node["status"] != RunStatus.SKIP
                     ),
                 }

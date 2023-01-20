@@ -4,6 +4,8 @@ from enum import Enum
 
 
 class RunMode(Enum):
+    """Mode in which to run when we execute a Flypipe pipeline"""
+
     PARALLEL = "parallel"
     SEQUENTIAL = "sequential"
 
@@ -22,19 +24,23 @@ class _Config:
 
     @classmethod
     def get_config(cls, config_name):
+        """
+        Retrieve the value of a Flypipe configuration variable. In order of precedence this comes from:
+        - Set config via the config_context context manager
+        - Corresponding environment variable for a config
+        - Default config value
+        """
         if config_name not in cls.OPTIONS:
             raise KeyError(
                 f'Config option "{config_name}" is invalid, available options are {cls.VALID_OPTIONS}'
             )
         active_config = cls.get_active_config()
         if active_config:
-            return active_config._get_config(config_name)
-        else:
-            environment_config = cls._get_config_from_environment_variables(config_name)
-            if environment_config is not None:
-                return environment_config
-            else:
-                return cls.OPTIONS[config_name]
+            return active_config.get_config_from_context_manager(config_name)
+        environment_config = cls._get_config_from_environment_variables(config_name)
+        if environment_config is not None:
+            return environment_config
+        return cls.OPTIONS[config_name]
 
     @classmethod
     def _get_config_from_environment_variables(cls, config_name):
@@ -49,7 +55,7 @@ class _Config:
                 config = False
         return config
 
-    def _get_config(self, config_name):
+    def get_config_from_context_manager(self, config_name):
         return self.config.get(config_name)
 
     def set_config(self, config_name, value):
@@ -71,8 +77,7 @@ class _Config:
     def get_active_config(cls):
         if cls.ACTIVE_CONFIGS:
             return cls.ACTIVE_CONFIGS[-1]
-        else:
-            return None
+        return None
 
 
 def get_config(config_name):
