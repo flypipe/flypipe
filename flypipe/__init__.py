@@ -10,5 +10,5 @@ with open(os.path.join(os.path.dirname(__file__), "version.txt"), "r", encoding=
 try:
     from flypipe.node import node
     from flypipe.node_function import node_function
-except:
+except:     # pylint: disable=bare-except
     pass
