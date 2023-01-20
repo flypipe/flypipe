@@ -7,6 +7,10 @@ from flypipe.utils import DataFrameType
 
 
 class PandasOnSparkDataFrameWrapper(SparkDataFrameWrapper):
+    """
+    Wrapper around a Pandas on Spark dataframe. This gives some conversion functionality between Flypipe types and
+    their pandas on spark equivalents.
+    """
     DF_TYPE = DataFrameType.PANDAS_ON_SPARK
 
     def _select_columns(self, columns):

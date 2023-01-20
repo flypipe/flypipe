@@ -15,10 +15,13 @@ class DataFrameWrapper(ABC):
 
     def __init__(self, spark, df):
         self.spark = spark
-        self.df = df
+        self.df = df    # pylint: disable=invalid-name
 
     @classmethod
     def get_instance(cls, spark, df):
+        # We need to do imports of the various df types within the function to avoid circular imports as they in turn
+        # import dataframe_wrapper
+        # pylint: disable=import-outside-toplevel
         df_type = dataframe_type(df)
         if df_type == DataFrameType.PANDAS:
             from flypipe.dataframe.pandas_dataframe_wrapper import (
@@ -43,6 +46,7 @@ class DataFrameWrapper(ABC):
             df_instance = PandasOnSparkDataFrameWrapper
         else:
             raise ValueError(f"No flypipe dataframe type found for dataframe {df_type}")
+        # pylint: enable=import-outside-toplevel
         return df_instance(spark, df)
 
     def get_df(self):
@@ -71,26 +75,27 @@ class DataFrameWrapper(ABC):
         raise NotImplementedError
 
     def cast_column(self, column: str, flypipe_type: Type):
-        if self.get_column_flypipe_type(column).name == flypipe_type.name:
-            # The column already has the requested type, do nothing
-            return
-        try:
-            return getattr(self, f"_cast_column_{flypipe_type.key()}")(
-                column, flypipe_type
-            )
-        except AttributeError:
-            if flypipe_type.key() in self.FLYPIPE_TYPE_TO_DF_TYPE_MAP:
-                df_type = self.FLYPIPE_TYPE_TO_DF_TYPE_MAP[flypipe_type.key()]
-                return self._cast_column(column, flypipe_type, df_type)
-            else:
-                raise TypeError(
-                    f"Unable to cast to flypipe type {flypipe_type.name}- no dataframe type registered"
+        result = None
+        if self.get_column_flypipe_type(column).name != flypipe_type.name:
+            # Check if the column already has the requested type
+            try:
+                result = getattr(self, f"_cast_column_{flypipe_type.key()}")(
+                    column, flypipe_type
                 )
+            except AttributeError as exc:
+                if flypipe_type.key() in self.FLYPIPE_TYPE_TO_DF_TYPE_MAP:
+                    df_type = self.FLYPIPE_TYPE_TO_DF_TYPE_MAP[flypipe_type.key()]
+                    result = self._cast_column(column, flypipe_type, df_type)
+                else:
+                    raise TypeError(
+                        f"Unable to cast to flypipe type {flypipe_type.name}- no dataframe type registered"
+                    ) from exc
+        return result
 
     @abstractmethod
     def _cast_column(self, column: str, flypipe_type: Type, df_type):
         raise NotImplementedError
 
-    def _cast_column_unknown(self, column: str, flypipe_type: Type):
+    def _cast_column_unknown(self, column: str, flypipe_type: Type):    # pylint: disable=unused-argument
         """If we don't know the type let's do nothing"""
         return

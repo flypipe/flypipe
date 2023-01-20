@@ -7,7 +7,7 @@ from flypipe.utils import assert_dataframes_equals, DataFrameType
 
 @pytest.fixture(scope="function")
 def spark():
-    from flypipe.tests.spark import spark
+    from flypipe.tests.spark import spark   # pylint: disable=import-outside-toplevel
 
     return spark
 
@@ -28,42 +28,43 @@ def pandas_on_spark_df(pyspark_df):
 
 
 class TestDataFrameConverter:
+    """Tests on DataFrameConverts"""
     def test_convert_pandas_to_pandas(self, pandas_df):
-        df_ = DataFrameConverter().convert(pandas_df, DataFrameType.PANDAS)
-        assert_dataframes_equals(df_, pandas_df)
+        df = DataFrameConverter().convert(pandas_df, DataFrameType.PANDAS)
+        assert_dataframes_equals(df, pandas_df)
 
     def test_convert_pandas_to_pandas_on_spark(
         self, spark, pandas_df, pandas_on_spark_df
     ):
-        df_ = DataFrameConverter(spark).convert(
+        df = DataFrameConverter(spark).convert(
             pandas_df, DataFrameType.PANDAS_ON_SPARK
         )
-        assert_dataframes_equals(df_, pandas_on_spark_df)
+        assert_dataframes_equals(df, pandas_on_spark_df)
 
     def test_convert_pandas_to_pyspark(self, spark, pandas_df, pyspark_df):
-        df_ = DataFrameConverter(spark).convert(pandas_df, DataFrameType.PYSPARK)
-        assert_dataframes_equals(df_, pyspark_df)
+        df = DataFrameConverter(spark).convert(pandas_df, DataFrameType.PYSPARK)
+        assert_dataframes_equals(df, pyspark_df)
 
     def test_convert_pandas_on_spark_to_pandas(
         self, spark, pandas_on_spark_df, pandas_df
     ):
-        df_ = DataFrameConverter(spark).convert(
+        df = DataFrameConverter(spark).convert(
             pandas_on_spark_df, DataFrameType.PANDAS
         )
-        assert_dataframes_equals(df_, pandas_df)
+        assert_dataframes_equals(df, pandas_df)
 
     def test_convert_pandas_on_spark_to_pyspark(self, pandas_on_spark_df, pyspark_df):
-        df_ = DataFrameConverter(spark).convert(
+        df = DataFrameConverter(spark).convert(
             pandas_on_spark_df, DataFrameType.PYSPARK
         )
-        assert_dataframes_equals(df_, pyspark_df)
+        assert_dataframes_equals(df, pyspark_df)
 
     def test_convert_pyspark_to_pandas(self, spark, pyspark_df, pandas_df):
-        df_ = DataFrameConverter(spark).convert(pyspark_df, DataFrameType.PANDAS)
-        assert_dataframes_equals(df_, pandas_df)
+        df = DataFrameConverter(spark).convert(pyspark_df, DataFrameType.PANDAS)
+        assert_dataframes_equals(df, pandas_df)
 
     def test_convert_pyspark_to_pandas_on_spark(self, pyspark_df, pandas_on_spark_df):
-        df_ = DataFrameConverter(spark).convert(
+        df = DataFrameConverter(spark).convert(
             pyspark_df, DataFrameType.PANDAS_ON_SPARK
         )
-        assert_dataframes_equals(df_, pandas_on_spark_df)
+        assert_dataframes_equals(df, pandas_on_spark_df)

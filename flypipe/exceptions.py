@@ -5,19 +5,19 @@ from tabulate import tabulate
 
 
 class DataframeTypeNotSupportedError(Exception):
-    pass
+    """Error raised if the dataframe type is not supported"""
 
 
 class DataframeSchemasDoNotMatchError(Exception):
-    pass
+    """Error raised if a dataframe schema is not compatible with what was expected"""
 
 
 class DataframeDifferentDataError(DataframeSchemasDoNotMatchError):
-    pass
+    """Error raised if the dataframe data is different"""
 
 
 class DependencyNoSelectedColumnsError(ValueError):
-    pass
+    """Error raised if no columns are selected from the dataframe"""
 
 
 class ColumnNotInDataframeError(Exception):
@@ -40,23 +40,28 @@ class ColumnNotInDataframeError(Exception):
 
 
 class DataFrameMissingColumns(Exception):
-    def __init__(self, source_columns, selected_columns):
+    """
+    Exception raised when the dataframe is missing some expected columns. Primarily responsible for generating a nice
+    table to give the reader a high level picture of which columns are available, which aren't and which columns have
+    been requested.
+    """
+    def __init__(self, source_columns, selected_columns):   # pylint: disable=too-many-locals
 
         # Columns found or difference case sensitive
         all_cols = []
-        for selected_col_ in selected_columns:
-            found_selected_col = [c for c in source_columns if c == selected_col_]
+        for selected_column in selected_columns:
+            found_selected_col = [c for c in source_columns if c == selected_column]
             found_lower_selected_col = [
-                c for c in source_columns if c.lower() == selected_col_.lower()
+                c for c in source_columns if c.lower() == selected_column.lower()
             ]
 
             if found_selected_col:
-                all_cols.append((found_selected_col[0], selected_col_, "found"))
+                all_cols.append((found_selected_col[0], selected_column, "found"))
             elif found_lower_selected_col:
                 all_cols.append(
                     (
                         found_lower_selected_col[0],
-                        selected_col_,
+                        selected_column,
                         f"Did you mean `{found_lower_selected_col[0]}`?",
                     )
                 )

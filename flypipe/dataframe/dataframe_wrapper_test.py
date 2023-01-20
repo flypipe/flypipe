@@ -13,6 +13,7 @@ from flypipe.tests.spark import spark
 
 
 class DummyDataFrameWrapper(DataFrameWrapper):
+    """Dummy subclass of abstract class DataFrameWrapper so we can use it in tests"""
     FLYPIPE_TYPE_TO_DF_TYPE_MAP = {Boolean.key(): np.dtype("bool")}
 
     def _select_columns(self, columns):
@@ -62,8 +63,9 @@ class TestDataFrameWrapper:
         Ensure that DataFrameWrapper.select_columns does the selection operation out-of-place and returns a new
         dataframe wrapper, therefore the original dataframe wrapper should be untouched.
         """
+        # TODO- doesn't look like we're testing anything here?
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
-        df_wrapper2 = df_wrapper.select_columns("col1")
+        df_wrapper2 = df_wrapper.select_columns("col1")     # pylint: disable=unused-variable
 
     def test_cast_column_basic(self, mocker):
         """

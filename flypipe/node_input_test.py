@@ -12,6 +12,7 @@ def transformation():
 
 
 class TestInputNode:
+    """Tests for InputNode"""
     def test_name(self):
         node_input = transformation.select(["c1", "c2"])
         assert node_input.__name__ == transformation.__name__

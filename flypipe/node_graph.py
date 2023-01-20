@@ -1,9 +1,8 @@
 from enum import Enum
 from typing import List, Union
-
+from matplotlib import pyplot as plt
 import networkx as nx
 from networkx import DiGraph
-
 from flypipe.node import Node
 from flypipe.node_function import NodeFunction
 from flypipe.node_run_context import NodeRunContext
@@ -12,13 +11,18 @@ from flypipe.utils import DataFrameType
 
 
 class RunStatus(Enum):
+    """Describes the run state of a node in a pipeline when that pipeline is executed"""
     UNKNOWN = 0
     ACTIVE = 1
     SKIP = 2
 
 
 class NodeGraph:
-    def __init__(
+    """
+    Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
+    this.
+    """
+    def __init__(   # pylint: disable=too-many-arguments
         self,
         transformation: Union[Node, None],
         graph=None,
@@ -26,10 +30,6 @@ class NodeGraph:
         pandas_on_spark_use_pandas=False,
         parameters=None,
     ):
-        """
-        Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
-        this.
-        """
         parameters = parameters or {}
         parameters = {node.key: params for node, params in parameters.items()}
 
@@ -48,7 +48,7 @@ class NodeGraph:
         self.skipped_node_keys = skipped_node_keys
         self.calculate_graph_run_status()
 
-    def add_node(
+    def add_node(   # pylint: disable=too-many-arguments
         self,
         graph: DiGraph,
         node_name: str,
@@ -108,7 +108,8 @@ class NodeGraph:
         for node_key in graph.nodes:
             transformation = graph.nodes[node_key]["transformation"]
             # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
-            # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state is cleared
+            # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state
+            # is cleared
             if (
                 pandas_on_spark_use_pandas
                 and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
@@ -129,7 +130,7 @@ class NodeGraph:
 
         return graph
 
-    def _expand_node_functions(self, graph: DiGraph):
+    def _expand_node_functions(self, graph: DiGraph):   # pylint: disable=too-many-branches
         """
         Expand all node functions. Given a node graph, return the same node graph with all node functions expanded.
         """
@@ -138,7 +139,8 @@ class NodeGraph:
             for node_key in graph
             if isinstance(graph.nodes[node_key]["transformation"], NodeFunction)
         ]
-        while node_functions:
+        # TODO- pylint flagged the below as having too many nested blocks, we should refactor it to be cleaner
+        while node_functions:   # pylint: disable=too-many-nested-blocks
             found_node_function = False
             # FIXME: messy to call this twice
             node_functions = [
@@ -149,12 +151,10 @@ class NodeGraph:
             for node_function in node_functions:
                 # We cannot expand a node function until all successor nodes that are node functions have been expanded
                 is_runnable_node_function = all(
-                    [
-                        not isinstance(successor["transformation"], NodeFunction)
-                        for successor in self._get_successor_nodes(
-                            graph, node_function["transformation"].key
-                        )
-                    ]
+                    not isinstance(successor["transformation"], NodeFunction)
+                    for successor in self._get_successor_nodes(
+                        graph, node_function["transformation"].key
+                    )
                 )
                 if is_runnable_node_function:
                     found_node_function = True
@@ -166,12 +166,14 @@ class NodeGraph:
                         node_function["run_context"],
                     )
 
-                    # The edges created from the node function node_dependencies are now irrelevant and should be removed
+                    # The edges created from the node function node_dependencies are now irrelevant and should be
+                    # removed
                     for edge in list(graph.in_edges(node_function_key)):
                         graph.remove_edge(edge[0], edge[1])
 
                     # Expanded graph can have dependencies to nodes in graph and nodes in graph
-                    # can have attributes, such as run_context, that must remain in these nodes when composing a new graph
+                    # can have attributes, such as run_context, that must remain in these nodes when composing a new
+                    # graph
                     for expanded_node_key in expanded_graph.nodes:
 
                         # updates parameters only for those nodes in node function dependencies
@@ -188,7 +190,8 @@ class NodeGraph:
 
                     graph = nx.compose(graph, expanded_graph)
 
-                    # Any successors of the node function need to be repointed to point to the end node that got returned
+                    # Any successors of the node function need to be repointed to point to the end node that got
+                    # returned
                     for node_key in list(graph.nodes):
                         node = graph.nodes[node_key]
                         if isinstance(node["transformation"], NodeFunction):
@@ -296,6 +299,7 @@ class NodeGraph:
         for name in self.graph:
             if self.graph.out_degree[name] == 0:
                 return name
+        return None
 
     def calculate_graph_run_status(self):
         # because the last node can be a generator, we have to get the last node node
@@ -338,8 +342,8 @@ class NodeGraph:
         Return a map of node names to their depth in the graph, depth being the minimal distance to the root/first node.
         """
         # TODO- this function is failing unit tests, I can see 3 issues:
-        # - The depth of each node is maximal not minimal, that is if there is a path of length 2 to the start node and a
-        # path of length 1 it uses 2 as the depth where it should be 1.
+        # - The depth of each node is maximal not minimal, that is if there is a path of length 2 to the start node and
+        # a path of length 1 it uses 2 as the depth where it should be 1.
         # - Depth is 1 more than it ought to be. The start node should have depth 0 not depth 1.
         # - We ought to be having the node name as the key and not the value.
         end_node = [
@@ -353,7 +357,7 @@ class NodeGraph:
             depth = len(
                 max(
                     list(nx.all_simple_paths(self.graph, node, end_node)),
-                    key=lambda x: len(x),
+                    key=lambda x: len(x),   # pylint: disable=unnecessary-lambda
                     default=[end_node],
                 )
             )
@@ -387,9 +391,8 @@ class NodeGraph:
 
     def plot(self, graph=None):
         graph = graph or self.graph
-        from matplotlib import pyplot as plt
 
-        plt.title(f"Transformation Graph")
+        plt.title("Transformation Graph")
         nx.draw(graph, with_labels=True)
         plt.show()
 

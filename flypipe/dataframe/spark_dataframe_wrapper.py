@@ -36,6 +36,10 @@ from flypipe.utils import DataFrameType
 
 
 class SparkDataFrameWrapper(DataFrameWrapper):
+    """
+    Wrapper around a Spark dataframe. This gives some conversion functionality between Flypipe types and their spark
+    equivalents.
+    """
 
     DF_TYPE = DataFrameType.PYSPARK
     FLYPIPE_TYPE_TO_DF_TYPE_MAP = {

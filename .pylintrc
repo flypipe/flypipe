@@ -163,6 +163,8 @@ disable=raw-checker-failed,
                               # don't use alias otherwise.
         fixme, # We will get around to solving fixme's in the code seperately, if we allow pylint to block us on this
                # then we won't be able to push any code until fixmes are fixed.
+       import-error, # Pytest keeps flagging stuff as not being importable when it's in requirements.txt
+                     # /requirements_dev.txt, so removing this to avoid the pointless noise.
 
 
 # Enable the message, report, category or checker with the given id(s). You can

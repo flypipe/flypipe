@@ -22,6 +22,10 @@ from flypipe.utils import DataFrameType
 
 
 class PandasDataFrameWrapper(DataFrameWrapper):
+    """
+    Wrapper around a Pandas dataframe. This gives some conversion functionality between Flypipe types and their pandas
+    equivalents.
+    """
     DF_TYPE = DataFrameType.PANDAS
     FLYPIPE_TYPE_TO_DF_TYPE_MAP = {
         Boolean.key(): dtype("bool"),

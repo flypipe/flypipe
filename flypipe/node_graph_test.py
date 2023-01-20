@@ -3,7 +3,9 @@ from flypipe.node_graph import NodeGraph, RunStatus
 
 
 class TestNodeGraph:
+    """Tests for NodeGraph"""
     def test_build_graph(self):
+        # pylint: disable=anomalous-backslash-in-string
         """
         Ensure an appropriate graph is built for a transformation
            T2
@@ -12,6 +14,7 @@ class TestNodeGraph:
           \  /
            T3
         """
+        # pylint: enable=anomalous-backslash-in-string
 
         @node(type="pandas")
         def t1():

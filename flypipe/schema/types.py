@@ -2,6 +2,7 @@ from flypipe.schema.util import DateFormat
 
 
 class Type:
+    """Base class for Flypipe types"""
     @classmethod
     def key(cls):
         return cls.__name__.lower()
@@ -16,11 +17,12 @@ class Type:
 
 
 class Unknown(Type):
-    pass
+    """Special type that is used when the type of column is unknown"""
 
 
 class Boolean(Type):
-    VALID_VALUES = {True, False, 1, 0}
+    """Flypipe boolean type"""
+    VALID_VALUES = {True, False, 1, 0}  # pylint: disable=duplicate-value
 
     @property
     def valid_values(self):
@@ -28,44 +30,47 @@ class Boolean(Type):
 
 
 class Byte(Type):
-    pass
+    """Flypipe byte type"""
 
 
 class Binary(Type):
-    pass
+    """Flypipe binary type"""
 
 
 class Integer(Type):
-    pass
+    """Flypipe integer type"""
 
 
 class Short(Type):
-    pass
+    """Flypipe short type"""
 
 
 class Long(Type):
-    pass
+    """Flypipe long type"""
 
 
 class Float(Type):
-    pass
+    """Flypipe float type"""
 
 
 class Double(Type):
-    pass
+    """Flypipe double type"""
 
 
 class String(Type):
-    pass
+    """Flypipe string type"""
 
 
 class Decimal(Type):
+    """Flypipe decimal type"""
+
     def __init__(self, precision: int = 13, scale: int = 2):
         self.precision = precision
         self.scale = scale
 
 
 class Date(Type):
+    """Flypipe date type"""
     PYTHON_PYSPARK_DATETIME_SYMBOL_MAP = {
         "%A": "EEEE",
         "%B": "MMMM",
@@ -89,7 +94,19 @@ class Date(Type):
         for python_symbol, pyspark_symbol in PYTHON_PYSPARK_DATETIME_SYMBOL_MAP.items()
     }
 
-    def __init__(self, format="yyyy-MM-dd", format_mode=DateFormat.PYSPARK):
+    def __init__(self, format="yyyy-MM-dd", format_mode=DateFormat.PYSPARK):    # pylint: disable=redefined-builtin
+        """
+        Parameters
+        ----------
+
+        format: str, optional
+            Date format to use for string -> Date conversion if relevant. Uses either Spark date format or
+            Python/Pandas format depending on the value of format_mode.
+        format_mode: DateFormat, optional
+            the format mode to use, this allows the user to pick between Spark date format
+            (https://spark.apache.org/docs/latest/sql-ref-datetime-pattern.html) and the native Python/Pandas date
+            format.
+        """
         if format_mode == DateFormat.PYSPARK:
             self._pyspark_format = format
             self._python_format = None
@@ -125,10 +142,10 @@ class Date(Type):
                     pyspark_format.append(
                         cls.PYTHON_PYSPARK_DATETIME_SYMBOL_MAP[symbol]
                     )
-                except KeyError:
+                except KeyError as exc:
                     raise ValueError(
                         f"Unable to convert datetime symbol {symbol} to pyspark"
-                    )
+                    ) from exc
             else:
                 formatting = python_format[0]
                 print(f'Extracted formatting "{formatting}"')
@@ -149,10 +166,10 @@ class Date(Type):
                 pyspark_format = pyspark_format[i:]
                 try:
                     python_format.append(cls.PYSPARK_PYTHON_DATETIME_SYMBOL_MAP[symbol])
-                except KeyError:
+                except KeyError as exc:
                     raise ValueError(
                         f"Unable to convert datetime symbol {symbol} to python/pandas datetime format"
-                    )
+                    ) from exc
             else:
                 formatting = pyspark_format[0]
                 pyspark_format = pyspark_format[1:]
@@ -161,5 +178,19 @@ class Date(Type):
 
 
 class DateTime(Date):
-    def __init__(self, format="yyyy-MM-dd H:m:s", format_mode=DateFormat.PYSPARK):
+    """Flypipe datetime type"""
+
+    def __init__(self, format="yyyy-MM-dd H:m:s", format_mode=DateFormat.PYSPARK):  # pylint: disable=redefined-builtin
+        """
+        Parameters
+        ----------
+
+        format: str, optional
+            Date format to use for string -> DateTime conversion if relevant. Uses either Spark datetime format or
+            Python/Pandas format depending on the value of format_mode.
+        format_mode: DateFormat, optional
+            the format mode to use, this allows the user to pick between Spark datetime format
+            (https://spark.apache.org/docs/latest/sql-ref-datetime-pattern.html) and the native Python/Pandas datetime
+            format.
+        """
         super().__init__(format=format, format_mode=format_mode)
