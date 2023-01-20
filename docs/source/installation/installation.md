@@ -3,7 +3,7 @@
 ## Databricks
 
 * [Notebook Scope](https://learn.microsoft.com/en-us/azure/databricks/libraries/cluster-libraries): `%pip install flypipe`
-* [Worksparce Scope](https://learn.microsoft.com/en-us/azure/databricks/libraries/workspace-libraries)
+* [Workspace Scope](https://learn.microsoft.com/en-us/azure/databricks/libraries/workspace-libraries)
 * [Cluster Scope](https://learn.microsoft.com/en-us/azure/databricks/libraries/cluster-libraries) (recommended)
 
 ## Local

@@ -38,7 +38,7 @@ https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page
 
 ### Rebuilding documents
 
-from `/flypipe/docs` run `sh build_docs.sh`
+from `/flypipe` run `sh docs/build_docs.sh` (note you will need to have the python dependencies installed via a virtual env or globally)
 
 ### Other useful commands
 
