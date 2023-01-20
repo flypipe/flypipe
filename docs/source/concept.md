@@ -1,9 +1,11 @@
 # Flypipe
 
-Flypipe is a Python framework to simplify development, management and maintainance of data, feature and ML model
-pipelines.
+The Data/Machine Learning/Data Science space heavily leverages pipelines. These pipelines typically involve a chain of 
+transformations on data stored in Pandas/PySpark dataframes to clean, filter, etc the data into a useful form. 
 
-Transformations are implemented in small pieces of code called `nodes` that are linked to each other in a DAG.
+Flypipe is a Python framework to simplify development, management and maintenance of these pipelines. At its heart it 
+involves the simple concept of splitting a pipeline into logical transformations/nodes and defining relationships 
+between these nodes. The Flypipe framework then uses this information to build a Directed Acyclic Graph (DAG). 
 
 ```python
 from flypipe.node import node
