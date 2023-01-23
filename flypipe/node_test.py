@@ -901,6 +901,55 @@ class TestNode:  # pylint: disable=too-many-public-methods
         assert sql_mock.call_args[0][0] == "select * from t2__t1"
         assert createOrReplaceTempView_mock.call_args[0][0] == "t2__t1"
 
+    def test_node_dependency_used_multiple_times(self):
+        """
+        We should throw an exception if the user attempts to use the same node as a dependency multiple times on a
+        node.
+        """
+
+        @node(
+            type="pandas",
+        )
+        def t1():
+            return pd.DataFrame({"c1": [1, 2, 3], "c2": ["apple", "orange", "plum"]})
+
+        with pytest.raises(ValueError):
+
+            @node(
+                type="pandas",
+                dependencies=[
+                    t1.select("c1").alias("a"),
+                    t1.select("c2").alias("b"),
+                ],
+            )
+            def t2(a, b):
+                return pd.concat([a, b], axis=1)
+
+    def test_node_duplicate_name(self):
+        """
+        Having multiple dependencies with the same name/alias should fail.
+        """
+
+        @node(type="pandas")
+        def t1():
+            return pd.DataFrame({"c1": [1, 2, 3]})
+
+        @node(type="pandas")
+        def t2():
+            return pd.DataFrame({"c2": [1, 2, 3]})
+
+        with pytest.raises(ValueError):
+
+            @node(type="pandas", dependencies=[t1, t2.alias("t1")])
+            def t3(t1):
+                return t1
+
+        with pytest.raises(ValueError):
+
+            @node(type="pandas", dependencies=[t1.alias("test"), t2.alias("test")])
+            def t4(test):
+                return test
+
 
 # class TestNodeIntegration:
 #     """
