@@ -81,13 +81,22 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
     def _get_input_nodes(self, dependencies):
         input_nodes = []
+        input_node_keys = set()
         if dependencies is None:
             dependencies = []
         for dependency in dependencies:
+            if dependency.key in input_node_keys:
+                raise ValueError(
+                    f"Illegal operation- node {self.__name__} is using the same node {dependency.__name__} more than "
+                    f"once"
+                )
+
             if isinstance(dependency, Node):
                 input_nodes.append(InputNode(dependency))
+                input_node_keys.add(dependency.key)
             elif isinstance(dependency, InputNode):
                 input_nodes.append(dependency)
+                input_node_keys.add(dependency.key)
             else:
                 raise ValueError(
                     f"Expected all dependencies of node {self.__name__} to be of format node/node.alias(...)/node."
