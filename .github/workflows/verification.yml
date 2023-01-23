@@ -29,7 +29,7 @@ jobs:
       - name: Run Formatter (Black)
         run: black flypipe --check
       - name: Run Linter (pylint)
-        run: python -m pylint flypipe
+        run: python ./scripts/pylint.py
       - name: Run Unit Tests
         run: pytest flypipe
 
