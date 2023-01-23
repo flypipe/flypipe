@@ -29,8 +29,17 @@ jobs:
         run: echo "VERSION_NUMBER=$(python scripts/calculate_version.py)" >> $GITHUB_ENV
       - name: Set version
         run: echo ${{ env.VERSION_NUMBER }} > flypipe/version.txt
-      - name: Upload Version File
+      - name: Upload version file
         uses: actions/upload-artifact@v3
         with:
           name: version.txt
           path: ./flypipe/version.txt
+      - name: Calculate changelog for new version
+        run: python scripts/generate_changelog.py
+        env:
+          JIRA_USER: ${{ secrets.JIRA_USER }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+      - name: Upload changelog file
+        uses: actions/upload-artifact@v3
+        with:
+          name: changelog.txt

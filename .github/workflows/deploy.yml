@@ -29,12 +29,17 @@ jobs:
           path: flypipe
       - name: Store version number
         run: echo "VERSION_NUMBER=$(cat flypipe/version.txt)" >> $GITHUB_ENV
+      - name: Download changelog
+        uses: actions/download-artifact@v3
+        with:
+          name: changelog.txt
       - name: Create new branch
         run: |
           git config --global user.email "flypipe@dummy.com"
           git config --global user.name "flypipe"
           git checkout -b "release/${{ env.VERSION_NUMBER }}"
           git add flypipe/version.txt
+          git add changelog.txt
           git commit -m 'chore: update version file'
           git push origin "release/${{ env.VERSION_NUMBER }}"
       - name: Upload to pypi
