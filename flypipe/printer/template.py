@@ -1,16 +1,16 @@
 from jinja2 import Environment, PackageLoader, select_autoescape
 
 
-_env = None
+ENV = None
 
 
 def _get_env():
-    global _env
-    if not _env:
-        _env = Environment(
+    global ENV  # pylint: disable=global-statement
+    if not ENV:
+        ENV = Environment(
             loader=PackageLoader("flypipe.printer"), autoescape=select_autoescape()
         )
-    return _env
+    return ENV
 
 
 def get_template(template_name):

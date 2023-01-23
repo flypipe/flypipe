@@ -3,9 +3,15 @@ from flypipe.node_type import NodeType
 
 
 class NodeFunction(Node):
+    """
+    Special type of node that returns a series of nodes. Can be used to create a dynamic series of nodes.
+    """
+
     NODE_TYPE = NodeType.NODE_FUNCTION
 
-    def __init__(self, function, node_dependencies=None, requested_columns=False):
+    def __init__(
+        self, function, node_dependencies=None, requested_columns=False
+    ):  # pylint: disable=super-init-not-called
         self._key = None
         self.function = function
         self.node_dependencies = node_dependencies or []
@@ -22,6 +28,8 @@ class NodeFunction(Node):
                     )
 
     def expand(self, requested_columns: list, parameters: dict = None):
+        # TODO- we should not be invoking _key in this function
+        # pylint: disable=protected-access
         kwargs = parameters or {}
         if self.requested_columns:
             kwargs["requested_columns"] = requested_columns
@@ -38,8 +46,9 @@ class NodeFunction(Node):
             for dependency in node.input_nodes:
                 if dependency not in nodes and dependency not in self.node_dependencies:
                     raise ValueError(
-                        f"Unknown node {dependency.key} in node function {self._key} dependencies {[n._key for n in self.node_dependencies]}, all external dependencies must "
-                        f"be defined in node function parameter node_dependencies"
+                        f"Unknown node {dependency.key} in node function {self._key} dependencies "
+                        f"{[n._key for n in self.node_dependencies]}, all external dependencies must be defined in "
+                        f"node function parameter node_dependencies"
                     )
 
         return list(nodes)
@@ -51,7 +60,7 @@ class NodeFunction(Node):
             self.requested_columns,
         )
 
-        node_function._key = self._key
+        node_function._key = self._key  # pylint: disable=protected-access
         return node_function
 
 
@@ -67,8 +76,8 @@ def node_function(*args, **kwargs):
         if True will retrieve `requested_columns` as named argument
     node_dependencies : List[Node or NodeFunction], optional
         List of external nodes that the node function is dependent on.
-        Any node retrieved by the node function (called internal node) can only be dependent on any internal node or any anode inside
-        `node_dependencies`.
+        Any node retrieved by the node function (called internal node) can only be dependent on any internal node or
+        any node inside `node_dependencies`.
         True, returns spark context as argument to the funtion (default is False)
 
     Returns
@@ -79,7 +88,8 @@ def node_function(*args, **kwargs):
     Raises
     ------
     ValueError
-        If any internal node is of type NodeFunction; if any internal node has a dependency that is not to another internal node and not declared in node_dependencies
+        If any internal node is of type NodeFunction; if any internal node has a dependency that is not to another
+        internal node and not declared in node_dependencies
 
 
     .. highlight:: python

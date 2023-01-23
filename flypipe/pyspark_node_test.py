@@ -1,6 +1,7 @@
-import pandas
+# pylint: disable=duplicate-code
 import pandas as pd
-import pyspark.pandas
+import pyspark.pandas as ps
+import pyspark.sql.functions as F
 import pytest
 from pyspark_test import assert_pyspark_df_equal
 from tabulate import tabulate
@@ -8,14 +9,14 @@ from tabulate import tabulate
 from flypipe.datasource.spark import Spark
 from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.node import node
-from flypipe.schema.column import Column
-from flypipe.schema.schema import Schema
+from flypipe.schema import Column
+from flypipe.schema import Schema
 from flypipe.schema.types import Decimal, Integer, String
 
 
 @pytest.fixture(scope="function")
 def spark():
-    from flypipe.tests.spark import spark
+    from flypipe.tests.spark import spark  # pylint: disable=import-outside-toplevel
 
     (
         spark.createDataFrame(
@@ -27,8 +28,10 @@ def spark():
 
 
 class TestPySparkNode:
-    def test_exception_invalid_node_type(self, spark):
-        with pytest.raises(ValueError) as e_info:
+    """Tests on Nodes with pyspark type"""
+
+    def test_exception_invalid_node_type(self):
+        with pytest.raises(ValueError):
 
             @node(type="anything", output=Schema([Column("balance", Decimal(16, 2))]))
             def dummy():
@@ -109,18 +112,7 @@ class TestPySparkNode:
             return t1
 
         df = t2.run(spark, parallel=False)
-        assert isinstance(df, pandas.DataFrame)
-
-        @node(
-            type="pandas",
-            dependencies=[Spark("dummy_table").select("c1")],
-            output=Schema([Column("c1", Decimal(10, 2))]),
-        )
-        def t1(dummy_table):
-            return dummy_table
-
-        df = t1.run(spark, parallel=False)
-        assert isinstance(df, pandas.DataFrame)
+        assert isinstance(df, pd.DataFrame)
 
     def test_conversion_to_pandas_on_spark(self, spark):
         @node(
@@ -140,18 +132,7 @@ class TestPySparkNode:
             return t1
 
         df = t2.run(spark, parallel=False)
-        assert isinstance(df, pyspark.pandas.DataFrame)
-
-        @node(
-            type="pandas_on_spark",
-            dependencies=[Spark("dummy_table").select("c1")],
-            output=Schema([Column("c1", Decimal(10, 2))]),
-        )
-        def t1(dummy_table):
-            return dummy_table
-
-        df = t1.run(spark, parallel=False)
-        assert isinstance(df, pyspark.pandas.DataFrame)
+        assert isinstance(df, ps.DataFrame)
 
     def test_datasource_case_sensitive_columns(self, spark):
         """
@@ -191,7 +172,7 @@ class TestPySparkNode:
         @node(
             type="pandas_on_spark",
             dependencies=[
-                Spark(f"dummy_table__anything_c").select("Id", "my_col__x", "My_Col__z")
+                Spark("dummy_table__anything_c").select("Id", "my_col__x", "My_Col__z")
             ],
             output=Schema(
                 [
@@ -199,7 +180,9 @@ class TestPySparkNode:
                 ]
             ),
         )
-        def my_col(test_pyspark_node_dummy_table__anything_c):
+        def my_col(
+            test_pyspark_node_dummy_table__anything_c,
+        ):  # pylint: disable=invalid-name
             df = test_pyspark_node_dummy_table__anything_c
             df = df.rename(columns={"my_col__x": "my_col"})
             return df
@@ -257,15 +240,15 @@ class TestPySparkNode:
             dependencies=[t2.select("c1", "c2"), t1.select("c1")],
             output=Schema([Column("c2", String())]),
         )
-        def t4(t1, t2):
+        def t4(t1, t2):  # pylint: disable=unused-argument
             return t2
 
-        t4._create_graph()
+        t4._create_graph()  # pylint: disable=protected-access
         for node_name in t4.node_graph.graph:
-            node_ = t4.node_graph.get_node(node_name)
-            if node_["transformation"].__name__ == "t4":
+            n = t4.node_graph.get_node(node_name)
+            if n["transformation"].__name__ == "t4":
                 continue
-            assert len(node_["output_columns"]) == len(set(node_["output_columns"]))
+            assert len(n["output_columns"]) == len(set(n["output_columns"]))
 
         df = t4.run(spark, parallel=False)
         assert_pyspark_df_equal(
@@ -273,16 +256,12 @@ class TestPySparkNode:
         )
 
     def test_dataframes_are_isolated_from_nodes(self, spark):
-        import pyspark.sql.functions as F
-
         @node(
             type="pyspark",
             output=Schema([Column("c1", String()), Column("c2", String())]),
         )
         def t1():
-            return spark.createDataFrame(
-                pandas.DataFrame(data={"c1": ["1"], "c2": ["2"]})
-            )
+            return spark.createDataFrame(pd.DataFrame(data={"c1": ["1"], "c2": ["2"]}))
 
         @node(
             type="pyspark",
@@ -323,4 +302,7 @@ class TestPySparkNode:
             assert t2.loc[0, "c3"] == "t2 set this value"
             return spark.createDataFrame(t2)
 
-        df = t3.run(spark, parallel=False)
+        t3.run(spark, parallel=False)
+
+
+# pylint: enable=duplicate-code

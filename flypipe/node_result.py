@@ -4,6 +4,11 @@ from flypipe.utils import DataFrameType
 
 
 class NodeResult:
+    """
+    Wrapper around the raw result from a node, allowing for the result to be converted into various format and have
+    type casting applied.
+    """
+
     def __init__(self, spark, df, schema):
         self.spark = spark
         self.df_wrapper = DataFrameWrapper.get_instance(spark, df)
@@ -23,7 +28,6 @@ class NodeResult:
             )
             for column in schema.columns:
                 self.df_wrapper.cast_column(column.name, column.type)
-        return None
 
     def select_columns(self, *columns):
         return self.df_wrapper.select_columns(*columns)
@@ -40,7 +44,8 @@ class NodeResult:
         if self.df_wrapper.DF_TYPE == df_type:
             dataframe = self.df_wrapper
         else:
-            # TODO- is this a good idea? We are having to reach into self.df_wrapper to grab the df, this usually is a mark of a design issue
+            # TODO- is this a good idea? We are having to reach into self.df_wrapper to grab the df, this usually is a
+            # mark of a design issue
             dataframe = DataFrameWrapper.get_instance(
                 self.spark,
                 self.dataframe_converter.convert(self.df_wrapper.df, df_type),

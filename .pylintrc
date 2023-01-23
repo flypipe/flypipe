@@ -42,7 +42,8 @@ fail-under=10
 #from-stdin=
 
 # Files or directories to be skipped. They should be base names, not paths.
-ignore=CVS
+ignore=CVS,
+       tests
 
 # Add files or directories matching the regular expressions patterns to the
 # ignore-list. The regex matches against paths and can be in Posix or Windows
@@ -156,8 +157,14 @@ disable=raw-checker-failed,
         use-symbolic-message-instead,
         missing-module-docstring, # I think it's reasonable to disable this, we generally have one class per module and
                                   # the docstring for the module wouldn't be particularly different to that of the class.
+        missing-function-docstring, # Maybe we should follow this but it seems a bit excessive, there are plenty of
+                                    # simple functions where the name is enough documentation-wise.
         redefined-outer-name, # Disabling this for our sanity- this will be triggered for any node dependencies that
                               # don't use alias otherwise.
+        fixme, # We will get around to solving fixme's in the code seperately, if we allow pylint to block us on this
+               # then we won't be able to push any code until fixmes are fixed.
+       import-error, # Pytest keeps flagging stuff as not being importable when it's in requirements.txt
+                     # /requirements_dev.txt, so removing this to avoid the pointless noise.
 
 
 # Enable the message, report, category or checker with the given id(s). You can
@@ -235,7 +242,8 @@ const-naming-style=UPPER_CASE
 docstring-min-length=-1
 
 # Naming style matching correct function names.
-function-naming-style=snake_case
+# disable naming style checks for functions as it doesn't like very common naming patterns like 't1', etc
+function-naming-style=any
 
 # Regular expression matching correct function names. Overrides function-
 # naming-style. If left empty, function names will be checked with the set
@@ -397,7 +405,7 @@ indent-after-paren=4
 indent-string='    '
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=120
 
 # Maximum number of lines in a module.
 max-module-lines=1000

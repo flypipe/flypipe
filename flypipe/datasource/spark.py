@@ -42,6 +42,6 @@ def Spark(table):
     spark_datasource.function.__name__ = table
 
     key = f"spark.{table}"
-    spark_datasource.key = re.sub("[^\da-zA-Z]", "_", key)
+    spark_datasource.key = re.sub(r"[^\da-zA-Z]", "_", key)
     spark_datasource.node_type = NodeType.DATASOURCE
     return spark_datasource

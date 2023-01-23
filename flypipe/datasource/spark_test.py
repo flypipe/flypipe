@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 from decimal import Decimal as PythonDecimal
 
 import pytest
@@ -12,6 +13,7 @@ from flypipe.schema.types import Decimal
 
 @pytest.fixture(scope="function")
 def spark():
+    # pylint: disable-next=import-outside-toplevel
     from flypipe.tests.spark import spark
 
     (
@@ -41,6 +43,8 @@ def spark():
 
 
 class TestSparkDataSource:
+    """Tests for SparkDataSource"""
+
     def test_load(self, spark):
         """
         Test basic functionality of the datasource i.e from Spark('dummy_table1').select('c1') we a) pick up the
@@ -192,3 +196,6 @@ class TestSparkDataSource:
             spark.createDataFrame(schema=("c0", "c1"), data=[(0, 1)]),
             check_dtype=False,
         )
+
+
+# pylint: enable=duplicate-code

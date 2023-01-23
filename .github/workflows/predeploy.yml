@@ -1,4 +1,11 @@
-name: 'Prepare for deployment by running verification and calculating the new version we will be deploying'
+# Prepare for deployment:
+# - run verification to double check the code quality
+# - calculate the new prospective version
+# - calculate the new prospective changelog
+# By calculating the version/changelog here instead of in the deployment job we can double check these artifacts to
+# ensure they are looking fine prior to releasing.
+
+name: 'Prepare for deployment'
 
 on:
   push:
@@ -29,8 +36,18 @@ jobs:
         run: echo "VERSION_NUMBER=$(python scripts/calculate_version.py)" >> $GITHUB_ENV
       - name: Set version
         run: echo ${{ env.VERSION_NUMBER }} > flypipe/version.txt
-      - name: Upload Version File
+      - name: Upload version file
         uses: actions/upload-artifact@v3
         with:
           name: version.txt
           path: ./flypipe/version.txt
+      - name: Calculate changelog for new version
+        run: python scripts/generate_changelog.py
+        env:
+          JIRA_USER: ${{ secrets.JIRA_USER }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+      - name: Upload changelog file
+        uses: actions/upload-artifact@v3
+        with:
+          name: changelog.txt
+          path: ./changelog.txt

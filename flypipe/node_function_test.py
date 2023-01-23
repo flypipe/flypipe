@@ -6,9 +6,13 @@ from flypipe.node_function import node_function
 
 
 class TestNodeFunction:
+    """Tests for NodeFunction"""
+
     def test_node_dependencies_type(self):
         """
-        For simplicity we want to limit the node dependencies on node functions to only have dependent nodes and not the column selection which is what we normally do on regular nodes. Let's throw an appropriate error if the user attempts to make the node dependent with columns
+        For simplicity we want to limit the node dependencies on node functions to only have dependent nodes and not
+        the column selection which is what we normally do on regular nodes. Let's throw an appropriate error if the
+        user attempts to make the node dependent with columns
         """
 
         @node(type="pandas")
@@ -52,7 +56,7 @@ class TestNodeFunction:
             return c
 
         @node(type="pandas", dependencies=[b, c.select("c2")])
-        def a(b, c):
+        def a(b, c):  # pylint: disable=unused-argument
             return b
 
         @node_function(node_dependencies=[c])

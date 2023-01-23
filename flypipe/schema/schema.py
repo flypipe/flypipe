@@ -2,6 +2,10 @@ from flypipe.schema.column import Column
 
 
 class Schema:
+    """
+    Holds information about the nature of the output dataframe from a Flypipe transformation.
+    """
+
     def __init__(self, *columns):
         self.columns = columns[0] if isinstance(columns[0], list) else list(columns)
 
@@ -9,6 +13,7 @@ class Schema:
         for col in self.columns:
             if col.name == column:
                 return col
+        return None
 
     def get_column_names(self):
         return [column.name for column in self.columns]

@@ -49,7 +49,8 @@ def fit_scale(config, split):
         if not os.path.exists(artifact_location):
             os.makedirs(artifact_location, exist_ok=True)
 
-        pickle.dump(scaler, open(os.path.join(artifact_location, "scaler.pkl"), "wb"))
+        with open(os.path.join(artifact_location, "scaler.pkl"), "wb") as f:
+            pickle.dump(scaler, f)
 
     split[X_cols] = scaler.transform(split[X_cols])
 

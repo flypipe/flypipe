@@ -1,7 +1,9 @@
+import json
 from enum import Enum
-
+import pandas as pd
+import pyspark.pandas as ps
+import pyspark.sql.dataframe as sql
 from pandas.testing import assert_frame_equal
-
 from flypipe.exceptions import (
     DataframeDifferentDataError,
     DataframeSchemasDoNotMatchError,
@@ -9,10 +11,11 @@ from flypipe.exceptions import (
 )
 
 
-# TODO: document things
-
-
 class DataFrameType(Enum):
+    """
+    Enum of possible dataframe types
+    """
+
     PANDAS = "pandas"
     PANDAS_ON_SPARK = "pandas_on_spark"
     PYSPARK = "pyspark"
@@ -26,8 +29,6 @@ def assert_schemas_are_equals(df1, df2) -> None:
             )
 
     elif dataframe_type(df1) in [DataFrameType.PYSPARK, DataFrameType.PANDAS_ON_SPARK]:
-        import json
-
         schema_df1 = json.dumps(sorted(df1.dtypes, key=lambda t: t[0]))
         schema_df2 = json.dumps(sorted(df2.dtypes, key=lambda t: t[0]))
         if schema_df1 != schema_df2:
@@ -55,21 +56,12 @@ def assert_dataframes_equals(df1, df2) -> None:
 
 
 def dataframe_type(df) -> DataFrameType:
-    import pandas as pd
-
     if isinstance(df, pd.DataFrame):
         return DataFrameType.PANDAS
-    else:
-        import pyspark.pandas as ps
-
-        if isinstance(df, ps.DataFrame):
-            return DataFrameType.PANDAS_ON_SPARK
-        else:
-            import pyspark.sql.dataframe as sql
-
-            if isinstance(df, sql.DataFrame):
-                return DataFrameType.PYSPARK
-
+    if isinstance(df, ps.DataFrame):
+        return DataFrameType.PANDAS_ON_SPARK
+    if isinstance(df, sql.DataFrame):
+        return DataFrameType.PYSPARK
     raise DataframeTypeNotSupportedError(type(df))
 
 
@@ -83,11 +75,7 @@ def get_schema(df, columns=None):
             s.name: s.dataType
             for s in (df if not columns else df.select(columns)).schema
         }
-    else:
 
-        return {
-            column: datatype
-            for column, datatype in (
-                df.dtypes if not columns else df.dtypes[columns]
-            ).items()
-        }
+    if not columns:
+        return df.dtypes
+    return df.dtypes[columns]

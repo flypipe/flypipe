@@ -1,12 +1,12 @@
 import os
 from contextlib import contextmanager
-
 import pytest
-
 from flypipe.config import get_config, config_context, RunMode
 
 
 class TestConfig:
+    """Tests for Config"""
+
     @contextmanager
     def _set_environment_variable_for_test(self, name, value):
         """

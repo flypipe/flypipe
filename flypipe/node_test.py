@@ -22,7 +22,7 @@ from flypipe.utils import DataFrameType, dataframe_type
 
 @pytest.fixture(scope="function")
 def spark():
-    from flypipe.tests.spark import spark
+    from flypipe.tests.spark import spark  # pylint: disable=import-outside-toplevel
 
     spark.createDataFrame(
         schema=("c0", "c1"),
@@ -37,7 +37,9 @@ def spark():
     return spark
 
 
-class TestNode:
+class TestNode:  # pylint: disable=too-many-public-methods
+    """Unit tests on the Node class"""
+
     def test_invalid_type(self):
         """Building a node with a type not in Node.ALLOWED_TYPES should raise an exception"""
         with pytest.raises(ValueError):
@@ -55,7 +57,7 @@ class TestNode:
         ],
     )
     def test_get_class(self, node_type, expected_class):
-        assert type(Node(None, node_type)) == expected_class
+        assert isinstance(Node(None, node_type), expected_class)
 
     def test_dependencies(self):
         """
@@ -116,8 +118,8 @@ class TestNode:
         the child node.
 
         We want to ensure that we do b) the filtering done in a) is already done. This is vital because sometimes the
-        original output of a node can be far bigger than the output with filtered columns, if the order of operations is wrong
-        and b) happens before a) it can be extremely inefficient.
+        original output of a node can be far bigger than the output with filtered columns, if the order of operations
+        is wrong and b) happens before a) it can be extremely inefficient.
         """
 
         @node(type="pandas", dependencies=[Spark("dummy_table1").select("c1")])
@@ -192,29 +194,29 @@ class TestNode:
         Ensure that different nodes with the same function name have different keys
         """
 
-        class A:
+        class A:  # pylint: disable=missing-class-docstring,invalid-name,too-few-public-methods
             @classmethod
             @node(type="pandas", output=Schema([Column("fruit", String(), "")]))
             def test(cls):
                 return pd.DataFrame({"fruit": ["banana"]})
 
-        class B:
-            class C:
+        class B:  # pylint: disable=missing-class-docstring,invalid-name,too-few-public-methods
+            class C:  # pylint: disable=missing-class-docstring,invalid-name,too-few-public-methods
                 @classmethod
                 @node(
                     type="pandas",
-                    dependencies=[A.test.select("fruit")],
+                    dependencies=[A.test.select("fruit")],  # pylint: disable=no-member
                     output=Schema([Column("fruit", String(), "")]),
                 )
                 def test(cls, test):
                     return test["fruit"]
 
         assert (
-            A.test.key
+            A.test.key  # pylint: disable=no-member
             == "flypipe_node_test_function_test_TestNode_test_key__locals__A_test"
         )
         assert (
-            B.C.test.key
+            B.C.test.key  # pylint: disable=no-member
             == "flypipe_node_test_function_test_TestNode_test_key__locals__B_C_test"
         )
 
@@ -242,8 +244,15 @@ class TestNode:
         """
         Ensure that node graph is processed with node keys and alias is used for arguments
         """
-        from flypipe.tests.transformations.group_1.t1 import t1
-        from flypipe.tests.transformations.group_2.t1 import t1 as t1_group2
+        # pylint: disable-next=import-outside-toplevel
+        from flypipe.tests.transformations.group_1.t1 import (
+            t1,
+        )
+
+        # pylint: disable-next=import-outside-toplevel
+        from flypipe.tests.transformations.group_2.t1 import (
+            t1 as t1_group2,
+        )
 
         @node(
             type="pandas",
@@ -725,8 +734,9 @@ class TestNode:
 
     def test_pandas_on_spark_use_pandas(self, spark):
         """
-        When running a graph with pandas_on_spark_use_pandas=True, all pandas_on_spark nodes types should be of type pandas
-        If running straight after, but with pandas_on_spark_use_pandas=False, all pandas_on_spark nodes types should be of type pandas_on_spark
+        When running a graph with pandas_on_spark_use_pandas=True, all pandas_on_spark nodes types should be of type
+        pandas. If running straight after, but with pandas_on_spark_use_pandas=False, all pandas_on_spark nodes types
+        should be of type pandas_on_spark.
         """
 
         @node(type="pandas_on_spark", dependencies=[Spark("dummy_table1").select("c1")])
@@ -739,6 +749,8 @@ class TestNode:
         t1.run(spark, pandas_on_spark_use_pandas=False)
         assert t1.dataframe_type == DataFrameType.PANDAS_ON_SPARK
 
+        # TODO- we should refactor to avoid having to call this private method to build a graph
+        # pylint: disable-next=protected-access
         t1._create_graph(pandas_on_spark_use_pandas=True)
         for n in t1.node_graph.graph.nodes:
             if t1.node_graph.graph.nodes[n]["transformation"].__name__ == "t1":
@@ -820,7 +832,7 @@ class TestNode:
             return a
 
         @node(type="pandas", dependencies=[a.select("c2"), b])
-        def c(a, b):
+        def c(a, b):  # pylint: disable=unused-argument
             return a
 
         c.run(parallel=False)
@@ -835,7 +847,7 @@ class TestNode:
 
     def test_node_parameters_missing(self):
         @node(type="pandas")
-        def t1(param1):
+        def t1(param1):  # pylint: disable=unused-argument
             return pd.DataFrame()
 
         with pytest.raises(TypeError):
@@ -844,8 +856,9 @@ class TestNode:
     def test_spark_sql_conversion(self, spark):
         """
         If we use a spark sql code then:
-        - any dependencies should be saved into a unique table
-        - the dataframes passed into the spark sql function should be replaced with the names of the tables they were saved into.
+        - any dependencies should be saved into a unique table.
+        - the dataframes passed into the spark sql function should be replaced with the names of the tables they were
+        saved into.
         """
 
         @node(type="pandas")
@@ -889,43 +902,43 @@ class TestNode:
         assert createOrReplaceTempView_mock.call_args[0][0] == "t2__t1"
 
 
-class TestNodeIntegration:
-    """
-    Higher level integration tests
-    """
+# class TestNodeIntegration:
+#     """
+#     Higher level integration tests
+#     """
 
-    # def test_spark_sql(self, spark):
-    #     """
-    #     Simple pipeline to check that we can flick between regular dataframe and Spark SQL transformations.
-    #     """
-    #     # # FIXME- incomplete, need to get pyspark working locally again first
-    #     # @node(
-    #     #     type='pandas'
-    #     # )
-    #     # def t1():
-    #     #     return pd.DataFrame({'name': ['Bob', 'Chris'], 'age': [10, 20]})
-    #     #
-    #     # @node(
-    #     #     type='spark_sql',
-    #     #     dependencies=[t1]
-    #     # )
-    #     # def t2(t1):
-    #     #     return f'SELECT name, age + 1 FROM {t1}'
-    #     #
-    #     # @node(
-    #     #     type='spark_sql',
-    #     #     dependencies=[t2]
-    #     # )
-    #     # def t3(t2):
-    #     #     return f'SELECT name, age + 1 FROM {t2}'
-    #     #
-    #     # @node(
-    #     #     type='pandas',
-    #     #     dependencies=[t3]
-    #     # )
-    #     # def t4(t3):
-    #     #     t3['age'] += 1
-    #     #     return t3
-    #     #
-    #     # result = t4.run(spark=spark)
-    #     # pass
+# def test_spark_sql(self, spark):
+#     """
+#     Simple pipeline to check that we can flick between regular dataframe and Spark SQL transformations.
+#     """
+#     # # FIXME- incomplete, need to get pyspark working locally again first
+#     # @node(
+#     #     type='pandas'
+#     # )
+#     # def t1():
+#     #     return pd.DataFrame({'name': ['Bob', 'Chris'], 'age': [10, 20]})
+#     #
+#     # @node(
+#     #     type='spark_sql',
+#     #     dependencies=[t1]
+#     # )
+#     # def t2(t1):
+#     #     return f'SELECT name, age + 1 FROM {t1}'
+#     #
+#     # @node(
+#     #     type='spark_sql',
+#     #     dependencies=[t2]
+#     # )
+#     # def t3(t2):
+#     #     return f'SELECT name, age + 1 FROM {t2}'
+#     #
+#     # @node(
+#     #     type='pandas',
+#     #     dependencies=[t3]
+#     # )
+#     # def t4(t3):
+#     #     t3['age'] += 1
+#     #     return t3
+#     #
+#     # result = t4.run(spark=spark)
+#     # pass
