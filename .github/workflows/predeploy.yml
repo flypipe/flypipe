@@ -1,4 +1,4 @@
-name: 'Prepare for deployment by running verification and calculating the new version we will be deploying'
+name: 'Prepare for deployment by running verification and calculating the new version/changelog we will be deploying'
 
 on:
   push:
@@ -43,3 +43,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: changelog.txt
+          path: ./changelog.txt
