@@ -925,6 +925,31 @@ class TestNode:  # pylint: disable=too-many-public-methods
             def t2(a, b):
                 return pd.concat([a, b], axis=1)
 
+    def test_node_duplicate_name(self):
+        """
+        Having multiple dependencies with the same name/alias should fail.
+        """
+
+        @node(type="pandas")
+        def t1():
+            return pd.DataFrame({"c1": [1, 2, 3]})
+
+        @node(type="pandas")
+        def t2():
+            return pd.DataFrame({"c2": [1, 2, 3]})
+
+        with pytest.raises(ValueError):
+
+            @node(type="pandas", dependencies=[t1, t2.alias("t1")])
+            def t3(t1):
+                return t1
+
+        with pytest.raises(ValueError):
+
+            @node(type="pandas", dependencies=[t1.alias("test"), t2.alias("test")])
+            def t4(test):
+                return test
+
 
 # class TestNodeIntegration:
 #     """
