@@ -12,7 +12,7 @@ from flypipe.schema.types import Unknown
 from flypipe.utils import DataFrameType
 
 
-class Node: # pylint: disable=too-many-instance-attributes
+class Node:  # pylint: disable=too-many-instance-attributes
     """
     Central model for Flypipe. Should be used indirectly through the `node` decorator rather than directly referencing
     it.
@@ -26,10 +26,10 @@ class Node: # pylint: disable=too-many-instance-attributes
         "spark_sql": DataFrameType.PYSPARK,
     }
 
-    def __init__( # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         function,
-        type: str, # pylint: disable=redefined-builtin
+        type: str,  # pylint: disable=redefined-builtin
         description=None,
         tags=None,
         dependencies: List[InputNode] = None,
@@ -154,7 +154,10 @@ class Node: # pylint: disable=too-many-instance-attributes
         self, skipped_node_keys=None, pandas_on_spark_use_pandas=False, parameters=None
     ):
         # This import is here to avoid a circular import issue
-        from flypipe.node_graph import NodeGraph # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel,cyclic-import
+        from flypipe.node_graph import (
+            NodeGraph,
+        )
 
         self.node_graph = NodeGraph(
             self,
@@ -192,7 +195,7 @@ class Node: # pylint: disable=too-many-instance-attributes
     def __call__(self, *args):
         return self.function(*args)
 
-    def run(    # pylint: disable=too-many-arguments
+    def run(  # pylint: disable=too-many-arguments
         self,
         spark=None,
         parallel=None,
@@ -305,7 +308,7 @@ class Node: # pylint: disable=too-many-instance-attributes
     def plot(self):
         self.node_graph.plot()
 
-    def html(   # pylint: disable=too-many-arguments
+    def html(  # pylint: disable=too-many-arguments
         self,
         width=None,
         height=1000,
@@ -339,7 +342,10 @@ class Node: # pylint: disable=too-many-instance-attributes
         """
 
         # This import needs to be here to avoid a circular import issue (graph_html -> node_graph -> imports node)
-        from flypipe.printer.graph_html import GraphHTML # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel,cyclic-import
+        from flypipe.printer.graph_html import (
+            GraphHTML,
+        )
 
         width = width or -1
         skipped_nodes = inputs or {}
@@ -368,12 +374,12 @@ class Node: # pylint: disable=too-many-instance-attributes
         )
         node.name = self.name
         # Accessing protected members in a deep copy method is necessary
-        node._key = self._key   # pylint: disable=protected-access
+        node._key = self._key  # pylint: disable=protected-access
         node.node_type = self.node_type
         return node
 
 
-def node(type, *args, **kwargs):    # pylint: disable=redefined-builtin
+def node(type, *args, **kwargs):  # pylint: disable=redefined-builtin
     """
     Nodes are the fundamental building block of Flypipe. Simply apply the node function as a decorator to a
     transformation function in order to declare the transformation as a Flypipe node.

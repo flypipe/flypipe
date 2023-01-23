@@ -12,6 +12,7 @@ from flypipe.utils import DataFrameType
 
 class RunStatus(Enum):
     """Describes the run state of a node in a pipeline when that pipeline is executed"""
+
     UNKNOWN = 0
     ACTIVE = 1
     SKIP = 2
@@ -22,7 +23,8 @@ class NodeGraph:
     Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
     this.
     """
-    def __init__(   # pylint: disable=too-many-arguments
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         transformation: Union[Node, None],
         graph=None,
@@ -48,7 +50,7 @@ class NodeGraph:
         self.skipped_node_keys = skipped_node_keys
         self.calculate_graph_run_status()
 
-    def add_node(   # pylint: disable=too-many-arguments
+    def add_node(  # pylint: disable=too-many-arguments
         self,
         graph: DiGraph,
         node_name: str,
@@ -130,7 +132,9 @@ class NodeGraph:
 
         return graph
 
-    def _expand_node_functions(self, graph: DiGraph):   # pylint: disable=too-many-branches
+    def _expand_node_functions(
+        self, graph: DiGraph
+    ):  # pylint: disable=too-many-branches
         """
         Expand all node functions. Given a node graph, return the same node graph with all node functions expanded.
         """
@@ -140,7 +144,7 @@ class NodeGraph:
             if isinstance(graph.nodes[node_key]["transformation"], NodeFunction)
         ]
         # TODO- pylint flagged the below as having too many nested blocks, we should refactor it to be cleaner
-        while node_functions:   # pylint: disable=too-many-nested-blocks
+        while node_functions:  # pylint: disable=too-many-nested-blocks
             found_node_function = False
             # FIXME: messy to call this twice
             node_functions = [
@@ -357,7 +361,7 @@ class NodeGraph:
             depth = len(
                 max(
                     list(nx.all_simple_paths(self.graph, node, end_node)),
-                    key=lambda x: len(x),   # pylint: disable=unnecessary-lambda
+                    key=lambda x: len(x),  # pylint: disable=unnecessary-lambda
                     default=[end_node],
                 )
             )

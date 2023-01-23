@@ -74,9 +74,13 @@ class GraphHTML:
 
         css_scripts = {}
         js_scripts = {}
-        with open(os.path.join(dir_path, "amsify.suggestags.css"), "r", encoding='utf-8') as f:
+        with open(
+            os.path.join(dir_path, "amsify.suggestags.css"), "r", encoding="utf-8"
+        ) as f:
             css_scripts["amsify_suggestags"] = f.read()
-        with open(os.path.join(dir_path, "jquery.amsify.suggestags.js"), "r", encoding='utf-8') as f:
+        with open(
+            os.path.join(dir_path, "jquery.amsify.suggestags.js"), "r", encoding="utf-8"
+        ) as f:
             js_scripts["amsify_suggestags"] = f.read()
         js_scripts[
             "d3_graph_setup"
@@ -87,11 +91,11 @@ class GraphHTML:
         var nodes = {json.dumps(nodes)};
         var links = {json.dumps(self.edges)};
         """
-        with open(os.path.join(dir_path, "d3js.js"), "r", encoding='utf-8') as f:
+        with open(os.path.join(dir_path, "d3js.js"), "r", encoding="utf-8") as f:
             js_scripts["d3js"] = f.read()
-        with open(os.path.join(dir_path, "offcanvas.js"), "r", encoding='utf-8') as f:
+        with open(os.path.join(dir_path, "offcanvas.js"), "r", encoding="utf-8") as f:
             js_scripts["offcanvas"] = f.read()
-        with open(os.path.join(dir_path, "tags.js"), "r", encoding='utf-8') as f:
+        with open(os.path.join(dir_path, "tags.js"), "r", encoding="utf-8") as f:
             js_scripts["tags"] = f.read()
 
         return get_template("index.html").render(
@@ -252,7 +256,8 @@ class GraphHTML:
                         target_node["transformation"].key
                     ],
                     "active": (
-                        source_node["status"] != RunStatus.SKIP # pylint: disable=consider-using-in
+                        # pylint: disable-next=consider-using-in
+                        source_node["status"] != RunStatus.SKIP
                         and target_node["status"] != RunStatus.SKIP
                     ),
                 }

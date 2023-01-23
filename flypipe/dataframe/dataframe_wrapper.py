@@ -15,13 +15,13 @@ class DataFrameWrapper(ABC):
 
     def __init__(self, spark, df):
         self.spark = spark
-        self.df = df    # pylint: disable=invalid-name
+        self.df = df  # pylint: disable=invalid-name
 
     @classmethod
     def get_instance(cls, spark, df):
         # We need to do imports of the various df types within the function to avoid circular imports as they in turn
         # import dataframe_wrapper
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable=import-outside-toplevel,cyclic-import
         df_type = dataframe_type(df)
         if df_type == DataFrameType.PANDAS:
             from flypipe.dataframe.pandas_dataframe_wrapper import (
@@ -46,7 +46,7 @@ class DataFrameWrapper(ABC):
             df_instance = PandasOnSparkDataFrameWrapper
         else:
             raise ValueError(f"No flypipe dataframe type found for dataframe {df_type}")
-        # pylint: enable=import-outside-toplevel
+        # pylint: enable=import-outside-toplevel,cyclic-import
         return df_instance(spark, df)
 
     def get_df(self):
@@ -71,7 +71,7 @@ class DataFrameWrapper(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_column_flypipe_type(self, column):
+    def get_column_flypipe_type(self, target_column):
         raise NotImplementedError
 
     def cast_column(self, column: str, flypipe_type: Type):
@@ -96,6 +96,8 @@ class DataFrameWrapper(ABC):
     def _cast_column(self, column: str, flypipe_type: Type, df_type):
         raise NotImplementedError
 
-    def _cast_column_unknown(self, column: str, flypipe_type: Type):    # pylint: disable=unused-argument
+    def _cast_column_unknown(
+        self, column: str, flypipe_type: Type
+    ):  # pylint: disable=unused-argument
         """If we don't know the type let's do nothing"""
         return

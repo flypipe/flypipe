@@ -11,13 +11,14 @@ class PandasOnSparkDataFrameWrapper(SparkDataFrameWrapper):
     Wrapper around a Pandas on Spark dataframe. This gives some conversion functionality between Flypipe types and
     their pandas on spark equivalents.
     """
+
     DF_TYPE = DataFrameType.PANDAS_ON_SPARK
 
     def _select_columns(self, columns):
         try:
             return self.df[list(columns)]
-        except KeyError:
-            raise DataFrameMissingColumns(self.df.columns, list(columns))
+        except KeyError as exc:
+            raise DataFrameMissingColumns(self.df.columns, list(columns)) from exc
 
     def get_df(self):
         return self.df.to_spark().pandas_api()

@@ -6,7 +6,9 @@ from flypipe.schema import Schema, Column
 from flypipe.schema.types import String
 
 
-class TestColumn:
+class TestColumn:  # pylint: disable=too-few-public-methods
+    """Tests for column"""
+
     def test_schema_mandatory_description(self):
         with pytest.raises(ValueError) as ex, config_context(
             require_schema_description=True

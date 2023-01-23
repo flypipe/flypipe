@@ -9,6 +9,7 @@ class OutputColumnSet:
     - node t4 is dependent on t1 and has no selected columns (which means it selects all columns). The output column
     set will be None (special value for all columns) after this is computed.
     """
+
     def __init__(self, columns):
         self.columns = set()
         self.add_columns(columns)

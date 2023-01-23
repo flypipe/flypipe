@@ -3,6 +3,7 @@ from flypipe.schema.util import DateFormat
 
 class Type:
     """Base class for Flypipe types"""
+
     @classmethod
     def key(cls):
         return cls.__name__.lower()
@@ -22,6 +23,7 @@ class Unknown(Type):
 
 class Boolean(Type):
     """Flypipe boolean type"""
+
     VALID_VALUES = {True, False, 1, 0}  # pylint: disable=duplicate-value
 
     @property
@@ -71,6 +73,7 @@ class Decimal(Type):
 
 class Date(Type):
     """Flypipe date type"""
+
     PYTHON_PYSPARK_DATETIME_SYMBOL_MAP = {
         "%A": "EEEE",
         "%B": "MMMM",
@@ -94,7 +97,9 @@ class Date(Type):
         for python_symbol, pyspark_symbol in PYTHON_PYSPARK_DATETIME_SYMBOL_MAP.items()
     }
 
-    def __init__(self, format="yyyy-MM-dd", format_mode=DateFormat.PYSPARK):    # pylint: disable=redefined-builtin
+    def __init__(
+        self, format="yyyy-MM-dd", format_mode=DateFormat.PYSPARK
+    ):  # pylint: disable=redefined-builtin
         """
         Parameters
         ----------
@@ -180,7 +185,9 @@ class Date(Type):
 class DateTime(Date):
     """Flypipe datetime type"""
 
-    def __init__(self, format="yyyy-MM-dd H:m:s", format_mode=DateFormat.PYSPARK):  # pylint: disable=redefined-builtin
+    def __init__(
+        self, format="yyyy-MM-dd H:m:s", format_mode=DateFormat.PYSPARK
+    ):  # pylint: disable=redefined-builtin
         """
         Parameters
         ----------

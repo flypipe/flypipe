@@ -22,7 +22,7 @@ from flypipe.utils import DataFrameType, dataframe_type
 
 @pytest.fixture(scope="function")
 def spark():
-    from flypipe.tests.spark import spark   # pylint: disable=import-outside-toplevel
+    from flypipe.tests.spark import spark  # pylint: disable=import-outside-toplevel
 
     spark.createDataFrame(
         schema=("c0", "c1"),
@@ -37,8 +37,9 @@ def spark():
     return spark
 
 
-class TestNode:     # pylint: disable=too-many-public-methods
+class TestNode:  # pylint: disable=too-many-public-methods
     """Unit tests on the Node class"""
+
     def test_invalid_type(self):
         """Building a node with a type not in Node.ALLOWED_TYPES should raise an exception"""
         with pytest.raises(ValueError):
@@ -193,14 +194,14 @@ class TestNode:     # pylint: disable=too-many-public-methods
         Ensure that different nodes with the same function name have different keys
         """
 
-        class A:    # pylint: disable=missing-class-docstring,invalid-name,too-few-public-methods
+        class A:  # pylint: disable=missing-class-docstring,invalid-name,too-few-public-methods
             @classmethod
             @node(type="pandas", output=Schema([Column("fruit", String(), "")]))
             def test(cls):
                 return pd.DataFrame({"fruit": ["banana"]})
 
-        class B:    # pylint: disable=missing-class-docstring,invalid-name,too-few-public-methods
-            class C:    # pylint: disable=missing-class-docstring,invalid-name,too-few-public-methods
+        class B:  # pylint: disable=missing-class-docstring,invalid-name,too-few-public-methods
+            class C:  # pylint: disable=missing-class-docstring,invalid-name,too-few-public-methods
                 @classmethod
                 @node(
                     type="pandas",
@@ -211,11 +212,11 @@ class TestNode:     # pylint: disable=too-many-public-methods
                     return test["fruit"]
 
         assert (
-            A.test.key      # pylint: disable=no-member
+            A.test.key  # pylint: disable=no-member
             == "flypipe_node_test_function_test_TestNode_test_key__locals__A_test"
         )
         assert (
-            B.C.test.key    # pylint: disable=no-member
+            B.C.test.key  # pylint: disable=no-member
             == "flypipe_node_test_function_test_TestNode_test_key__locals__B_C_test"
         )
 
@@ -243,8 +244,15 @@ class TestNode:     # pylint: disable=too-many-public-methods
         """
         Ensure that node graph is processed with node keys and alias is used for arguments
         """
-        from flypipe.tests.transformations.group_1.t1 import t1     # pylint: disable=import-outside-toplevel
-        from flypipe.tests.transformations.group_2.t1 import t1 as t1_group2   # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
+        from flypipe.tests.transformations.group_1.t1 import (
+            t1,
+        )
+
+        # pylint: disable-next=import-outside-toplevel
+        from flypipe.tests.transformations.group_2.t1 import (
+            t1 as t1_group2,
+        )
 
         @node(
             type="pandas",
@@ -742,7 +750,8 @@ class TestNode:     # pylint: disable=too-many-public-methods
         assert t1.dataframe_type == DataFrameType.PANDAS_ON_SPARK
 
         # TODO- we should refactor to avoid having to call this private method to build a graph
-        t1._create_graph(pandas_on_spark_use_pandas=True)       # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
+        t1._create_graph(pandas_on_spark_use_pandas=True)
         for n in t1.node_graph.graph.nodes:
             if t1.node_graph.graph.nodes[n]["transformation"].__name__ == "t1":
                 assert (
@@ -823,7 +832,7 @@ class TestNode:     # pylint: disable=too-many-public-methods
             return a
 
         @node(type="pandas", dependencies=[a.select("c2"), b])
-        def c(a, b):    # pylint: disable=unused-argument
+        def c(a, b):  # pylint: disable=unused-argument
             return a
 
         c.run(parallel=False)
@@ -838,7 +847,7 @@ class TestNode:     # pylint: disable=too-many-public-methods
 
     def test_node_parameters_missing(self):
         @node(type="pandas")
-        def t1(param1):     # pylint: disable=unused-argument
+        def t1(param1):  # pylint: disable=unused-argument
             return pd.DataFrame()
 
         with pytest.raises(TypeError):
@@ -898,38 +907,38 @@ class TestNode:     # pylint: disable=too-many-public-methods
 #     Higher level integration tests
 #     """
 
-    # def test_spark_sql(self, spark):
-    #     """
-    #     Simple pipeline to check that we can flick between regular dataframe and Spark SQL transformations.
-    #     """
-    #     # # FIXME- incomplete, need to get pyspark working locally again first
-    #     # @node(
-    #     #     type='pandas'
-    #     # )
-    #     # def t1():
-    #     #     return pd.DataFrame({'name': ['Bob', 'Chris'], 'age': [10, 20]})
-    #     #
-    #     # @node(
-    #     #     type='spark_sql',
-    #     #     dependencies=[t1]
-    #     # )
-    #     # def t2(t1):
-    #     #     return f'SELECT name, age + 1 FROM {t1}'
-    #     #
-    #     # @node(
-    #     #     type='spark_sql',
-    #     #     dependencies=[t2]
-    #     # )
-    #     # def t3(t2):
-    #     #     return f'SELECT name, age + 1 FROM {t2}'
-    #     #
-    #     # @node(
-    #     #     type='pandas',
-    #     #     dependencies=[t3]
-    #     # )
-    #     # def t4(t3):
-    #     #     t3['age'] += 1
-    #     #     return t3
-    #     #
-    #     # result = t4.run(spark=spark)
-    #     # pass
+# def test_spark_sql(self, spark):
+#     """
+#     Simple pipeline to check that we can flick between regular dataframe and Spark SQL transformations.
+#     """
+#     # # FIXME- incomplete, need to get pyspark working locally again first
+#     # @node(
+#     #     type='pandas'
+#     # )
+#     # def t1():
+#     #     return pd.DataFrame({'name': ['Bob', 'Chris'], 'age': [10, 20]})
+#     #
+#     # @node(
+#     #     type='spark_sql',
+#     #     dependencies=[t1]
+#     # )
+#     # def t2(t1):
+#     #     return f'SELECT name, age + 1 FROM {t1}'
+#     #
+#     # @node(
+#     #     type='spark_sql',
+#     #     dependencies=[t2]
+#     # )
+#     # def t3(t2):
+#     #     return f'SELECT name, age + 1 FROM {t2}'
+#     #
+#     # @node(
+#     #     type='pandas',
+#     #     dependencies=[t3]
+#     # )
+#     # def t4(t3):
+#     #     t3['age'] += 1
+#     #     return t3
+#     #
+#     # result = t4.run(spark=spark)
+#     # pass

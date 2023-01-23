@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 import pandas as pd
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
@@ -8,14 +9,14 @@ from tabulate import tabulate
 from flypipe.datasource.spark import Spark
 from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.node import node
-from flypipe.schema.column import Column
-from flypipe.schema.schema import Schema
+from flypipe.schema import Column
+from flypipe.schema import Schema
 from flypipe.schema.types import Decimal, Integer, String
 
 
 @pytest.fixture(scope="function")
 def spark():
-    from flypipe.tests.spark import spark   # pylint: disable=import-outside-toplevel
+    from flypipe.tests.spark import spark  # pylint: disable=import-outside-toplevel
 
     (
         spark.createDataFrame(
@@ -28,6 +29,7 @@ def spark():
 
 class TestPySparkNode:
     """Tests on Nodes with pyspark type"""
+
     def test_exception_invalid_node_type(self):
         with pytest.raises(ValueError):
 
@@ -178,7 +180,9 @@ class TestPySparkNode:
                 ]
             ),
         )
-        def my_col(test_pyspark_node_dummy_table__anything_c):  # pylint: disable=invalid-name
+        def my_col(
+            test_pyspark_node_dummy_table__anything_c,
+        ):  # pylint: disable=invalid-name
             df = test_pyspark_node_dummy_table__anything_c
             df = df.rename(columns={"my_col__x": "my_col"})
             return df
@@ -236,10 +240,10 @@ class TestPySparkNode:
             dependencies=[t2.select("c1", "c2"), t1.select("c1")],
             output=Schema([Column("c2", String())]),
         )
-        def t4(t1, t2):     # pylint: disable=unused-argument
+        def t4(t1, t2):  # pylint: disable=unused-argument
             return t2
 
-        t4._create_graph()      # pylint: disable=protected-access
+        t4._create_graph()  # pylint: disable=protected-access
         for node_name in t4.node_graph.graph:
             n = t4.node_graph.get_node(node_name)
             if n["transformation"].__name__ == "t4":
@@ -257,9 +261,7 @@ class TestPySparkNode:
             output=Schema([Column("c1", String()), Column("c2", String())]),
         )
         def t1():
-            return spark.createDataFrame(
-                pd.DataFrame(data={"c1": ["1"], "c2": ["2"]})
-            )
+            return spark.createDataFrame(pd.DataFrame(data={"c1": ["1"], "c2": ["2"]}))
 
         @node(
             type="pyspark",
@@ -301,3 +303,6 @@ class TestPySparkNode:
             return spark.createDataFrame(t2)
 
         t3.run(spark, parallel=False)
+
+
+# pylint: enable=duplicate-code

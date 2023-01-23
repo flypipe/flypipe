@@ -1,7 +1,7 @@
 from flypipe.utils import DataFrameType, dataframe_type
 
 
-class DataFrameConverter:   # pylint: disable=too-few-public-methods
+class DataFrameConverter:  # pylint: disable=too-few-public-methods
     """Converts a dataframe between pandas, pandas on spark and pyspark
 
     Attributes

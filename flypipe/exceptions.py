@@ -45,7 +45,10 @@ class DataFrameMissingColumns(Exception):
     table to give the reader a high level picture of which columns are available, which aren't and which columns have
     been requested.
     """
-    def __init__(self, source_columns, selected_columns):   # pylint: disable=too-many-locals
+
+    def __init__(
+        self, source_columns, selected_columns
+    ):  # pylint: disable=too-many-locals
 
         # Columns found or difference case sensitive
         all_cols = []

@@ -26,6 +26,7 @@ class PandasDataFrameWrapper(DataFrameWrapper):
     Wrapper around a Pandas dataframe. This gives some conversion functionality between Flypipe types and their pandas
     equivalents.
     """
+
     DF_TYPE = DataFrameType.PANDAS
     FLYPIPE_TYPE_TO_DF_TYPE_MAP = {
         Boolean.key(): dtype("bool"),
@@ -55,8 +56,8 @@ class PandasDataFrameWrapper(DataFrameWrapper):
     def _select_columns(self, columns):
         try:
             return self.df[list(columns)]
-        except KeyError:
-            raise DataFrameMissingColumns(self.df.columns, list(columns))
+        except KeyError as exc:
+            raise DataFrameMissingColumns(self.df.columns, list(columns)) from exc
 
     def get_df(self):
         return self.df.copy()
@@ -95,8 +96,9 @@ class PandasDataFrameWrapper(DataFrameWrapper):
 
         self.df.loc[rows, column] = self.df.loc[rows, column].astype(df_type)
 
-    def _cast_column_integer(self, column, flypipe_type):
-        rows = self._get_rows_for_cast(column, flypipe_type)
+    def _cast_column_integer(
+        self, column, flypipe_type
+    ):  # pylint: disable=unused-argument
         integer_type = pd.Int64Dtype()
         # Automatic casts to the pandas integer extension type from float error out, we have to manually tweak it,
         # solution adapted from

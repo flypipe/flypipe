@@ -4,6 +4,8 @@ from flypipe.schema.types import Date
 
 
 class TestDate:
+    """Tests for Date flypipe type"""
+
     @pytest.mark.parametrize(
         "python_format,expected_pyspark_format",
         [

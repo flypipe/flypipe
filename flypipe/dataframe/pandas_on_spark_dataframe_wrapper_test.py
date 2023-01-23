@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 import numpy as np
 import pandas as pd
 import pyspark.pandas as ps
@@ -17,6 +18,8 @@ from flypipe.schema.types import (
 
 
 class TestPandasOnSparkDataFrameWrapper:
+    """Tests for PandasOnSpark"""
+
     def test_select_column_1(self):
         df = ps.DataFrame(
             {
@@ -102,3 +105,6 @@ class TestPandasOnSparkDataFrameWrapper:
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
         df_wrapper.cast_column("col1", Boolean())
         assert_frame_equal(df_wrapper.df.to_pandas(), expected_pd_df)
+
+
+# pylint: enable=duplicate-code

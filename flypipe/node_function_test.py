@@ -7,6 +7,7 @@ from flypipe.node_function import node_function
 
 class TestNodeFunction:
     """Tests for NodeFunction"""
+
     def test_node_dependencies_type(self):
         """
         For simplicity we want to limit the node dependencies on node functions to only have dependent nodes and not
@@ -55,7 +56,7 @@ class TestNodeFunction:
             return c
 
         @node(type="pandas", dependencies=[b, c.select("c2")])
-        def a(b, c):    # pylint: disable=unused-argument
+        def a(b, c):  # pylint: disable=unused-argument
             return b
 
         @node_function(node_dependencies=[c])

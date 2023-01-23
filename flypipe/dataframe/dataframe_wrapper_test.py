@@ -14,6 +14,7 @@ from flypipe.tests.spark import spark
 
 class DummyDataFrameWrapper(DataFrameWrapper):
     """Dummy subclass of abstract class DataFrameWrapper so we can use it in tests"""
+
     FLYPIPE_TYPE_TO_DF_TYPE_MAP = {Boolean.key(): np.dtype("bool")}
 
     def _select_columns(self, columns):
@@ -22,7 +23,7 @@ class DummyDataFrameWrapper(DataFrameWrapper):
     def copy(self):
         pass
 
-    def get_column_flypipe_type(self, column):
+    def get_column_flypipe_type(self, target_column):
         return Unknown()
 
     def _cast_column(self, column, flypipe_type, df_type):
@@ -33,6 +34,8 @@ class DummyDataFrameWrapper(DataFrameWrapper):
 
 
 class TestDataFrameWrapper:
+    """Tests for DataFrameWrapper"""
+
     @pytest.mark.parametrize(
         "df,expected_class",
         [
@@ -65,7 +68,8 @@ class TestDataFrameWrapper:
         """
         # TODO- doesn't look like we're testing anything here?
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
-        df_wrapper2 = df_wrapper.select_columns("col1")     # pylint: disable=unused-variable
+        # pylint: disable-next=unused-variable
+        df_wrapper2 = df_wrapper.select_columns("col1")
 
     def test_cast_column_basic(self, mocker):
         """

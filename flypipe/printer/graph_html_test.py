@@ -7,6 +7,8 @@ from flypipe.schema.types import String, Integer
 
 
 class TestNodeGraph:
+    """Tests for NodeGraph"""
+
     def test_get_node_positions_1(self):
         @node(type="pandas")
         def t1():
@@ -21,7 +23,7 @@ class TestNodeGraph:
             return
 
         # TODO- we should not be having to call a private method to setup
-        t3._create_graph()
+        t3._create_graph()  # pylint: disable=protected-access
         positions = GraphHTML(t3.node_graph).get_node_positions()
         assert positions == {
             t1.key: [1.0, 50.0],
@@ -47,7 +49,7 @@ class TestNodeGraph:
             return
 
         # TODO- we should not be having to call a private method to setup
-        t4._create_graph()
+        t4._create_graph()  # pylint: disable=protected-access
         positions = GraphHTML(t4.node_graph).get_node_positions()
         assert positions == {
             t1.key: [1.0, 50.0],
@@ -73,7 +75,8 @@ class TestNodeGraph:
         def t1():
             return pd.DataFrame({"c1": ["Bla"], "c2": [1]})
 
-        t1._create_graph()
+        t1._create_graph()  # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         assert GraphHTML(t1.node_graph)._get_node_columns(t1.key) == [
             {"name": "c1", "type": "String", "description": ""},
             {"name": "c2", "type": "Integer", "description": ""},
@@ -101,10 +104,11 @@ class TestNodeGraph:
             return t1
 
         @node(type="pandas", dependencies=[t2, t3])
-        def t4(t2, t3):
+        def t4(t2, t3):  # pylint: disable=unused-argument
             return t2
 
-        t4._create_graph()
+        t4._create_graph()  # pylint: disable=protected-access
+        # pylint: disable-next=protected-access
         assert GraphHTML(t4.node_graph)._get_node_columns(t1.key) == [
             {"name": "c1", "type": "Unknown", "description": ""},
             {"name": "c3", "type": "Unknown", "description": ""},

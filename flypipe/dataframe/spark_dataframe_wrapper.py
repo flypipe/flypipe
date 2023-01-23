@@ -88,10 +88,10 @@ class SparkDataFrameWrapper(DataFrameWrapper):
     def _get_column_flypipe_type(self, df, target_column):
         try:
             dtype = df.schema[target_column].dataType
-        except KeyError:
+        except KeyError as exc:
             raise ValueError(
                 f'Column "{target_column}" not found in df, available columns are {df.columns}'
-            )
+            ) from exc
         if isinstance(dtype, DecimalType):
             flypipe_type = Decimal(precision=dtype.precision, scale=dtype.scale)
         else:

@@ -15,6 +15,7 @@ class DataFrameType(Enum):
     """
     Enum of possible dataframe types
     """
+
     PANDAS = "pandas"
     PANDAS_ON_SPARK = "pandas_on_spark"
     PYSPARK = "pyspark"

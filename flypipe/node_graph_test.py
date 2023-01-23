@@ -4,6 +4,7 @@ from flypipe.node_graph import NodeGraph, RunStatus
 
 class TestNodeGraph:
     """Tests for NodeGraph"""
+
     def test_build_graph(self):
         # pylint: disable=anomalous-backslash-in-string
         """

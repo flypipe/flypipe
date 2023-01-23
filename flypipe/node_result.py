@@ -8,6 +8,7 @@ class NodeResult:
     Wrapper around the raw result from a node, allowing for the result to be converted into various format and have
     type casting applied.
     """
+
     def __init__(self, spark, df, schema):
         self.spark = spark
         self.df_wrapper = DataFrameWrapper.get_instance(spark, df)
