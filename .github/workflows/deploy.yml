@@ -1,3 +1,7 @@
+# Release a new version of Flypipe. Changes that take place:
+# -
+# - Documentation is regenerated and a new version added to the docs.
+
 name: 'Deploy'
 
 on:

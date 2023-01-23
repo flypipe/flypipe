@@ -1,10 +1,7 @@
+# Utilise sphinx-multiversion to build & deploy documentation from all released branches
 name: Build and Deploy Documentation via GitHub Pages
 
 on:
-  # TODO: we should only run this when deploying a version and not on pushes to certain branches
-  push:
-    branches: ["main"]
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 

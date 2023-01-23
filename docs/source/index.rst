@@ -18,6 +18,7 @@ Welcome to FlyPipe!
    Contribute <contribute/contribute>
    License <license/license>
    Questions and Suggestions <questions-suggentions/questions-suggentions>
+   Changelog <changelog/changelog>
 
 
 Indices and tables

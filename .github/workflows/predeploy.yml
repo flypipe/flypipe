@@ -1,4 +1,11 @@
-name: 'Prepare for deployment by running verification and calculating the new version/changelog we will be deploying'
+# Prepare for deployment:
+# - run verification to double check the code quality
+# - calculate the new prospective version
+# - calculate the new prospective changelog
+# By calculating the version/changelog here instead of in the deployment job we can double check these artifacts to
+# ensure they are looking fine prior to releasing.
+
+name: 'Prepare for deployment'
 
 on:
   push:

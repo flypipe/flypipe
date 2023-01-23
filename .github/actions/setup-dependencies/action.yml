@@ -1,3 +1,6 @@
+# Composite action to setup python and install dependencies
+# Useful for use in various pipelines as we usually have to setup python/dependencies.
+
 name: "Setup Dependencies"
 
 runs:
