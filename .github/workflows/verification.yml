@@ -1,4 +1,4 @@
-name: Verification
+name: verification
 
 # Controls when the workflow will run
 on:
