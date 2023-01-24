@@ -2,7 +2,7 @@
 # -
 # - Documentation is regenerated and a new version added to the docs.
 
-name: 'Deploy'
+name: 'deploy'
 
 on:
 

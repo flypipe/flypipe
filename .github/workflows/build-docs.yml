@@ -1,5 +1,5 @@
 # Utilise sphinx-multiversion to build & deploy documentation from all released branches
-name: Build and Deploy Documentation via GitHub Pages
+name: build-and-deploy-documentation-via-github-pages
 
 on:
   # Allows you to run this workflow manually from the Actions tab
