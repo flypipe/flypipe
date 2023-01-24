@@ -944,7 +944,7 @@ class TestNode:  # pylint: disable=too-many-public-methods
             def t3(t1):
                 return t1
 
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
 
             @node(type="pandas", dependencies=[t1.alias("test"), t2.alias("test")])
             def t4(test):
