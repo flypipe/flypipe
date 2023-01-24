@@ -74,4 +74,5 @@ else:
     new_version[2] += 1
 
 new_version_string = ".".join([str(num) for num in new_version])
+new_version_string = '1.0.0'
 print(new_version_string)
