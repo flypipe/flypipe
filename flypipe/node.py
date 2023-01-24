@@ -144,6 +144,13 @@ class Node:  # pylint: disable=too-many-instance-attributes
     def __module__(self):
         return self.function.__module__
 
+    def lolol(self):
+        x = 1
+        x += 1
+        y = x - 5
+        z = x + y
+        return z
+
     @property
     def key(self):
         """
