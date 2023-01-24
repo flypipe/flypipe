@@ -42,7 +42,7 @@ class TestNode:  # pylint: disable=too-many-public-methods
 
     def test_invalid_type(self):
         """Building a node with a type not in Node.ALLOWED_TYPES should raise an exception"""
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
 
             @node(type="dummy")
             def t1():
