@@ -72,6 +72,9 @@ class NodeGraph:
 
         return graph
 
+    def remove_node(self, node_name):
+        self.graph.remove_node(node_name)
+
     def _build_graph(
         self, transformation: Node, pandas_on_spark_use_pandas: bool, parameters: dict
     ):
@@ -375,7 +378,7 @@ class NodeGraph:
 
         return {-1 * k + max_depth + 1: v for k, v in nodes_depth.items()}
 
-    def pop_runnable_transformations(self) -> List[Node]:
+    def get_runnable_transformations(self) -> List[Node]:
         candidate_node_names = [
             node_name
             for node_name in self.graph
@@ -386,8 +389,6 @@ class NodeGraph:
             candidate_node_names,
         )
         runnable_nodes = [self.get_node(node_name) for node_name in runnable_node_names]
-        for node_name in candidate_node_names:
-            self.graph.remove_node(node_name)
         return runnable_nodes
 
     def is_empty(self):

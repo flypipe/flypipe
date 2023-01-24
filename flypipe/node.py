@@ -248,8 +248,9 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
         runnable_node = None
         while not execution_graph.is_empty():
-            runnable_nodes = execution_graph.pop_runnable_transformations()
+            runnable_nodes = execution_graph.get_runnable_transformations()
             for runnable_node in runnable_nodes:
+                execution_graph.remove_node(runnable_node["transformation"].key)
 
                 if runnable_node["transformation"].key in outputs:
                     continue
