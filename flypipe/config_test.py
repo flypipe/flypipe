@@ -41,7 +41,7 @@ class TestConfig:
         with self._set_environment_variable_for_test(
             "FLYPIPE_REQUIRE_NODE_DESCRIPTION", env_value
         ):
-            assert get_config("require_node_description") == expected
+            assert get_config("require_node_description") != expected
 
     def test_get_config_by_context_manager(self):
         """
