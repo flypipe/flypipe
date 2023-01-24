@@ -18,8 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FLIT_USERNAME: __token__
-      # TODO- change this to regular pypi from the test instance when we're ready
-      FLIT_INDEX_URL: https://test.pypi.org/legacy/
+      FLIT_INDEX_URL: https://upload.pypi.org/legacy/
 
     steps:
       - name: Checkout
@@ -50,8 +49,7 @@ jobs:
         run: |
           flit publish
         env:
-          # TODO- change this to PYPI_API_TOKEN when we're ready
-          FLIT_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          FLIT_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       - name: Upload Wheel
         uses: actions/upload-artifact@v3
         with:
