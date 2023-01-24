@@ -24,6 +24,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          # Fetch all tags/branches to run diff-cover properly
+          fetch-depth: 0
       - name: Setup dependencies
         uses: ./.github/actions/setup-dependencies
       - name: Run formatter (black)
