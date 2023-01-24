@@ -50,7 +50,7 @@ jobs:
           flit publish
         env:
           FLIT_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-      - name: Upload Wheel
+      - name: Upload wheel
         uses: actions/upload-artifact@v3
         with:
           name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl

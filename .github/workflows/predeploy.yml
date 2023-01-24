@@ -36,6 +36,8 @@ jobs:
         run: echo "VERSION_NUMBER=$(python scripts/calculate_version.py)" >> $GITHUB_ENV
       - name: Set version
         run: echo ${{ env.VERSION_NUMBER }} > flypipe/version.txt
+      - name: Store version number
+        run: echo "VERSION_NUMBER=$(cat flypipe/version.txt)" >> $GITHUB_ENV
       - name: Upload version file
         uses: actions/upload-artifact@v3
         with:
@@ -51,3 +53,11 @@ jobs:
         with:
           name: changelog.txt
           path: ./changelog.txt
+      # Build and upload the wheel so we can access the wheel without having to upload it to pypi
+      - name: Build wheel
+        run: flit build
+      - name: Upload wheel
+        uses: actions/upload-artifact@v3
+        with:
+          name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
+          path: ./dist/flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
