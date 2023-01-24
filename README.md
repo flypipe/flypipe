@@ -41,3 +41,7 @@ As each node (transformation) is connected to its ancestors, we can easily view 
 - Low latency for on-demand feature generation and predictions
 - Framework level optimisations and dynamic transformations help to make even complex transformation pipelines low 
 latency. This in turn allows for on-demand feature generation/predictions.
+
+## Documentation
+
+Full documentation is available at https://flypipe.github.io/flypipe/. 
