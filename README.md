@@ -44,4 +44,4 @@ latency. This in turn allows for on-demand feature generation/predictions.
 
 ## Documentation
 
-Full documentation is available at https://flypipe.github.io/flypipe/. 
+Full documentation is available at [https://flypipe.github.io/flypipe/](https://flypipe.github.io/flypipe/). 
