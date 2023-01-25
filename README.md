@@ -1,6 +1,6 @@
 # Flypipe
 
-[![Continuous Integration](https://github.com/flypipe/flypipe/actions/workflows/verification.yml/badge.svg?branch=main)](https://github.com/flypipe/flypipe/actions/workflows/verification.yml)
+[![verification](https://github.com/flypipe/flypipe/actions/workflows/verification.yml/badge.svg?branch=main)](https://github.com/flypipe/flypipe/actions/workflows/verification.yml)
 
 Flypipe is a Python framework to simplify development, management and maintenance of transformation pipelines, which are 
 commonly used in the data, feature and ML model space.
