@@ -239,7 +239,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
             key: NodeResult(spark, df, schema=None)
             for key, df in provided_inputs.items()
         }
-        execution_graph = self.node_graph.copy()
+        execution_graph = self.node_graph.get_execution_graph()
 
         if parallel is None:
             parallel = get_config("default_run_mode") == RunMode.PARALLEL.value

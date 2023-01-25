@@ -401,7 +401,18 @@ class NodeGraph:
         nx.draw(graph, with_labels=True)
         plt.show()
 
-    def copy(self):
-        return NodeGraph(
+    def get_execution_graph(self):
+        """
+        Return an execution graph for this node graph. Practically, this is a copy of the graph with inactive nodes
+        filtered out.
+        """
+        execution_graph = NodeGraph(
             None, graph=self.graph.copy(), skipped_node_keys=self.skipped_node_keys
         )
+        to_remove = []
+        for node_name in execution_graph.graph.nodes:
+            if execution_graph.get_node(node_name)["status"] == RunStatus.SKIP:
+                to_remove.append(node_name)
+        for node_name in to_remove:
+            execution_graph.remove_node(node_name)
+        return execution_graph
