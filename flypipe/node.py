@@ -1,5 +1,7 @@
+import logging
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Mapping, List
 
 from flypipe.config import get_config, RunMode
@@ -10,6 +12,9 @@ from flypipe.node_type import NodeType
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import Unknown
 from flypipe.utils import DataFrameType
+
+
+logger = logging.getLogger(__name__)
 
 
 class Node:  # pylint: disable=too-many-instance-attributes
@@ -227,17 +232,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         self._create_graph(
             list(provided_inputs.keys()), pandas_on_spark_use_pandas, parameters
         )
-        if parallel is None:
-            parallel = get_config("default_run_mode") == RunMode.PARALLEL.value
-        if parallel:
-            raise NotImplementedError
-        return self._run_sequential(spark, provided_inputs)
 
-    @property
-    def dataframe_type(self):
-        return self.DATAFRAME_TYPE_MAP[self.type]
-
-    def _run_sequential(self, spark=None, provided_inputs=None):
         if provided_inputs is None:
             provided_inputs = {}
         outputs = {
@@ -246,6 +241,79 @@ class Node:  # pylint: disable=too-many-instance-attributes
         }
         execution_graph = self.node_graph.copy()
 
+        if parallel is None:
+            parallel = get_config("default_run_mode") == RunMode.PARALLEL.value
+        if parallel:
+            return self._run_parallel(spark, execution_graph, outputs)
+        return self._run_sequential(spark, execution_graph, outputs)
+
+    @property
+    def dataframe_type(self):
+        return self.DATAFRAME_TYPE_MAP[self.type]
+
+    def _run_parallel(
+        self, spark, execution_graph, outputs
+    ):  # pylint: disable=too-many-locals
+        def execute(node):
+            dependency_values = node["transformation"].get_node_inputs(outputs)
+
+            result = NodeResult(
+                spark,
+                node["transformation"].process_transformation(
+                    spark,
+                    node["output_columns"],
+                    node["run_context"],
+                    **dependency_values,
+                ),
+                schema=self._get_consolidated_output_schema(
+                    node["transformation"].output_schema,
+                    node["output_columns"],
+                ),
+            )
+
+            return node["transformation"].key, result
+
+        logger.info("Starting parallel processing of node %s", node.__name__)
+        with ThreadPoolExecutor(
+            max_workers=get_config("node_run_max_workers")
+        ) as executor:
+            visited = set()
+            jobs = set()
+            initial_nodes_to_run = [
+                runnable_node
+                for runnable_node in execution_graph.get_runnable_transformations()
+                if runnable_node["transformation"].key not in outputs
+            ]
+            for runnable_node in initial_nodes_to_run:
+                logger.info(
+                    "Schedule parallelised execution of node %s",
+                    runnable_node["transformation"].__name__,
+                )
+                jobs.add(executor.submit(execute, runnable_node))
+                visited.add(runnable_node["transformation"].key)
+            while jobs:
+                to_remove = set()
+                for job in as_completed(jobs):
+                    # When we finish processing a node we remove it from the execution graph and check if there are any
+                    # new eligible nodes to be run.
+                    processed_node_key, output = job.result()
+                    outputs[processed_node_key] = output
+                    to_remove.add(job)
+                    execution_graph.remove_node(processed_node_key)
+                    runnable_nodes = execution_graph.get_runnable_transformations()
+                    for runnable_node in runnable_nodes:
+                        node_key = runnable_node["transformation"].key
+                        if node_key not in visited and node_key not in outputs:
+                            logger.info(
+                                "Schedule parallelised execution of node %s",
+                                runnable_node["transformation"].__name__,
+                            )
+                            jobs.add(executor.submit(execute, runnable_node))
+                            visited.add(runnable_node["transformation"].key)
+                jobs = jobs - to_remove
+        return outputs[self.key].as_type(self.dataframe_type).get_df()
+
+    def _run_sequential(self, spark, execution_graph, outputs):
         runnable_node = None
         while not execution_graph.is_empty():
             runnable_nodes = execution_graph.get_runnable_transformations()

@@ -1,4 +1,4 @@
-from unittest import mock
+from unittest import mock  # pylint: disable=too-many-lines
 
 import pandas as pd
 import pyspark
@@ -949,6 +949,30 @@ class TestNode:  # pylint: disable=too-many-public-methods
             @node(type="pandas", dependencies=[t1.alias("test"), t2.alias("test")])
             def t4(test):
                 return test
+
+    def test_run_parallel(self):
+        @node(type="pandas")
+        def t1():
+            return pd.DataFrame({"c1": [3]})
+
+        @node(type="pandas", dependencies=[t1])
+        def t2(t1):
+            return t1 + 1
+
+        @node(type="pandas", dependencies=[t1])
+        def t3(t1):
+            return t1 * 10
+
+        @node(type="pandas", dependencies=[t1])
+        def t4(t1):
+            return t1**2
+
+        @node(type="pandas", dependencies=[t2, t3, t4])
+        def t5(t2, t3, t4):
+            return pd.concat([t2, t3, t4]).reset_index(drop=True)
+
+        result = t5.run(parallel=True)
+        assert_frame_equal(result, pd.DataFrame({"c1": [4, 30, 9]}))
 
 
 # class TestNodeIntegration:
