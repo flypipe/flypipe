@@ -6,7 +6,7 @@ import subprocess
 
 
 BASE_URL = 'https://prospa.atlassian.net/rest/api/3'
-RE_JIRA_ID = r'\w+-\d+'
+RE_JIRA_ID = re.compile(r'DATA-\d+', flags=re.IGNORECASE)
 JIRA_USER = os.environ.get('JIRA_USER')
 JIRA_TOKEN = os.environ.get('JIRA_TOKEN')
 jira_connection = requests.session()
