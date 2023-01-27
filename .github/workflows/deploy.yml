@@ -16,6 +16,7 @@ jobs:
   deploy-pypi:
     needs: predeploy
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     env:
       FLIT_USERNAME: __token__
       FLIT_INDEX_URL: https://upload.pypi.org/legacy/

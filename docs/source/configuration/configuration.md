@@ -55,6 +55,19 @@ processed all the usual rules about ancestors having already been executed will 
 :type: string
 :default: `sequential`
 
+### node_run_max_workers
+
+Sets the maximum number of workers Flypipe will use when running transformations in parallel execution mode. 
+
+:type: integer
+:default: `os.cpu_count()`
+
+```{note}
+Beware- at the moment we don't anticipate parallel execution of nodes to be faster than sequential except for Pandas 
+nodes running IO operations such as in datasource nodes. This is because most other node operations are CPU-bound, and 
+Python only permits a single thread per process to execute Python bytecode. 
+```
+
 ```{note}
 If you are working in Databricks, you can configure environment variables for specific clusters 
 (https://docs.databricks.com/clusters/configure.html#environment-variables). Commonly different teams will be using 

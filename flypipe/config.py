@@ -15,6 +15,7 @@ class _Config:
         "require_node_description": False,
         "require_schema_description": False,
         "default_run_mode": RunMode.SEQUENTIAL.value,
+        "node_run_max_workers": os.cpu_count(),
     }
     VALID_OPTIONS = set(config_name for config_name in OPTIONS.keys())
     ACTIVE_CONFIGS = []
