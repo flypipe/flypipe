@@ -47,8 +47,7 @@ jobs:
       - name: Calculate changelog for new version
         run: python scripts/generate_changelog.py
         env:
-          JIRA_USER: ${{ secrets.JIRA_USER }}
-          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload changelog file
         uses: actions/upload-artifact@v3
         with:

@@ -5,12 +5,10 @@ import re
 import subprocess
 
 
-BASE_URL = 'https://prospa.atlassian.net/rest/api/3'
-RE_JIRA_ID = re.compile(r'DATA-\d+', flags=re.IGNORECASE)
-JIRA_USER = os.environ.get('JIRA_USER')
-JIRA_TOKEN = os.environ.get('JIRA_TOKEN')
-jira_connection = requests.session()
-auth_string = base64.b64encode(f'{JIRA_USER}:{JIRA_TOKEN}'.encode('utf-8')).decode('utf-8')
+RE_GITHUB_ISSUE = re.compile(r'#\d+')
+GITHUB_URL = 'https://api.github.com/repos/flypipe/flypipe'
+GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
+github_connection = requests.session()
 
 
 # Get commit list between HEAD and the most recent version number
@@ -32,6 +30,7 @@ if not release_branches:
     )
 else:
     latest_version_branch_name = max(release_branches)
+    # release branch name will be origin/release/x.y.z, we remove the first 15 characters to just get the version
     latest_version = [int(num) for num in latest_version_branch_name[15:].split(".")]
     commit_list = (
         subprocess.check_output(
@@ -41,42 +40,25 @@ else:
         .split()
     )
 
-print('test')
-features = {}
-bugs = {}
+issues = {}
 for commit_id in commit_list:
     commit_message = subprocess.check_output(
         f"git show {commit_id} -s --format=%B", shell=True
     ).decode("utf-8")
     commit_message_summary = commit_message.split("\n", maxsplit=1)[0]
-    re_match = re.search(RE_JIRA_ID, commit_message_summary)
+    re_match = re.search(RE_GITHUB_ISSUE, commit_message_summary)
     if re_match:
-        jira_id = re_match.group(0)
-        if jira_id in features or jira_id in bugs:
+        print(f'Found github issue {re_match.group(0)} in commit msg summary {commit_message_summary}')
+        issue_id = re_match.group(0)[1:]
+        issue = github_connection.get(f'{GITHUB_URL}/issues/{issue_id}', headers={'Authorization': f'Bearer {GITHUB_TOKEN}'}).json()
+        if 'title' not in issue:
+            print(f'Unable to find title for issue {issue_id}')
             continue
-        issue_data = requests.get(
-            f'{BASE_URL}/issue/{jira_id}',
-            headers={
-                'Authorization': f'Basic {auth_string}',
-                'Content-Type': 'application/json'
-            }).json()
-        issue_type = issue_data['fields']['issuetype']['name']
-        if issue_type == 'Story':
-            print(f'Found feature with id {jira_id}')
-            features[jira_id] = issue_data['fields']['summary']
-        elif issue_type == 'Bug':
-            print(f'Found bugfix with id {jira_id}')
-            bugs[jira_id] = issue_data['fields']['summary']
-        else:
-            print(f'Issue {jira_id} has type {issue_type}, ignoring')
+        issues[issue_id] = issue['title']
 
-feature_summaries = sorted(features.values())
-bug_summaries = sorted(bugs.values())
+
+issue_ids = sorted(list(issues.keys()))
 with open('changelog.txt', 'w', encoding='utf-8') as f:
     f.writelines(['Changelog\n', '*******\n'])
-    if features:
-        f.writelines(['Features: \n'])
-        f.writelines(f'- {feature}\n' for feature in feature_summaries)
-    if bugs:
-        f.writelines(['Bugs: \n'])
-        f.writelines(f'- {bug}\n' for bug in bug_summaries)
+    lines = [f'- {issues[issue_id]}\n' for issue_id in issue_ids]
+    f.writelines(lines)
