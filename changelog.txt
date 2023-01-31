@@ -1,2 +1,3 @@
 Changelog
 *******
+- fix: snyk commit msg accidentally treated like a jira project
