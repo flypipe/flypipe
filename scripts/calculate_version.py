@@ -20,9 +20,7 @@ released)
 import subprocess
 import re
 
-# A breaking change in a commit message can either be the words BREAKING CHANGE or an exclamation mark after the type.
-# This regex handles the exclamation mark case.
-RE_BREAKING_CHANGE_EXCLAMATION_MARK = re.compile(r'^\w+(\(\w+\))?!')
+RE_COMMIT_TYPE = r'(^\w+!?):'
 
 all_branches = (
     subprocess.check_output('git for-each-ref --format="%(refname:short)"', shell=True)
@@ -61,10 +59,13 @@ for commit_id in commit_list:
         f"git show {commit_id} -s --format=%B", shell=True
     ).decode("utf-8")
     commit_message_summary = commit_message.split("\n", maxsplit=1)[0]
-    if "BREAKING_CHANGE" in commit_message or re.match(RE_BREAKING_CHANGE_EXCLAMATION_MARK, commit_message_summary):
-        is_breaking_change = True
-    elif commit_message.startswith("feat:"):
-        is_feature_change = True
+    commit_type_match = re.search(RE_COMMIT_TYPE, commit_message_summary)
+    if commit_type_match:
+        commit_type_str = commit_type_match.group(1)
+        if commit_type_str[-1] == '!':
+            is_breaking_change = True
+        elif commit_type_str == "feat":
+            is_feature_change = True
 
 if is_breaking_change:
     new_version[0] += 1
