@@ -41,6 +41,7 @@ else:
         .split()
     )
 
+print('test')
 features = {}
 bugs = {}
 for commit_id in commit_list:
