@@ -34,11 +34,9 @@ jobs:
       - name: Setup Dependencies
         uses: './.github/actions/setup-dependencies'
       - name: Calculate new version number
-        run: echo "VERSION_NUMBER=$(python scripts/calculate_version.py)" >> $GITHUB_ENV
-      - name: Set version
-        run: echo ${{ env.VERSION_NUMBER }} > flypipe/version.txt
-      - name: Store version number
-        run: echo "VERSION_NUMBER=$(cat flypipe/version.txt)" >> $GITHUB_ENV
+        run: |
+          python scripts/calculate_version.py
+          echo "VERSION_NUMBER=$(cat flypipe/version.txt)" >> $GITHUB_ENV
       - name: Upload version file
         uses: actions/upload-artifact@v3
         with:
