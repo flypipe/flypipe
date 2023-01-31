@@ -1,20 +1,18 @@
 """
 This script calculates the next version number which Flypipe ought to release to. Flypipe uses semantic versioning
-(https://semver.org/) for it's releases, and conventional commits (https://www.conventionalcommits.org/en/v1.0.0/) for
-the commit format. We leverage these to get the appropriate version for new releases in the following process:
+(https://semver.org/) for its releases, and a simplified form of conventional commits where the each commit has the form:
+<commit type>: <summary>
+We leverage these to get the appropriate version for new releases in the following process:
 1. Get the most recent release
-2. Scan through the commit messages of the list of commits between the most recent release and HEAD:
-    - If we encounter any commit with BREAKING CHANGE or ! after the type then we increment the major version on the
-    most recent released version and the resultant version number is our new release number.
-    - If none of the commits contained BREAKING CHANGE or ! after the type but we have at least one feature change (i.e
-    type == 'feat') then we increment the minor version on the most recent released version and the resultant version
-    number is our new release number.
+2. Look at the commit type in the list of commits between HEAD and the last released version.
+    - If there is an exclamation mark denoting a breaking change after the type aka "feat!: ..." or "fix!: ..." then we
+    increment the major version on the most recent released version and the resultant version number is our new release
+    number.
+    - If none of the commits are breaking changes but we have at least one feature change (i.e feat: ...) then we
+    increment the minor version on the most recent released version and the resultant version number is our new release
+    number.
     - If neither of the above two events occurred then we increment the patch version on the most recent released
     version and the resultant version number is our new release number.
-
-Get the diff between the latest release and the current HEAD, using the conventional commit rules we can
-calculate the offset from the latest release and thus the new version (assuming the current state of HEAD were to be
-released)
 """
 
 import subprocess
@@ -59,12 +57,16 @@ for commit_id in commit_list:
         f"git show {commit_id} -s --format=%B", shell=True
     ).decode("utf-8")
     commit_message_summary = commit_message.split("\n", maxsplit=1)[0]
+    print(f'Check commit "{commit_message_summary}"')
     commit_type_match = re.search(RE_COMMIT_TYPE, commit_message_summary)
     if commit_type_match:
+        print(' *** commit contains a type')
         commit_type_str = commit_type_match.group(1)
         if commit_type_str[-1] == '!':
+            print(' *** detected breaking change')
             is_breaking_change = True
         elif commit_type_str == "feat":
+            print(' *** detected feature')
             is_feature_change = True
 
 if is_breaking_change:
@@ -75,4 +77,5 @@ else:
     new_version[2] += 1
 
 new_version_string = ".".join([str(num) for num in new_version])
-print(new_version_string)
+with open('flypipe/version.txt', 'w') as f:
+    f.write(new_version_string)
