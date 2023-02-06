@@ -25,7 +25,7 @@ const SideBar = ({nodes}) => {
         setSelectedDetailsKey(key);
     };
     
-    return <div className="d-flex flex-column col-2">
+    return <div className="d-flex flex-column col-2 justify-content-between">
         <NavTabs className="d-flex flex-row" tabDefs={navItemDefs} handleTabClick={handleChangeTab}/>
         <SidebarDetails className={{flexGrow: 2}}>
             {navItemDefs.find(({key}) => key === selectedDetailsKey)['details']}

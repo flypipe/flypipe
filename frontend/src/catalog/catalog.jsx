@@ -7,7 +7,7 @@ import SearchBar from './searchbar/searchbar';
 const nodes = [
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code1",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -27,7 +27,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code2",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -37,7 +37,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code3",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -47,7 +47,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code4",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -57,7 +57,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code5",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -67,7 +67,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code6",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -77,7 +77,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code7",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -87,7 +87,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code8",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -97,7 +97,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code9",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -107,7 +107,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code10",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -117,7 +117,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code11",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -127,7 +127,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code12",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -137,7 +137,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code13",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -147,7 +147,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code14",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
@@ -157,7 +157,7 @@ const nodes = [
     },
     {
         "key": "country_code_1",
-        "name": "country_code",
+        "name": "country_code15",
         "filePath": "this/is/the/path/to/country/code.py",
         "description": "This is the description of the country code",
         "tags": ["feature", "test"],
