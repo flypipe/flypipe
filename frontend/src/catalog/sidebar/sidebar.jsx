@@ -15,6 +15,7 @@ const SideBar = ({nodes}) => {
         {
             key: 'nav-key-2',
             title: "Node Builder",
+            // TODO: add node builder tag here...
             details: <p>{'<Node Builder>'}</p>
         }
     ];
@@ -33,11 +34,3 @@ const SideBar = ({nodes}) => {
 }
 
 export default SideBar;
-
-// const NavTab = () => {
-//     return <NavItem key={key} title={title} isSelected={key == selectedNav} onClick={onClick}></NavItem>
-// }
-// () => {
-//     setTabContent(component);
-//     setSelectedNav(key);
-// }
