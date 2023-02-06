@@ -2,6 +2,7 @@ import React, {useState, useCallback} from 'react';
 import SideBar from './sidebar/sidebar';
 import Details from './details';
 import SearchBar from './searchbar/searchbar';
+import Header from './header';
 
 // TODO: this should be supplied by the frontend
 const nodes = [
@@ -172,11 +173,14 @@ const Catalog = () => {
     const handleUpdateSearch = useCallback((results) => {
         setSearchResultNodes(results);
     }, []);
-    return <div className="d-flex">
-        <SideBar nodes={searchResultNodes}/>
-        <Details/>
-        <SearchBar nodes={nodes} handleUpdateSearch={handleUpdateSearch}/>
-    </div>
+    return <>
+        <Header/>
+        <div className="d-flex">
+            <SideBar nodes={searchResultNodes}/>
+            <Details/>
+            <SearchBar nodes={nodes} handleUpdateSearch={handleUpdateSearch}/>
+        </div>
+    </>
 }
 
 export default Catalog;

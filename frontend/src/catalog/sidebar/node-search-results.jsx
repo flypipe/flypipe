@@ -32,7 +32,7 @@ const NodeSearchResults = ({nodes}) => {
         {currentNodes.map(
             ({name, nodePath, description}, i) => <NodeSearchResultItem key={`node-search-result-${i}`} name={name} nodePath={nodePath} description={description}/>
         )}
-        <Pagination maxPage={maxPage} pageGroupSize={5} handleClickPage={handleChangePage}/>
+        <Pagination maxPage={maxPage} pageGroupSize={SEARCH_PAGE_GROUP_SIZE} handleClickPage={handleChangePage}/>
     </div>
 
 };
