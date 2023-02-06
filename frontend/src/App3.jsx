@@ -594,7 +594,6 @@ const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
 );
 
 const LayoutFlow = () => {
-  console.log(layoutedNodes);
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
 

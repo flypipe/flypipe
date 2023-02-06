@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useCallback} from 'react';
 import SideBar from './sidebar/sidebar';
 import Details from './details';
 import SearchBar from './searchbar/searchbar';
@@ -26,11 +26,14 @@ const nodes = [
 ]
 
 const Catalog = () => {
-    
+    const [searchResultNodes, setSearchResultNodes] = useState(nodes);
+    const handleUpdateSearch = useCallback((results) => {
+        setSearchResultNodes(results);
+    }, []);
     return <div className="d-flex">
-        <SideBar/>
+        <SideBar nodes={searchResultNodes}/>
         <Details/>
-        <SearchBar nodes={nodes}/>
+        <SearchBar nodes={nodes} handleUpdateSearch={handleUpdateSearch}/>
     </div>
 }
 

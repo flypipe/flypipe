@@ -8,4 +8,4 @@ import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App3";
 import Catalog from "./catalog/catalog";
-ReactDOM.render(<App />, document.getElementById("root"));
+ReactDOM.render(<Catalog />, document.getElementById("root"));

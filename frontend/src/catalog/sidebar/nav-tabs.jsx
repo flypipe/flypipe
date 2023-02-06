@@ -13,7 +13,7 @@ const NavTabs = ({tabDefs, handleTabClick}) => {
                     {tabDefs.map(
                         ({key, title, details}) => <NavTab key={key} title={title} isSelected={selectedTab === key} onClick={(e) => {
                             setSelectedTab(key);
-                            handleTabClick(details);
+                            handleTabClick(key);
                         }}/>
                     )}
                 </ul>
