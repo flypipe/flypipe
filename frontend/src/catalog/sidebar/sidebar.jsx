@@ -12,12 +12,12 @@ const SideBar = ({nodes}) => {
             title: "Results",
             details: ResultsElement,
         },
-        {
-            key: 'nav-key-2',
-            title: "Node Builder",
-            // TODO: add node builder tag here...
-            details: <p>{'<Node Builder>'}</p>
-        }
+        // {
+        //     key: 'nav-key-2',
+        //     title: "Node Builder",
+        //     // TODO: add node builder tag here...
+        //     details: <p>{'<Node Builder>'}</p>
+        // }
     ];
     const [selectedDetailsKey, setSelectedDetailsKey] = useState(navItemDefs[0].key);
     // const [currentDetails, setCurrentDetails] = useState(navItemDefs[0].details);
@@ -25,7 +25,7 @@ const SideBar = ({nodes}) => {
         setSelectedDetailsKey(key);
     };
     
-    return <div className="d-flex flex-column col-2 justify-content-between">
+    return <div className="d-flex flex-column col-4">
         <NavTabs className="d-flex flex-row" tabDefs={navItemDefs} handleTabClick={handleChangeTab}/>
         <SidebarDetails className={{flexGrow: 2}}>
             {navItemDefs.find(({key}) => key === selectedDetailsKey)['details']}

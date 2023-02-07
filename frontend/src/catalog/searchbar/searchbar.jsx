@@ -45,18 +45,18 @@ const SearchBar = ({nodes, handleUpdateSearch}) => {
             'name': 'Tags',
             'value': 'tags'
         },
-        {
-            'name': 'Schema',
-            'value': 'schema'
-        },
-        {
-            'name': 'Predecessors',
-            'value': 'predecessors'
-        },
-        {
-            'name': 'Successors',
-            'value': 'successors'
-        },
+        // {
+        //     'name': 'Schema',
+        //     'value': 'schema'
+        // },
+        // {
+        //     'name': 'Predecessors',
+        //     'value': 'predecessors'
+        // },
+        // {
+        //     'name': 'Successors',
+        //     'value': 'successors'
+        // },
     ];
     const [searchText, setSearchText] = useState('');
     const [selectedSearchOptions, setSelectedSearchOptions] = useState(allSearchOptions.map(({value}) => value));

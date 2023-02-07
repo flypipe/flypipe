@@ -5,7 +5,7 @@ import Pagination from './pagination';
 // Maximum number of search entries per page
 const SEARCH_PAGE_SIZE = 5;
 // Maximum number of pages to show at the bottom of the screen
-const SEARCH_PAGE_GROUP_SIZE = 5;
+const SEARCH_PAGE_GROUP_SIZE = 2;
 
 
 
@@ -30,7 +30,7 @@ const NodeSearchResults = ({nodes}) => {
     
     return <div className="mx-4 mb-4">
         {currentNodes.map(
-            ({name, nodePath, description}, i) => <NodeSearchResultItem key={`node-search-result-${i}`} name={name} nodePath={nodePath} description={description}/>
+            ({name, importCmd, description}, i) => <NodeSearchResultItem key={`node-search-result-${i}`} name={name} importCmd={importCmd} description={description}/>
         )}
         <Pagination maxPage={maxPage} pageGroupSize={SEARCH_PAGE_GROUP_SIZE} handleClickPage={handleChangePage}/>
     </div>
