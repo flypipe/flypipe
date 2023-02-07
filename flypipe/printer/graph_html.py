@@ -3,7 +3,7 @@ import os
 
 from flypipe.node_graph import RunStatus, NodeGraph
 from flypipe.node_type import NodeType
-from flypipe.printer.template import get_template
+from flypipe.template import get_template
 from flypipe.schema.types import Unknown
 from flypipe.utils import DataFrameType
 
@@ -98,7 +98,7 @@ class GraphHTML:
         with open(os.path.join(dir_path, "tags.js"), "r", encoding="utf-8") as f:
             js_scripts["tags"] = f.read()
 
-        return get_template("index.html").render(
+        return get_template("graph.html").render(
             height=self.height, css_scripts=css_scripts, js_scripts=js_scripts
         )
 

@@ -1,9 +1,11 @@
 <html>
     <head>
-        
     </head>
     <body>
         <div id="root"></div>
+        <script>
+            window.nodes = {{nodes | safe}};
+        </script>
         <script>{{ js_bundle|safe }}</script>
     </body>
 </html>
