@@ -1,6 +1,8 @@
 import os
 import inspect
 import json
+
+from flypipe.node_function import NodeFunction
 from flypipe.template import get_template
 
 
@@ -11,10 +13,13 @@ class CatalogNode:
 
     def __init__(self, node):
         self.node = node
+        # TODO: it's a little awkward to deal with this node function logic here, is this even the behaviour we want?
         self.predecessors = [
-            input_node.node.__name__ for input_node in node.input_nodes
+            input_node.node.__name__
+            if not isinstance(input_node.node, NodeFunction)
+            else input_node.node.expand(None)[-1].__name__ for input_node in node.input_nodes
         ]
-        self.successors = []
+        self.successors = set()
 
     def register_successor(self, successor_node):
         """
@@ -22,7 +27,7 @@ class CatalogNode:
         themselves aware of their successors. To support a list of successors we need to manually register the
         successor nodes whilst parsing a node graph.
         """
-        self.successors.append(successor_node.__name__)
+        self.successors.add(successor_node.__name__)
 
     def get_def(self):
         return {
@@ -34,7 +39,7 @@ class CatalogNode:
             "importCmd": self._get_import_cmd(),
             "schema": self._get_schema(),
             "predecessors": self.predecessors,
-            "successors": self.successors,
+            "successors": sorted(list(self.successors)),
         }
 
     def _get_file_path(self):
@@ -60,16 +65,17 @@ class Catalog:
     def __init__(self):
         self.nodes = {}
 
-    def register_node(self, node, recursive=True):
-        should_register_successor = False
-        if node.key not in self.nodes:
-            self.nodes[node.key] = CatalogNode(node)
-            should_register_successor = True
-        if recursive:
+    def register_node(self, node, successor=None):
+        if isinstance(node, NodeFunction):
+            expanded_nodes = node.expand(None)
+            self.register_node(expanded_nodes[-1], successor)
+        else:
+            if node.key not in self.nodes:
+                self.nodes[node.key] = CatalogNode(node)
+            if successor:
+                self.nodes[node.key].register_successor(successor)
             for input_node in node.input_nodes:
-                self.register_node(input_node.node)
-                if should_register_successor:
-                    self.nodes[input_node.node.key].register_successor(node)
+                self.register_node(input_node.node, node)
 
     def html(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
