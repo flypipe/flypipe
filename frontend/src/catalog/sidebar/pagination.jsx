@@ -22,7 +22,8 @@ const Pagination = ({maxPage, pageGroupSize, handleClickPage}) => {
         handleClickPage(targetPage);
     }, [handleClickPage]);
     
-    const onLeftMovePagesClick = useCallback(() => {
+    const onLeftMovePagesClick = useCallback((e) => {
+        e.preventDefault();
         let newPageGroup = [];
         const firstVisiblePage = pageGroup[0];
         if (firstVisiblePage - pageGroupSize < 1) {
@@ -39,7 +40,8 @@ const Pagination = ({maxPage, pageGroupSize, handleClickPage}) => {
         setPageGroup(newPageGroup);
     }, [pageGroup, maxPage, pageGroupSize]);
 
-    const onRightMovePagesClick = useCallback(() => {
+    const onRightMovePagesClick = useCallback((e) => {
+        e.preventDefault();
         let newPageGroup = [];
         const lastVisiblePage = pageGroup[pageGroup.length - 1];
         if (lastVisiblePage + pageGroupSize > maxPage) {
@@ -61,7 +63,10 @@ const Pagination = ({maxPage, pageGroupSize, handleClickPage}) => {
             <li className="page-item"><a className={classNames("page-link", {"disabled": pageGroup[0] === 1})} href="#" onClick={onLeftMovePagesClick}>{"<<"}</a></li>
             {
                 pageGroup.map((pageNumber) => (
-                    <li key={`page-${pageNumber}`} className="page-item"><a className={classNames("page-link", {"fw-bold": pageNumber === currentPage})} href="#" onClick={() => {onPageClick(pageNumber)}}>{pageNumber}</a></li>
+                    <li key={`page-${pageNumber}`} className="page-item"><a className={classNames("page-link", {"fw-bold": pageNumber === currentPage})} href="#" onClick={(e) => {
+                        e.preventDefault();
+                        onPageClick(pageNumber)
+                    }}>{pageNumber}</a></li>
                 ))
             }
             <li className="page-item"><a className={classNames("page-link", {"disabled": pageGroup[pageGroup.length-1] === maxPage })} href="#" onClick={onRightMovePagesClick}>{">>"}</a></li>
