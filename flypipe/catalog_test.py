@@ -1,3 +1,4 @@
+from pathlib import Path
 import pandas as pd
 from flypipe.catalog import Catalog
 from flypipe import node, node_function
@@ -73,7 +74,7 @@ class TestCatalog:
         assert catalog.get_node_defs() == [
             {
                 "description": "No description",
-                "filePath": "flypipe\\catalog_test.py",
+                "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t2",
                 "key": "flypipe_catalog_test_function_t2_t2",
                 "name": "t2",
@@ -84,7 +85,7 @@ class TestCatalog:
             },
             {
                 "description": "No description",
-                "filePath": "flypipe\\catalog_test.py",
+                "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t1",
                 "key": "flypipe_catalog_test_function_t1_t1",
                 "name": "t1",
@@ -95,7 +96,7 @@ class TestCatalog:
             },
             {
                 "description": "No description",
-                "filePath": "flypipe\\catalog_test.py",
+                "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t3",
                 "key": "flypipe_catalog_test_function_t3_t3",
                 "name": "t3",
@@ -150,7 +151,7 @@ class TestCatalog:
         assert catalog.get_node_defs() == [
             {
                 "description": "No description",
-                "filePath": "flypipe\\catalog_test.py",
+                "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t4",
                 "key": "flypipe_catalog_test_function_t4_TestCatalog_test_register_node_function__locals__t4",
                 "name": "t4",
@@ -161,7 +162,7 @@ class TestCatalog:
             },
             {
                 "description": "No description",
-                "filePath": "flypipe\\catalog_test.py",
+                "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t3",
                 "key": "flypipe_catalog_test_function_t3_TestCatalog_test_register_node_function__locals__get_nodes__"
                 "locals__t3",
@@ -173,7 +174,7 @@ class TestCatalog:
             },
             {
                 "description": "No description",
-                "filePath": "flypipe\\catalog_test.py",
+                "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t2",
                 "key": "flypipe_catalog_test_function_t2_TestCatalog_test_register_node_function__locals__get_nodes__"
                 "locals__t2",
@@ -185,7 +186,7 @@ class TestCatalog:
             },
             {
                 "description": "No description",
-                "filePath": "flypipe\\catalog_test.py",
+                "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t1",
                 "key": "flypipe_catalog_test_function_t1_TestCatalog_test_register_node_function__locals__t1",
                 "name": "t1",
