@@ -36,6 +36,6 @@
   },
   "scripts": {
     "start": "webpack-dev-server --mode development",
-    "build": "webpack --mode development"
+    "build": "webpack --mode development && node scripts/copy-to-flypipe.js"
   }
 }
