@@ -1,6 +1,7 @@
 import os
 import inspect
 import json
+from pathlib import Path
 
 from flypipe.node_function import NodeFunction
 from flypipe.template import get_template
@@ -43,7 +44,19 @@ class CatalogNode:
         }
 
     def _get_file_path(self):
-        return os.path.relpath(inspect.getfile(self.node.function))
+        """
+        Get the path of the file holding the node. The inspect.getfile utility function returns an absolute path but we
+        would like a path relative to the project root, this is especially important in _get_import_cmd as we use the
+        path to generate the import command.
+
+        The method used to calculate the path relative to the project root is simply to iterate over the parent
+        directories one by one until we reach a directory that doesn't contain an __init__.py file.
+        """
+        absolute_path = inspect.getfile(self.node.function)
+        base = Path(absolute_path).parent
+        while (base / '__init__.py').is_file():
+            base = base.parent
+        return os.path.relpath(absolute_path, start=base)
 
     def _get_import_cmd(self):
         # Remove the .py extension and convert the directory separator / into full stops
