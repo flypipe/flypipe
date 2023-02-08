@@ -1,21 +1,32 @@
 import pandas as pd
 from flypipe.catalog import Catalog
 from flypipe import node, node_function
+from flypipe.config import config_context
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String
 
 
-@node(type="pandas")
+@node(type="pandas", tags=["train"])
 def t1():
     return pd.DataFrame({"c1": [1, 2, 3]})
 
 
-@node(type="pandas", dependencies=[t1], output=Schema([Column("c1", String(), "bla")]))
+@node(
+    type="pandas",
+    dependencies=[t1],
+    tags=["train", "test"],
+    output=Schema([Column("c1", String(), "bla")]),
+)
 def t2(t1):
     return t1
 
 
-@node(type="pandas", dependencies=[t1], output=Schema([Column("c1", String(), "bla")]))
+@node(
+    type="pandas",
+    dependencies=[t1],
+    tags=["misc"],
+    output=Schema([Column("c1", String(), "bla")]),
+)
 def t3(t1):
     return t1
 
@@ -69,7 +80,7 @@ class TestCatalog:
                 "predecessors": ["t1"],
                 "schema": ["c1"],
                 "successors": [],
-                "tags": ["pandas", "Transformation"],
+                "tags": ["pandas", "Transformation", "train", "test"],
             },
             {
                 "description": "No description",
@@ -80,7 +91,7 @@ class TestCatalog:
                 "predecessors": [],
                 "schema": [],
                 "successors": ["t2", "t3"],
-                "tags": ["pandas", "Transformation"],
+                "tags": ["pandas", "Transformation", "train"],
             },
             {
                 "description": "No description",
@@ -91,8 +102,20 @@ class TestCatalog:
                 "predecessors": ["t1"],
                 "schema": ["c1"],
                 "successors": [],
-                "tags": ["pandas", "Transformation"],
+                "tags": ["pandas", "Transformation", "misc"],
             },
+        ]
+
+    def test_get_count_box_defs(self):
+        catalog = Catalog()
+        catalog.register_node(t2)
+        catalog.register_node(t3)
+        with config_context(catalog_count_box_tags="train,test"):
+            result = catalog.get_count_box_defs()
+        assert result == [
+            {"count": 3, "label": "nodes"},
+            {"count": 2, "label": "train"},
+            {"count": 1, "label": "test"},
         ]
 
     def test_register_node_function(self):
@@ -140,7 +163,8 @@ class TestCatalog:
                 "description": "No description",
                 "filePath": "flypipe\\catalog_test.py",
                 "importCmd": "from flypipe.catalog_test import t3",
-                "key": "flypipe_catalog_test_function_t3_TestCatalog_test_register_node_function__locals__get_nodes__locals__t3",
+                "key": "flypipe_catalog_test_function_t3_TestCatalog_test_register_node_function__locals__get_nodes__"
+                "locals__t3",
                 "name": "t3",
                 "predecessors": ["t2"],
                 "schema": [],
@@ -151,7 +175,8 @@ class TestCatalog:
                 "description": "No description",
                 "filePath": "flypipe\\catalog_test.py",
                 "importCmd": "from flypipe.catalog_test import t2",
-                "key": "flypipe_catalog_test_function_t2_TestCatalog_test_register_node_function__locals__get_nodes__locals__t2",
+                "key": "flypipe_catalog_test_function_t2_TestCatalog_test_register_node_function__locals__get_nodes__"
+                "locals__t2",
                 "name": "t2",
                 "predecessors": ["t1"],
                 "schema": [],

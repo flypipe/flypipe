@@ -12,10 +12,11 @@ class RunMode(Enum):
 
 class _Config:
     OPTIONS = {
-        "require_node_description": False,
-        "require_schema_description": False,
+        "catalog_count_box_tags": "bronze,silver,gold",
         "default_run_mode": RunMode.SEQUENTIAL.value,
         "node_run_max_workers": os.cpu_count(),
+        "require_node_description": False,
+        "require_schema_description": False,
     }
     VALID_OPTIONS = set(config_name for config_name in OPTIONS.keys())
     ACTIVE_CONFIGS = []

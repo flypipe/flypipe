@@ -68,6 +68,16 @@ nodes running IO operations such as in datasource nodes. This is because most ot
 Python only permits a single thread per process to execute Python bytecode. 
 ```
 
+## Catalog
+
+### catalog_count_box_tags
+
+Which tags to show at the top of the Flypipe Catalog, seperated by commas. For each tag Flypipe will search through the 
+nodes in the Catalog to obtain the number of nodes that have that tag. 
+
+:type: string
+:default: `bronze,silver,gold`
+
 ```{note}
 If you are working in Databricks, you can configure environment variables for specific clusters 
 (https://docs.databricks.com/clusters/configure.html#environment-variables). Commonly different teams will be using 

@@ -5,7 +5,7 @@ import Pagination from './pagination';
 // Maximum number of search entries per page
 const SEARCH_PAGE_SIZE = 5;
 // Maximum number of pages to show at the bottom of the screen
-const SEARCH_PAGE_GROUP_SIZE = 2;
+const SEARCH_PAGE_GROUP_SIZE = 3;
 
 
 

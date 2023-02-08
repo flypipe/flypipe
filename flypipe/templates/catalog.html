@@ -4,7 +4,8 @@
     <body>
         <div id="root"></div>
         <script>
-            window.nodes = {{nodes | safe}};
+            window.count_boxes = {{ count_boxes | safe }}
+            window.nodes = {{ nodes | safe }};
         </script>
         <script>{{ js_bundle|safe }}</script>
     </body>

@@ -3,6 +3,7 @@ import inspect
 import json
 from pathlib import Path
 
+from flypipe.config import get_config
 from flypipe.node_function import NodeFunction
 from flypipe.template import get_template
 
@@ -18,7 +19,8 @@ class CatalogNode:
         self.predecessors = [
             input_node.node.__name__
             if not isinstance(input_node.node, NodeFunction)
-            else input_node.node.expand(None)[-1].__name__ for input_node in node.input_nodes
+            else input_node.node.expand(None)[-1].__name__
+            for input_node in node.input_nodes
         ]
         self.successors = set()
 
@@ -54,7 +56,7 @@ class CatalogNode:
         """
         absolute_path = inspect.getfile(self.node.function)
         base = Path(absolute_path).parent
-        while (base / '__init__.py').is_file():
+        while (base / "__init__.py").is_file():
             base = base.parent
         return os.path.relpath(absolute_path, start=base)
 
@@ -95,11 +97,32 @@ class Catalog:
         with open(os.path.join(dir_path, "js/bundle.js"), "r", encoding="utf-8") as f:
             js_bundle = f.read()
         return get_template("catalog.html").render(
-            js_bundle=js_bundle, nodes=json.dumps(self.get_node_defs())
+            js_bundle=js_bundle,
+            nodes=json.dumps(self.get_node_defs()),
+            count_boxes=json.dumps(self.get_count_box_defs()),
         )
 
     def get_node_defs(self):
         return [node.get_def() for node in self.nodes.values()]
+
+    def get_count_box_defs(self):
+        """
+        We want to show a list of counts at the top of the catalog screen showing how many nodes the catalog currently
+        has, as well as the node count under certain categorical labels.
+        """
+        count_box_defs = [{"label": "nodes", "count": len(self.nodes)}]
+        raw_config = get_config("catalog_count_box_tags")
+        if not raw_config:
+            return count_box_defs
+        tags = raw_config.split(",")
+        tag_count = {tag: 0 for tag in tags}
+        for catalog_node in self.nodes.values():
+            for tag in catalog_node.node.tags:
+                if tag in tag_count:
+                    tag_count[tag] += 1
+        for tag in tags:
+            count_box_defs.append({"label": tag, "count": tag_count[tag]})
+        return count_box_defs
 
 
 if __name__ == "__main__":
