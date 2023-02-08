@@ -26,7 +26,7 @@ const NodeSearchResults = ({nodes}) => {
     }, [nodes]);
     const handleChangePage = useCallback((pageNumber) => {
         setCurrentNodes(nodesByPage[pageNumber]);
-    }, []);
+    }, [nodesByPage]);
     
     return <div className="mx-4 mb-4">
         {currentNodes.map(
