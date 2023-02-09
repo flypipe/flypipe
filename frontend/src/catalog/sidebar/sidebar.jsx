@@ -5,7 +5,7 @@ import NodeSearchResults from './node-search-results';
 
 
 const SideBar = ({nodes}) => {
-    const ResultsElement = useMemo(() => <NodeSearchResults nodes={nodes}/>, [nodes]);
+    const ResultsElement = useMemo(() => <NodeSearchResults nodes={nodes} onCheckNode/>, [nodes]);
     const navItemDefs = [
         {
             key: 'nav-key-1',

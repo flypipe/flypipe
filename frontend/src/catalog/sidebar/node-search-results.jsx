@@ -11,6 +11,7 @@ const SEARCH_PAGE_GROUP_SIZE = 3;
 
 const NodeSearchResults = ({nodes}) => {
     const [currentNodes, setCurrentNodes] = useState([]);
+    const [checkedNodes, setCheckedNodes] = useState(new Set());
     // nodes can change via the node search panel, we must reset the nodes if so
     useEffect(() => {
         setCurrentNodes(nodes.slice(0, SEARCH_PAGE_SIZE))
@@ -27,10 +28,18 @@ const NodeSearchResults = ({nodes}) => {
     const handleChangePage = useCallback((pageNumber) => {
         setCurrentNodes(nodesByPage[pageNumber]);
     }, [nodesByPage]);
+    const handleCheck = useCallback((e) => {
+        if (e.target.checked) {
+            setCheckedNodes((prevCheckedNodes) => new Set([...prevCheckedNodes, e.target.value]));
+        } else {
+            setCheckedNodes((prevCheckedNodes) => new Set([...prevCheckedNodes].filter(x => x !== e.target.value)));
+        }
+        // TODO- USE A CONTEXT
+    }, []);
     
     return <div className="mx-4 mb-4">
         {currentNodes.map(
-            ({name, importCmd, description}, i) => <NodeSearchResultItem key={`node-search-result-${i}`} name={name} importCmd={importCmd} description={description}/>
+            ({name, importCmd, description}, i) => <NodeSearchResultItem key={`node-search-result-${i}`} name={name} importCmd={importCmd} description={description} checked={checkedNodes.has(name)} handleCheck={handleCheck}/>
         )}
         <Pagination maxPage={maxPage} pageGroupSize={SEARCH_PAGE_GROUP_SIZE} handleClickPage={handleChangePage}/>
     </div>
