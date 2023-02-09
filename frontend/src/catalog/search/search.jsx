@@ -31,7 +31,7 @@ const searchNodes = (searchText, nodes, options) => {
 };
 
 
-const SearchBar = ({nodes, handleUpdateSearch}) => {
+const Search = ({nodes, handleUpdateSearch}) => {
     const allSearchOptions = [
         {
             'name': 'Name',
@@ -45,18 +45,18 @@ const SearchBar = ({nodes, handleUpdateSearch}) => {
             'name': 'Tags',
             'value': 'tags'
         },
-        // {
-        //     'name': 'Schema',
-        //     'value': 'schema'
-        // },
-        // {
-        //     'name': 'Predecessors',
-        //     'value': 'predecessors'
-        // },
-        // {
-        //     'name': 'Successors',
-        //     'value': 'successors'
-        // },
+        {
+            'name': 'Schema',
+            'value': 'schema'
+        },
+        {
+            'name': 'Predecessors',
+            'value': 'predecessors'
+        },
+        {
+            'name': 'Successors',
+            'value': 'successors'
+        },
     ];
     const [searchText, setSearchText] = useState('');
     const [selectedSearchOptions, setSelectedSearchOptions] = useState(allSearchOptions.map(({value}) => value));
@@ -72,8 +72,9 @@ const SearchBar = ({nodes, handleUpdateSearch}) => {
     return <div className="d-flex flex-column col-2 m-4">
         <div className="form-outline">
           <input type="search" className="form-control" ref={searchTextRef} placeholder="Search" aria-label="Search" onChange={(e) => {setSearchText(e.target.value)}} />
-          {/* <input type="search" className="form-control" ref={searchTextRef} placeholder="Search" aria-label="Search" onChange={onUpdateSearch} /> */}
         </div>
+        <br/>
+        <h5>Search By</h5>
         {allSearchOptions.map(({name, value}, i) => 
             <div className="d-flex p-1" key={`search_filter_${i}`}>
                 <input id={`search_${value}`} className="form-check-input mx-2" type="checkbox" name="search_type" defaultChecked value={value} onChange={(e) => {
@@ -96,4 +97,4 @@ const SearchBar = ({nodes, handleUpdateSearch}) => {
     </div>
 }
 
-export default SearchBar;
+export default Search;

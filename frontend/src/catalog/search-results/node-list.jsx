@@ -1,6 +1,6 @@
 import React, {useState, useMemo, useCallback, useEffect} from 'react';
-import NodeSearchResultItem from './node-search-result-item';
-import Pagination from '../search-results/pagination';
+import Node from './node';
+import Pagination from './pagination';
 
 // Maximum number of search entries per page
 const SEARCH_PAGE_SIZE = 5;
@@ -8,8 +8,7 @@ const SEARCH_PAGE_SIZE = 5;
 const SEARCH_PAGE_GROUP_SIZE = 3;
 
 
-
-const NodeSearchResults = ({nodes}) => {
+const NodeList = ({nodes}) => {
     const [currentNodes, setCurrentNodes] = useState([]);
     const [checkedNodes, setCheckedNodes] = useState(new Set());
     // nodes can change via the node search panel, we must reset the nodes if so
@@ -37,13 +36,12 @@ const NodeSearchResults = ({nodes}) => {
         // TODO- USE A CONTEXT
     }, []);
     
-    return <div className="mx-4 mb-4">
+    return <div>
         {currentNodes.map(
-            ({name, importCmd, description}, i) => <NodeSearchResultItem key={`node-search-result-${i}`} name={name} importCmd={importCmd} description={description} checked={checkedNodes.has(name)} handleCheck={handleCheck}/>
+            ({name, importCmd, description}, i) => <Node key={`node-search-result-${i}`} name={name} importCmd={importCmd} description={description} checked={checkedNodes.has(name)} handleCheck={handleCheck}/>
         )}
         <Pagination maxPage={maxPage} pageGroupSize={SEARCH_PAGE_GROUP_SIZE} handleClickPage={handleChangePage}/>
     </div>
-
 };
 
-export default NodeSearchResults;
+export default NodeList;
