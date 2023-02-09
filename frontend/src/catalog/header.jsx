@@ -6,7 +6,7 @@ import NavDropdown from 'react-bootstrap/NavDropdown';
 
 
 const Header = () => {
-    return <Navbar className="px-4" bg="info" variant="dark">
+    return <Navbar className="px-4" bg="info" variant="white">
         {/* <Container> */}
             <Navbar.Brand>Flypipe Catalog</Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
