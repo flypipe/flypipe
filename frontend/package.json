@@ -1,6 +1,5 @@
 {
   "name": "flypipe-frontend",
-  "version": "1.0.0",
   "description": "Frontend UI for Flypipe",
   "main": "src/index.js",
   "repository": "https://github.com/flypipe/flypipe/",
