@@ -6,10 +6,11 @@ const Node = ({nodeKey, name, importCmd, description, isInGraphBuilder=false, se
     const graphBuilderButton = useMemo(() => {
         const btnText = isInGraphBuilder ? "Remove" : "Add";
         const tooltipText = isInGraphBuilder ? "Remove node from the Graph Builder" : "Add node to the Graph Builder";
-        const buttonClass = isInGraphBuilder ? "btn-danger" : "btn-success";
+        const buttonClass = isInGraphBuilder ? "btn-danger" : "btn-light";
         return <button 
             className={classNames(
                 "btn",
+                "btn-sm",
                 buttonClass,
             )}
             data-elem-name="graph-builder-button"
@@ -35,7 +36,7 @@ const Node = ({nodeKey, name, importCmd, description, isInGraphBuilder=false, se
     }}>
         <div className="d-flex justify-content-between">
             <label className="form-check-label" htmlFor={`nodeCheckbox-${name}`}><span className="fw-bold">{name}</span></label>
-            {graphBuilderButton}
+            {/* {graphBuilderButton} */}
         </div>
         <p>{description}</p>
     </a>
