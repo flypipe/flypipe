@@ -10,7 +10,7 @@ const Catalog = () => {
     }, []);
 
     return <>
-        <div className="d-flex">
+        <div className="d-flex justify-content-around h-75">
             <Search nodes={nodes} handleUpdateSearch={handleUpdateSearch}/>
             <SearchResults nodes={searchResultNodes}/>
         </div>

@@ -43,6 +43,7 @@ class CatalogNode:
             "schema": self._get_schema(),
             "predecessors": self.predecessors,
             "successors": sorted(list(self.successors)),
+            "sourceCode": self._get_source_code(),
         }
 
     def _get_file_path(self):
@@ -69,6 +70,9 @@ class CatalogNode:
         if self.node.output_schema:
             return [column.name for column in self.node.output_schema.columns]
         return []
+
+    def _get_source_code(self):
+        return inspect.getsource(self.node)
 
 
 class Catalog:
