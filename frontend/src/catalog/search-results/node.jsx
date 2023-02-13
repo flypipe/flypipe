@@ -23,6 +23,11 @@ const Node = ({nodeKey, name, importCmd, description, isInGraphBuilder=false, se
         </button>
     }, [isInGraphBuilder, nodeKey]);
 
+    const onDragStart = (event, nodeType) => {
+        event.dataTransfer.setData('application/reactflow', nodeKey);
+        event.dataTransfer.effectAllowed = 'move';
+    };
+
     return <a className={classNames(
         "list-group-item", 
         "list-group-item-action",
@@ -33,7 +38,10 @@ const Node = ({nodeKey, name, importCmd, description, isInGraphBuilder=false, se
         if (!(e.target.getAttribute('data-elem-name') === "graph-builder-button")) {
             handleClickNode(nodeKey);
         }
-    }}>
+    }}
+        onDragStart={(event) => onDragStart(event, 'input')}
+        draggable
+    >
         <div className="d-flex justify-content-between">
             <label className="form-check-label" htmlFor={`nodeCheckbox-${name}`}><span className="fw-bold">{name}</span></label>
             {/* {graphBuilderButton} */}
