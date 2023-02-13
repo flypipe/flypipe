@@ -13,7 +13,7 @@ const Header = ({links}) => {
     }, []);
     return <Navbar className="px-4" bg="info" variant="white">
         {/* <Container> */}
-            <Navbar.Brand>Flypipe Catalog</Navbar.Brand>
+            <Navbar.Brand>Flypipe</Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
