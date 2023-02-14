@@ -21,22 +21,22 @@ Below is a list of the available configuration variables:
 
 [Governance](#Governance)
 
-* [require_node_description](#require_node_description)
-* [require_schema_description](#require_schema_description)
+* [FLYPIPE_REQUIRE_NODE_DESCRIPTION](#FLYPIPE_REQUIRE_NODE_DESCRIPTION)
+* [FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION](#FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION)
 
 [Execution](#Execution)
 
-* [default_run_mode](#default_run_mode)
+* [FLYPIPE_default_run_mode](#FLYPIPE_default_run_mode)
 
 ## Governance
 
-### require_node_description
+### FLYPIPE_REQUIRE_NODE_DESCRIPTION
 
 Enforces declaration of node **description**
 :type: boolean
 :default: `False`
 
-### require_schema_description
+### FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION
 
 Enforces declaration of node **output** schema
 :type: boolean
@@ -44,7 +44,7 @@ Enforces declaration of node **output** schema
 
 ## Execution
 
-### default_run_mode
+### FLYPIPE_default_run_mode
 
 Defines the default execution mode for Flypipe pipelines:
 
