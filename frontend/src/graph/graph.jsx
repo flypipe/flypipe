@@ -1,15 +1,23 @@
-import React, {useState, useCallback, useRef} from 'react';
+import React, {useState, useCallback, useRef, useContext} from 'react';
 import ReactFlow, {useNodes} from 'reactflow';
-import dagre from 'dagre';
+import Node from './node';
+import { useStore } from './store';
+import { shallow } from 'zustand/shallow';
 import 'reactflow/dist/style.css';
 
 
-const NODE_WIDTH = 172;
-const NODE_HEIGHT = 36;
+// TODO- get rid of this index when we introduce the new node modal
+let NEW_NODE_INDEX = 1
+
+
+const NODE_TYPES = {
+    "flypipe-node": Node
+};
 
 // Retrieve the graph node representation of a node
 const convertNodeDefToGraphNode = ({nodeKey, name}) => ({
     "id": nodeKey,
+    "type": "flypipe-node",
     "data": {
         "label": name
     },
@@ -46,49 +54,38 @@ const getNodeGraph = (nodeDefs, nodeKey) => {
 };
 
 
-// Given the nodes & edges from the graph, construct a dagre graph to automatically assign 
-// the positions of the nodes. 
-const assignNodePositions = (nodes, edges) => {
-    const dagreGraph = new dagre.graphlib.Graph();
-    dagreGraph.setGraph({ rankdir: 'LR' });
-    dagreGraph.setDefaultEdgeLabel(() => ({}));
-    nodes.forEach(({id}) => {
-        dagreGraph.setNode(id, { width: NODE_WIDTH, height: NODE_HEIGHT });
-    });
-
-    edges.forEach(({source, target}) => {
-        dagreGraph.setEdge(source, target);
-    });
-    dagre.layout(dagreGraph);
-
-    nodes.forEach((node) => {
-        const nodeWithPosition = dagreGraph.node(node.id);
-
-        // We are shifting the dagre node position (anchor=center center) to the top left
-        // so it matches the React Flow node anchor point (top left).
-        node.position = {
-            x: nodeWithPosition.x - NODE_WIDTH / 2,
-            y: nodeWithPosition.y - NODE_HEIGHT / 2,
-        };
-    });
-};
-
-
-
 const Graph = ({nodeDefs: nodeDefsList}) => {
     const nodeDefs = nodeDefsList.reduce((accumulator, nodeDef) => ({...accumulator, [nodeDef.nodeKey]: nodeDef}),{});
-    const [graphData, setGraphData] = useState({
-        nodes: [],
-        edges: [],
-        nodeKeys: new Set(),
-        edgeKeys: new Set(),
-    });
+    const {nodes, edges, nodeKeys, edgeKeys, addGraphData} = useStore((state) => ({
+        nodes: state.nodes,
+        edges: state.edges,
+        nodeKeys: state.nodeKeys,
+        edgeKeys: state.edgeKeys,
+        addGraphData: state.addGraphData,
+    }), shallow);
 
     const graphDiv = useRef(null);
     const onDragOver = useCallback((event) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
       }, []);
+
+
+    const onClickNewNode = useCallback(() => {
+        const newNode = {
+            "id": `new-node-${NEW_NODE_INDEX}`,
+            "type": "flypipe-node",
+            "data": {
+                "label": `Untitled-${NEW_NODE_INDEX}`
+            },
+            "position": { // dummy position, this will be automatically updated later
+                "x": 0,
+                "y": 0,
+            }
+        };
+        NEW_NODE_INDEX += 1;
+        addGraphData([newNode], []);
+    }, []);
     
     const onDrop = useCallback(
         (event) => {
@@ -97,39 +94,29 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
             const nodeDef = nodeDefs[nodeKey];
             let [nodesToAdd, edgesToAdd] = getNodeGraph(nodeDefs, nodeDef.nodeKey);
             // We're only going to add nodes/edges that don't yet exist in the graph
-            nodesToAdd = nodesToAdd.filter((node) => !graphData.nodeKeys.has(node.id));
-            edgesToAdd = edgesToAdd.filter((edge) => !graphData.edgeKeys.has(edge.id));
+            nodesToAdd = nodesToAdd.filter((node) => !nodeKeys.has(node.id));
+            edgesToAdd = edgesToAdd.filter((edge) => !edgeKeys.has(edge.id));
             if (nodesToAdd || edgesToAdd) {
-                setGraphData(prevGraphData => {
-                    const newNodes = [...prevGraphData.nodes, ...nodesToAdd];
-                    const newEdges = [...prevGraphData.edges, ...edgesToAdd];
-                    const newGraphData = {
-                        ...prevGraphData,
-                        nodes: newNodes,
-                        edges: newEdges,
-                        nodeKeys: new Set(newNodes.map(node => node.id)),
-                        edgeKeys: new Set(newEdges.map(edge => edge.id))
-                    };
-                    // Recalculate the positions of the nodes
-                    assignNodePositions(newGraphData.nodes, newGraphData.edges);
-
-                    return newGraphData;
-                });
+                addGraphData(nodesToAdd, edgesToAdd);
             }
         },
-        [graphData, nodeDefs]
+        [nodeKeys, edgeKeys, nodeDefs]
     );
 
     return (
         <div className="layoutflow" ref={graphDiv}>
-          <ReactFlow
-            nodes={graphData.nodes}
-            edges={graphData.edges}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            // connectionLineType={ConnectionLineType.Straight}
-            fitView
-          />
+            <div className="m-4">
+                <button className="btn btn-secondary" onClick={onClickNewNode}>New Node</button>
+            </div>
+            <ReactFlow
+                nodes={nodes}
+                nodeTypes={NODE_TYPES}
+                edges={edges}
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+                // connectionLineType={ConnectionLineType.Straight}
+                fitView
+            />
         </div>
       );
 }

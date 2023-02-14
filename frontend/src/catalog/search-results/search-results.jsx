@@ -3,6 +3,7 @@ import { ReactFlowProvider } from 'reactflow';
 import NodeList from './node-list';
 import NodeDetails from './node-details';
 import Graph from '../../graph/graph';
+import App from '../zustand-test/App';
 
 
 const SearchResults = ({nodes}) => {
@@ -28,8 +29,8 @@ const SearchResults = ({nodes}) => {
                 />
             </div>
             <div className="col-7">
+                {/* <App/> */}
                 <Graph nodeDefs={nodes}/>
-                {/* <NodeDetails node={nodes.filter(({nodeKey}) => nodeKey === selectedNode)[0]}/> */}
             </div>
         </div>
     </ReactFlowProvider>
