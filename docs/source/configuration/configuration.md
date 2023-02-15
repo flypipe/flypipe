@@ -26,7 +26,7 @@ Below is a list of the available configuration variables:
 
 [Execution](#Execution)
 
-* [FLYPIPE_default_run_mode](#FLYPIPE_default_run_mode)
+* [FLYPIPE_DEFAULT_RUN_MODE](#FLYPIPE_DEFAULT_RUN_MODE)
 
 ## Governance
 
@@ -44,7 +44,7 @@ Enforces declaration of node **output** schema
 
 ## Execution
 
-### FLYPIPE_default_run_mode
+### FLYPIPE_DEFAULT_RUN_MODE
 
 Defines the default execution mode for Flypipe pipelines:
 
