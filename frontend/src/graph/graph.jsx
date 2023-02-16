@@ -1,5 +1,5 @@
-import React, {useState, useCallback, useRef, useContext} from 'react';
-import ReactFlow, {useNodes} from 'reactflow';
+import React, {useState, useCallback, useRef, useContext, useEffect} from 'react';
+import ReactFlow, {useNodes, useReactFlow} from 'reactflow';
 import Node from './node';
 import { useStore } from './store';
 import { shallow } from 'zustand/shallow';
@@ -8,6 +8,8 @@ import 'reactflow/dist/style.css';
 
 // TODO- get rid of this index when we introduce the new node modal
 let NEW_NODE_INDEX = 1
+const MIN_ZOOM = 0.6;
+const MAX_ZOOM = 2;
 
 
 const NODE_TYPES = {
@@ -43,7 +45,6 @@ const getNodeGraph = (nodeDefs, nodeKey) => {
             for (const successor of current.successors) {
                 frontier.push(successor);
                 edges.push({
-                    "id": `${successor}-${current.nodeKey}`,
                     "source": successor,
                     "target": current.nodeKey,
                 });
@@ -55,6 +56,7 @@ const getNodeGraph = (nodeDefs, nodeKey) => {
 
 
 const Graph = ({nodeDefs: nodeDefsList}) => {
+    const graph = useReactFlow();
     const nodeDefs = nodeDefsList.reduce((accumulator, nodeDef) => ({...accumulator, [nodeDef.nodeKey]: nodeDef}),{});
     const {nodes, edges, addNode, addNodesAndEdges} = useStore(({nodes, edges, addNode, addNodesAndEdges}) => ({
         nodes, 
@@ -96,6 +98,9 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
         },
         [nodeDefs]
     );
+    useEffect(() => {
+        graph.fitView({duration: 500});
+    }, [nodes, edges, graph]);
 
     return (
         <div className="layoutflow" ref={graphDiv}>
@@ -105,6 +110,8 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
             <ReactFlow
                 nodes={nodes}
                 nodeTypes={NODE_TYPES}
+                minZoom={MIN_ZOOM}
+                maxZoom={MAX_ZOOM}
                 edges={edges}
                 onDrop={onDrop}
                 onDragOver={onDragOver}

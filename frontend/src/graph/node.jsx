@@ -24,11 +24,10 @@ const Node = ({ data }) => {
             position={Position.Right}
             id="source-handle"
             onConnect={({source, target}) => {
-                addEdge({
-                    id: `${source}-${target}`,
+                addEdge(
                     source,
                     target
-                });
+                );
             }}
             isConnectable
         />

@@ -2,8 +2,8 @@ import React, {useState, useCallback, useMemo} from 'react';
 import { ReactFlowProvider } from 'reactflow';
 import NodeList from './node-list';
 import NodeDetails from './node-details';
-import Graph from '../../graph/graph';
 import App from '../zustand-test/App';
+import GraphWrapper from '../../graph/graph-wrapper';
 
 
 const SearchResults = ({nodes}) => {
@@ -30,7 +30,7 @@ const SearchResults = ({nodes}) => {
             </div>
             <div className="col-7">
                 {/* <App/> */}
-                <Graph nodeDefs={nodes}/>
+                <GraphWrapper nodeDefs={nodes}/>
             </div>
         </div>
     </ReactFlowProvider>
