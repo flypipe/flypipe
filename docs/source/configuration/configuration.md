@@ -1,50 +1,30 @@
-# Configuration Reference
+# Configuration
 
 There are a number of configuration variables that can be set to control Flypipe behaviour at a global level. These can 
-be set via environment variables or via the context manager from `flypipe.config.config_context` (Naturally 
-when using the context manager the configuration will only persist for the code under the context). The environment 
-variable map of a flypipe variable is always prefixed with FLYPIPE and uses uppercase. 
+be set via [Environment Variables](#environment-variables) or via the [Context Manager](#context-manager) 
 
-For example, to switch on the configuration `require_node_description` we can either set the environment variable 
-FLYPIPE_REQUIRE_NODE_DESCRIPTION=True or in the code with: 
+## Environment Variables
 
-```
-from flypipe.config import config_context
-
-with config_context(require_node_description=True):
-	...
-```
-
-Note that you can query the value of a configuration variable with the utility method flypipe.config.get_config. 
-
-Below is a list of the available configuration variables: 
-
-[Governance](#Governance)
+Below is a list of the available variables: 
 
 * [FLYPIPE_REQUIRE_NODE_DESCRIPTION](#FLYPIPE_REQUIRE_NODE_DESCRIPTION)
 * [FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION](#FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION)
-
-[Execution](#Execution)
-
 * [FLYPIPE_DEFAULT_RUN_MODE](#FLYPIPE_DEFAULT_RUN_MODE)
+* [FLYPIPE_NODE_RUN_MAX_WORKERS](#FLYPIPE_NODE_RUN_MAX_WORKERS)
 
-## Governance
-
-### FLYPIPE_REQUIRE_NODE_DESCRIPTION
+#### FLYPIPE_REQUIRE_NODE_DESCRIPTION
 
 Enforces declaration of node **description**
 :type: boolean
 :default: `False`
 
-### FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION
+#### FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION
 
 Enforces declaration of node **output** schema
 :type: boolean
 :default: `False`
 
-## Execution
-
-### FLYPIPE_DEFAULT_RUN_MODE
+#### FLYPIPE_DEFAULT_RUN_MODE
 
 Defines the default execution mode for Flypipe pipelines:
 
@@ -55,7 +35,7 @@ processed all the usual rules about ancestors having already been executed will 
 :type: string
 :default: `sequential`
 
-### node_run_max_workers
+#### FLYPIPE_NODE_RUN_MAX_WORKERS
 
 Sets the maximum number of workers Flypipe will use when running transformations in parallel execution mode. 
 
@@ -73,3 +53,22 @@ If you are working in Databricks, you can configure environment variables for sp
 (https://docs.databricks.com/clusters/configure.html#environment-variables). Commonly different teams will be using 
 different clusters so you can easily setup different configurations by team with this approach.  
 ```
+
+## Context Manager
+
+Naturally when using the context manager the configuration will only persist for the code under the context. 
+The environment variable map of a flypipe variable is always prefixed with FLYPIPE and uses uppercase. 
+
+For example, to switch on the configuration `require_node_description` we can either set the environment variable 
+FLYPIPE_REQUIRE_NODE_DESCRIPTION=True or in the code with: 
+
+```
+from flypipe.config import config_context
+
+with config_context(require_node_description=True):
+	...
+```
+
+Note that you can query the value of a configuration variable with the utility method flypipe.config.get_config. 
+
+
