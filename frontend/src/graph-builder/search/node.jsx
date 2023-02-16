@@ -44,7 +44,7 @@ const Node = ({nodeKey, name, importCmd, description, isInGraphBuilder=false, se
     >
         <div className="d-flex justify-content-between">
             <label className="form-check-label" htmlFor={`nodeCheckbox-${name}`}><span className="fw-bold">{name}</span></label>
-            {/* {graphBuilderButton} */}
+            {graphBuilderButton}
         </div>
         <p>{description}</p>
     </a>

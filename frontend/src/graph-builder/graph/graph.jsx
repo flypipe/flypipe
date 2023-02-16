@@ -1,7 +1,7 @@
 import React, {useState, useCallback, useRef, useContext, useEffect} from 'react';
 import ReactFlow, {useNodes, useReactFlow} from 'reactflow';
 import Node from './node';
-import { useStore } from './store';
+import { useStore } from '../store';
 import { shallow } from 'zustand/shallow';
 import 'reactflow/dist/style.css';
 

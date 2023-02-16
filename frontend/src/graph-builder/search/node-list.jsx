@@ -1,7 +1,7 @@
 import React, {useState, useMemo, useCallback, useEffect, useRef} from 'react';
 import Node from './node';
 import Pagination from './pagination';
-import Notifications from './notifications';
+import Notifications from '../../catalog/search-results/notifications';
 
 // Maximum number of search entries per page
 const SEARCH_PAGE_SIZE = 8;

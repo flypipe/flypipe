@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { useStore } from './store';
+import { useStore } from '../store';
 
 
 const Node = ({ data }) => {

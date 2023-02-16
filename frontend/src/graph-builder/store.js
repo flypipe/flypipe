@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import {MarkerType} from 'reactflow';
+import { MarkerType } from 'reactflow';
 import { assignNodePositions } from './util';
 
 
