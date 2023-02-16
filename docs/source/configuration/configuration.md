@@ -69,6 +69,6 @@ with config_context(require_node_description=True):
 	...
 ```
 
-Note that you can query the value of a configuration variable with the utility method flypipe.config.get_config. 
+Note that you can query the value of a configuration variable with the utility method `flypipe.config.get_config`. 
 
 
