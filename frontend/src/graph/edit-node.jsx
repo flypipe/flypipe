@@ -4,6 +4,7 @@ import Form from 'react-bootstrap/Form';
 import { AiOutlineDelete } from 'react-icons/ai';
 
 export const EditNode = () => {
+    
 
     return (
         <Modal show='true' size="lg">
