@@ -12,19 +12,19 @@ Below is a list of the available variables:
 * [FLYPIPE_DEFAULT_RUN_MODE](#FLYPIPE_DEFAULT_RUN_MODE)
 * [FLYPIPE_NODE_RUN_MAX_WORKERS](#FLYPIPE_NODE_RUN_MAX_WORKERS)
 
-#### FLYPIPE_REQUIRE_NODE_DESCRIPTION
+### FLYPIPE_REQUIRE_NODE_DESCRIPTION
 
 Enforces declaration of node **description**
 :type: boolean
 :default: `False`
 
-#### FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION
+### FLYPIPE_REQUIRE_SCHEMA_DESCRIPTION
 
 Enforces declaration of node **output** schema
 :type: boolean
 :default: `False`
 
-#### FLYPIPE_DEFAULT_RUN_MODE
+### FLYPIPE_DEFAULT_RUN_MODE
 
 Defines the default execution mode for Flypipe pipelines:
 
@@ -35,7 +35,7 @@ processed all the usual rules about ancestors having already been executed will 
 :type: string
 :default: `sequential`
 
-#### FLYPIPE_NODE_RUN_MAX_WORKERS
+### FLYPIPE_NODE_RUN_MAX_WORKERS
 
 Sets the maximum number of workers Flypipe will use when running transformations in parallel execution mode. 
 
