@@ -4,22 +4,15 @@ import classNames from 'classnames';
 
 const Node = ({nodeKey, name, importCmd, description, isInGraphBuilder=false, selected, handleClickNode, handleClickGraphBuilder}) => {
     const graphBuilderButton = useMemo(() => {
-        const btnText = isInGraphBuilder ? "Remove" : "Add";
-        const tooltipText = isInGraphBuilder ? "Remove node from the Graph Builder" : "Add node to the Graph Builder";
-        const buttonClass = isInGraphBuilder ? "btn-danger" : "btn-light";
         return <button 
-            className={classNames(
-                "btn",
-                "btn-sm",
-                buttonClass,
-            )}
+            className={"btn btn-sm btn-light"}
             data-elem-name="graph-builder-button"
             onClick={() => {handleClickGraphBuilder(nodeKey)}}
             data-toggle="tooltip" 
             data-placement="top" 
-            title={tooltipText}
+            title={"Add node to the Graph Builder"}
         >
-            {btnText}
+            Add
         </button>
     }, [isInGraphBuilder, nodeKey]);
 

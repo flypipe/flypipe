@@ -1,5 +1,5 @@
 import React, {useState, useCallback, useRef, useContext, useEffect} from 'react';
-import ReactFlow, {useNodes, useReactFlow} from 'reactflow';
+import ReactFlow, {useNodes, useReactFlow, applyNodeChanges} from 'reactflow';
 import Node from './node';
 import { useStore } from '../store';
 import { shallow } from 'zustand/shallow';
@@ -16,52 +16,14 @@ const NODE_TYPES = {
     "flypipe-node": Node
 };
 
-// Retrieve the graph node representation of a node
-const convertNodeDefToGraphNode = ({nodeKey, name}) => ({
-    "id": nodeKey,
-    "type": "flypipe-node",
-    "data": {
-        "label": name
-    },
-    "position": { // dummy position, this will be automatically updated later
-        "x": 0,
-        "y": 0,
-    }
-});
-
-
-// Given a node, get the graph formed by grabbing all of it's predecessor nodes.
-const getNodeGraph = (nodeDefs, nodeKey) => {
-    const nodeDef = nodeDefs[nodeKey];
-    const frontier = [...nodeDef.predecessors];
-    const selectedNodeDefs = [nodeDef];
-    const edges = [];
-    const addedKeys = [nodeDef.nodeKey];
-    while (frontier.length > 0) {
-        const current = nodeDefs[frontier.pop()];
-        if (!addedKeys.includes(current.nodeKey)) {
-            addedKeys.push(current.nodeKey);
-            selectedNodeDefs.push(current);
-            for (const successor of current.successors) {
-                frontier.push(successor);
-                edges.push({
-                    "source": successor,
-                    "target": current.nodeKey,
-                });
-            }
-        }
-    }
-    return [selectedNodeDefs.map((nodeDef) => convertNodeDefToGraphNode(nodeDef)), edges];
-};
-
-
 const Graph = ({nodeDefs: nodeDefsList}) => {
     const graph = useReactFlow();
     const nodeDefs = nodeDefsList.reduce((accumulator, nodeDef) => ({...accumulator, [nodeDef.nodeKey]: nodeDef}),{});
-    const {nodes, edges, addNode, addNodesAndEdges} = useStore(({nodes, edges, addNode, addNodesAndEdges}) => ({
+    const {nodes, edges, addNode, editNode, addNodesAndEdges} = useStore(({nodes, edges, addNode, editNode, addNodesAndEdges}) => ({
         nodes, 
         edges, 
         addNode, 
+        editNode, 
         addNodesAndEdges
     }), shallow);
 
@@ -113,6 +75,13 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
                 minZoom={MIN_ZOOM}
                 maxZoom={MAX_ZOOM}
                 edges={edges}
+                onNodesChange={(changes) => {
+                    // TODO do we always have exactly one change in the event??? 
+                    if (changes[0].type === 'position') {
+                        const {id, position} = changes[0];
+                        editNode(id, {position});
+                    }
+                }}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 // connectionLineType={ConnectionLineType.Straight}
