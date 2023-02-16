@@ -56,12 +56,11 @@ const getNodeGraph = (nodeDefs, nodeKey) => {
 
 const Graph = ({nodeDefs: nodeDefsList}) => {
     const nodeDefs = nodeDefsList.reduce((accumulator, nodeDef) => ({...accumulator, [nodeDef.nodeKey]: nodeDef}),{});
-    const {nodes, edges, nodeKeys, edgeKeys, addGraphData} = useStore((state) => ({
-        nodes: state.nodes,
-        edges: state.edges,
-        nodeKeys: state.nodeKeys,
-        edgeKeys: state.edgeKeys,
-        addGraphData: state.addGraphData,
+    const {nodes, edges, addNode, addNodesAndEdges} = useStore(({nodes, edges, addNode, addNodesAndEdges}) => ({
+        nodes, 
+        edges, 
+        addNode, 
+        addNodesAndEdges
     }), shallow);
 
     const graphDiv = useRef(null);
@@ -84,7 +83,7 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
             }
         };
         NEW_NODE_INDEX += 1;
-        addGraphData([newNode], []);
+        addNode(newNode, []);
     }, []);
     
     const onDrop = useCallback(
@@ -92,15 +91,10 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
             event.preventDefault();
             const nodeKey = event.dataTransfer.getData('application/reactflow');
             const nodeDef = nodeDefs[nodeKey];
-            let [nodesToAdd, edgesToAdd] = getNodeGraph(nodeDefs, nodeDef.nodeKey);
-            // We're only going to add nodes/edges that don't yet exist in the graph
-            nodesToAdd = nodesToAdd.filter((node) => !nodeKeys.has(node.id));
-            edgesToAdd = edgesToAdd.filter((edge) => !edgeKeys.has(edge.id));
-            if (nodesToAdd || edgesToAdd) {
-                addGraphData(nodesToAdd, edgesToAdd);
-            }
+            let [newNodes, newEdges] = getNodeGraph(nodeDefs, nodeDef.nodeKey);
+            addNodesAndEdges(newNodes, newEdges);
         },
-        [nodeKeys, edgeKeys, nodeDefs]
+        [nodeDefs]
     );
 
     return (

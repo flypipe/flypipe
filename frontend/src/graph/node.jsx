@@ -1,15 +1,19 @@
 import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useStore } from './store';
 
 
 const Node = ({ data }) => {
     const {label} = data;
+    const {addEdge} = useStore(({addEdge}) => ({
+        addEdge
+    }));
+
     return <>
         <Handle
             type="target"
             position={Position.Left}
             id="target-handle"
-            onConnect={(params) => console.log('handle onConnect', params)}
             isConnectable
         />
         <div className="p-2 border rounded" draggable>
@@ -19,7 +23,13 @@ const Node = ({ data }) => {
             type="source"
             position={Position.Right}
             id="source-handle"
-            onConnect={(params) => console.log('handle onConnect', params)}
+            onConnect={({source, target}) => {
+                addEdge({
+                    id: `${source}-${target}`,
+                    source,
+                    target
+                });
+            }}
             isConnectable
         />
     </>
