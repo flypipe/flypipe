@@ -3,7 +3,10 @@ import ReactFlow, {useNodes} from 'reactflow';
 import Node from './node';
 import { useStore } from './store';
 import { shallow } from 'zustand/shallow';
+import { EditNode } from './edit-node';
 import 'reactflow/dist/style.css';
+import Button from 'react-bootstrap/Button';
+
 
 
 // TODO- get rid of this index when we introduce the new node modal
@@ -85,6 +88,11 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
         };
         NEW_NODE_INDEX += 1;
         addGraphData([newNode], []);
+        
+        
+
+        
+        
     }, []);
     
     const onDrop = useCallback(
@@ -106,8 +114,10 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
     return (
         <div className="layoutflow" ref={graphDiv}>
             <div className="m-4">
-                <button className="btn btn-secondary" onClick={onClickNewNode}>New Node</button>
+                {/* <button className="btn btn-secondary" onClick={onClickNewNode}>New Node</button> */}
+                <Button variant="secondary" onClick={onClickNewNode}>New Node</Button>
             </div>
+            <EditNode/>
             <ReactFlow
                 nodes={nodes}
                 nodeTypes={NODE_TYPES}

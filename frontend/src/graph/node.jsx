@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 
 
+
 const Node = ({ data }) => {
     const {label} = data;
     return <>
