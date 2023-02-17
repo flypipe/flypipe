@@ -1,5 +1,10 @@
 import dagre from 'dagre';
-import {ANIMATION_SPEED, DEFAULT_ZOOM, NODE_WIDTH, NODE_HEIGHT} from './graph/config';
+import {ANIMATION_SPEED, DEFAULT_ZOOM} from './graph/config';
+
+// This isn't the actual node width which appears to be dynamically calculated. It's a width that we must give for 
+// the dagre layout calculation. 
+export const NODE_WIDTH = 150;
+export const NODE_HEIGHT = 40;
 
 
 // Given the nodes & edges from the graph, construct a dagre graph to automatically assign 
@@ -45,7 +50,9 @@ const convertNodeDefToGraphNode = ({nodeKey, name}, isNew=true) => ({
     "position": { // dummy position, this will be automatically updated later
         "x": 0,
         "y": 0,
-    }
+    },
+    // "width": NODE_WIDTH,
+    // "height": NODE_HEIGHT,
 });
 
 // Given an input node, get the list of nodes and edges of all of the input node's predecessors. 
@@ -78,5 +85,9 @@ const moveToNode = (graph, nodeId) => {
     const newNodePosition = graph.getNodes().find(({id}) => id === nodeId).position;
     graph.setCenter(newNodePosition.x, newNodePosition.y, {duration: ANIMATION_SPEED, zoom: DEFAULT_ZOOM});
 };
+
+const getIntersectingNodes = (graph, node) => {
+
+}
 
 export {getPredecessorNodesAndEdgesFromNode, refreshNodePositions, moveToNode};

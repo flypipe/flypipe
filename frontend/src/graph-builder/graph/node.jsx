@@ -1,10 +1,11 @@
 import React, { useCallback, useMemo } from 'react';
 import { useReactFlow, Handle, Position } from 'reactflow';
+import Badge from 'react-bootstrap/Badge';
 import { refreshNodePositions } from '../util';
 import classNames from 'classnames';
 
 
-const BaseNode = ({ data, isNewNode }) => {
+const BaseNode = ({ data, isNewNode, width, height }) => {
     const graph = useReactFlow();
     const { label } = data;
 
@@ -21,13 +22,14 @@ const BaseNode = ({ data, isNewNode }) => {
     }, [graph]);
 
     const klass = useMemo(() => classNames(
-        "p-2",
+        "d-flex",
+        "justify-content-between",
+        "px-4",
+        "py-2",
         "border",
-        isNewNode ? "rounded" : "",
-        {
-            "border-3": isNewNode
-        }
-    ), [isNewNode]);
+        "border-3",
+        "rounded",
+    ));
 
     return <>
         <Handle
@@ -36,9 +38,9 @@ const BaseNode = ({ data, isNewNode }) => {
             id="target-handle"
             isConnectable
         />
-        
-        <div className={klass} draggable>
-            {label}
+        <div className={klass} style={{width, height}}>
+            <p className="mb-0 me-2 h1">{label}</p>
+            {isNewNode && <Badge pill bg="primary" className="align-self-start"><span class="fs-6">New</span></Badge>}
         </div>
         <Handle
             type="source"

@@ -3,7 +3,7 @@ import ReactFlow, {useNodes, useReactFlow, applyNodeChanges} from 'reactflow';
 import {ExistingNode, NewNode} from './node';
 import { refreshNodePositions, moveToNode } from '../util';
 import 'reactflow/dist/style.css';
-import {MIN_ZOOM, MAX_ZOOM, NODE_WIDTH, NODE_HEIGHT} from './config';
+import {MIN_ZOOM, MAX_ZOOM} from './config';
 
 
 // TODO- get rid of this index when we introduce the new node modal
@@ -38,8 +38,6 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
                 "x": 0,
                 "y": 0,
             },
-            "width": NODE_WIDTH,
-            "height": NODE_HEIGHT,
         };
         NEW_NODE_INDEX += 1;
 
