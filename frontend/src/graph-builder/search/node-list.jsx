@@ -1,7 +1,8 @@
 import React, {useState, useMemo, useCallback, useEffect, useRef} from 'react';
 import Node from './node';
 import Pagination from './pagination';
-import Notifications from './notifications';
+import { getPredecessorNodesAndEdgesFromNode, moveToNode, refreshNodePositions } from '../util';
+import { useReactFlow } from 'reactflow';
 
 // Maximum number of search entries per page
 const SEARCH_PAGE_SIZE = 8;
@@ -10,12 +11,11 @@ const SEARCH_PAGE_GROUP_SIZE = 5;
 
 
 const NodeList = ({nodes, selectedNode, handleSelectNode}) => {
+    const graph = useReactFlow();
     const [currentNodes, setCurrentNodes] = useState([]);
     const [graphBuilderNodes, setGraphBuilderNodes] = useState(new Set());
-    const [notification, setNotification] = useState({
-        msgId: 0,
-        message: ""
-    });
+    // const {addNodesAndEdges, removeNodesAndEdges} = useStore(({addNodesAndEdges, removeNodesAndEdges}) => ({addNodesAndEdges, removeNodesAndEdges}));
+    
     // Use need to use a ref to access the updated graphBuilderNodes 
     // (https://stackoverflow.com/questions/55265255/react-usestate-hook-event-handler-using-initial-state)
     // Still unsure why exactly the state doesn't update in callbacks here in particular though as it 
@@ -41,26 +41,27 @@ const NodeList = ({nodes, selectedNode, handleSelectNode}) => {
     const handleClickGraphBuilder = (nodeKey) => {
         const graphBuilderNodes = graphBuilderNodesRef.current;
         const {name} = nodes.find((node) => node.nodeKey === nodeKey);
-        const notificationMessage = graphBuilderNodes.has(nodeKey) ? 
-            `Removed ${name} from the Graph Builder` : 
-            `Added ${name} to the Graph Builder`;
-        if (graphBuilderNodes.has(nodeKey)) {
-            setGraphBuilderNodes((prevGraphBuilderNodes) => {
-                const newSet = new Set([...prevGraphBuilderNodes].filter(x => x !== nodeKey));
-                graphBuilderNodesRef.current = newSet;
-                return newSet;
-            });
-        } else {
+
+        const [predecessorNodes, predecessorEdges] = getPredecessorNodesAndEdgesFromNode(nodes, nodeKey);
+        if (!graphBuilderNodes.has(nodeKey)) {
             setGraphBuilderNodes((prevGraphBuilderNodes) => {
                 const newSet = new Set([...prevGraphBuilderNodes, nodeKey]);
                 graphBuilderNodesRef.current = newSet;
                 return newSet;
             });
         }
-        setNotification(({msgId}) => ({
-            msgId: msgId + 1,
-            message: notificationMessage
-        }));
+        // Add the node and any predecessor nodes/edges to the graph that aren't already there.
+        const currentNodes = new Set(graph.getNodes().map(({id}) => id));
+        const currentEdges = new Set(graph.getEdges().map(({id}) => id));
+        const newNodes = predecessorNodes.filter(({id}) => !(currentNodes.has(id)));
+        const newEdges = predecessorEdges.filter(({id}) => !(currentEdges.has(id)));
+
+        
+
+        graph.addNodes(newNodes);
+        graph.addEdges(newEdges);
+        refreshNodePositions(graph);
+        moveToNode(graph, nodeKey);
     };
     
     return <div className="list-group list-group-flush">
@@ -78,7 +79,6 @@ const NodeList = ({nodes, selectedNode, handleSelectNode}) => {
             />
         )}
         <Pagination maxPage={maxPage} pageGroupSize={SEARCH_PAGE_GROUP_SIZE} handleClickPage={handleChangePage}/>
-        {/* <Notifications newMessage={notification}/> */}
     </div>
 };
 

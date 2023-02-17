@@ -1,15 +1,15 @@
 import React, {useState, useMemo} from 'react';
-import Header from './catalog/header/header';
-import Catalog from './catalog/catalog';
+import Header from './header/header';
+import GraphBuilder from './graph-builder/graph-builder';
 
 
 const App = () => {
-    const [content, setContent] = useState(<Catalog/>);
+    const [content, setContent] = useState(<GraphBuilder/>);
     const headerLinks = useMemo(() => [
         {
-            'name': 'Catalog',
+            'name': 'Graph Builder',
             'handleClick': () => {
-                setContent(<Catalog/>)
+                setContent(<GraphBuilder/>)
             }
         },
         {
