@@ -58,6 +58,7 @@ const getNodeGraph = (nodeDefs, nodeKey) => {
 
 
 const Graph = ({nodeDefs: nodeDefsList}) => {
+    const [newNodeId, setNewNodeId] = useState(null);
     const nodeDefs = nodeDefsList.reduce((accumulator, nodeDef) => ({...accumulator, [nodeDef.nodeKey]: nodeDef}),{});
     const {nodes, edges, nodeKeys, edgeKeys, addGraphData} = useStore((state) => ({
         nodes: state.nodes,
@@ -75,8 +76,9 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
 
 
     const onClickNewNode = useCallback(() => {
+        const newNodeId = `new-node-${NEW_NODE_INDEX}`;
         const newNode = {
-            "id": `new-node-${NEW_NODE_INDEX}`,
+            "id": newNodeId,
             "type": "flypipe-node",
             "data": {
                 "label": `Untitled-${NEW_NODE_INDEX}`
@@ -89,7 +91,7 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
         NEW_NODE_INDEX += 1;
         addGraphData([newNode], []);
         
-        
+        setNewNodeId(newNodeId);
 
         
         
@@ -117,7 +119,7 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
                 {/* <button className="btn btn-secondary" onClick={onClickNewNode}>New Node</button> */}
                 <Button variant="secondary" onClick={onClickNewNode}>New Node</Button>
             </div>
-            <EditNode/>
+            {newNodeId && <EditNode nodeId={newNodeId} />}
             <ReactFlow
                 nodes={nodes}
                 nodeTypes={NODE_TYPES}

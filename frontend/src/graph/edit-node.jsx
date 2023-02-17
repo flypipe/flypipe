@@ -3,9 +3,17 @@ import { Button, Offcanvas, Badge, Row, Col, Accordion, Span} from 'react-bootst
 import Form from 'react-bootstrap/Form';
 import {Tags} from './tags';
 import { BsCodeSlash } from "react-icons/bs";
+import { useReactFlow } from 'reactflow';
 
 
-export const EditNode = () => {
+
+export const EditNode = (nodeId) => {   
+    
+    const reactFlowInstance = useReactFlow();
+    const node = reactFlowInstance.getNode(nodeId);
+    debugger;
+    console.log(nodeId,reactFlowInstance,  node);
+
     const [show, setShow] = useState(true);
 
     const handleClose = () => setShow(false);
