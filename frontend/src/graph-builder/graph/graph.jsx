@@ -1,6 +1,6 @@
 import React, {useState, useCallback, useRef, useContext, useEffect} from 'react';
 import ReactFlow, {useNodes, useReactFlow, applyNodeChanges} from 'reactflow';
-import Node from './node';
+import {ExistingNode, NewNode} from './node';
 import { refreshNodePositions, moveToNode } from '../util';
 import 'reactflow/dist/style.css';
 import {MIN_ZOOM, MAX_ZOOM, NODE_WIDTH, NODE_HEIGHT} from './config';
@@ -11,7 +11,8 @@ let NEW_NODE_INDEX = 1;
 
 
 const NODE_TYPES = {
-    "flypipe-node": Node
+    "flypipe-node-existing": ExistingNode,
+    "flypipe-node-new": NewNode
 };
 
 const Graph = ({nodeDefs: nodeDefsList}) => {
@@ -29,7 +30,7 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
         const newNodeId = `new-node-${NEW_NODE_INDEX}`;
         const newNode = {
             "id": newNodeId,
-            "type": "flypipe-node",
+            "type": "flypipe-node-new",
             "data": {
                 "label": `Untitled-${NEW_NODE_INDEX}`
             },
@@ -70,16 +71,7 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
                 nodeTypes={NODE_TYPES}
                 minZoom={MIN_ZOOM}
                 maxZoom={MAX_ZOOM}
-                // onNodesChange={(changes) => {
-                //     // TODO do we always have exactly one change in the event??? 
-                //     if (changes[0].type === 'position') {
-                //         const {id, position} = changes[0];
-                //         editNode(id, {position});
-                //     }
-                // }}
-                onDrop={onDrop}
-                onDragOver={onDragOver}
-                // connectionLineType={ConnectionLineType.Straight}
+                onNodeDrag={(e) => {console.log(e)}}
                 fitView
             />
         </div>

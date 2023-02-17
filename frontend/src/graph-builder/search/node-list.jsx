@@ -55,6 +55,9 @@ const NodeList = ({nodes, selectedNode, handleSelectNode}) => {
         const currentEdges = new Set(graph.getEdges().map(({id}) => id));
         const newNodes = predecessorNodes.filter(({id}) => !(currentNodes.has(id)));
         const newEdges = predecessorEdges.filter(({id}) => !(currentEdges.has(id)));
+
+        
+
         graph.addNodes(newNodes);
         graph.addEdges(newEdges);
         refreshNodePositions(graph);

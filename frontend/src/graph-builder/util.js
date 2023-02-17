@@ -36,9 +36,9 @@ const refreshNodePositions = (graph) => {
 };
 
 // Retrieve the graph node representation of a node
-const convertNodeDefToGraphNode = ({nodeKey, name}) => ({
+const convertNodeDefToGraphNode = ({nodeKey, name}, isNew=true) => ({
     "id": nodeKey,
-    "type": "flypipe-node",
+    "type": isNew ? "flypipe-node-new" : "flypipe-node-existing",
     "data": {
         "label": name
     },
@@ -71,7 +71,7 @@ const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
             }
         }
     }
-    return [selectedNodeDefs.map((nodeDef) => convertNodeDefToGraphNode(nodeDef)), edges];
+    return [selectedNodeDefs.map((nodeDef) => convertNodeDefToGraphNode(nodeDef, false)), edges];
 };
 
 const moveToNode = (graph, nodeId) => {

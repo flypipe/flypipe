@@ -1,11 +1,12 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useReactFlow, Handle, Position } from 'reactflow';
 import { refreshNodePositions } from '../util';
+import classNames from 'classnames';
 
 
-const Node = ({ data }) => {
+const BaseNode = ({ data, isNewNode }) => {
     const graph = useReactFlow();
-    const {label} = data;
+    const { label } = data;
 
     const handleConnect = useCallback(({source, target}) => {
         const edgeId = `${source}-${target}`;
@@ -19,6 +20,15 @@ const Node = ({ data }) => {
         }
     }, [graph]);
 
+    const klass = useMemo(() => classNames(
+        "p-2",
+        "border",
+        isNewNode ? "rounded" : "",
+        {
+            "border-3": isNewNode
+        }
+    ), [isNewNode]);
+
     return <>
         <Handle
             type="target"
@@ -26,7 +36,8 @@ const Node = ({ data }) => {
             id="target-handle"
             isConnectable
         />
-        <div className="p-2 border rounded" draggable>
+        
+        <div className={klass} draggable>
             {label}
         </div>
         <Handle
@@ -39,5 +50,7 @@ const Node = ({ data }) => {
     </>
 }
 
+const ExistingNode = (props) => <BaseNode isNewNode={false} {...props}/>
+const NewNode = (props) => <BaseNode isNewNode={true} {...props}/>
 
-export default Node;
+export {ExistingNode, NewNode};
