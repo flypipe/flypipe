@@ -1,29 +1,40 @@
-import React, { useState } from 'react';
-import { Button, Offcanvas, Badge, Row, Col, Accordion, Span} from 'react-bootstrap';
+import React, { useState, useCallback } from 'react';
+import { Button, Offcanvas, Badge, Row, Col, Accordion, Modal} from 'react-bootstrap';
 import Form from 'react-bootstrap/Form';
 import {Tags} from './tags';
+import {NodeSourceCode} from './node-source-code';
 import { BsCodeSlash } from "react-icons/bs";
 import { useReactFlow } from 'reactflow';
 
 
 
-export const EditNode = (nodeId) => {   
-    
+export const EditNode = ({nodeId}) => {   
+    const [showSourceCode, setShowSourceCode] = useState(false);
+    const [sourceCode, setSourcecode] = useState(null);
     const reactFlowInstance = useReactFlow();
     const node = reactFlowInstance.getNode(nodeId);
-    debugger;
-    console.log(nodeId,reactFlowInstance,  node);
+    // debugger;
+    console.log(nodeId, reactFlowInstance,  node);
 
     const [show, setShow] = useState(true);
 
     const handleClose = () => setShow(false);
 
+
+    const onClickSourceCode = useCallback(() => {
+        setSourcecode(node.data.sourceCode);
+        setShowSourceCode(true);
+    }, [node]);
+
     return (
+        <>
+        <NodeSourceCode sourceCode={sourceCode}  show={showSourceCode} onClose={() => {setShowSourceCode(false)}} />
+
         <Offcanvas show={show} onHide={handleClose} placement='end' backdrop={false} scroll={true} className='node'>
             <Offcanvas.Header closeButton={false} className='node'>
                 <Offcanvas.Title>
                     Edit Node
-                    <Button variant="outline-dark" className="btn-sm float-end"><BsCodeSlash /></Button>
+                    <Button variant="outline-dark" className="btn-sm float-end" onClick={onClickSourceCode}><BsCodeSlash /></Button>
                 </Offcanvas.Title>                
             </Offcanvas.Header>
             <Offcanvas.Body>
@@ -33,7 +44,7 @@ export const EditNode = (nodeId) => {
                 <Form>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-semibold">Name</Form.Label>
-                        <Form.Control type="text"/>
+                        <Form.Control type="text" defaultValue={node.data.label}/>
                     </Form.Group>
 
                     <Form.Group className="mb-3">
@@ -142,6 +153,7 @@ export const EditNode = (nodeId) => {
             </Offcanvas.Body>
         </Offcanvas>
         
+        </>
     );
 
 }

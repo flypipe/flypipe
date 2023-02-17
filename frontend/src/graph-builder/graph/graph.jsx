@@ -4,7 +4,7 @@ import {ExistingNode, NewNode} from './node';
 import { refreshNodePositions, moveToNode } from '../util';
 import 'reactflow/dist/style.css';
 import {MIN_ZOOM, MAX_ZOOM, NODE_WIDTH, NODE_HEIGHT} from './config';
-
+import { EditNode } from './edit-node'; 
 
 // TODO- get rid of this index when we introduce the new node modal
 let NEW_NODE_INDEX = 1;
@@ -16,6 +16,7 @@ const NODE_TYPES = {
 };
 
 const Graph = ({nodeDefs: nodeDefsList}) => {
+    const [newNodeId, setNewNodeId] = useState(null);
     const graph = useReactFlow();
     const nodeDefs = nodeDefsList.reduce((accumulator, nodeDef) => ({...accumulator, [nodeDef.nodeKey]: nodeDef}),{});
 
@@ -46,6 +47,9 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
         graph.addNodes(newNode);
         refreshNodePositions(graph);
         moveToNode(graph, newNodeId);
+
+        setNewNodeId(newNodeId);
+
     }, [graph]);
     
     const onDrop = useCallback(
@@ -58,6 +62,14 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
         },
         [nodeDefs]
     );
+
+    const onNodeClick = useCallback(
+        (event, node) => {
+            console.log(node);
+            setNewNodeId(node.id);
+        },
+        []
+    );
     // graph.fitView({duration: 250});
 
     return (
@@ -65,6 +77,7 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
             <div className="m-4">
                 <button className="btn btn-secondary" onClick={onClickNewNode}>New Node</button>
             </div>
+            { newNodeId && <EditNode nodeId={newNodeId} />}
             <ReactFlow
                 defaultNodes={[]}
                 defaultEdges={[]}
@@ -72,6 +85,7 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
                 minZoom={MIN_ZOOM}
                 maxZoom={MAX_ZOOM}
                 onNodeDrag={(e) => {console.log(e)}}
+                onNodeClick={onNodeClick}
                 fitView
             />
         </div>
