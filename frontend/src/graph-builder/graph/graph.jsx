@@ -1,15 +1,13 @@
 import React, {useState, useCallback, useRef, useContext, useEffect} from 'react';
 import ReactFlow, {useNodes, useReactFlow, applyNodeChanges} from 'reactflow';
 import Node from './node';
-import { useStore } from '../store';
-import { shallow } from 'zustand/shallow';
+import { refreshNodePositions, moveToNode } from '../util';
 import 'reactflow/dist/style.css';
+import {MIN_ZOOM, MAX_ZOOM, NODE_WIDTH, NODE_HEIGHT} from './config';
 
 
 // TODO- get rid of this index when we introduce the new node modal
-let NEW_NODE_INDEX = 1
-const MIN_ZOOM = 0.6;
-const MAX_ZOOM = 2;
+let NEW_NODE_INDEX = 1;
 
 
 const NODE_TYPES = {
@@ -19,13 +17,6 @@ const NODE_TYPES = {
 const Graph = ({nodeDefs: nodeDefsList}) => {
     const graph = useReactFlow();
     const nodeDefs = nodeDefsList.reduce((accumulator, nodeDef) => ({...accumulator, [nodeDef.nodeKey]: nodeDef}),{});
-    const {nodes, edges, addNode, editNode, addNodesAndEdges} = useStore(({nodes, edges, addNode, editNode, addNodesAndEdges}) => ({
-        nodes, 
-        edges, 
-        addNode, 
-        editNode, 
-        addNodesAndEdges
-    }), shallow);
 
     const graphDiv = useRef(null);
     const onDragOver = useCallback((event) => {
@@ -35,8 +26,9 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
 
 
     const onClickNewNode = useCallback(() => {
+        const newNodeId = `new-node-${NEW_NODE_INDEX}`;
         const newNode = {
-            "id": `new-node-${NEW_NODE_INDEX}`,
+            "id": newNodeId,
             "type": "flypipe-node",
             "data": {
                 "label": `Untitled-${NEW_NODE_INDEX}`
@@ -44,11 +36,16 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
             "position": { // dummy position, this will be automatically updated later
                 "x": 0,
                 "y": 0,
-            }
+            },
+            "width": NODE_WIDTH,
+            "height": NODE_HEIGHT,
         };
         NEW_NODE_INDEX += 1;
-        addNode(newNode, []);
-    }, []);
+
+        graph.addNodes(newNode);
+        refreshNodePositions(graph);
+        moveToNode(graph, newNodeId);
+    }, [graph]);
     
     const onDrop = useCallback(
         (event) => {
@@ -60,9 +57,7 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
         },
         [nodeDefs]
     );
-    useEffect(() => {
-        graph.fitView({duration: 500});
-    }, [nodes, edges, graph]);
+    // graph.fitView({duration: 250});
 
     return (
         <div className="layoutflow" ref={graphDiv}>
@@ -70,18 +65,18 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
                 <button className="btn btn-secondary" onClick={onClickNewNode}>New Node</button>
             </div>
             <ReactFlow
-                nodes={nodes}
+                defaultNodes={[]}
+                defaultEdges={[]}
                 nodeTypes={NODE_TYPES}
                 minZoom={MIN_ZOOM}
                 maxZoom={MAX_ZOOM}
-                edges={edges}
-                onNodesChange={(changes) => {
-                    // TODO do we always have exactly one change in the event??? 
-                    if (changes[0].type === 'position') {
-                        const {id, position} = changes[0];
-                        editNode(id, {position});
-                    }
-                }}
+                // onNodesChange={(changes) => {
+                //     // TODO do we always have exactly one change in the event??? 
+                //     if (changes[0].type === 'position') {
+                //         const {id, position} = changes[0];
+                //         editNode(id, {position});
+                //     }
+                // }}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 // connectionLineType={ConnectionLineType.Straight}

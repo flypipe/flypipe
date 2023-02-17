@@ -1,11 +1,10 @@
 import dagre from 'dagre';
+import {ANIMATION_SPEED, DEFAULT_ZOOM, NODE_WIDTH, NODE_HEIGHT} from './graph/config';
 
-const NODE_WIDTH = 172;
-const NODE_HEIGHT = 36;
 
 // Given the nodes & edges from the graph, construct a dagre graph to automatically assign 
 // the positions of the nodes. 
-export const assignNodePositions = (nodes, edges) => {
+const assignNodePositions = (nodes, edges) => {
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setGraph({ rankdir: 'LR' });
     dagreGraph.setDefaultEdgeLabel(() => ({}));
@@ -30,6 +29,12 @@ export const assignNodePositions = (nodes, edges) => {
     });
 };
 
+const refreshNodePositions = (graph) => {
+    const nodes = graph.getNodes();
+    assignNodePositions(nodes, graph.getEdges());
+    graph.setNodes(nodes);
+};
+
 // Retrieve the graph node representation of a node
 const convertNodeDefToGraphNode = ({nodeKey, name}) => ({
     "id": nodeKey,
@@ -44,7 +49,7 @@ const convertNodeDefToGraphNode = ({nodeKey, name}) => ({
 });
 
 // Given an input node, get the list of nodes and edges of all of the input node's predecessors. 
-export const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
+const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
     const nodeDef = nodeDefs.find((nodeDef) => nodeDef.nodeKey === nodeKey);
     const frontier = [...nodeDef.predecessors];
     const selectedNodeDefs = [nodeDef];
@@ -59,6 +64,7 @@ export const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
             for (const successor of current.successors) {
                 frontier.push(successor);
                 edges.push({
+                    "id": `${successor}-${current.nodeKey}`,
                     "source": successor,
                     "target": current.nodeKey,
                 });
@@ -67,3 +73,10 @@ export const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
     }
     return [selectedNodeDefs.map((nodeDef) => convertNodeDefToGraphNode(nodeDef)), edges];
 };
+
+const moveToNode = (graph, nodeId) => {
+    const newNodePosition = graph.getNodes().find(({id}) => id === nodeId).position;
+    graph.setCenter(newNodePosition.x, newNodePosition.y, {duration: ANIMATION_SPEED, zoom: DEFAULT_ZOOM});
+};
+
+export {getPredecessorNodesAndEdgesFromNode, refreshNodePositions, moveToNode};

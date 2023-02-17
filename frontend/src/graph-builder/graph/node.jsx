@@ -1,13 +1,23 @@
-import React, { memo } from 'react';
-import { Handle, Position } from 'reactflow';
-import { useStore } from '../store';
+import React, { useCallback } from 'react';
+import { useReactFlow, Handle, Position } from 'reactflow';
+import { refreshNodePositions } from '../util';
 
 
 const Node = ({ data }) => {
+    const graph = useReactFlow();
     const {label} = data;
-    const {addEdge} = useStore(({addEdge}) => ({
-        addEdge
-    }));
+
+    const handleConnect = useCallback(({source, target}) => {
+        const edgeId = `${source}-${target}`;
+        if (!graph.getEdge(edgeId)) {
+            graph.addEdges({
+                id: edgeId,
+                source,
+                target
+            })
+            refreshNodePositions(graph);
+        }
+    }, [graph]);
 
     return <>
         <Handle
@@ -23,12 +33,7 @@ const Node = ({ data }) => {
             type="source"
             position={Position.Right}
             id="source-handle"
-            onConnect={({source, target}) => {
-                addEdge(
-                    source,
-                    target
-                );
-            }}
+            onConnect={handleConnect}
             isConnectable
         />
     </>

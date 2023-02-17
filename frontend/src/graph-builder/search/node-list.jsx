@@ -1,8 +1,8 @@
 import React, {useState, useMemo, useCallback, useEffect, useRef} from 'react';
 import Node from './node';
 import Pagination from './pagination';
-import { useStore } from '../store';
-import { getPredecessorNodesAndEdgesFromNode } from '../util';
+import { getPredecessorNodesAndEdgesFromNode, moveToNode, refreshNodePositions } from '../util';
+import { useReactFlow } from 'reactflow';
 
 // Maximum number of search entries per page
 const SEARCH_PAGE_SIZE = 8;
@@ -11,9 +11,10 @@ const SEARCH_PAGE_GROUP_SIZE = 5;
 
 
 const NodeList = ({nodes, selectedNode, handleSelectNode}) => {
+    const graph = useReactFlow();
     const [currentNodes, setCurrentNodes] = useState([]);
     const [graphBuilderNodes, setGraphBuilderNodes] = useState(new Set());
-    const {addNodesAndEdges, removeNodesAndEdges} = useStore(({addNodesAndEdges, removeNodesAndEdges}) => ({addNodesAndEdges, removeNodesAndEdges}));
+    // const {addNodesAndEdges, removeNodesAndEdges} = useStore(({addNodesAndEdges, removeNodesAndEdges}) => ({addNodesAndEdges, removeNodesAndEdges}));
     
     // Use need to use a ref to access the updated graphBuilderNodes 
     // (https://stackoverflow.com/questions/55265255/react-usestate-hook-event-handler-using-initial-state)
@@ -49,8 +50,15 @@ const NodeList = ({nodes, selectedNode, handleSelectNode}) => {
                 return newSet;
             });
         }
-        // Add the node and it's predecessors to the graph
-        addNodesAndEdges(predecessorNodes, predecessorEdges);
+        // Add the node and any predecessor nodes/edges to the graph that aren't already there.
+        const currentNodes = new Set(graph.getNodes().map(({id}) => id));
+        const currentEdges = new Set(graph.getEdges().map(({id}) => id));
+        const newNodes = predecessorNodes.filter(({id}) => !(currentNodes.has(id)));
+        const newEdges = predecessorEdges.filter(({id}) => !(currentEdges.has(id)));
+        graph.addNodes(newNodes);
+        graph.addEdges(newEdges);
+        refreshNodePositions(graph);
+        moveToNode(graph, nodeKey);
     };
     
     return <div className="list-group list-group-flush">
