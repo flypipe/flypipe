@@ -16,7 +16,7 @@ const NODE_TYPES = {
 };
 
 const Graph = ({nodeDefs: nodeDefsList}) => {
-    const [newNodeId, setNewNodeId] = useState(null);
+    const [nodeInView, setNodeInView] = useState(null);
     const graph = useReactFlow();
     const nodeDefs = nodeDefsList.reduce((accumulator, nodeDef) => ({...accumulator, [nodeDef.nodeKey]: nodeDef}),{});
 
@@ -48,7 +48,7 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
         refreshNodePositions(graph);
         moveToNode(graph, newNodeId);
 
-        setNewNodeId(newNodeId);
+        setNodeInView(graph.getNode(newNodeId));
 
     }, [graph]);
     
@@ -65,19 +65,32 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
 
     const onNodeClick = useCallback(
         (event, node) => {
-            console.log(node);
-            setNewNodeId(node.id);
+            setNodeInView(node);
         },
         []
     );
     // graph.fitView({duration: 250});
+
+    const onNodeChanged =  useCallback(
+        (name, value) => {
+            console.log("node changed:", name, value);
+
+            
+            setNodeInView((prevNode) => {
+                const node = {...prevNode};
+                node.data[name] = value;
+                return node;
+            })
+        },
+        []
+    );
 
     return (
         <div className="layoutflow" ref={graphDiv}>
             <div className="m-4">
                 <button className="btn btn-secondary" onClick={onClickNewNode}>New Node</button>
             </div>
-            { newNodeId && <EditNode nodeId={newNodeId} />}
+            { nodeInView && <EditNode node={nodeInView} onNodeChanged={onNodeChanged} />}
             <ReactFlow
                 defaultNodes={[]}
                 defaultEdges={[]}

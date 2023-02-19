@@ -8,18 +8,21 @@ import { useReactFlow } from 'reactflow';
 
 
 
-export const EditNode = ({nodeId}) => {   
+export const EditNode = ({ node, onNodeChanged }) => {   
+    
+    
+    const [show, setShow] = useState(true);
+    const handleClose = () => setShow(false);
+    
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [sourceCode, setSourcecode] = useState(null);
-    const reactFlowInstance = useReactFlow();
-    const node = reactFlowInstance.getNode(nodeId);
+
     // debugger;
-    console.log(nodeId, reactFlowInstance,  node);
+    console.log(node);
 
-    const [show, setShow] = useState(true);
-
-    const handleClose = () => setShow(false);
-
+    const onNodeNameChange = (value) => {
+        console.log("name:",value);          
+    };
 
     const onClickSourceCode = useCallback(() => {
         setSourcecode(node.data.sourceCode);
@@ -44,7 +47,7 @@ export const EditNode = ({nodeId}) => {
                 <Form>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-semibold">Name</Form.Label>
-                        <Form.Control type="text" defaultValue={node.data.label}/>
+                        <Form.Control type="text" value={node.data.label} onChange={(e) => onNodeChanged('label', e.target.value)}/>
                     </Form.Group>
 
                     <Form.Group className="mb-3">

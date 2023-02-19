@@ -41,7 +41,6 @@ const convertNodeDefToGraphNode = ({nodeKey, name, ...fields}, isNew=true) => ({
     "type": isNew ? "flypipe-node-new" : "flypipe-node-existing",
     "data": {
         "label": name,
-        "name": name,
         ...fields
     },
     "position": { // dummy position, this will be automatically updated later
