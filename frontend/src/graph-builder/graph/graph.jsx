@@ -1,5 +1,6 @@
-import React, {useState, useCallback, useRef, useContext, useEffect} from 'react';
-import ReactFlow, {useNodes, useReactFlow, applyNodeChanges, Background, Panel, MiniMap} from 'reactflow';
+import React, {useState, useCallback, useRef} from 'react';
+import ReactFlow, {useReactFlow, Controls, Background, Panel, MiniMap} from 'reactflow';
+import { BsFilter } from "react-icons/bs";
 import {ExistingNode, NewNode} from './node';
 import { refreshNodePositions, moveToNode } from '../util';
 import 'reactflow/dist/style.css';
@@ -57,13 +58,14 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
         },
         [nodeDefs]
     );
-    // graph.fitView({duration: 250});
+    
+    const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+    const onClickFilters = useCallback(() => {
+        setIsFiltersVisible((prevState) => !prevState);
+    }, [setIsFiltersVisible]);
 
     return (
         <div className="layoutflow" ref={graphDiv}>
-            <div className="m-4">
-                <button className="btn btn-secondary" onClick={onClickNewNode}>New Node</button>
-            </div>
             <ReactFlow
                 defaultNodes={[]}
                 defaultEdges={[]}
@@ -73,8 +75,21 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
                 onNodeDrag={(e) => {console.log(e)}}
                 fitView
             >
-                <MiniMap zoomable pannable />
+                <Panel position="top-left">
+                    <div className="d-flex flex-column">
+                        <div className="m-4">
+                            <button className="btn btn-secondary mx-2" onClick={onClickFilters}><BsFilter size={21}/>All filters</button>
+                            <button className="btn btn-secondary mx-2" onClick={onClickNewNode}>New Node</button>
+                        </div>
+                        {isFiltersVisible && <div className="border border-3 bg-white">
+                            <p>Lol</p>
+                        </div>}
+                    </div>
+                    
+                </Panel>
+                <Controls />
                 <Panel position="bottom-center"><a href="//flypipe.github.io/flypipe/">Flypipe</a></Panel>
+                <MiniMap zoomable pannable />
                 <Background color="#aaa" gap={16} />
             </ReactFlow>
         </div>
