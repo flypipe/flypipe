@@ -31,6 +31,7 @@
                     "importCmd": "from this.is.the.path.to.country.code import Code",
                     "description": "This is the description of the country code",
                     "tags": ["feature", "test"],
+                    "nodeType": "pandas",
                     "schema": [],
                     "predecessors": [],
                     "successors": ["dummy_1"],
@@ -50,12 +51,13 @@
                     "importCmd": "from bla.dummy import Dummy",
                     "description": "<dummy>",
                     "tags": ["test"],
+                    "nodeType": "pyspark",
                     "schema": [],
                     "predecessors": ["country_code_1"],
                     "successors": [],
                     "sourceCode": (
                         "@node(\n" +
-                        "   type='pandas',\n" +
+                        "   type='pyspark',\n" +
                         "   dependencies=['country_code1']" +
                         ")\n" +
                         "def dummy(country_code1):\n" +
@@ -70,12 +72,13 @@
                     "importCmd": "from this.is.the.path.to.country.code import Code",
                     "description": "This is the description of the country code",
                     "tags": ["feature", "test"],
+                    "nodeType": "pandas_on_spark",
                     "schema": [],
                     "predecessors": [],
                     "successors": ["dummy_1"],
                     "sourceCode": (
                         "@node(\n" +
-                        "   type='pandas',\n" +
+                        "   type='pandas_on_spark',\n" +
                         ")\n" +
                         "def country_code2():\n" +
                         "   return pd.DataFrame({'c1': [1,2,3]}))\n" +

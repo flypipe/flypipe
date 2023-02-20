@@ -5,6 +5,7 @@ import { refreshNodePositions, moveToNode } from '../util';
 import 'reactflow/dist/style.css';
 import {MIN_ZOOM, MAX_ZOOM, NODE_WIDTH, NODE_HEIGHT} from './config';
 import { EditNode } from './edit-node'; 
+import { useFormik } from 'formik';
 
 // TODO- get rid of this index when we introduce the new node modal
 let NEW_NODE_INDEX = 1;
@@ -16,7 +17,33 @@ const NODE_TYPES = {
 };
 
 const Graph = ({nodeDefs: nodeDefsList}) => {
-    const [nodeInView, setNodeInView] = useState(null);
+
+    const [editNode, setEditNode] = useState(false);
+
+    const validate = values => {
+        const errors = {}
+
+        if (!values.label){
+            errors.label = 'Label is required'
+        }
+
+        if (!values.nodeType){
+            errors.nodeType = 'Type is required'
+        }
+
+        return errors
+    }
+    const formik = useFormik({
+        initialValues: {
+          name: '',
+          nodeType: '',
+        },
+        validate,
+        onSubmit: values => {
+          alert(JSON.stringify(values, null, 2));
+        },
+      });
+
     const graph = useReactFlow();
     const nodeDefs = nodeDefsList.reduce((accumulator, nodeDef) => ({...accumulator, [nodeDef.nodeKey]: nodeDef}),{});
 
@@ -33,7 +60,8 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
             "id": newNodeId,
             "type": "flypipe-node-new",
             "data": {
-                "label": `Untitled-${NEW_NODE_INDEX}`
+                "label": `Untitled-${NEW_NODE_INDEX}`,
+                "nodeType": "",
             },
             "position": { // dummy position, this will be automatically updated later
                 "x": 0,
@@ -48,7 +76,11 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
         refreshNodePositions(graph);
         moveToNode(graph, newNodeId);
 
-        setNodeInView(graph.getNode(newNodeId));
+        formik.resetForm({
+            values: newNode.data
+          });
+
+          setEditNode(true);
 
     }, [graph]);
     
@@ -65,32 +97,21 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
 
     const onNodeClick = useCallback(
         (event, node) => {
-            setNodeInView(node);
+            formik.resetForm({
+                values: node.data
+            });
+            setEditNode(true);
         },
         []
     );
     // graph.fitView({duration: 250});
-
-    const onNodeChanged =  useCallback(
-        (name, value) => {
-            console.log("node changed:", name, value);
-
-            
-            setNodeInView((prevNode) => {
-                const node = {...prevNode};
-                node.data[name] = value;
-                return node;
-            })
-        },
-        []
-    );
 
     return (
         <div className="layoutflow" ref={graphDiv}>
             <div className="m-4">
                 <button className="btn btn-secondary" onClick={onClickNewNode}>New Node</button>
             </div>
-            { nodeInView && <EditNode node={nodeInView} onNodeChanged={onNodeChanged} />}
+            { editNode && <EditNode formik={formik} />}
             <ReactFlow
                 defaultNodes={[]}
                 defaultEdges={[]}

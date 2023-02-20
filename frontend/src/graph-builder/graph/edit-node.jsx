@@ -5,11 +5,18 @@ import {Tags} from './tags';
 import {NodeSourceCode} from './node-source-code';
 import { BsCodeSlash } from "react-icons/bs";
 import { useReactFlow } from 'reactflow';
+import CustomSelect from './CustomSelect';
 
 
 
-export const EditNode = ({ node, onNodeChanged }) => {   
-    
+export const EditNode = ({ formik }) => {   
+    const nodeTypeOptions = [
+        {value: '', label: 'select'},
+        {value: 'pandas_on_spark', label: 'Pandas on Spark'},
+        {value: 'pyspark', label: 'PySpark'},
+        {value: 'spark_sql', label: 'Spark Sql'},
+        {value: 'pandas', label: 'Pandas'}        
+    ]
     
     const [show, setShow] = useState(true);
     const handleClose = () => setShow(false);
@@ -17,17 +24,11 @@ export const EditNode = ({ node, onNodeChanged }) => {
     const [showSourceCode, setShowSourceCode] = useState(false);
     const [sourceCode, setSourcecode] = useState(null);
 
-    // debugger;
-    console.log(node);
 
-    const onNodeNameChange = (value) => {
-        console.log("name:",value);          
-    };
-
-    const onClickSourceCode = useCallback(() => {
-        setSourcecode(node.data.sourceCode);
-        setShowSourceCode(true);
-    }, [node]);
+    // const onClickSourceCode = useCallback(() => {
+    //     setSourcecode(formik.values.sourceCode);
+    //     setShowSourceCode(true);
+    // }, [node]);
 
     return (
         <>
@@ -37,28 +38,30 @@ export const EditNode = ({ node, onNodeChanged }) => {
             <Offcanvas.Header closeButton={false} className='node'>
                 <Offcanvas.Title>
                     Edit Node
-                    <Button variant="outline-dark" className="btn-sm float-end" onClick={onClickSourceCode}><BsCodeSlash /></Button>
+                    {/* <Button variant="outline-dark" className="btn-sm float-end" onClick={onClickSourceCode}><BsCodeSlash /></Button> */}
                 </Offcanvas.Title>                
             </Offcanvas.Header>
             <Offcanvas.Body>
                 <p><span className='fw-semibold'>Status</span><Badge bg="success float-end" className="text-uppercase">active</Badge></p>
                 
 
-                <Form>
+                <Form onSubmit={formik.handleSubmit}>
                     <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">Name</Form.Label>
-                        <Form.Control type="text" value={node.data.label} onChange={(e) => onNodeChanged('label', e.target.value)}/>
+                        <Form.Label className="fw-semibold">Label</Form.Label>
+                        <Form.Control type="text" id="label" name="label" value={formik.values.label} onChange={formik.handleChange}/>
+                        {formik.errors.label ? <div className='text-danger'>{formik.errors.label}</div>: null}
                     </Form.Group>
 
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-semibold">Type</Form.Label>
-                        <Form.Select>
-                            <option>Select</option>
-                            <option value="pandas_on_spark">Pandas on Spark</option>
-                            <option value="pyspark">PySpark</option>
-                            <option value="pandas">Pandas</option>
-                            <option value="spark_sql">Spark SQL</option>
-                        </Form.Select>            
+                        <CustomSelect 
+                          id="nodeType" 
+                          name="nodeType"
+                          options={nodeTypeOptions}
+                          value={formik.values.nodeType}
+                          onChange={value=>formik.setFieldValue('nodeType', value.value)}
+                        />            
+                        {formik.errors.nodeType ? <div className='text-danger'>{formik.errors.nodeType}</div>: null}
                     </Form.Group>
 
                     <Form.Group className="mb-3">
@@ -142,14 +145,15 @@ export const EditNode = ({ node, onNodeChanged }) => {
                             </Accordion.Item>
                         </Accordion>                        
                     </Form.Group>
+                    <Row>
+                        <Col>
+                            <Button variant="outline-danger">delete</Button>
+                            <Button variant="outline-primary" className="me-2 float-end" type="submit">save</Button>
+                            <Button variant="outline-secondary" className="me-2 float-end">close</Button>
+                        </Col>
+                    </Row>
                 </Form>
-                <Row>
-                    <Col>
-                        <Button variant="outline-danger">delete</Button>
-                        <Button variant="outline-primary" className="me-2 float-end">save</Button>
-                        <Button variant="outline-secondary" className="me-2 float-end">close</Button>
-                    </Col>
-                </Row>
+                
                 
                 
 
