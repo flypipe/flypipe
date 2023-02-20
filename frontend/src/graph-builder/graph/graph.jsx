@@ -1,5 +1,5 @@
 import React, {useState, useCallback, useRef, useContext, useEffect} from 'react';
-import ReactFlow, {useNodes, useReactFlow, applyNodeChanges} from 'reactflow';
+import ReactFlow, {useNodes, useReactFlow, applyNodeChanges, Background, Panel, MiniMap} from 'reactflow';
 import {ExistingNode, NewNode} from './node';
 import { refreshNodePositions, moveToNode } from '../util';
 import 'reactflow/dist/style.css';
@@ -72,7 +72,11 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
                 maxZoom={MAX_ZOOM}
                 onNodeDrag={(e) => {console.log(e)}}
                 fitView
-            />
+            >
+                <MiniMap zoomable pannable />
+                <Panel position="bottom-center"><a href="//flypipe.github.io/flypipe/">Flypipe</a></Panel>
+                <Background color="#aaa" gap={16} />
+            </ReactFlow>
         </div>
       );
 }

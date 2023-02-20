@@ -20,7 +20,6 @@ const App = () => {
         }
     ], []);
     return <>
-        <Header links={headerLinks}/>
         <div>
             {content}
         </div>
