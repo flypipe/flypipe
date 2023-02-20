@@ -9,7 +9,7 @@ import CustomSelect from './CustomSelect';
 
 
 
-export const EditNode = ({ formik }) => {   
+export const EditNode = ({ formik, tagsSuggestions }) => {   
     const nodeTypeOptions = [
         {value: '', label: 'select'},
         {value: 'pandas_on_spark', label: 'Pandas on Spark'},
@@ -25,10 +25,10 @@ export const EditNode = ({ formik }) => {
     const [sourceCode, setSourcecode] = useState(null);
 
 
-    // const onClickSourceCode = useCallback(() => {
-    //     setSourcecode(formik.values.sourceCode);
-    //     setShowSourceCode(true);
-    // }, [node]);
+    const onClickSourceCode = useCallback(() => {
+        setSourcecode(formik.values.sourceCode);
+        setShowSourceCode(true);
+    }, [formik]);
 
     return (
         <>
@@ -38,7 +38,7 @@ export const EditNode = ({ formik }) => {
             <Offcanvas.Header closeButton={false} className='node'>
                 <Offcanvas.Title>
                     Edit Node
-                    {/* <Button variant="outline-dark" className="btn-sm float-end" onClick={onClickSourceCode}><BsCodeSlash /></Button> */}
+                    { formik.values.sourceCode && <Button variant="outline-dark" className="btn-sm float-end" onClick={onClickSourceCode}><BsCodeSlash /></Button> }
                 </Offcanvas.Title>                
             </Offcanvas.Header>
             <Offcanvas.Body>
@@ -47,7 +47,7 @@ export const EditNode = ({ formik }) => {
 
                 <Form onSubmit={formik.handleSubmit}>
                     <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold">Label</Form.Label>
+                        <Form.Label className="fw-semibold">Name</Form.Label>
                         <Form.Control type="text" id="label" name="label" value={formik.values.label} onChange={formik.handleChange}/>
                         {formik.errors.label ? <div className='text-danger'>{formik.errors.label}</div>: null}
                     </Form.Group>
@@ -66,12 +66,12 @@ export const EditNode = ({ formik }) => {
 
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-semibold">Tags</Form.Label>
-                        <Tags/>                        
+                        <Tags formik={formik}/>                        
                     </Form.Group>
 
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-semibold">Description</Form.Label>
-                        <Form.Control as="textarea" style={{ height: '120px' }}/>
+                        <Form.Control as="textarea"  id="description" name="description" value={formik.values.description} onChange={formik.handleChange} style={{ height: '120px' }}/>
                     </Form.Group>
 
                     <Form.Group className="mb-3">

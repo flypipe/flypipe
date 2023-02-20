@@ -11,7 +11,7 @@ export const NodeSourceCode = ( { sourceCode, show, onClose }) => {
     return (
         <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Modal heading</Modal.Title>
+          <Modal.Title>Source Code</Modal.Title>
         </Modal.Header>
         <Modal.Body>{sourceCode}</Modal.Body>
         <Modal.Footer>

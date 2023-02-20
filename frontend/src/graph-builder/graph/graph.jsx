@@ -62,6 +62,10 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
             "data": {
                 "label": `Untitled-${NEW_NODE_INDEX}`,
                 "nodeType": "",
+                "sourceCode": "",
+                "description": "",
+                "tags": []
+
             },
             "position": { // dummy position, this will be automatically updated later
                 "x": 0,

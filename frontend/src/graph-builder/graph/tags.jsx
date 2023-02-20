@@ -2,13 +2,6 @@ import React, { useState } from 'react';
 import { render } from 'react-dom';
 import { WithContext as ReactTags } from 'react-tag-input';
 
-const suggestions = [
-    { id: 'Tag_1', text: 'Tag_1' },
-    { id: 'Tag_2', text: 'Tag_2' },
-    { id: 'Tag_3', text: 'Tag_3' },
-    { id: 'Tag_4', text: 'Tag_4' }
-];
-
 const KeyCodes = {
   comma: 188,
   enter: 13
@@ -16,29 +9,28 @@ const KeyCodes = {
 
 const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
-export const Tags = () => {
+export const Tags = ( { formik } ) => {
 
-  const [tags, setTags] = React.useState([
-    { id: 'Tag_1', text: 'Tag_1' },
-    { id: 'Tag_2', text: 'Tag_2' },
-  ]);
-
+  
   const handleDelete = i => {
-    setTags(tags.filter((tag, index) => index !== i));
+    const newTags = formik.values.tags.filter((tag, index) => index !== i)
+    formik.setFieldValue('tags', newTags);
   };
 
   const handleAddition = tag => {
-    setTags([...tags, tag]);
+    const newTags = [...formik.values.tags, tag];
+    console.log("tags=>", newTags);
+    formik.setFieldValue('tags', newTags);
   };
 
   const handleDrag = (tag, currPos, newPos) => {
-    const newTags = tags.slice();
+    const newTags = formik.values.tags.slice();
 
     newTags.splice(currPos, 1);
     newTags.splice(newPos, 0, tag);
 
     // re-render
-    setTags(newTags);
+    formik.setFieldValue('tags', newTags);
   };
 
   const handleTagClick = index => {
@@ -47,8 +39,10 @@ export const Tags = () => {
 
   return (
         <ReactTags
-          tags={tags}
-          suggestions={suggestions}
+          id="tags"
+          name="tags"
+          tags={formik.values.tags}
+          suggestions={tagsSuggestions}
           delimiters={delimiters}
           handleDelete={handleDelete}
           handleAddition={handleAddition}
