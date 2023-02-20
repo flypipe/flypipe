@@ -16,7 +16,7 @@ const NODE_TYPES = {
     "flypipe-node-new": NewNode
 };
 
-const Graph = ({nodeDefs: nodeDefsList}) => {
+const Graph = ({nodeDefs: nodeDefsList, tagsSuggestions}) => {
 
     const [editNode, setEditNode] = useState(false);
 
@@ -40,7 +40,7 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
         },
         validate,
         onSubmit: values => {
-          alert(JSON.stringify(values, null, 2));
+          console.log("submited: ", values);
         },
       });
 
@@ -60,11 +60,15 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
             "id": newNodeId,
             "type": "flypipe-node-new",
             "data": {
+                "id": newNodeId,
                 "label": `Untitled-${NEW_NODE_INDEX}`,
                 "nodeType": "",
                 "sourceCode": "",
                 "description": "",
-                "tags": []
+                "tags": [],
+                "output": [],
+                "predecessors": [],
+                "successors": []
 
             },
             "position": { // dummy position, this will be automatically updated later
@@ -101,21 +105,22 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
 
     const onNodeClick = useCallback(
         (event, node) => {
+            const id = {id: node.id}
+
             formik.resetForm({
-                values: node.data
+                values: {...node.data, id: node.id}
             });
             setEditNode(true);
         },
         []
     );
-    // graph.fitView({duration: 250});
 
     return (
         <div className="layoutflow" ref={graphDiv}>
             <div className="m-4">
                 <button className="btn btn-secondary" onClick={onClickNewNode}>New Node</button>
             </div>
-            { editNode && <EditNode formik={formik} />}
+            { editNode && <EditNode formik={formik}  tagsSuggestions={tagsSuggestions}/>}
             <ReactFlow
                 defaultNodes={[]}
                 defaultEdges={[]}

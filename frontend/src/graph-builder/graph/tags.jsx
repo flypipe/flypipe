@@ -9,7 +9,7 @@ const KeyCodes = {
 
 const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
-export const Tags = ( { formik } ) => {
+export const Tags = ( { formik, tagsSuggestions } ) => {
 
   
   const handleDelete = i => {

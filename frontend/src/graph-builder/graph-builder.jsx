@@ -12,7 +12,7 @@ const GraphBuilder = () => {
                 <Search/>
             </div>
             <div className="col-7">
-                <Graph nodeDefs={nodes}/>
+                <Graph nodeDefs={nodes} tagsSuggestions={tagsSuggestions}/>
             </div>
         </div>
     </ReactFlowProvider>
