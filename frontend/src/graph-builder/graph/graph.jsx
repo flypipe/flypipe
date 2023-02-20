@@ -32,6 +32,7 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
             "id": newNodeId,
             "type": "flypipe-node-new",
             "data": {
+                "nodeType": "pandas",
                 "label": `Untitled-${NEW_NODE_INDEX}`
             },
             "position": { // dummy position, this will be automatically updated later

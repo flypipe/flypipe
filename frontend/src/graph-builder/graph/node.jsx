@@ -7,7 +7,7 @@ import classNames from 'classnames';
 
 const BaseNode = ({ data, isNewNode, width, height }) => {
     const graph = useReactFlow();
-    const { label } = data;
+    const { nodeType, label } = data;
 
     const handleConnect = useCallback(({source, target}) => {
         const edgeId = `${source}-${target}`;
@@ -21,6 +21,20 @@ const BaseNode = ({ data, isNewNode, width, height }) => {
         }
     }, [graph]);
 
+    const color = useMemo(() => {
+        switch (nodeType) {
+            case 'pyspark':
+                return 'bg-danger';
+            case 'pandas_on_spark':
+                return 'bg-warning';
+            case 'pandas':
+                return 'bg-success';
+            case 'spark_sql':
+                return 'bg-info';
+            default:
+                return 'bg-secondary';
+        }
+    }, [nodeType]);
     const klass = useMemo(() => classNames(
         "d-flex",
         "justify-content-between",
@@ -29,6 +43,7 @@ const BaseNode = ({ data, isNewNode, width, height }) => {
         "border",
         "border-3",
         "rounded",
+        color,
     ));
 
     return <>
@@ -40,7 +55,7 @@ const BaseNode = ({ data, isNewNode, width, height }) => {
         />
         <div className={klass} style={{width, height}}>
             <p className="mb-0 me-2 h1">{label}</p>
-            {isNewNode && <Badge pill bg="primary" className="align-self-start"><span class="fs-6">New</span></Badge>}
+            {isNewNode && <Badge pill bg="primary" className="align-self-start"><span className="fs-6">New</span></Badge>}
         </div>
         <Handle
             type="source"

@@ -28,8 +28,8 @@ const assignNodePositions = (nodes, edges) => {
         // We are shifting the dagre node position (anchor=center center) to the top left
         // so it matches the React Flow node anchor point (top left).
         node.position = {
-            x: nodeWithPosition.x - NODE_WIDTH / 2,
-            y: nodeWithPosition.y - NODE_HEIGHT / 2,
+            x: nodeWithPosition.x - (NODE_WIDTH / 2),
+            y: nodeWithPosition.y - (NODE_HEIGHT / 2),
         };
     });
 };
@@ -41,10 +41,11 @@ const refreshNodePositions = (graph) => {
 };
 
 // Retrieve the graph node representation of a node
-const convertNodeDefToGraphNode = ({nodeKey, name}, isNew=true) => ({
+const convertNodeDefToGraphNode = ({nodeKey, nodeType, name}, isNew=true) => ({
     "id": nodeKey,
     "type": isNew ? "flypipe-node-new" : "flypipe-node-existing",
     "data": {
+        "nodeType": nodeType,
         "label": name
     },
     "position": { // dummy position, this will be automatically updated later
