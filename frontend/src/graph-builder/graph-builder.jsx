@@ -9,7 +9,7 @@ const GraphBuilder = () => {
     return <ReactFlowProvider>
         <div className="d-flex col">
             <div className="d-flex flex-column col-4 m-4">
-                <Search/>
+                <Search nodes={nodes}/>
             </div>
             <div className="col-7">
                 <Graph nodeDefs={nodes}/>

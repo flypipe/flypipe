@@ -10,7 +10,7 @@ const SEARCH_PAGE_SIZE = 8;
 const SEARCH_PAGE_GROUP_SIZE = 5;
 
 
-const NodeList = ({nodes, selectedNode, handleSelectNode}) => {
+const NodeList = ({nodes, allNodes}) => {
     const graph = useReactFlow();
     const [currentNodes, setCurrentNodes] = useState([]);
     const [graphBuilderNodes, setGraphBuilderNodes] = useState(new Set());
@@ -42,7 +42,7 @@ const NodeList = ({nodes, selectedNode, handleSelectNode}) => {
         const graphBuilderNodes = graphBuilderNodesRef.current;
         const {name} = nodes.find((node) => node.nodeKey === nodeKey);
 
-        const [predecessorNodes, predecessorEdges] = getPredecessorNodesAndEdgesFromNode(nodes, nodeKey);
+        const [predecessorNodes, predecessorEdges] = getPredecessorNodesAndEdgesFromNode(allNodes, nodeKey);
         if (!graphBuilderNodes.has(nodeKey)) {
             setGraphBuilderNodes((prevGraphBuilderNodes) => {
                 const newSet = new Set([...prevGraphBuilderNodes, nodeKey]);
@@ -73,8 +73,6 @@ const NodeList = ({nodes, selectedNode, handleSelectNode}) => {
                 importCmd={importCmd} 
                 description={description} 
                 isInGraphBuilder={graphBuilderNodes.has(nodeKey)} 
-                selected={selectedNode === nodeKey} 
-                handleClickNode={handleSelectNode}
                 handleClickGraphBuilder={handleClickGraphBuilder}
             />
         )}

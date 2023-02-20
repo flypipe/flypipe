@@ -62,6 +62,7 @@ const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
     const frontier = [...nodeDef.predecessors];
     const selectedNodeDefs = [nodeDef];
     const edges = [];
+    const edgeKeys = new Set();
     const addedKeys = [nodeDef.nodeKey];
     while (frontier.length > 0) {
         const currentKey = frontier.pop();
@@ -69,14 +70,23 @@ const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
         if (!addedKeys.includes(current.nodeKey)) {
             addedKeys.push(current.nodeKey);
             selectedNodeDefs.push(current);
-            for (const successor of current.successors) {
-                frontier.push(successor);
-                edges.push({
-                    "id": `${successor}-${current.nodeKey}`,
-                    "source": successor,
-                    "target": current.nodeKey,
-                });
+        }
+        for (const successor of current.successors) {
+            if (addedKeys.includes(successor)) {
+                const edgeKey = `${current.nodeKey}-${successor}`;
+                if (!(edgeKeys.has(edgeKey))) {
+                    const edge = {
+                        "id": edgeKey,
+                        "source": current.nodeKey,
+                        "target": successor,
+                    }
+                    edges.push(edge);
+                    edgeKeys.add(edgeKey);
+                }
             }
+        }
+        for (const predecessor of current.predecessors) {
+            frontier.push(predecessor);
         }
     }
     return [selectedNodeDefs.map((nodeDef) => convertNodeDefToGraphNode(nodeDef, false)), edges];
@@ -86,9 +96,5 @@ const moveToNode = (graph, nodeId) => {
     const newNodePosition = graph.getNodes().find(({id}) => id === nodeId).position;
     graph.setCenter(newNodePosition.x, newNodePosition.y, {duration: ANIMATION_SPEED, zoom: DEFAULT_ZOOM});
 };
-
-const getIntersectingNodes = (graph, node) => {
-
-}
 
 export {getPredecessorNodesAndEdgesFromNode, refreshNodePositions, moveToNode};
