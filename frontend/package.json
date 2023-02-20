@@ -33,6 +33,7 @@
     "react-dom": "^18.2.0",
     "react-syntax-highlighter": "^15.5.0",
     "reactflow": "^11.5.3",
+    "textfit": "^2.4.0",
     "zustand": "^4.3.3"
   },
   "scripts": {

@@ -1,11 +1,12 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect } from 'react';
 import { useReactFlow, Handle, Position } from 'reactflow';
 import Badge from 'react-bootstrap/Badge';
-import { refreshNodePositions } from '../util';
+import { refreshNodePositions, NODE_WIDTH, NODE_HEIGHT } from '../util';
 import classNames from 'classnames';
+import textFit from 'textfit';
 
 
-const BaseNode = ({ data, isNewNode, width, height }) => {
+const BaseNode = ({ data, isNewNode }) => {
     const graph = useReactFlow();
     const { nodeType, label } = data;
 
@@ -37,7 +38,8 @@ const BaseNode = ({ data, isNewNode, width, height }) => {
     }, [nodeType]);
     const klass = useMemo(() => classNames(
         "d-flex",
-        "justify-content-between",
+        "container",
+        isNewNode ? "justify-content-between" : "justify-content-center",
         "px-4",
         "py-2",
         "border",
@@ -46,6 +48,22 @@ const BaseNode = ({ data, isNewNode, width, height }) => {
         color,
     ));
 
+    const nodeTextRef = useRef(null);
+    useEffect(() => {
+        if (nodeTextRef.current) {
+            textFit(nodeTextRef.current, {alignHoriz: true, alignVert: true});
+        }
+    }, [nodeTextRef.current]);
+
+    // Within the node we must divide the space between the name and the badge
+    const [nameWidth, badgeWidth] = useMemo(() => {
+        if (isNewNode) {
+            return ['col-8', 'col-4'];
+        } else {
+            return ['col-12', ''];
+        }
+    }, [isNewNode]);
+
     return <>
         <Handle
             type="target"
@@ -53,9 +71,9 @@ const BaseNode = ({ data, isNewNode, width, height }) => {
             id="target-handle"
             isConnectable
         />
-        <div className={klass} style={{width, height}}>
-            <p className="mb-0 me-2 h1">{label}</p>
-            {isNewNode && <Badge pill bg="primary" className="align-self-start"><span className="fs-6">New</span></Badge>}
+        <div className={klass} style={{width: NODE_WIDTH, height: NODE_HEIGHT}}>
+            <p className={`${nameWidth} mb-0 me-2`} style={{textAlign: "center"}} ref={nodeTextRef}>{label}</p>
+            {isNewNode && <Badge pill bg="primary" className={`${badgeWidth} align-self-start fs-6`}>New</Badge>}
         </div>
         <Handle
             type="source"

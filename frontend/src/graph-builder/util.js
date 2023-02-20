@@ -3,8 +3,8 @@ import {ANIMATION_SPEED, DEFAULT_ZOOM} from './graph/config';
 
 // This isn't the actual node width which appears to be dynamically calculated. It's a width that we must give for 
 // the dagre layout calculation. 
-export const NODE_WIDTH = 150;
-export const NODE_HEIGHT = 40;
+export const NODE_WIDTH = 250;
+export const NODE_HEIGHT = 75;
 
 
 // Given the nodes & edges from the graph, construct a dagre graph to automatically assign 
