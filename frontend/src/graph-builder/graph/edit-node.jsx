@@ -8,8 +8,9 @@ import CustomSelect from "./CustomSelect";
 import { NodeOutput } from "./node-output";
 import { NodePredecessors } from "./node-predecessors";
 import { NodeSuccessors } from "./node-successors";
+import { DeleteNode } from "./delete-node";
 
-export const EditNode = ({ formik, tagsSuggestions }) => {
+export const EditNode = ({ formik, tagsSuggestions, setEditNode }) => {
     const nodeTypeOptions = [
         { value: "", label: "select" },
         { value: "pandas_on_spark", label: "Pandas on Spark" },
@@ -19,7 +20,17 @@ export const EditNode = ({ formik, tagsSuggestions }) => {
     ];
 
     const [show, setShow] = useState(true);
-    const handleClose = () => setShow(false);
+    const [showDeleteNode, setShowDeleteNode] = useState(false);
+
+    const handleClose = () => {
+        setShow(false);
+        setEditNode(false);
+    }
+
+    const handleDeleteNode = () => {
+        setShowDeleteNode(true);
+    }
+    
 
     const [showMoreInfo, setShowMoreInfo] = useState(false);
 
@@ -29,9 +40,11 @@ export const EditNode = ({ formik, tagsSuggestions }) => {
 
     return (
         <>
+            { showDeleteNode && <DeleteNode id={formik.values.id} label={formik.values.label}  setShowDeleteNode={setShowDeleteNode} setEditNode={setEditNode} /> }
             <NodeMoreInfo
                 node={formik.values}
                 show={showMoreInfo}
+                onHide={handleClose}
                 onClose={() => {
                     setShowMoreInfo(false);
                 }}
@@ -194,7 +207,7 @@ export const EditNode = ({ formik, tagsSuggestions }) => {
 
                         <Row>
                             <Col>
-                                <Button variant="outline-danger">delete</Button>
+                                <Button variant="outline-danger" onClick={handleDeleteNode}>delete</Button>
                                 <Button
                                     variant="outline-primary"
                                     className="me-2 float-end"
@@ -205,6 +218,7 @@ export const EditNode = ({ formik, tagsSuggestions }) => {
                                 <Button
                                     variant="outline-secondary flypipe"
                                     className="me-2 float-end"
+                                    onClick={handleClose}
                                 >
                                     close
                                 </Button>
