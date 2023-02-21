@@ -1,21 +1,55 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Button, Offcanvas, Badge, Row, Col } from "react-bootstrap";
 import Form from "react-bootstrap/Form";
 import { Tags } from "./tags";
 import { NodeMoreInfo } from "./node-more-info";
 import { BsInfoLg } from "react-icons/bs";
 import CustomSelect from "./CustomSelect";
+import { DeleteNode } from "./delete-node";
 import { NodeOutput } from "./node-output";
 import { NodePredecessors } from "./node-predecessors";
 import { NodeSuccessors } from "./node-successors";
-import { DeleteNode } from "./delete-node";
+import { useFormik } from "formik";
 
-export const EditNode = ({ formik, tagsSuggestions, setEditNode }) => {
+
+export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
+    const validate = (values) => {
+        const errors = {};
+
+        if (!values.label) {
+            errors.label = "Name is required";
+        }
+
+        if (!values.nodeType) {
+            errors.nodeType = "Type is required";
+        }
+
+        return errors;
+    };
+    const formState = useFormik({
+        initialValues: {
+            name: "",
+            nodeType: "",
+        },
+        validate,
+        onSubmit: (values) => {
+            alert(JSON.stringify(values, null, 2));
+        },
+    });
+    useEffect(() => {
+        formState.resetForm({
+            values: {
+                id: node.id,
+                isNew: node.type === "flypipe-node-new" ? true : false,
+                ...node.data,
+            },
+        });
+    }, [node]);
+
     const nodeTypeOptions = [
-        { value: "", label: "select" },
         { value: "pandas_on_spark", label: "Pandas on Spark" },
         { value: "pyspark", label: "PySpark" },
-        { value: "spark_sql", label: "Spark Sql" },
+        { value: "spark_sql", label: "Spark SQL" },
         { value: "pandas", label: "Pandas" },
     ];
 
@@ -36,13 +70,13 @@ export const EditNode = ({ formik, tagsSuggestions, setEditNode }) => {
 
     const onClickMoreInfo = useCallback(() => {
         setShowMoreInfo(true);
-    }, [formik]);
+    }, [formState]);
 
     return (
         <>
-            { showDeleteNode && <DeleteNode id={formik.values.id} label={formik.values.label}  setShowDeleteNode={setShowDeleteNode} setEditNode={setEditNode} /> }
+            { showDeleteNode && <DeleteNode id={formState.values.id} label={formState.values.label}  setShowDeleteNode={setShowDeleteNode} setEditNode={setEditNode} /> }
             <NodeMoreInfo
-                node={formik.values}
+                node={formState.values}
                 show={showMoreInfo}
                 onHide={handleClose}
                 onClose={() => {
@@ -61,7 +95,7 @@ export const EditNode = ({ formik, tagsSuggestions, setEditNode }) => {
                 <Offcanvas.Header closeButton={false} className="node">
                     <Offcanvas.Title>
                         Edit Node
-                        {formik.values.sourceCode && (
+                        {formState.values.sourceCode && (
                             <Button
                                 variant="outline-secondary flypipe"
                                 className="btn-sm float-end"
@@ -83,13 +117,13 @@ export const EditNode = ({ formik, tagsSuggestions, setEditNode }) => {
                         </Badge>
                     </p>
 
-                    <Form onSubmit={formik.handleSubmit}>
+                    <Form onSubmit={formState.handleSubmit}>
                         <Form.Control
                             type="text"
                             hidden={true}
                             id="id"
                             name="id"
-                            defaultValue={formik.values.label}
+                            defaultValue={formState.values.label}
                         />
 
                         <Form.Group className="mb-3">
@@ -100,12 +134,12 @@ export const EditNode = ({ formik, tagsSuggestions, setEditNode }) => {
                                 type="text"
                                 id="label"
                                 name="label"
-                                value={formik.values.label}
-                                onChange={formik.handleChange}
+                                value={formState.values.label}
+                                onChange={formState.handleChange}
                             />
-                            {formik.errors.label ? (
+                            {formState.errors.label ? (
                                 <div className="text-danger">
-                                    {formik.errors.label}
+                                    {formState.errors.label}
                                 </div>
                             ) : null}
                         </Form.Group>
@@ -118,17 +152,17 @@ export const EditNode = ({ formik, tagsSuggestions, setEditNode }) => {
                                 id="nodeType"
                                 name="nodeType"
                                 options={nodeTypeOptions}
-                                value={formik.values.nodeType}
+                                value={formState.values.nodeType}
                                 onChange={(value) =>
-                                    formik.setFieldValue(
+                                    formState.setFieldValue(
                                         "nodeType",
                                         value.value
                                     )
                                 }
                             />
-                            {formik.errors.nodeType ? (
+                            {formState.errors.nodeType ? (
                                 <div className="text-danger">
-                                    {formik.errors.nodeType}
+                                    {formState.errors.nodeType}
                                 </div>
                             ) : null}
                         </Form.Group>
@@ -138,7 +172,7 @@ export const EditNode = ({ formik, tagsSuggestions, setEditNode }) => {
                                 Tags
                             </Form.Label>
                             <Tags
-                                formik={formik}
+                                formik={formState}
                                 tagsSuggestions={tagsSuggestions}
                             />
                         </Form.Group>
@@ -151,8 +185,8 @@ export const EditNode = ({ formik, tagsSuggestions, setEditNode }) => {
                                 as="textarea"
                                 id="description"
                                 name="description"
-                                value={formik.values.description}
-                                onChange={formik.handleChange}
+                                value={formState.values.description}
+                                onChange={formState.handleChange}
                                 style={{ height: "120px" }}
                             />
                         </Form.Group>
@@ -161,17 +195,17 @@ export const EditNode = ({ formik, tagsSuggestions, setEditNode }) => {
                             <Form.Label className="fw-semibold">
                                 Predecessors
                             </Form.Label>
-                            {formik.values.predecessors2 &&
-                                Object.keys(formik.values.predecessors2)
+                            {formState.values.predecessors2 &&
+                                Object.keys(formState.values.predecessors2)
                                     .length > 0 && (
                                     <NodePredecessors
                                         dependencies={
-                                            formik.values.predecessors2
+                                            formState.values.predecessors2
                                         }
                                     />
                                 )}
-                            {(!formik.values.predecessors2 ||
-                                Object.keys(formik.values.predecessors2)
+                            {(!formState.values.predecessors2 ||
+                                Object.keys(formState.values.predecessors2)
                                     .length == 0) && <p>No predecessors</p>}
                         </Form.Group>
 
@@ -179,14 +213,14 @@ export const EditNode = ({ formik, tagsSuggestions, setEditNode }) => {
                             <Form.Label className="fw-semibold">
                                 Successors
                             </Form.Label>
-                            {formik.values.successors &&
-                                formik.values.successors.length > 0 && (
+                            {formState.values.successors &&
+                                formState.values.successors.length > 0 && (
                                     <NodeSuccessors
-                                        successors={formik.values.successors}
+                                        successors={formState.values.successors}
                                     />
                                 )}
-                            {(!formik.values.successors ||
-                                formik.values.successors.length == 0) && (
+                            {(!formState.values.successors ||
+                                formState.values.successors.length == 0) && (
                                 <p>No successors</p>
                             )}
                         </Form.Group>
@@ -195,12 +229,12 @@ export const EditNode = ({ formik, tagsSuggestions, setEditNode }) => {
                             <Form.Label className="fw-semibold">
                                 Output Schema
                             </Form.Label>
-                            {formik.values.output &&
-                                formik.values.output.length > 0 && (
-                                    <NodeOutput output={formik.values.output} />
+                            {formState.values.output &&
+                                formState.values.output.length > 0 && (
+                                    <NodeOutput output={formState.values.output} />
                                 )}
-                            {(!formik.values.output ||
-                                formik.values.output.length == 0) && (
+                            {(!formState.values.output ||
+                                formState.values.output.length == 0) && (
                                 <p>No output declared</p>
                             )}
                         </Form.Group>

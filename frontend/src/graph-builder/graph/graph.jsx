@@ -14,7 +14,6 @@ import "reactflow/dist/style.css";
 import { MIN_ZOOM, MAX_ZOOM } from "./config";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { EditNode } from "./edit-node";
-import { useFormik } from "formik";
 import { Button } from "react-bootstrap";
 import { TfiAngleLeft, TfiAngleRight } from "react-icons/tfi";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
@@ -30,31 +29,8 @@ const NODE_TYPES = {
 };
 
 const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
-    const [editNode, setEditNode] = useState(false);
-
-    const validate = (values) => {
-        const errors = {};
-
-        if (!values.label) {
-            errors.label = "Name is required";
-        }
-
-        if (!values.nodeType) {
-            errors.nodeType = "Type is required";
-        }
-
-        return errors;
-    };
-    const formik = useFormik({
-        initialValues: {
-            name: "",
-            nodeType: "",
-        },
-        validate,
-        onSubmit: (values) => {
-            alert(JSON.stringify(values, null, 2));
-        },
-    });
+    const [editNode, setEditNode] = useState(null);
+    const [showEditNode, setShowEditNode] = useState(false);
 
     const graph = useReactFlow();
     const nodeDefs = nodeDefsList.reduce(
@@ -95,11 +71,8 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
         refreshNodePositions(graph);
         moveToNode(graph, newNodeId);
 
-        formik.resetForm({
-            values: newNode.data,
-        });
-
-        setEditNode(true);
+        setEditNode(newNode);
+        setShowEditNode(true);
     }, [graph]);
 
     const onCopyToClipboard = useCallback(() => {
@@ -112,14 +85,8 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
             id: node.id,
             isNew: node.type === "flypipe-node-new" ? true : false,
         });
-        formik.resetForm({
-            values: {
-                ...node.data,
-                id: node.id,
-                isNew: node.type === "flypipe-node-new" ? true : false,
-            },
-        });
-        setEditNode(true);
+        setEditNode(node);
+        setShowEditNode(true);
     }, []);
 
     const [showSearchPanel, setShowSearchPanel] = useState(true);
@@ -130,9 +97,8 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
 
     return (
         <div className="layoutflow" ref={graphDiv}>
-            
-            {editNode && (
-                <EditNode formik={formik} tagsSuggestions={tagsSuggestions} setEditNode={setEditNode}/>
+            {showEditNode && (
+                <EditNode node={editNode} tagsSuggestions={tagsSuggestions} setEditNode={setShowEditNode}/>
             )}
             <ReactFlow
                 defaultNodes={[]}
