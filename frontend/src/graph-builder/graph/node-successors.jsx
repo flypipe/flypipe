@@ -2,14 +2,13 @@ import React from 'react';
 import ListGroup from 'react-bootstrap/ListGroup';
 
 export const NodeSuccessors = ({ successors }) => {   
-    const successor = []
-    console.log("NodeSuccessors=>",successors)
-
-    successors.forEach((out) => {
-        successor.push(
-            <ListGroup.Item key={`successor_${out}`}>{out}</ListGroup.Item>
+    console.log("NodeSuccessors: ",successors)
+    const nodesSuccessor = []
+    successors.forEach((nodeSuccessor) => {
+        nodesSuccessor.push(
+            <ListGroup.Item key={`successor_${nodeSuccessor}`}>{nodeSuccessor}</ListGroup.Item>
          )
     })
 
-    return (<ListGroup variant="flush">{successor}</ListGroup>);
+    return (<ListGroup variant="flush">{nodesSuccessor}</ListGroup>);
 }

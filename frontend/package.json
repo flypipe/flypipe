@@ -31,11 +31,13 @@
     "formik": "^2.2.9",
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.2",
+    "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.7.1",
     "react-select": "^5.7.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-tag-input": "^6.8.1",
+    "react-uuid": "^2.0.0",
     "reactflow": "^11.5.3",
     "zustand": "^4.3.3"
   },

@@ -1,10 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { Button, Offcanvas, Badge, Row, Col, Accordion, Modal} from 'react-bootstrap';
+import { Button, Offcanvas, Badge, Row, Col} from 'react-bootstrap';
 import Form from 'react-bootstrap/Form';
 import {Tags} from './tags';
-import {NodeSourceCode} from './node-source-code';
-import { BsCodeSlash } from "react-icons/bs";
-import { useReactFlow } from 'reactflow';
+import {NodeMoreInfo} from './node-more-info';
+import { BsInfoSquare } from "react-icons/bs";
 import CustomSelect from './CustomSelect';
 import { NodeOutput } from './node-output';
 import { NodePredecessors } from './node-predecessors';
@@ -24,24 +23,21 @@ export const EditNode = ({ formik, tagsSuggestions }) => {
     const [show, setShow] = useState(true);
     const handleClose = () => setShow(false);
     
-    const [showSourceCode, setShowSourceCode] = useState(false);
-    const [sourceCode, setSourcecode] = useState(null);
-
-
-    const onClickSourceCode = useCallback(() => {
-        setSourcecode(formik.values.sourceCode);
-        setShowSourceCode(true);
+    const [showMoreInfo, setShowMoreInfo] = useState(false);
+    
+    const onClickMoreInfo = useCallback(() => {
+        setShowMoreInfo(true);
     }, [formik]);
 
     return (
         <>
-        <NodeSourceCode sourceCode={sourceCode}  show={showSourceCode} onClose={() => {setShowSourceCode(false)}} />
+        <NodeMoreInfo node={formik.values}  show={showMoreInfo} onClose={() => {setShowMoreInfo(false)}} />
 
         <Offcanvas show={show} onHide={handleClose} placement='end' backdrop={false} scroll={true} className='node'>
             <Offcanvas.Header closeButton={false} className='node'>
                 <Offcanvas.Title>
                     Edit Node
-                    { formik.values.sourceCode && <Button variant="outline-dark" className="btn-sm float-end" onClick={onClickSourceCode}><BsCodeSlash /></Button> }
+                    { formik.values.sourceCode && <Button variant="outline-dark" className="btn-sm float-end" onClick={onClickMoreInfo}><BsInfoSquare /></Button> }
                 </Offcanvas.Title>                
             </Offcanvas.Header>
             <Offcanvas.Body>
@@ -80,11 +76,12 @@ export const EditNode = ({ formik, tagsSuggestions }) => {
                     </Form.Group>
 
                     <Form.Group className="mb-3">
+
                         <Form.Label className="fw-semibold">Predecessors</Form.Label>
-                        { formik.values.predecessors2 &&  formik.values.predecessors2.length > 0 &&
+                        { formik.values.predecessors2 &&  Object.keys(formik.values.predecessors2).length > 0 &&
                             <NodePredecessors dependencies={formik.values.predecessors2}/>           
                         } 
-                        { (!formik.values.predecessors2 || formik.values.predecessors2.length == 0) && <p>No predecessors</p>}
+                        { (!formik.values.predecessors2 || Object.keys(formik.values.predecessors2).length == 0) && <p>No predecessors</p>}
                     </Form.Group>
 
                     <Form.Group className="mb-3">

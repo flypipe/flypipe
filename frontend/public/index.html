@@ -35,6 +35,11 @@
                     "schema": [],
                     "predecessors": [],
                     "successors": ["dummy_1"],
+                    "output":[
+                        {"column": "col1", "type": "Integer", "description": "this is a description of col 1"},
+                        {"column": "col2", "type": "String", "description": "this is a description of col 2"},                        
+                        {"column": "col3", "type": "Float", "description": "this is a description of col 3"},
+                    ],
                     "sourceCode": (
                         "@node(\n" +
                         "   type='pandas',\n" +
@@ -46,7 +51,7 @@
                 },
                 {
                     "nodeKey": "dummy_1",
-                    "name": "dummy",
+                    "name": "dummy_1",
                     "filePath": "bla/dummy.py",
                     "importCmd": "from bla.dummy import Dummy",
                     "description": "<dummy>",
@@ -54,9 +59,9 @@
                     "nodeType": "pyspark",
                     "schema": [],
                     "predecessors": ["country_code_1"],
-                    "predecessors2": [
-                        {"nodeKey": "country_code_1", "columns": ["col1", "col2", "col4"]}
-                    ],
+                    "predecessors2": {
+                        "country_code_1": ["col1", "col2"]
+                    },
                     "successors": [],
                     "output":[
                         {"column": "col1", "type": "String", "description": "this is a description of col 1"},

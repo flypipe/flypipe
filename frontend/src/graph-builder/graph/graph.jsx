@@ -17,7 +17,7 @@ const NODE_TYPES = {
 };
 
 const Graph = ({nodeDefs: nodeDefsList, tagsSuggestions}) => {
-
+    
     const [editNode, setEditNode] = useState(false);
 
     const validate = values => {
@@ -106,7 +106,7 @@ const Graph = ({nodeDefs: nodeDefsList, tagsSuggestions}) => {
     const onNodeClick = useCallback(
         (event, node) => {
             const id = {id: node.id}
-
+            console.log({...node.data, id: node.id});
             formik.resetForm({
                 values: {...node.data, id: node.id}
             });
@@ -131,6 +131,7 @@ const Graph = ({nodeDefs: nodeDefsList, tagsSuggestions}) => {
                 onNodeClick={onNodeClick}
                 fitView
             />
+            
         </div>
       );
 }
