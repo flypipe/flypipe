@@ -93,7 +93,24 @@
 }
 
 .node-badge{
-    top: -10px;
-    right: -20px !important;
+    top: -25px;
+    right: -25px !important;
+    padding: 15px !important;
 
+}
+
+.react-flow__handle{
+    width: 35px !important;
+    height: 75px !important;
+    border-radius: 0 !important;
+    background: none !important;
+    border: none !important;
+}
+
+.react-flow__handle-left{
+    left: -10px !important;
+}
+
+.react-flow__handle-right{
+    right: -10px !important;
 }

@@ -46,8 +46,6 @@ const BaseNode = ({ data, isNewNode }) => {
             isNewNode ? "justify-content-between" : "justify-content-center",
             "px-4",
             "py-2",
-            "border",
-            "border-3",
             "rounded",
             color
         )
@@ -94,8 +92,9 @@ const BaseNode = ({ data, isNewNode }) => {
                         bg="warning"
                         className={`${badgeWidth} align-self-start fs-6 position-absolute node-badge`}
                         title="New node"
+                        size="md"
                     >
-                        <GrNew/>
+                        <GrNew className="fs-4"/>
                     </Badge>
                 )}
             </div>
