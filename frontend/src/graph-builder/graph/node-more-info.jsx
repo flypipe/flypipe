@@ -46,7 +46,7 @@ export const NodeMoreInfo = ({ node, show, onClose }) => {
                     </li>
                     <li>
                         Location:
-                        <CopyToClipboard
+                        { node.filePath && <CopyToClipboard
                             text={node.filePath}
                             className="ms-2 pointer fst-italic text-secondary bg-opacity-10"
                             onCopy={() => {
@@ -59,10 +59,13 @@ export const NodeMoreInfo = ({ node, show, onClose }) => {
                         >
                             <span>{node.filePath}</span>
                         </CopyToClipboard>
+                        }
+
+                        { !node.filePath ? <span className="ms-2 text-secondary">not specified</span> : null}
                     </li>
                     <li>
                         Py Import:
-                        <CopyToClipboard
+                        { node.pythonImportCommand && <CopyToClipboard
                             text={node.pythonImportCommand}
                             className="ms-2 pointer fst-italic text-secondary bg-opacity-10"
                             onCopy={() => {
@@ -75,6 +78,8 @@ export const NodeMoreInfo = ({ node, show, onClose }) => {
                         >
                             <span>{node.pythonImportCommand}</span>
                         </CopyToClipboard>
+                        }
+                        { !node.pythonImportCommand ? <span className="ms-2 text-secondary">not specified</span> : null}
                     </li>
                 </ul>
 
