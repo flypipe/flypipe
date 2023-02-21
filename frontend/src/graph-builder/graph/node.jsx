@@ -28,15 +28,15 @@ const BaseNode = ({ data, isNewNode }) => {
     const color = useMemo(() => {
         switch (nodeType) {
             case "pyspark":
-                return "bg-danger";
+                return "btn btn-outline-danger";
             case "pandas_on_spark":
-                return "bg-warning";
+                return "btn btn-outline-primary";
             case "pandas":
-                return "bg-success";
+                return "btn btn-outline-success";
             case "spark_sql":
-                return "bg-info";
+                return "btn btn-outline-info";
             default:
-                return "bg-secondary";
+                return "btn btn-outline-warning";
         }
     }, [nodeType]);
     const klass = useMemo(() =>
