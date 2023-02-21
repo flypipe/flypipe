@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useEffect } from "react";
-import { useReactFlow, Handle, Position } from "reactflow";
+import { useReactFlow, Handle, Position, MarkerType } from "reactflow";
 import Badge from "react-bootstrap/Badge";
 import { refreshNodePositions, NODE_WIDTH, NODE_HEIGHT } from "../util";
 import classNames from "classnames";
@@ -18,6 +18,11 @@ const BaseNode = ({ data, isNewNode }) => {
                     id: edgeId,
                     source,
                     target,
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        width: 20,
+                        height: 20,
+                    }
                 });
                 refreshNodePositions(graph);
             }

@@ -21,7 +21,6 @@ import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 
 
-
 // TODO- get rid of this index when we introduce the new node modal
 let NEW_NODE_INDEX = 1;
 
@@ -142,7 +141,7 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
                 minZoom={MIN_ZOOM}
                 maxZoom={MAX_ZOOM}
                 onNodeClick={onNodeClick}
-                fitView
+                fitView    
             >
                 <Panel  className={`m-0 ${showSearchPanel ? 'search-show' : 'search-hide'}`}>
                     <Button 
