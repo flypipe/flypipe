@@ -179,7 +179,7 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
                                 placement="left"
                                 overlay={
                                     <Tooltip id="tooltip-right">
-                                        Export edited nodes to the clipboard
+                                        Copy edited nodes source code to the clipboard
                                     </Tooltip>
                                 }
                             >
