@@ -1,9 +1,11 @@
-import React, {useState, useCallback, useRef} from 'react';
+import React, {useCallback, useRef} from 'react';
 import ReactFlow, {useReactFlow, Controls, Background, Panel, MiniMap} from 'reactflow';
+import { BsDownload } from 'react-icons/bs';
 import {ExistingNode, NewNode} from './node';
 import { refreshNodePositions, moveToNode } from '../util';
 import 'reactflow/dist/style.css';
 import {MIN_ZOOM, MAX_ZOOM} from './config';
+import {CopyToClipboard} from 'react-copy-to-clipboard';
 
 
 // TODO- get rid of this index when we introduce the new node modal
@@ -20,11 +22,6 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
     const nodeDefs = nodeDefsList.reduce((accumulator, nodeDef) => ({...accumulator, [nodeDef.nodeKey]: nodeDef}),{});
 
     const graphDiv = useRef(null);
-    const onDragOver = useCallback((event) => {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
-      }, []);
-
 
     const onClickNewNode = useCallback(() => {
         const newNodeId = `new-node-${NEW_NODE_INDEX}`;
@@ -46,17 +43,9 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
         refreshNodePositions(graph);
         moveToNode(graph, newNodeId);
     }, [graph]);
-    
-    const onDrop = useCallback(
-        (event) => {
-            event.preventDefault();
-            const nodeKey = event.dataTransfer.getData('application/reactflow');
-            const nodeDef = nodeDefs[nodeKey];
-            let [newNodes, newEdges] = getNodeGraph(nodeDefs, nodeDef.nodeKey);
-            addNodesAndEdges(newNodes, newEdges);
-        },
-        [nodeDefs]
-    );
+    const onCopyToClipboard = useCallback(() => {
+        // TODO- add notification toast msg here
+    }, []);
 
     return (
         <div className="layoutflow" ref={graphDiv}>
@@ -66,15 +55,21 @@ const Graph = ({nodeDefs: nodeDefsList}) => {
                 nodeTypes={NODE_TYPES}
                 minZoom={MIN_ZOOM}
                 maxZoom={MAX_ZOOM}
-                onNodeDrag={(e) => {console.log(e)}}
                 fitView
             >
                 <Panel position="top-left">
-                    <div className="d-flex flex-column">
-                        <div className="m-4">
-                            <button className="btn btn-secondary mx-2" onClick={onClickNewNode}>New Node</button>
-                        </div>
-                    </div>
+                    <button className="btn btn-secondary m-4" onClick={onClickNewNode}>New Node</button>
+                </Panel>
+                <Panel position="top-right">
+                    <button 
+                        className="btn btn-secondary m-4"
+                        data-toggle="tooltip" 
+                        title={"Export new nodes to the clipboard"}
+                    >
+                        <CopyToClipboard text="<dummy>" onCopy={onCopyToClipboard}>
+                            <BsDownload/>
+                        </CopyToClipboard>
+                    </button>
                 </Panel>
                 <Controls />
                 <Panel position="bottom-center"><a href="//flypipe.github.io/flypipe/">Flypipe</a></Panel>
