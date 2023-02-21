@@ -99,7 +99,7 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
     return (
         <div className="layoutflow" ref={graphDiv}>
             {showEditNode && (
-                <EditNode node={editNode} tagsSuggestions={tagsSuggestions} setEditNode={setEditNode}/>
+                <EditNode node={editNode} tagsSuggestions={tagsSuggestions} setEditNode={setShowEditNode}/>
             )}
             <ReactFlow
                 defaultNodes={[]}

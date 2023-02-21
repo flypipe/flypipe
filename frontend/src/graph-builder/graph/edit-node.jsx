@@ -74,7 +74,7 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
 
     return (
         <>
-            { showDeleteNode && <DeleteNode id={formik.values.id} label={formik.values.label}  setShowDeleteNode={setShowDeleteNode} setEditNode={setEditNode} /> }
+            { showDeleteNode && <DeleteNode id={formState.values.id} label={formState.values.label}  setShowDeleteNode={setShowDeleteNode} setEditNode={setEditNode} /> }
             <NodeMoreInfo
                 node={formState.values}
                 show={showMoreInfo}
