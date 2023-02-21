@@ -1,2 +1,49 @@
-// Import all of Bootstrap's CSS
-@import "~bootstrap/scss/bootstrap";
+.suggestionsClass {
+    padding: 10px;
+    
+    background-color: white;
+    border: 1px solid #ced4da;
+}
+
+.suggestionsClass > ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.accordion-item {
+    border: none;
+}
+
+.accordion-button:not(.collapsed){
+    color: black;
+    background-color: white;
+    font-weight: bold;
+}
+
+
+.offcanvas.node {
+    --bs-offcanvas-width: 500px !important;
+}
+
+.offcanvas-header.node {
+    display: block;
+}
+
+.modal-90w{
+    max-width: 60%
+}
+
+.toast-z-index {
+    z-index: 1056 !important;
+    background-color: rgba(255, 255, 255, 1);
+}
+
+.margin-left-95{
+    margin-left: 50%;
+}
+
+.pointer {
+    cursor: pointer;
+}
+

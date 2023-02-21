@@ -41,12 +41,12 @@ const refreshNodePositions = (graph) => {
 };
 
 // Retrieve the graph node representation of a node
-const convertNodeDefToGraphNode = ({nodeKey, nodeType, name}, isNew=true) => ({
+const convertNodeDefToGraphNode = ({nodeKey, name, ...fields}, isNew=true) => ({
     "id": nodeKey,
     "type": isNew ? "flypipe-node-new" : "flypipe-node-existing",
     "data": {
-        "nodeType": nodeType,
-        "label": name
+        "label": name,
+        ...fields
     },
     "position": { // dummy position, this will be automatically updated later
         "x": 0,

@@ -109,12 +109,17 @@
                     "nodeType": "pandas",
                     "name": "country_code1",
                     "filePath": "this/is/the/path/to/country/code.py",
-                    "importCmd": "from this.is.the.path.to.country.code import Code",
+                    "pythonImportCommand": "from this.is.the.path.to.country.code import Code",
                     "description": "This is the description of the country code",
-                    "tags": ["feature", "test"],
+                    "tags": [{"id": "feature", "text": "feature"}, {"id": "test", "text": "test"}],
                     "schema": [],
                     "predecessors": [],
                     "successors": ["dummy_1"],
+                    "output":[
+                        {"column": "col1", "type": "Integer", "description": "this is a description of col 1"},
+                        {"column": "col2", "type": "String", "description": "this is a description of col 2"},                        
+                        {"column": "col3", "type": "Float", "description": "this is a description of col 3"},
+                    ],
                     "sourceCode": (
                         "@node(\n" +
                         "   type='pandas',\n" +
@@ -126,18 +131,27 @@
                 },
                 {
                     "nodeKey": "dummy_1",
-                    "nodeType": "spark_sql",
-                    "name": "dummy fdgh asdf hdfgh",
+                    "nodeType": "pyspark",
+                    "name": "dummy_1",
                     "filePath": "bla/dummy.py",
-                    "importCmd": "from bla.dummy import Dummy",
+                    "pythonImportCommand": "from bla.dummy import Dummy",
                     "description": "<dummy>",
-                    "tags": ["test"],
+                    "tags": [{"id": "test", "text": "test"}],
                     "schema": [],
                     "predecessors": ["country_code_1"],
+                    "predecessors2": {
+                        "country_code_1": ["col1", "col2"]
+                    },
                     "successors": [],
+                    "output":[
+                        {"column": "col1", "type": "String", "description": "this is a description of col 1"},
+                        {"column": "col2", "type": "Boolean", "description": "this is a description of col 2"},
+                        {"column": "col3", "type": "Boolean", "description": "this is a description of col 3"},
+                        {"column": "col4", "type": "Boolean", "description": "this is a description of col 4"},
+                    ],
                     "sourceCode": (
                         "@node(\n" +
-                        "   type='pandas',\n" +
+                        "   type='pyspark',\n" +
                         "   dependencies=['country_code1']" +
                         ")\n" +
                         "def dummy(country_code1):\n" +
@@ -147,24 +161,28 @@
                 },
                 {
                     "nodeKey": "country_code_2",
-                    "nodeType": "pyspark",
+                    "nodeType": "pandas_on_spark",
                     "name": "country_code2",
                     "filePath": "this/is/the/path/to/country/code.py",
-                    "importCmd": "from this.is.the.path.to.country.code import Code",
+                    "pythonImportCommand": "from this.is.the.path.to.country.code import Code",
                     "description": "This is the description of the country code",
-                    "tags": ["feature", "test"],
+                    "tags": [{"id": "feature2", "text": "feature2"}, {"id": "test4", "text": "test4"}],
                     "schema": [],
                     "predecessors": [],
                     "successors": ["dummy_1"],
                     "sourceCode": (
                         "@node(\n" +
-                        "   type='pandas',\n" +
+                        "   type='pandas_on_spark',\n" +
                         ")\n" +
                         "def country_code2():\n" +
                         "   return pd.DataFrame({'c1': [1,2,3]}))\n" +
                         "\n"
                     )
                 },
+            ];
+            window.tagsSuggestions=[
+                { id: 'Tag_1', text: 'Tag_1' },
+                { id: 'Tag_2', text: 'Tag_2' },                
             ];
         </script>
         <script src="../dist/bundle.js"></script>

@@ -1,10 +1,15 @@
-import React, {useState, useMemo} from 'react';
+import React, {useState, useMemo, useContext} from 'react';
 import Header from './header/header';
 import GraphBuilder from './graph-builder/graph-builder';
+import Notifications from './catalog/notifications';
+import { NotificationContext } from './context';
+import uuid from 'react-uuid';
+
 
 
 const App = () => {
     const [content, setContent] = useState(<GraphBuilder/>);
+    const { newMessage, setNewMessage } = useContext(NotificationContext);
     const headerLinks = useMemo(() => [
         {
             'name': 'Graph Builder',
@@ -20,6 +25,7 @@ const App = () => {
         }
     ], []);
     return <>
+        <Notifications newMessage={newMessage}/>
         <div className="d-flex w-100 h-100">
             {content}
         </div>
