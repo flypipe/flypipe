@@ -86,7 +86,7 @@ const NodeList = ({ nodes, allNodes }) => {
     };
 
     return (
-        <div className="list-group list-group-flush">
+        <div className="list-group list-group-flush overflow-auto list-group-flypipe pb-2">
             {currentNodes.map(
                 ({ nodeKey, name, importCmd, description }, i) => (
                     <Node

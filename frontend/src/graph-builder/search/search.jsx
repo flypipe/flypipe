@@ -92,7 +92,8 @@ const Search = ({ nodes }) => {
     );
 
     return (
-        <>
+        <>  
+        <div id="search" className="search p-2">
             <div className="form-outline">
                 <input
                     type="search"
@@ -106,7 +107,7 @@ const Search = ({ nodes }) => {
             <br />
             <div className="d-flex justify-content-between align-items-center">
                 <Dropdown>
-                    <Dropdown.Toggle variant="secondary">
+                    <Dropdown.Toggle variant="light flypipe" className="no-border">
                         <BsFilter size={21} />
                         All filters
                     </Dropdown.Toggle>
@@ -128,6 +129,7 @@ const Search = ({ nodes }) => {
                 <h6 className="mb-0">{numberSearchResultsText}</h6>
             </div>
             <NodeList nodes={searchResults} allNodes={nodes} />
+        </div>
         </>
     );
 };

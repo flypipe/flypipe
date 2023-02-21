@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
+import Search from "../search/search";
 import ReactFlow, {
     useReactFlow,
     Controls,
@@ -14,6 +15,12 @@ import { MIN_ZOOM, MAX_ZOOM } from "./config";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { EditNode } from "./edit-node";
 import { useFormik } from "formik";
+import { Button } from "react-bootstrap";
+import { TfiAngleLeft, TfiAngleRight } from "react-icons/tfi";
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Tooltip from "react-bootstrap/Tooltip";
+
+
 
 // TODO- get rid of this index when we introduce the new node modal
 let NEW_NODE_INDEX = 1;
@@ -116,8 +123,15 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
         setEditNode(true);
     }, []);
 
+    const [showSearchPanel, setShowSearchPanel] = useState(true);
+
+    const toggleSearchPanel = () => {
+        setShowSearchPanel(!showSearchPanel);
+    }
+
     return (
         <div className="layoutflow" ref={graphDiv}>
+            
             {editNode && (
                 <EditNode formik={formik} tagsSuggestions={tagsSuggestions} />
             )}
@@ -130,31 +144,62 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
                 onNodeClick={onNodeClick}
                 fitView
             >
-                <Panel position="top-left">
-                    <button
-                        className="btn btn-secondary m-4"
-                        onClick={onClickNewNode}
-                    >
-                        New Node
-                    </button>
+                <Panel  className={`m-0 ${showSearchPanel ? 'search-show' : 'search-hide'}`}>
+                    <Button 
+                    variant="outline-secondary flypipe" 
+                    className="search-toggle-button position-absolute top-50 p-2 pt-3 pb-3" 
+                    size="sm"
+                    onClick={toggleSearchPanel}>
+                            {showSearchPanel && <TfiAngleLeft/>}
+                            {!showSearchPanel && <TfiAngleRight/>}
+                            
+                    </Button>
+                    <div className="row">
+                        <div className="col search-result">
+                            <Search nodes={nodeDefsList} />
+                        </div>
+                        <div className="col">
+                            <OverlayTrigger
+                                key="right"
+                                placement="right"
+                                overlay={
+                                    <Tooltip id="tooltip-right">
+                                        Add new node to the graph
+                                    </Tooltip>
+                                }
+                            >
+                                <Button variant="outline-secondary flypipe"  className="mt-2" onClick={onClickNewNode}>New Node</Button>
+                            </OverlayTrigger>
+                        </div>
+                    </div>
                 </Panel>
                 <Panel position="top-right">
-                    <button
-                        className="btn btn-secondary m-4"
-                        data-toggle="tooltip"
-                        title={"Export new nodes to the clipboard"}
-                    >
-                        <CopyToClipboard
-                            text="<dummy>"
-                            onCopy={onCopyToClipboard}
+                    <OverlayTrigger
+                                key="right"
+                                placement="left"
+                                overlay={
+                                    <Tooltip id="tooltip-right">
+                                        Export edited nodes to the clipboard
+                                    </Tooltip>
+                                }
+                            >
+                        <Button
+                        variant="outline-secondary flypipe"
+                            data-toggle="tooltip"
+                            size="md"
                         >
-                            <BsDownload />
-                        </CopyToClipboard>
-                    </button>
+                            <CopyToClipboard
+                                text="<dummy>"
+                                onCopy={onCopyToClipboard}
+                            >
+                                <BsDownload />
+                            </CopyToClipboard>
+                        </Button>
+                    </OverlayTrigger>
                 </Panel>
                 <Controls />
                 <Panel position="bottom-center">
-                    <a href="//flypipe.github.io/flypipe/">Flypipe</a>
+                    <a href="//flypipe.github.io/flypipe/" target="_blank" className="text-secondary text-decoration-none fs-5">Flypipe</a>
                 </Panel>
                 <MiniMap zoomable pannable />
                 <Background color="#aaa" gap={16} />

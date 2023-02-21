@@ -50,7 +50,7 @@ export const EditNode = ({ formik, tagsSuggestions }) => {
                         Edit Node
                         {formik.values.sourceCode && (
                             <Button
-                                variant="outline-dark"
+                                variant="outline-secondary flypipe"
                                 className="btn-sm float-end"
                                 onClick={onClickMoreInfo}
                             >
@@ -203,7 +203,7 @@ export const EditNode = ({ formik, tagsSuggestions }) => {
                                     save
                                 </Button>
                                 <Button
-                                    variant="outline-secondary"
+                                    variant="outline-secondary flypipe"
                                     className="me-2 float-end"
                                 >
                                     close
