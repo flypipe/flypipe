@@ -62,8 +62,8 @@ const Graph = ({nodeDefs: nodeDefsList, tagsSuggestions}) => {
             "data": {
                 "id": newNodeId,
                 "label": `Untitled-${NEW_NODE_INDEX}`,
+                "isNew": false,
                 "nodeType": "",
-                "sourceCode": "",
                 "description": "",
                 "tags": [],
                 "output": [],
@@ -105,10 +105,9 @@ const Graph = ({nodeDefs: nodeDefsList, tagsSuggestions}) => {
 
     const onNodeClick = useCallback(
         (event, node) => {
-            const id = {id: node.id}
-            console.log({...node.data, id: node.id});
+            console.log("{...node.data, id: node.id, type: node.type}=>",{...node.data, id: node.id, isNew: node.type === "flypipe-node-new" ? true : false})
             formik.resetForm({
-                values: {...node.data, id: node.id}
+                values: {...node.data, id: node.id, isNew: node.type === "flypipe-node-new" ? true : false}
             });
             setEditNode(true);
         },

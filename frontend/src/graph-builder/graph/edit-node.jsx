@@ -3,7 +3,7 @@ import { Button, Offcanvas, Badge, Row, Col} from 'react-bootstrap';
 import Form from 'react-bootstrap/Form';
 import {Tags} from './tags';
 import {NodeMoreInfo} from './node-more-info';
-import { BsInfoSquare } from "react-icons/bs";
+import { BsInfoLg } from "react-icons/bs";
 import CustomSelect from './CustomSelect';
 import { NodeOutput } from './node-output';
 import { NodePredecessors } from './node-predecessors';
@@ -37,7 +37,7 @@ export const EditNode = ({ formik, tagsSuggestions }) => {
             <Offcanvas.Header closeButton={false} className='node'>
                 <Offcanvas.Title>
                     Edit Node
-                    { formik.values.sourceCode && <Button variant="outline-dark" className="btn-sm float-end" onClick={onClickMoreInfo}><BsInfoSquare /></Button> }
+                    { formik.values.sourceCode && <Button variant="outline-dark" className="btn-sm float-end" onClick={onClickMoreInfo}><BsInfoLg /></Button> }
                 </Offcanvas.Title>                
             </Offcanvas.Header>
             <Offcanvas.Body>

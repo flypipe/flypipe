@@ -24,24 +24,12 @@ const App = () => {
             }
         }
     ], []);
-    return <>
-        
+    return <>        
             <Header links={headerLinks}/>
-            
-            <button onClick={() => {
-                
-                console.log(uuid());
-                setNewMessage({
-                    msgId: uuid(),
-                    message: "Hello"
-                })
-            }}>NOTIFICATION</button>
-            
             <Notifications newMessage={newMessage}/>
-            
             <div>
                 {content}
-            </div>
+            </div>            
     </>
 };
 
