@@ -96,10 +96,14 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
         setShowSearchPanel(!showSearchPanel);
     }
 
+    const handleCloseEditNode = useCallback(() => {
+        setShowEditNode(false);
+    }, [setShowEditNode]);
+
     return (
         <div className="layoutflow" ref={graphDiv}>
             {showEditNode && (
-                <EditNode node={editNode} tagsSuggestions={tagsSuggestions} setEditNode={setShowEditNode}/>
+                <EditNode node={editNode} tagsSuggestions={tagsSuggestions} onClose={handleCloseEditNode}/>
             )}
             <ReactFlow
                 defaultNodes={[]}

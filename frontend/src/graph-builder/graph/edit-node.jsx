@@ -5,14 +5,14 @@ import { Tags } from "./tags";
 import { NodeMoreInfo } from "./node-more-info";
 import { BsInfoLg } from "react-icons/bs";
 import CustomSelect from "./CustomSelect";
-import { DeleteNode } from "./delete-node";
+import DeleteNodeModal from "./delete-node-modal";
 import { NodeOutput } from "./node-output";
 import { NodePredecessors } from "./node-predecessors";
 import { NodeSuccessors } from "./node-successors";
 import { useFormik } from "formik";
 
 
-export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
+export const EditNode = ({ node, tagsSuggestions, onClose: handleClose }) => {
     const validate = (values) => {
         const errors = {};
 
@@ -56,15 +56,17 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
     const [show, setShow] = useState(true);
     const [showDeleteNode, setShowDeleteNode] = useState(false);
 
-    const handleClose = () => {
-        setShow(false);
-        setEditNode(false);
-    }
-
-    const handleDeleteNode = () => {
+    // Events for delete node modal
+    const handleShowDeleteNode = useCallback(() => {
         setShowDeleteNode(true);
-    }
-    
+    }, [setShowDeleteNode]);
+    const handleCancelDeleteNode = useCallback(() => {
+        setShowDeleteNode(false);
+    }, [setShowDeleteNode]);
+    const handleSubmitDeleteNode = useCallback(() => {
+        setShowDeleteNode(false);
+        handleClose();
+    }, [setShowDeleteNode, handleClose]);
 
     const [showMoreInfo, setShowMoreInfo] = useState(false);
 
@@ -74,7 +76,7 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
 
     return (
         <>
-            { showDeleteNode && <DeleteNode id={formState.values.id} label={formState.values.label}  setShowDeleteNode={setShowDeleteNode} setEditNode={setEditNode} /> }
+            { showDeleteNode && <DeleteNodeModal nodeId={formState.values.id} onCancel={handleCancelDeleteNode} onSubmit={handleSubmitDeleteNode} handleClose={handleCancelDeleteNode} /> }
             <NodeMoreInfo
                 node={formState.values}
                 show={showMoreInfo}
@@ -86,7 +88,7 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
 
             <Offcanvas
                 show={show}
-                onHide={handleClose}
+                // onHide={handleClose}
                 placement="end"
                 backdrop={false}
                 scroll={true}
@@ -241,20 +243,20 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
 
                         <Row>
                             <Col>
-                                <Button variant="outline-danger" onClick={handleDeleteNode}>delete</Button>
+                                <Button variant="outline-danger" onClick={handleShowDeleteNode}>Delete</Button>
                                 <Button
                                     variant="outline-primary"
                                     className="me-2 float-end"
                                     type="submit"
                                 >
-                                    save
+                                    Save
                                 </Button>
                                 <Button
                                     variant="outline-secondary flypipe"
                                     className="me-2 float-end"
                                     onClick={handleClose}
                                 >
-                                    close
+                                    Close
                                 </Button>
                             </Col>
                         </Row>
