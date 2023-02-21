@@ -4,6 +4,7 @@ import Badge from "react-bootstrap/Badge";
 import { refreshNodePositions, NODE_WIDTH, NODE_HEIGHT } from "../util";
 import classNames from "classnames";
 import textFit from "textfit";
+import { GrNew } from "react-icons/gr";
 
 const BaseNode = ({ data, isNewNode }) => {
     const graph = useReactFlow();
@@ -62,7 +63,7 @@ const BaseNode = ({ data, isNewNode }) => {
     // Within the node we must divide the space between the name and the badge
     const [nameWidth, badgeWidth] = useMemo(() => {
         if (isNewNode) {
-            return ["col-8", "col-4"];
+            return ["col-12", ""];
         } else {
             return ["col-12", ""];
         }
@@ -90,10 +91,11 @@ const BaseNode = ({ data, isNewNode }) => {
                 {isNewNode && (
                     <Badge
                         pill
-                        bg="primary"
-                        className={`${badgeWidth} align-self-start fs-6`}
+                        bg="warning"
+                        className={`${badgeWidth} align-self-start fs-6 position-absolute node-badge`}
+                        title="New node"
                     >
-                        New
+                        <GrNew/>
                     </Badge>
                 )}
             </div>
