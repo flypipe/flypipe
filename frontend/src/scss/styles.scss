@@ -1,6 +1,6 @@
 .suggestionsClass {
     padding: 10px;
-    
+
     background-color: white;
     border: 1px solid #ced4da;
 }
@@ -15,12 +15,11 @@
     border: none;
 }
 
-.accordion-button:not(.collapsed){
+.accordion-button:not(.collapsed) {
     color: black;
     background-color: white;
     font-weight: bold;
 }
-
 
 .offcanvas.node {
     --bs-offcanvas-width: 500px !important;
@@ -30,8 +29,8 @@
     display: block;
 }
 
-.modal-90w{
-    max-width: 60%
+.modal-90w {
+    max-width: 60%;
 }
 
 .toast-z-index {
@@ -39,11 +38,10 @@
     background-color: rgba(255, 255, 255, 1);
 }
 
-.margin-left-95{
+.margin-left-95 {
     margin-left: 50%;
 }
 
 .pointer {
     cursor: pointer;
 }
-

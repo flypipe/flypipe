@@ -1,11 +1,10 @@
-import React, {useState, useEffect} from 'react';
-import Toast from 'react-bootstrap/Toast';
-import ToastContainer from 'react-bootstrap/ToastContainer';
-import ToastHeader from 'react-bootstrap/ToastHeader';
-import ToastBody from 'react-bootstrap/ToastBody';
+import React, { useState, useEffect } from "react";
+import Toast from "react-bootstrap/Toast";
+import ToastContainer from "react-bootstrap/ToastContainer";
+import ToastHeader from "react-bootstrap/ToastHeader";
+import ToastBody from "react-bootstrap/ToastBody";
 
 const DELAY_MILLISECONDS = 2000;
-
 
 /*
 Stack of toast notifications. These notifications quietly die after DELAY_MILLISECONDS, which gave me a design 
@@ -22,32 +21,39 @@ Notifications component won't rerender.
 new toast message. This ensures that even if the message is repeated a second time it will still have a different 
 msgId and will prompt a rerender. 
 */
-const Notifications = ({newMessage}) => {
+const Notifications = ({ newMessage }) => {
     const [messages, setMessages] = useState([]);
     useEffect(() => {
         if (newMessage.message) {
-            setMessages((prevMessages) => [...prevMessages, newMessage])
+            setMessages((prevMessages) => [...prevMessages, newMessage]);
         }
     }, [newMessage]);
-    return <ToastContainer position='top-end' className="m-4">
-        {messages.map(({msgId, message}) => 
-        <Toast 
-            key={`toast-msg-${msgId}`}
-            onClose={() => {
-                setMessages((prevMessages) => {
-                    const nextMessages = [...prevMessages];
-                    nextMessages.splice(nextMessages.findIndex((message) => message.msgId === msgId), 1);
-                    return nextMessages;
-                })
-            }}
-            delay={DELAY_MILLISECONDS}
-            autohide
-        >
-            {/* <ToastHeader></ToastHeader> */}
-            <ToastBody>{message}</ToastBody>
-        </Toast>)}
-        
-    </ToastContainer>
+    return (
+        <ToastContainer position="top-end" className="m-4">
+            {messages.map(({ msgId, message }) => (
+                <Toast
+                    key={`toast-msg-${msgId}`}
+                    onClose={() => {
+                        setMessages((prevMessages) => {
+                            const nextMessages = [...prevMessages];
+                            nextMessages.splice(
+                                nextMessages.findIndex(
+                                    (message) => message.msgId === msgId
+                                ),
+                                1
+                            );
+                            return nextMessages;
+                        });
+                    }}
+                    delay={DELAY_MILLISECONDS}
+                    autohide
+                >
+                    {/* <ToastHeader></ToastHeader> */}
+                    <ToastBody>{message}</ToastBody>
+                </Toast>
+            ))}
+        </ToastContainer>
+    );
 };
 
 export default Notifications;

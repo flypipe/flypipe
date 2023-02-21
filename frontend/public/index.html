@@ -1,188 +1,215 @@
 <html>
-    <head>
-        
-    </head>
+    <head> </head>
     <body>
-        <div id="root" style="width: 100%; height: 100%;"></div>
+        <div id="root" style="width: 100%; height: 100%"></div>
         <script>
             window.count_boxes = [
                 {
-                    "label": "nodes",
-                    "count": 100
+                    label: "nodes",
+                    count: 100,
                 },
                 {
-                    "label": "bronze",
-                    "count": 10
+                    label: "bronze",
+                    count: 10,
                 },
                 {
-                    "label": "silver",
-                    "count": 5
+                    label: "silver",
+                    count: 5,
                 },
                 {
-                    "label": "gold",
-                    "count": 1
+                    label: "gold",
+                    count: 1,
                 },
-            ]
+            ];
             window.nodes = [
                 {
-                    "nodeKey": "t1",
-                    "nodeType": "pandas",
-                    "name": "t1",
-                    "filePath": "this/is/the/path/to/t1.py",
-                    "importCmd": "from this.is.the.path.to.t1 import t1",
-                    "description": "This is the description of t1",
-                    "tags": ["feature", "test"],
-                    "schema": [],
-                    "predecessors": [],
-                    "successors": ["t2", "t3"],
-                    "sourceCode": (
+                    nodeKey: "t1",
+                    nodeType: "pandas",
+                    name: "t1",
+                    filePath: "this/is/the/path/to/t1.py",
+                    importCmd: "from this.is.the.path.to.t1 import t1",
+                    description: "This is the description of t1",
+                    tags: ["feature", "test"],
+                    schema: [],
+                    predecessors: [],
+                    successors: ["t2", "t3"],
+                    sourceCode:
                         "@node(\n" +
                         "   type='pandas',\n" +
                         ")\n" +
                         "def t1():\n" +
                         "   return pd.DataFrame({'c1': [1,2,3]}))\n" +
-                        "\n"
-                    )
+                        "\n",
                 },
                 {
-                    "nodeKey": "t2",
-                    "nodeType": "pandas",
-                    "name": "t2",
-                    "filePath": "this/is/the/path/to/t2.py",
-                    "importCmd": "from this.is.the.path.to.t2 import t2",
-                    "description": "This is the description of t2",
-                    "tags": ["feature", "test"],
-                    "schema": [],
-                    "predecessors": ["t1"],
-                    "successors": ["t4"],
-                    "sourceCode": (
+                    nodeKey: "t2",
+                    nodeType: "pandas",
+                    name: "t2",
+                    filePath: "this/is/the/path/to/t2.py",
+                    importCmd: "from this.is.the.path.to.t2 import t2",
+                    description: "This is the description of t2",
+                    tags: ["feature", "test"],
+                    schema: [],
+                    predecessors: ["t1"],
+                    successors: ["t4"],
+                    sourceCode:
                         "@node(\n" +
                         "   type='pandas',\n" +
                         ")\n" +
                         "def t2():\n" +
                         "   return pd.DataFrame({'c1': [1,2,3]}))\n" +
-                        "\n"
-                    )
+                        "\n",
                 },
                 {
-                    "nodeKey": "t3",
-                    "nodeType": "pandas",
-                    "name": "t3",
-                    "filePath": "this/is/the/path/to/t3.py",
-                    "importCmd": "from this.is.the.path.to.t3 import t3",
-                    "description": "This is the description of t3",
-                    "tags": ["feature", "test"],
-                    "schema": [],
-                    "predecessors": ["t1"],
-                    "successors": ["t4"],
-                    "sourceCode": (
+                    nodeKey: "t3",
+                    nodeType: "pandas",
+                    name: "t3",
+                    filePath: "this/is/the/path/to/t3.py",
+                    importCmd: "from this.is.the.path.to.t3 import t3",
+                    description: "This is the description of t3",
+                    tags: ["feature", "test"],
+                    schema: [],
+                    predecessors: ["t1"],
+                    successors: ["t4"],
+                    sourceCode:
                         "@node(\n" +
                         "   type='pandas',\n" +
                         ")\n" +
                         "def t3():\n" +
                         "   return pd.DataFrame({'c1': [1,2,3]}))\n" +
-                        "\n"
-                    )
+                        "\n",
                 },
                 {
-                    "nodeKey": "t4",
-                    "nodeType": "pandas",
-                    "name": "t4",
-                    "filePath": "this/is/the/path/to/t4.py",
-                    "importCmd": "from this.is.the.path.to.t4 import t4",
-                    "description": "This is the description of t4",
-                    "tags": ["feature", "test"],
-                    "schema": [],
-                    "predecessors": ["t2", "t3"],
-                    "successors": [],
-                    "sourceCode": (
+                    nodeKey: "t4",
+                    nodeType: "pandas",
+                    name: "t4",
+                    filePath: "this/is/the/path/to/t4.py",
+                    importCmd: "from this.is.the.path.to.t4 import t4",
+                    description: "This is the description of t4",
+                    tags: ["feature", "test"],
+                    schema: [],
+                    predecessors: ["t2", "t3"],
+                    successors: [],
+                    sourceCode:
                         "@node(\n" +
                         "   type='pandas',\n" +
                         ")\n" +
                         "def t4():\n" +
                         "   return pd.DataFrame({'c1': [1,2,3]}))\n" +
-                        "\n"
-                    )
+                        "\n",
                 },
                 {
-                    "nodeKey": "country_code_1",
-                    "nodeType": "pandas",
-                    "name": "country_code1",
-                    "filePath": "this/is/the/path/to/country/code.py",
-                    "pythonImportCommand": "from this.is.the.path.to.country.code import Code",
-                    "description": "This is the description of the country code",
-                    "tags": [{"id": "feature", "text": "feature"}, {"id": "test", "text": "test"}],
-                    "schema": [],
-                    "predecessors": [],
-                    "successors": ["dummy_1"],
-                    "output":[
-                        {"column": "col1", "type": "Integer", "description": "this is a description of col 1"},
-                        {"column": "col2", "type": "String", "description": "this is a description of col 2"},                        
-                        {"column": "col3", "type": "Float", "description": "this is a description of col 3"},
+                    nodeKey: "country_code_1",
+                    nodeType: "pandas",
+                    name: "country_code1",
+                    filePath: "this/is/the/path/to/country/code.py",
+                    pythonImportCommand:
+                        "from this.is.the.path.to.country.code import Code",
+                    description: "This is the description of the country code",
+                    tags: [
+                        { id: "feature", text: "feature" },
+                        { id: "test", text: "test" },
                     ],
-                    "sourceCode": (
+                    schema: [],
+                    predecessors: [],
+                    successors: ["dummy_1"],
+                    output: [
+                        {
+                            column: "col1",
+                            type: "Integer",
+                            description: "this is a description of col 1",
+                        },
+                        {
+                            column: "col2",
+                            type: "String",
+                            description: "this is a description of col 2",
+                        },
+                        {
+                            column: "col3",
+                            type: "Float",
+                            description: "this is a description of col 3",
+                        },
+                    ],
+                    sourceCode:
                         "@node(\n" +
                         "   type='pandas',\n" +
                         ")\n" +
                         "def country_code1():\n" +
                         "   return pd.DataFrame({'c1': [1,2,3]}))\n" +
-                        "\n"
-                    )
+                        "\n",
                 },
                 {
-                    "nodeKey": "dummy_1",
-                    "nodeType": "pyspark",
-                    "name": "dummy_1",
-                    "filePath": "bla/dummy.py",
-                    "pythonImportCommand": "from bla.dummy import Dummy",
-                    "description": "<dummy>",
-                    "tags": [{"id": "test", "text": "test"}],
-                    "schema": [],
-                    "predecessors": ["country_code_1"],
-                    "predecessors2": {
-                        "country_code_1": ["col1", "col2"]
+                    nodeKey: "dummy_1",
+                    nodeType: "pyspark",
+                    name: "dummy_1",
+                    filePath: "bla/dummy.py",
+                    pythonImportCommand: "from bla.dummy import Dummy",
+                    description: "<dummy>",
+                    tags: [{ id: "test", text: "test" }],
+                    schema: [],
+                    predecessors: ["country_code_1"],
+                    predecessors2: {
+                        country_code_1: ["col1", "col2"],
                     },
-                    "successors": [],
-                    "output":[
-                        {"column": "col1", "type": "String", "description": "this is a description of col 1"},
-                        {"column": "col2", "type": "Boolean", "description": "this is a description of col 2"},
-                        {"column": "col3", "type": "Boolean", "description": "this is a description of col 3"},
-                        {"column": "col4", "type": "Boolean", "description": "this is a description of col 4"},
+                    successors: [],
+                    output: [
+                        {
+                            column: "col1",
+                            type: "String",
+                            description: "this is a description of col 1",
+                        },
+                        {
+                            column: "col2",
+                            type: "Boolean",
+                            description: "this is a description of col 2",
+                        },
+                        {
+                            column: "col3",
+                            type: "Boolean",
+                            description: "this is a description of col 3",
+                        },
+                        {
+                            column: "col4",
+                            type: "Boolean",
+                            description: "this is a description of col 4",
+                        },
                     ],
-                    "sourceCode": (
+                    sourceCode:
                         "@node(\n" +
                         "   type='pyspark',\n" +
                         "   dependencies=['country_code1']" +
                         ")\n" +
                         "def dummy(country_code1):\n" +
                         "   return country_code1\n" +
-                        "\n"
-                    )
+                        "\n",
                 },
                 {
-                    "nodeKey": "country_code_2",
-                    "nodeType": "pandas_on_spark",
-                    "name": "country_code2",
-                    "filePath": "this/is/the/path/to/country/code.py",
-                    "pythonImportCommand": "from this.is.the.path.to.country.code import Code",
-                    "description": "This is the description of the country code",
-                    "tags": [{"id": "feature2", "text": "feature2"}, {"id": "test4", "text": "test4"}],
-                    "schema": [],
-                    "predecessors": [],
-                    "successors": ["dummy_1"],
-                    "sourceCode": (
+                    nodeKey: "country_code_2",
+                    nodeType: "pandas_on_spark",
+                    name: "country_code2",
+                    filePath: "this/is/the/path/to/country/code.py",
+                    pythonImportCommand:
+                        "from this.is.the.path.to.country.code import Code",
+                    description: "This is the description of the country code",
+                    tags: [
+                        { id: "feature2", text: "feature2" },
+                        { id: "test4", text: "test4" },
+                    ],
+                    schema: [],
+                    predecessors: [],
+                    successors: ["dummy_1"],
+                    sourceCode:
                         "@node(\n" +
                         "   type='pandas_on_spark',\n" +
                         ")\n" +
                         "def country_code2():\n" +
                         "   return pd.DataFrame({'c1': [1,2,3]}))\n" +
-                        "\n"
-                    )
+                        "\n",
                 },
             ];
-            window.tagsSuggestions=[
-                { id: 'Tag_1', text: 'Tag_1' },
-                { id: 'Tag_2', text: 'Tag_2' },                
+            window.tagsSuggestions = [
+                { id: "Tag_1", text: "Tag_1" },
+                { id: "Tag_2", text: "Tag_2" },
             ];
         </script>
         <script src="../dist/bundle.js"></script>

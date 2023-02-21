@@ -1,23 +1,22 @@
-import dagre from 'dagre';
-import {ANIMATION_SPEED, DEFAULT_ZOOM} from './graph/config';
+import dagre from "dagre";
+import { ANIMATION_SPEED, DEFAULT_ZOOM } from "./graph/config";
 
-// This isn't the actual node width which appears to be dynamically calculated. It's a width that we must give for 
-// the dagre layout calculation. 
+// This isn't the actual node width which appears to be dynamically calculated. It's a width that we must give for
+// the dagre layout calculation.
 export const NODE_WIDTH = 250;
 export const NODE_HEIGHT = 75;
 
-
-// Given the nodes & edges from the graph, construct a dagre graph to automatically assign 
-// the positions of the nodes. 
+// Given the nodes & edges from the graph, construct a dagre graph to automatically assign
+// the positions of the nodes.
 const assignNodePositions = (nodes, edges) => {
     const dagreGraph = new dagre.graphlib.Graph();
-    dagreGraph.setGraph({ rankdir: 'LR' });
+    dagreGraph.setGraph({ rankdir: "LR" });
     dagreGraph.setDefaultEdgeLabel(() => ({}));
-    nodes.forEach(({id}) => {
+    nodes.forEach(({ id }) => {
         dagreGraph.setNode(id, { width: NODE_WIDTH, height: NODE_HEIGHT });
     });
 
-    edges.forEach(({source, target}) => {
+    edges.forEach(({ source, target }) => {
         dagreGraph.setEdge(source, target);
     });
     dagre.layout(dagreGraph);
@@ -28,8 +27,8 @@ const assignNodePositions = (nodes, edges) => {
         // We are shifting the dagre node position (anchor=center center) to the top left
         // so it matches the React Flow node anchor point (top left).
         node.position = {
-            x: nodeWithPosition.x - (NODE_WIDTH / 2),
-            y: nodeWithPosition.y - (NODE_HEIGHT / 2),
+            x: nodeWithPosition.x - NODE_WIDTH / 2,
+            y: nodeWithPosition.y - NODE_HEIGHT / 2,
         };
     });
 };
@@ -41,22 +40,26 @@ const refreshNodePositions = (graph) => {
 };
 
 // Retrieve the graph node representation of a node
-const convertNodeDefToGraphNode = ({nodeKey, name, ...fields}, isNew=true) => ({
-    "id": nodeKey,
-    "type": isNew ? "flypipe-node-new" : "flypipe-node-existing",
-    "data": {
-        "label": name,
-        ...fields
+const convertNodeDefToGraphNode = (
+    { nodeKey, name, ...fields },
+    isNew = true
+) => ({
+    id: nodeKey,
+    type: isNew ? "flypipe-node-new" : "flypipe-node-existing",
+    data: {
+        label: name,
+        ...fields,
     },
-    "position": { // dummy position, this will be automatically updated later
-        "x": 0,
-        "y": 0,
+    position: {
+        // dummy position, this will be automatically updated later
+        x: 0,
+        y: 0,
     },
     // "width": NODE_WIDTH,
     // "height": NODE_HEIGHT,
 });
 
-// Given an input node, get the list of nodes and edges of all of the input node's predecessors. 
+// Given an input node, get the list of nodes and edges of all of the input node's predecessors.
 const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
     const nodeDef = nodeDefs.find((nodeDef) => nodeDef.nodeKey === nodeKey);
     const frontier = [...nodeDef.predecessors];
@@ -66,7 +69,9 @@ const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
     const addedKeys = [nodeDef.nodeKey];
     while (frontier.length > 0) {
         const currentKey = frontier.pop();
-        const current = nodeDefs.find((nodeDef) => nodeDef.nodeKey === currentKey);
+        const current = nodeDefs.find(
+            (nodeDef) => nodeDef.nodeKey === currentKey
+        );
         if (!addedKeys.includes(current.nodeKey)) {
             addedKeys.push(current.nodeKey);
             selectedNodeDefs.push(current);
@@ -74,12 +79,12 @@ const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
         for (const successor of current.successors) {
             if (addedKeys.includes(successor)) {
                 const edgeKey = `${current.nodeKey}-${successor}`;
-                if (!(edgeKeys.has(edgeKey))) {
+                if (!edgeKeys.has(edgeKey)) {
                     const edge = {
-                        "id": edgeKey,
-                        "source": current.nodeKey,
-                        "target": successor,
-                    }
+                        id: edgeKey,
+                        source: current.nodeKey,
+                        target: successor,
+                    };
                     edges.push(edge);
                     edgeKeys.add(edgeKey);
                 }
@@ -89,12 +94,26 @@ const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
             frontier.push(predecessor);
         }
     }
-    return [selectedNodeDefs.map((nodeDef) => convertNodeDefToGraphNode(nodeDef, false)), edges];
+    return [
+        selectedNodeDefs.map((nodeDef) =>
+            convertNodeDefToGraphNode(nodeDef, false)
+        ),
+        edges,
+    ];
 };
 
 const moveToNode = (graph, nodeId) => {
-    const newNodePosition = graph.getNodes().find(({id}) => id === nodeId).position;
-    graph.setCenter(newNodePosition.x, newNodePosition.y, {duration: ANIMATION_SPEED, zoom: DEFAULT_ZOOM});
+    const newNodePosition = graph
+        .getNodes()
+        .find(({ id }) => id === nodeId).position;
+    graph.setCenter(newNodePosition.x, newNodePosition.y, {
+        duration: ANIMATION_SPEED,
+        zoom: DEFAULT_ZOOM,
+    });
 };
 
-export {getPredecessorNodesAndEdgesFromNode, refreshNodePositions, moveToNode};
+export {
+    getPredecessorNodesAndEdgesFromNode,
+    refreshNodePositions,
+    moveToNode,
+};
