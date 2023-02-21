@@ -123,7 +123,7 @@ const Search = ({ nodes }) => {
                                 handleChangeFilter={handleChangeFilter}
                             />
                         ))}
-                        <Dropdown.Header>Group</Dropdown.Header>
+                        {/* <Dropdown.Header>Group</Dropdown.Header> */}
                     </Dropdown.Menu>
                 </Dropdown>
                 <h6 className="mb-0">{numberSearchResultsText}</h6>
