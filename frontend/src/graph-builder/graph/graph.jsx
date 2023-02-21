@@ -24,7 +24,7 @@ const Graph = ({nodeDefs: nodeDefsList, tagsSuggestions}) => {
         const errors = {}
 
         if (!values.label){
-            errors.label = 'Label is required'
+            errors.label = 'Name is required'
         }
 
         if (!values.nodeType){
@@ -40,7 +40,7 @@ const Graph = ({nodeDefs: nodeDefsList, tagsSuggestions}) => {
         },
         validate,
         onSubmit: values => {
-          console.log("submited: ", values);
+          alert(JSON.stringify(values, null, 2));
         },
       });
 
