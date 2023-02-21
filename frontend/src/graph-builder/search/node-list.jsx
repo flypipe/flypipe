@@ -12,7 +12,7 @@ import {
     moveToNode,
     refreshNodePositions,
 } from "../util";
-import { useReactFlow } from "reactflow";
+import { useReactFlow, MarkerType } from "reactflow";
 
 // Maximum number of search entries per page
 const SEARCH_PAGE_SIZE = 8;
@@ -78,7 +78,16 @@ const NodeList = ({ nodes, allNodes }) => {
         const newEdges = predecessorEdges.filter(
             ({ id }) => !currentEdges.has(id)
         );
-
+        
+        newEdges.forEach((e,i) => {
+            console.log(i);
+            newEdges[i]['markerEnd'] = {
+                type: MarkerType.ArrowClosed,
+                width: 15,
+                height: 15,
+            }
+        })
+        
         graph.addNodes(newNodes);
         graph.addEdges(newEdges);
         refreshNodePositions(graph);

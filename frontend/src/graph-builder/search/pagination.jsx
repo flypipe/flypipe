@@ -100,7 +100,7 @@ const Pagination = ({ maxPage, pageGroupSize, handleClickPage }) => {
                 {pageGroup.map((pageNumber) => (
                     <li key={`page-${pageNumber}`} className="page-item">
                         <a
-                            className={classNames("page-link flypipe", {
+                            className={classNames("page-link flypipe text-secondary", {
                                 "fw-bold": pageNumber === currentPage,
                             })}
                             href="#"
@@ -113,6 +113,7 @@ const Pagination = ({ maxPage, pageGroupSize, handleClickPage }) => {
                         </a>
                     </li>
                 ))}
+                
                 <li className="page-item">
                     <a
                         className={classNames("page-link flypipe", {
