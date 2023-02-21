@@ -93,9 +93,9 @@
 }
 
 .node-badge{
-    top: -25px !important;
-    right: -25px !important;
-    padding: 15px !important;
+    top: -21px !important;
+    right: -21px !important;
+    padding: 12px !important;
 
 }
 
@@ -113,4 +113,8 @@
 
 .react-flow__handle-right{
     right: -10px !important;
+}
+
+.react-flow__edge-path, .react-flow__connection-path{
+    stroke-width: 0.09em !important;
 }
