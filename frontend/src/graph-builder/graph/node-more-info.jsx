@@ -8,13 +8,11 @@ import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 import uuid from "react-uuid";
 
-export const NodeMoreInfo = ({ node, show, onClose }) => {
+export const NodeMoreInfo = ({ node, show, onClose: handleClose }) => {
     const [copiedLocation, setCopiedLocation] = useState(false);
     const [copiedPyImport, setCopiedPyImport] = useState(false);
     const [copiedSourceCode, setCopiedSourceCode] = useState(false);
     const { newMessage, setNewMessage } = useContext(NotificationContext);
-
-    const handleClose = () => onClose(false);
 
     return (
         <Modal

@@ -70,10 +70,12 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
     }, [setShowDeleteNode, handleClose]);
 
     const [showMoreInfo, setShowMoreInfo] = useState(false);
-
     const onClickMoreInfo = useCallback(() => {
         setShowMoreInfo(true);
-    }, [formState]);
+    }, [setShowMoreInfo]);
+    const onClickCloseMoreInfo = useCallback(() => {
+        setShowMoreInfo(false);
+    }, [setShowMoreInfo]);
 
     const handleSetTags = useCallback((tags) => {
         formState.values.tags = tags.map(tag => tag.id);
@@ -86,10 +88,7 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
             <NodeMoreInfo
                 node={formState.values}
                 show={showMoreInfo}
-                onHide={handleClose}
-                onClose={() => {
-                    setShowMoreInfo(false);
-                }}
+                onClose={onClickCloseMoreInfo}
             />
 
             <Offcanvas
@@ -103,15 +102,13 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
                 <Offcanvas.Header closeButton={false} className="node">
                     <Offcanvas.Title>
                         Edit Node
-                        {formState.values.sourceCode && (
-                            <Button
-                                variant="outline-secondary flypipe"
-                                className="btn-sm float-end"
-                                onClick={onClickMoreInfo}
-                            >
-                                <BsInfoLg />
-                            </Button>
-                        )}
+                        <Button
+                            variant="outline-secondary flypipe"
+                            className="btn-sm float-end"
+                            onClick={onClickMoreInfo}
+                        >
+                            <BsInfoLg />
+                        </Button>
                     </Offcanvas.Title>
                 </Offcanvas.Header>
                 <Offcanvas.Body>
