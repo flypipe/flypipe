@@ -5,14 +5,14 @@ import { Tags } from "./tags";
 import { NodeMoreInfo } from "./node-more-info";
 import { BsInfoLg } from "react-icons/bs";
 import CustomSelect from "./CustomSelect";
-import { DeleteNode } from "./delete-node";
+import DeleteNodeModal from "./delete-node-modal";
 import { NodeOutput } from "./node-output";
 import { NodePredecessors } from "./node-predecessors";
 import { NodeSuccessors } from "./node-successors";
 import { useFormik } from "formik";
 
 
-export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
+export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: handleSave }) => {
     const validate = (values) => {
         const errors = {};
 
@@ -30,10 +30,11 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
         initialValues: {
             name: "",
             nodeType: "",
+            tags: [],
         },
         validate,
         onSubmit: (values) => {
-            alert(JSON.stringify(values, null, 2));
+            handleSave(values);
         },
     });
     useEffect(() => {
@@ -56,37 +57,42 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
  
     const [showDeleteNode, setShowDeleteNode] = useState(false);
 
-    const handleClose = () => {
-        
-        setEditNode(false);
-    }
-
-    const handleDeleteNode = () => {
+    const handleShowDeleteNode = useCallback(() => {
         setShowDeleteNode(true);
-    }
-    
+    }, [setShowDeleteNode]);
+    const handleCancelDeleteNode = useCallback(() => {
+        setShowDeleteNode(false);
+    }, [setShowDeleteNode]);
+    const handleSubmitDeleteNode = useCallback(() => {
+        setShowDeleteNode(false);
+        handleClose();
+    }, [setShowDeleteNode, handleClose]);
 
     const [showMoreInfo, setShowMoreInfo] = useState(false);
-
     const onClickMoreInfo = useCallback(() => {
         setShowMoreInfo(true);
+    }, [setShowMoreInfo]);
+    const onClickCloseMoreInfo = useCallback(() => {
+        setShowMoreInfo(false);
+    }, [setShowMoreInfo]);
+
+    const handleSetTags = useCallback((tags) => {
+        formState.values.tags = tags.map(tag => tag.id);
+        console.log(formState.values.tags);
     }, [formState]);
 
     return (
         <>
-            { showDeleteNode && <DeleteNode id={formState.values.id} label={formState.values.label}  setShowDeleteNode={setShowDeleteNode} setEditNode={setEditNode} /> }
+            { showDeleteNode && <DeleteNodeModal nodeId={formState.values.id} onCancel={handleCancelDeleteNode} onSubmit={handleSubmitDeleteNode} handleClose={handleCancelDeleteNode} /> }
             <NodeMoreInfo
                 node={formState.values}
                 show={showMoreInfo}
-                onHide={handleClose}
-                onClose={() => {
-                    setShowMoreInfo(false);
-                }}
+                onClose={onClickCloseMoreInfo}
             />
 
             <Offcanvas
-                show
-                onHide={handleClose}
+                show={show}
+                // onHide={handleClose}
                 placement="end"
                 backdrop={false}
                 scroll={true}
@@ -95,15 +101,13 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
                 <Offcanvas.Header closeButton={false} className="node">
                     <Offcanvas.Title>
                         Edit Node
-                        {formState.values.sourceCode && (
-                            <Button
-                                variant="outline-secondary flypipe"
-                                className="btn-sm float-end"
-                                onClick={onClickMoreInfo}
-                            >
-                                <BsInfoLg />
-                            </Button>
-                        )}
+                        <Button
+                            variant="outline-secondary flypipe"
+                            className="btn-sm float-end"
+                            onClick={onClickMoreInfo}
+                        >
+                            <BsInfoLg />
+                        </Button>
                     </Offcanvas.Title>
                 </Offcanvas.Header>
                 <Offcanvas.Body>
@@ -172,8 +176,9 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
                                 Tags
                             </Form.Label>
                             <Tags
-                                formik={formState}
-                                tagsSuggestions={tagsSuggestions}
+                                tags={formState.values.tags.map(tag => ({id: tag, text: tag}))}
+                                tagSuggestions={tagSuggestions}
+                                onSetTags={handleSetTags}
                             />
                         </Form.Group>
 
@@ -241,20 +246,20 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
 
                         <Row>
                             <Col>
-                                <Button variant="outline-danger" onClick={handleDeleteNode}>delete</Button>
+                                <Button variant="outline-danger" onClick={handleShowDeleteNode}>Delete</Button>
                                 <Button
                                     variant="outline-primary"
                                     className="me-2 float-end"
                                     type="submit"
                                 >
-                                    save
+                                    Save
                                 </Button>
                                 <Button
                                     variant="outline-secondary flypipe"
                                     className="me-2 float-end"
                                     onClick={handleClose}
                                 >
-                                    close
+                                    Close
                                 </Button>
                             </Col>
                         </Row>

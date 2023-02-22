@@ -19,6 +19,7 @@ import { Button } from "react-bootstrap";
 import { TfiAngleLeft, TfiAngleRight } from "react-icons/tfi";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
+import clone from 'just-clone';
 
 
 // TODO- get rid of this index when we introduce the new node modal
@@ -29,7 +30,7 @@ const NODE_TYPES = {
     "flypipe-node-new": NewNode,
 };
 
-const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
+const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
     const [editNode, setEditNode] = useState(null);
     const [showEditNode, setShowEditNode] = useState(false);
 
@@ -108,10 +109,28 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
         setShowSearchPanel(!showSearchPanel);
     }
 
+    const handleCloseEditNode = useCallback(() => {
+        setShowEditNode(false);
+    }, [setShowEditNode]);
+    const handleSaveEditNode = useCallback((editedNode) => {
+        setShowEditNode(false);
+        const nodes = graph.getNodes();
+        const newNodes = nodes.reduce((accumulator, node) => {
+            if (node.id !== editedNode.id) {
+                return [...accumulator, node];
+            } else {
+                return [...accumulator, {...node, data: {...editedNode}}];
+            }
+        }, []);
+        graph.setNodes(newNodes);
+    }, [setShowEditNode]);
+
     return (
         <div className="layoutflow" ref={graphDiv}>
             {showEditEdge && <EditEdge edge={editEdge} setShowEditEdge={setShowEditEdge}/>}
-            {showEditNode && <EditNode node={editNode} tagsSuggestions={tagsSuggestions} setEditNode={setShowEditNode}/>}
+            {showEditNode && (
+                <EditNode node={editNode} tagSuggestions={tagSuggestions} onClose={handleCloseEditNode} onSave={handleSaveEditNode}/>
+            )}
             <ReactFlow
                 defaultNodes={[]}
                 defaultEdges={[]}
