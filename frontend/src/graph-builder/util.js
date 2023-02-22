@@ -41,24 +41,24 @@ const refreshNodePositions = (graph) => {
 
 // Retrieve the graph node representation of a node
 const convertNodeDefToGraphNode = (
-    { nodeKey, name, ...fields },
+    nodeDef,
     isNew = true
-) => ({
-    id: nodeKey,
-    type: isNew ? "flypipe-node-new" : "flypipe-node-existing",
-    data: {
-        nodeKey: nodeKey,
-        label: name,
-        ...fields,
-    },
-    position: {
-        // dummy position, this will be automatically updated later
-        x: 0,
-        y: 0,
-    },
-    // "width": NODE_WIDTH,
-    // "height": NODE_HEIGHT,
-});
+) => {
+    return {
+        id: nodeDef.nodeKey,
+        type: isNew ? "flypipe-node-new" : "flypipe-node-existing",
+        data: {
+            label: nodeDef.name,
+            isNew,
+            ...nodeDef,
+        },
+        position: {
+            // dummy position, this will be automatically updated later
+            x: 0,
+            y: 0,
+        },
+    }
+};
 
 // Given an input node, get the list of nodes and edges of all of the input node's predecessors.
 const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
@@ -113,8 +113,39 @@ const moveToNode = (graph, nodeId) => {
     });
 };
 
+const generateCodeTemplate = (nodeData) => {
+    const {name, nodeType, description, tags, predecessors, predecessors2} = nodeData;
+    const argList = predecessors.join(', ');
+    const tagList = tags.map(tag => `'${tag}'`).join(', ');
+    const dependencyList = predecessors.join(', ');
+    return `@node(
+    type="${nodeType}",
+    description="${description}",
+    tags=[${tagList}],
+    dependencies=[${dependencyList}]
+)
+def ${name}(${argList}):
+    # <implement logic here>
+`;
+};
+
+const getNewNodeDef = ({id, name, nodeType, description, tags, output, predecessors, successors}) => ({
+    id,
+    label: name || 'Untitled',
+    isNew: true,
+    name: name || 'Untitled',
+    nodeType: nodeType || "pandas",
+    description: description || "",
+    tags: tags || [],
+    output: output || [],
+    predecessors: predecessors || [],
+    successors: successors || [],
+});
+
 export {
     getPredecessorNodesAndEdgesFromNode,
     refreshNodePositions,
     moveToNode,
+    generateCodeTemplate,
+    getNewNodeDef,
 };

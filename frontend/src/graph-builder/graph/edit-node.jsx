@@ -27,11 +27,7 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
         return errors;
     };
     const formState = useFormik({
-        initialValues: {
-            name: "",
-            nodeType: "",
-            tags: [],
-        },
+        initialValues: node.data,
         validate,
         onSubmit: (values) => {
             handleSave(values);
@@ -78,14 +74,13 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
 
     const handleSetTags = useCallback((tags) => {
         formState.values.tags = tags.map(tag => tag.id);
-        console.log(formState.values.tags);
     }, [formState]);
 
     return (
         <>
             { showDeleteNode && <DeleteNodeModal nodeId={formState.values.id} onCancel={handleCancelDeleteNode} onSubmit={handleSubmitDeleteNode} handleClose={handleCancelDeleteNode} /> }
             <NodeMoreInfo
-                node={formState.values}
+                nodeData={formState.values}
                 show={showMoreInfo}
                 onClose={onClickCloseMoreInfo}
             />

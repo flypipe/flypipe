@@ -1,11 +1,15 @@
-import React, { useCallback, useContext } from "react";
+import React, { useCallback, useContext, useMemo } from "react";
 import { Modal, Button, Badge } from "react-bootstrap";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { NotificationContext } from "../../context";
 import uuid from "react-uuid";
 import CopyToClipboardWidget from "../../copy-to-clipboard-widget";
+import { generateCodeTemplate } from "../util";
 
-export const NodeMoreInfo = ({ node, show, onClose: handleClose }) => {
+
+// Beware that nodeData is from form state not a state variable, this form state does not change object reference when 
+// it's changed so any usage of nodeData for memoisation must be on individual attributes. 
+export const NodeMoreInfo = ({ nodeData, show, onClose: handleClose }) => {
     const { newMessage, setNewMessage } = useContext(NotificationContext);
 
     const handleCopy = useCallback((data) => {
@@ -17,15 +21,17 @@ export const NodeMoreInfo = ({ node, show, onClose: handleClose }) => {
         });
     }, [setNewMessage]);
 
+    const sourceCode = useMemo(() => nodeData.sourceCode ? nodeData.sourceCode : generateCodeTemplate(nodeData), [nodeData.tags]);
+
     return (
         <Modal
             show={show}
             onHide={handleClose}
-            dialogClassName="modal-more-info  modal-dialog-scrollable"
+            dialogClassName="modal-more-info modal-dialog-scrollable"
         >
             <Modal.Header closeButton>
                 <Modal.Title>
-                    {node.label}
+                    {nodeData.label}
                     <Badge bg="success" className="ms-2 fs-6 fw-light fw-light">
                         Pandas
                     </Badge>
@@ -47,14 +53,14 @@ export const NodeMoreInfo = ({ node, show, onClose: handleClose }) => {
                 <div>
                     <span>Location:</span>
                     { 
-                        node.filePath ? 
+                        nodeData.filePath ? 
                             <>
                                 <CopyToClipboardWidget
-                                    text={node.filePath}
-                                    data={node.filePath}
+                                    text={nodeData.filePath}
+                                    data={nodeData.filePath}
                                     onCopy={handleCopy}
                                 >
-                                    <span>{node.filePath}</span>
+                                    <span>{nodeData.filePath}</span>
                                 </CopyToClipboardWidget>
                             </>
                         : <span className="ms-2 text-secondary">N/A</span>
@@ -63,13 +69,13 @@ export const NodeMoreInfo = ({ node, show, onClose: handleClose }) => {
                 <div>
                     <span>Py Import:</span>
                     { 
-                        node.pythonImportCommand ? 
+                        nodeData.pythonImportCommand ? 
                             <CopyToClipboardWidget
-                                text={node.pythonImportCommand}
-                                data={node.pythonImportCommand}
+                                text={nodeData.pythonImportCommand}
+                                data={nodeData.pythonImportCommand}
                                 onCopy={handleCopy}
                             >
-                                <span>{node.pythonImportCommand}</span>
+                                <span>{nodeData.pythonImportCommand}</span>
                             </CopyToClipboardWidget>
                         : <span className="ms-2 text-secondary">N/A</span>
                     }
@@ -77,18 +83,15 @@ export const NodeMoreInfo = ({ node, show, onClose: handleClose }) => {
 
                 <div className="position-relative">
                     <CopyToClipboardWidget
-                        data={node.sourceCode}
+                        data={sourceCode}
                         className="mt-2"
                         onCopy={handleCopy}
-                    >
-                        <span>{node.sourceCode}</span>
-                    </CopyToClipboardWidget>
-
+                    />
                     <SyntaxHighlighter
                         language="python"
                         className="border mt-4 p-4 pt-5 shadow-sm rounded h-75"
                     >
-                        {node.sourceCode}
+                        {sourceCode}
                     </SyntaxHighlighter>
                 </div>
             </Modal.Body>
