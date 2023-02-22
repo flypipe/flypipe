@@ -9,17 +9,14 @@ const KeyCodes = {
 
 const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
-export const Tags = ({ tags: initialTags, tagSuggestions, onSetTags }) => {
-    const [tags, setTags] = useState(initialTags);
+export const Tags = ({ tags, tagSuggestions, onSetTags }) => {
     const handleDelete = (index) => {
         const newTags = tags.filter(({}, i) => i !== index);
-        setTags(newTags);
         onSetTags(newTags);
     };
 
     const handleAddition = (tag) => {
         const newTags = [...tags, tag];
-        setTags(newTags);
         onSetTags(newTags);
     };
 
@@ -29,7 +26,6 @@ export const Tags = ({ tags: initialTags, tagSuggestions, onSetTags }) => {
         newTags.splice(currPos, 1);
         newTags.splice(newPos, 0, tag);
 
-        setTags(newTags);
         onSetTags(newTags);
     };
 

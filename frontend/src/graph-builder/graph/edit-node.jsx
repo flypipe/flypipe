@@ -35,11 +35,7 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
     });
     useEffect(() => {
         formState.resetForm({
-            values: {
-                id: node.id,
-                isNew: node.type === "flypipe-node-new" ? true : false,
-                ...node.data,
-            },
+            values: node.data,
         });
     }, [node]);
 
@@ -73,7 +69,10 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
     }, [setShowMoreInfo]);
 
     const handleSetTags = useCallback((tags) => {
-        formState.values.tags = tags.map(tag => tag.id);
+        formState.setFieldValue(
+            "tags",
+            tags
+        )
     }, [formState]);
 
     return (
@@ -171,7 +170,7 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
                                 Tags
                             </Form.Label>
                             <Tags
-                                tags={formState.values.tags.map(tag => ({id: tag, text: tag}))}
+                                tags={formState.values.tags}
                                 tagSuggestions={tagSuggestions}
                                 onSetTags={handleSetTags}
                             />
