@@ -7,7 +7,7 @@ const GraphBuilder = () => {
         <ReactFlowProvider>
             <div className="col">
                 <div>
-                    <Graph nodeDefs={nodes} tagsSuggestions={tagsSuggestions} />
+                    <Graph nodeDefs={nodes} tagSuggestions={tagSuggestions} />
                 </div>
             </div>
         </ReactFlowProvider>

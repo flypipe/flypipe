@@ -28,7 +28,7 @@ const NODE_TYPES = {
     "flypipe-node-new": NewNode,
 };
 
-const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
+const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
     const [editNode, setEditNode] = useState(null);
     const [showEditNode, setShowEditNode] = useState(false);
 
@@ -102,7 +102,7 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
     return (
         <div className="layoutflow" ref={graphDiv}>
             {showEditNode && (
-                <EditNode node={editNode} tagsSuggestions={tagsSuggestions} onClose={handleCloseEditNode}/>
+                <EditNode node={editNode} tagSuggestions={tagSuggestions} onClose={handleCloseEditNode}/>
             )}
             <ReactFlow
                 defaultNodes={[]}

@@ -12,7 +12,7 @@ import { NodeSuccessors } from "./node-successors";
 import { useFormik } from "formik";
 
 
-export const EditNode = ({ node, tagsSuggestions, onClose: handleClose }) => {
+export const EditNode = ({ node, tagSuggestions, onClose: handleClose }) => {
     const validate = (values) => {
         const errors = {};
 
@@ -30,6 +30,7 @@ export const EditNode = ({ node, tagsSuggestions, onClose: handleClose }) => {
         initialValues: {
             name: "",
             nodeType: "",
+            tags: [],
         },
         validate,
         onSubmit: (values) => {
@@ -72,6 +73,11 @@ export const EditNode = ({ node, tagsSuggestions, onClose: handleClose }) => {
 
     const onClickMoreInfo = useCallback(() => {
         setShowMoreInfo(true);
+    }, [formState]);
+
+    const handleSetTags = useCallback((tags) => {
+        formState.values.tags = tags.map(tag => tag.id);
+        console.log(formState.values.tags);
     }, [formState]);
 
     return (
@@ -174,8 +180,9 @@ export const EditNode = ({ node, tagsSuggestions, onClose: handleClose }) => {
                                 Tags
                             </Form.Label>
                             <Tags
-                                formik={formState}
-                                tagsSuggestions={tagsSuggestions}
+                                tags={formState.values.tags.map(tag => ({id: tag, text: tag}))}
+                                tagSuggestions={tagSuggestions}
+                                onSetTags={handleSetTags}
                             />
                         </Form.Group>
 
