@@ -61,7 +61,7 @@ const BaseNode = ({ data, isNewNode }) => {
         if (nodeTextRef.current) {
             textFit(nodeTextRef.current, { alignHoriz: true, alignVert: true });
         }
-    }, [nodeTextRef.current]);
+    }, [nodeTextRef.current, label]);
 
     // Within the node we must divide the space between the name and the badge
     const [nameWidth, badgeWidth] = useMemo(() => {

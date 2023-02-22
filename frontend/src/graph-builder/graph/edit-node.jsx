@@ -12,7 +12,7 @@ import { NodeSuccessors } from "./node-successors";
 import { useFormik } from "formik";
 
 
-export const EditNode = ({ node, tagSuggestions, onClose: handleClose }) => {
+export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: handleSave }) => {
     const validate = (values) => {
         const errors = {};
 
@@ -34,7 +34,7 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose }) => {
         },
         validate,
         onSubmit: (values) => {
-            alert(JSON.stringify(values, null, 2));
+            handleSave(values);
         },
     });
     useEffect(() => {

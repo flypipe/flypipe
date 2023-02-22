@@ -18,6 +18,7 @@ import { Button } from "react-bootstrap";
 import { TfiAngleLeft, TfiAngleRight } from "react-icons/tfi";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
+import clone from 'just-clone';
 
 
 // TODO- get rid of this index when we introduce the new node modal
@@ -98,11 +99,23 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
     const handleCloseEditNode = useCallback(() => {
         setShowEditNode(false);
     }, [setShowEditNode]);
+    const handleSaveEditNode = useCallback((editedNode) => {
+        setShowEditNode(false);
+        const nodes = graph.getNodes();
+        const newNodes = nodes.reduce((accumulator, node) => {
+            if (node.id !== editedNode.id) {
+                return [...accumulator, node];
+            } else {
+                return [...accumulator, {...node, data: {...editedNode}}];
+            }
+        }, []);
+        graph.setNodes(newNodes);
+    }, [setShowEditNode]);
 
     return (
         <div className="layoutflow" ref={graphDiv}>
             {showEditNode && (
-                <EditNode node={editNode} tagSuggestions={tagSuggestions} onClose={handleCloseEditNode}/>
+                <EditNode node={editNode} tagSuggestions={tagSuggestions} onClose={handleCloseEditNode} onSave={handleSaveEditNode}/>
             )}
             <ReactFlow
                 defaultNodes={[]}
