@@ -54,7 +54,7 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
         { value: "pandas", label: "Pandas" },
     ];
 
- 
+    const [show, setShow] = useState(true);
     const [showDeleteNode, setShowDeleteNode] = useState(false);
 
     const handleShowDeleteNode = useCallback(() => {
