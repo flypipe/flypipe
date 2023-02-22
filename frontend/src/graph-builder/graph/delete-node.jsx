@@ -4,18 +4,16 @@ import { useReactFlow } from "reactflow";
 import { useFormik } from "formik";
 
 export const DeleteNode = ({ id, label, setShowDeleteNode, setEditNode }) => {
-    const [show, setShow] = useState(true);
+    
     const [deleteConfirmed, setDeleteConfirmed] = useState(false);
     
     const graph = useReactFlow();
     
     
     const handleClose = () => {
-        setShow(false);
         setShowDeleteNode(false);
     };
 
-    const handleShow = () => setShow(true);
 
 
     const formik = useFormik({
@@ -35,7 +33,7 @@ export const DeleteNode = ({ id, label, setShowDeleteNode, setEditNode }) => {
     return (
         <>
         
-        <Modal show={show} onHide={handleClose} backdrop="static" keyboard={false}>
+        <Modal show onHide={handleClose} backdrop="static" keyboard={false}>
             <Modal.Header closeButton>
             <Modal.Title>Are you sure?</Modal.Title>
             </Modal.Header>

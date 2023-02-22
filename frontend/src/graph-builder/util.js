@@ -47,6 +47,7 @@ const convertNodeDefToGraphNode = (
     id: nodeKey,
     type: isNew ? "flypipe-node-new" : "flypipe-node-existing",
     data: {
+        nodeKey: nodeKey,
         label: name,
         ...fields,
     },

@@ -32,7 +32,9 @@
                     tags: ["feature", "test"],
                     schema: [],
                     predecessors: [],
+                    predecessor_columns: {},
                     successors: ["t2", "t3"],
+                    output: [],
                     sourceCode:
                         "@node(\n" +
                         "   type='pandas',\n" +
@@ -51,7 +53,11 @@
                     tags: ["feature", "test"],
                     schema: [],
                     predecessors: ["t1"],
+                    predecessor_columns: {
+                        "t1": ["col7", "col9"],
+                    },
                     successors: ["t4"],
+                    output: [],
                     sourceCode:
                         "@node(\n" +
                         "   type='pandas',\n" +
@@ -70,7 +76,22 @@
                     tags: ["feature", "test"],
                     schema: [],
                     predecessors: ["t1"],
+                    predecessor_columns: {
+                        "t1": ["col3", "col4"],
+                    },
                     successors: ["t4"],
+                    output: [                      
+                        {
+                            column: "col1",
+                            type: "Integer",
+                            description: "this is a description of col 1",
+                        },
+                        {
+                            column: "col5",
+                            type: "Integer",
+                            description: "this is a description of col 5",
+                        },
+                    ],
                     sourceCode:
                         "@node(\n" +
                         "   type='pandas',\n" +
@@ -89,7 +110,12 @@
                     tags: ["feature", "test"],
                     schema: [],
                     predecessors: ["t2", "t3"],
+                    predecessor_columns: {
+                        "t2": ["col1", "col2"],
+                        "t3": ["col5", "col14"],
+                    },
                     successors: [],
+                    output: [],
                     sourceCode:
                         "@node(\n" +
                         "   type='pandas',\n" +
@@ -148,8 +174,8 @@
                     tags: [{ id: "test", text: "test" }],
                     schema: [],
                     predecessors: ["country_code_1"],
-                    predecessors2: {
-                        country_code_1: ["col1", "col2"],
+                    predecessor_columns: {
+                        "country_code_1": ["col1", "col2"],
                     },
                     successors: [],
                     output: [
@@ -197,7 +223,9 @@
                     ],
                     schema: [],
                     predecessors: [],
+                    predecessor_columns: {},
                     successors: ["dummy_1"],
+                    output: [],
                     sourceCode:
                         "@node(\n" +
                         "   type='pandas_on_spark',\n" +

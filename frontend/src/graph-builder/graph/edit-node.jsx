@@ -53,11 +53,11 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
         { value: "pandas", label: "Pandas" },
     ];
 
-    const [show, setShow] = useState(true);
+ 
     const [showDeleteNode, setShowDeleteNode] = useState(false);
 
     const handleClose = () => {
-        setShow(false);
+        
         setEditNode(false);
     }
 
@@ -85,7 +85,7 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
             />
 
             <Offcanvas
-                show={show}
+                show
                 onHide={handleClose}
                 placement="end"
                 backdrop={false}
@@ -195,17 +195,17 @@ export const EditNode = ({ node, tagsSuggestions, setEditNode }) => {
                             <Form.Label className="fw-semibold">
                                 Predecessors
                             </Form.Label>
-                            {formState.values.predecessors2 &&
-                                Object.keys(formState.values.predecessors2)
+                            {formState.values.predecessors_columns &&
+                                Object.keys(formState.values.predecessors_columns)
                                     .length > 0 && (
                                     <NodePredecessors
                                         dependencies={
-                                            formState.values.predecessors2
+                                            formState.values.predecessors_columns
                                         }
                                     />
                                 )}
-                            {(!formState.values.predecessors2 ||
-                                Object.keys(formState.values.predecessors2)
+                            {(!formState.values.predecessors_columns ||
+                                Object.keys(formState.values.predecessors_columns)
                                     .length == 0) && <p>No predecessors</p>}
                         </Form.Group>
 

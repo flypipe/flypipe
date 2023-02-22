@@ -20,7 +20,7 @@ export const NodeMoreInfo = ({ node, show, onClose }) => {
         <Modal
             show={show}
             onHide={handleClose}
-            dialogClassName="modal-90w  modal-dialog-scrollable"
+            dialogClassName="modal-more-info  modal-dialog-scrollable"
         >
             <Modal.Header closeButton>
                 <Modal.Title>

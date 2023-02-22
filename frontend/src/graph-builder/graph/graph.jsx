@@ -14,6 +14,7 @@ import "reactflow/dist/style.css";
 import { MIN_ZOOM, MAX_ZOOM } from "./config";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { EditNode } from "./edit-node";
+import { EditEdge } from "./edit-edge";
 import { Button } from "react-bootstrap";
 import { TfiAngleLeft, TfiAngleRight } from "react-icons/tfi";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
@@ -89,6 +90,18 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
         setShowEditNode(true);
     }, []);
 
+    // Edge edition
+    const [showEditEdge, setShowEditEdge] = useState(false);
+    const [editEdge, setEditEdge] = useState(false);
+    const onEdgeClick = useCallback((event, edge) => {
+        setShowEditEdge(true);
+        setEditEdge(edge);
+    }, []);
+
+
+
+    
+    // Show/Hide Search Panel
     const [showSearchPanel, setShowSearchPanel] = useState(true);
 
     const toggleSearchPanel = () => {
@@ -97,9 +110,8 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
 
     return (
         <div className="layoutflow" ref={graphDiv}>
-            {showEditNode && (
-                <EditNode node={editNode} tagsSuggestions={tagsSuggestions} setEditNode={setShowEditNode}/>
-            )}
+            {showEditEdge && <EditEdge edge={editEdge} setShowEditEdge={setShowEditEdge}/>}
+            {showEditNode && <EditNode node={editNode} tagsSuggestions={tagsSuggestions} setEditNode={setShowEditNode}/>}
             <ReactFlow
                 defaultNodes={[]}
                 defaultEdges={[]}
@@ -107,6 +119,7 @@ const Graph = ({ nodeDefs: nodeDefsList, tagsSuggestions }) => {
                 minZoom={MIN_ZOOM}
                 maxZoom={MAX_ZOOM}
                 onNodeClick={onNodeClick}
+                onEdgeClick={onEdgeClick}
                 fitView    
             >
                 <Panel  className={`m-0 ${showSearchPanel ? 'search-show' : 'search-hide'}`}>
