@@ -59,6 +59,7 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
                 tags: [],
                 output: [],
                 predecessors: [],
+                predecessor_columns: {},
                 successors: [],
             },
             position: {
@@ -82,11 +83,6 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
     }, []);
 
     const onNodeClick = useCallback((event, node) => {
-        console.log("{...node.data, id: node.id, type: node.type}=>", {
-            ...node.data,
-            id: node.id,
-            isNew: node.type === "flypipe-node-new" ? true : false,
-        });
         setEditNode(node);
         setShowEditNode(true);
     }, []);
@@ -94,14 +90,13 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
     // Edge edition
     const [showEditEdge, setShowEditEdge] = useState(false);
     const [editEdge, setEditEdge] = useState(false);
+    
     const onEdgeClick = useCallback((event, edge) => {
         setShowEditEdge(true);
-        setEditEdge(edge);
-    }, []);
+        setEditEdge(edge);        
 
+    }, [graph]);
 
-
-    
     // Show/Hide Search Panel
     const [showSearchPanel, setShowSearchPanel] = useState(true);
 

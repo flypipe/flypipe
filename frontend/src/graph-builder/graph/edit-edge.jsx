@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Button, Form, Modal, Row, Col, Container, Offcanvas } from "react-bootstrap";
 import { useReactFlow } from "reactflow";
 import { useFormik } from "formik";
@@ -7,18 +7,51 @@ import { uuid } from  "react-uuid";
 export const EditEdge = ({ edge, setShowEditEdge }) => {
 
     const [allChecked, setAllChecked] = useState(false);
-    
+    const [listChecked, setListChecked] = useState([]);
+    const [sourceOutputColumns, setSourceOutputColumns] = useState([]);
+    const [supersetColumns, setSupersetColumns] = useState([]);
 
-    const graph = useReactFlow();    
+    const graph = useReactFlow();
     const nodeSource = graph.getNode(edge.source);
     const nodeTarget = graph.getNode(edge.target);
+    
+    console.log("Node source:", nodeSource);
+    console.log("Node target:", nodeTarget);
 
+
+    useEffect(() => {
+
+        const supersetColumns = [];
+        const outputColumns = [];
+        nodeSource.data.output.forEach((output) => {
+            outputColumns.push(output.column);
+            supersetColumns.push(output.column);
+        });
+
+        if (nodeSource.data.nodeKey.has(nodeSource.data.nodeKey)){
+            nodeTarget.data.predecessor_columns[nodeSource.data.nodeKey].forEach((column) => {
+                if (!supersetColumns.includes(column)){
+                    supersetColumns.push(column);    
+                }            
+            });
+        }
+
+        setSupersetColumns(supersetColumns);
+        setSourceOutputColumns(outputColumns);
+        setListChecked(nodeTarget.data.predecessor_columns[nodeSource.data.nodeKey]); 
+
+    }, [nodeSource, nodeTarget]);
+    
+    console.log("sourceOutputColumns: ",sourceOutputColumns);
+    console.log("supersetColumns: ",supersetColumns);
+    console.log("listChecked: ",listChecked);
+    
     const handleSelectAll = useCallback((e) => {
         if(allChecked){
             setListChecked([]);
         }
         else{
-            setListChecked(superSetColumns);
+            setListChecked(supersetColumns);
         }
 
         setAllChecked(!allChecked);        
@@ -26,15 +59,13 @@ export const EditEdge = ({ edge, setShowEditEdge }) => {
 
     const handleCheck = (e) => {
         const { id, _ } = e.target;
-        const isChecked = listChecked.includes(id);
-        console.log("1===>",id, isChecked, listChecked);
-        if (isChecked) {
+        if (listChecked.includes(id)) {
             setListChecked(prev => prev.filter(item => item !== id));
+            setAllChecked(false);
         }
         else{
             setListChecked([...listChecked, id]);
         }
-        console.log("3===>",id, isChecked, listChecked);
     }
 
     const handleClose = () => {
@@ -50,43 +81,14 @@ export const EditEdge = ({ edge, setShowEditEdge }) => {
         },
     });
 
-    const dependencies = [];
-
-    const dependentColumns = nodeSource.id in nodeTarget.data.predecessor_columns? nodeTarget.data.predecessor_columns[nodeSource.id] : [];
-    const [listChecked, setListChecked] = useState(dependentColumns);
-    console.log("listChecked:",listChecked, dependentColumns)
-
-    const outputColumns = [];
-    nodeSource.data.output.forEach((output) => {
-        outputColumns.push(output.column);
-    });
-
-    const superSetColumns = [];
-    dependentColumns.forEach((dependentColumn) => {
-        superSetColumns.push(dependentColumn);
-    });
-
-    outputColumns.forEach((outputColumn) => {
-        if (!superSetColumns.includes(outputColumn)){
-            superSetColumns.push(outputColumn);
-        }
-    });
-    console.log(superSetColumns.length, dependentColumns.length);
     
-
-    superSetColumns.forEach((column) => {
+    const dependencies = [];
+    supersetColumns.forEach((column) => {
         var foundInSourceOutput = "";
-        if (!outputColumns.includes(column)){
+        if (!sourceOutputColumns.includes(column)){
             foundInSourceOutput = `(not found in ${nodeSource.data.label} output)`
         }
         
-        console.log("listChecked.includes(column):", listChecked, column, listChecked.includes(column))
-        if (dependentColumns.includes(column) && !listChecked.includes(column)){
-            console.log("listChecked=> ", dependentColumns, column, [...listChecked, column])
-            setListChecked([...listChecked, column]);
-        }
-        
-
         dependencies.push(
             <Form.Check 
                 key={column}
@@ -119,7 +121,6 @@ export const EditEdge = ({ edge, setShowEditEdge }) => {
                 </Offcanvas.Header>
                 <Offcanvas.Body>
                     <Form onSubmit={formik.handleSubmit}>
-                        {/* <Form.Control type="text" hidden={true} id="id" name="id" defaultValue={formik.values.id}/>  */}
 
                         <Form.Check 
                             key="all"
