@@ -4,6 +4,7 @@ import React, {
     useCallback,
     useEffect,
     useRef,
+    useContext,
 } from "react";
 import Node from "./node";
 import Pagination from "./pagination";
@@ -13,6 +14,8 @@ import {
     refreshNodePositions,
 } from "../util";
 import { useReactFlow, MarkerType } from "reactflow";
+import { NotificationContext } from "../../context";
+import uuid from 'react-uuid';
 
 // Maximum number of search entries per page
 const SEARCH_PAGE_SIZE = 8;
@@ -20,6 +23,7 @@ const SEARCH_PAGE_SIZE = 8;
 const SEARCH_PAGE_GROUP_SIZE = 5;
 
 const NodeResultsList = ({ nodes, allNodes }) => {
+    const { setNewMessage } = useContext(NotificationContext);
     const graph = useReactFlow();
     const [currentNodes, setCurrentNodes] = useState([]);
     const [graphBuilderNodes, setGraphBuilderNodes] = useState(new Set());
@@ -80,7 +84,6 @@ const NodeResultsList = ({ nodes, allNodes }) => {
         );
         
         newEdges.forEach((e,i) => {
-            console.log(i);
             newEdges[i]['markerEnd'] = {
                 type: MarkerType.ArrowClosed,
                 width: 15,
@@ -91,6 +94,10 @@ const NodeResultsList = ({ nodes, allNodes }) => {
         graph.addNodes(newNodes);
         graph.addEdges(newEdges);
         refreshNodePositions(graph);
+        setNewMessage({
+            msgId: uuid(),
+            message: `Added node and ancestor nodes/edges to the graph`
+        });
         moveToNode(graph, nodeKey);
     };
 

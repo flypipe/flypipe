@@ -6,7 +6,7 @@ import { NotificationContext } from "./context";
 
 const App = () => {
     const [content, setContent] = useState(<GraphBuilder />);
-    const { newMessage, setNewMessage } = useContext(NotificationContext);
+    const { newMessage } = useContext(NotificationContext);
     
     return (
         <>

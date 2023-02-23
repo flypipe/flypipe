@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState, useContext } from "react";
 import Search from "../search/search";
 import ReactFlow, {
     useReactFlow,
@@ -17,6 +17,8 @@ import { Button } from "react-bootstrap";
 import { TfiAngleLeft, TfiAngleRight } from "react-icons/tfi";
 import ExportGraph from "./export-graph";
 import Tooltip from "../../tooltip";
+import { NotificationContext } from "../../context";
+import uuid from 'react-uuid';
 
 
 // TODO- get rid of this index when we introduce the new node modal
@@ -30,6 +32,7 @@ const NODE_TYPES = {
 const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
     const [editNode, setEditNode] = useState(null);
     const [showEditNode, setShowEditNode] = useState(false);
+    const { setNewMessage } = useContext(NotificationContext);
 
     const graph = useReactFlow();
     const nodeDefs = nodeDefsList.reduce(
@@ -74,7 +77,11 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
 
         setEditNode(newNode);
         setShowEditNode(true);
-    }, [graph]);
+        setNewMessage({
+            msgId: uuid(),
+            message: `New node ${newNode.data.label} added to the graph`
+        });
+    }, [graph, setNewMessage]);
 
     const onNodeClick = useCallback((event, node) => {
         setEditNode(node);

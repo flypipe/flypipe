@@ -1,14 +1,20 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useContext } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { useReactFlow } from "reactflow";
+import { NotificationContext } from "../../context";
+import { deleteNode } from '../util';
+
 
 const DeleteNodeModal = ({ nodeId, onCancel, onSubmit }) => {
+    const { addNotification } = useContext(NotificationContext);
     const graph = useReactFlow();
     const {label} = useMemo(() => graph.getNodes().find((n) => n.id === nodeId), [nodeId]);
 
     const handleSubmit = useCallback(() => {
-        const nodes = graph.getNodes().filter((n) => n.id !== nodeId)
-        graph.setNodes(nodes);
+        const nodes = graph.getNodes();
+        const deletedNode = nodes.find(node => node.id === nodeId);
+        deleteNode(graph, nodeId);
+        addNotification(`Node ${deletedNode.data.label} deleted`);
         onSubmit();
     }, [nodeId, graph]);
 

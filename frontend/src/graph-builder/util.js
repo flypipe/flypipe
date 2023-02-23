@@ -160,6 +160,23 @@ const addEdge = (graph, edge) => {
     graph.setNodes([sourceNode, targetNode, ...nodes]);
 };
 
+const deleteNode = (graph, nodeId) => {
+    const nodes = graph.getNodes().filter(node => node.id !== nodeId);
+
+    // Any nodes that have the node to be deleted listed as a successor or predecessor needs to be amended to remove 
+    // this reference. 
+    const successorNodeIds = new Set(graph.getEdges().filter(({source}) => source === nodeId).map(({target}) => target));
+    const predecessorNodeIds = new Set(graph.getEdges().filter(({target}) => target === nodeId).map(({source}) => source));
+    for (const node of nodes) {
+        if (successorNodeIds.has(node.id)) {
+            node.data.predecessors = node.data.predecessors.filter(id => id !== nodeId);
+        } else if (predecessorNodeIds.has(node.id)) {
+            node.data.successors = node.data.successors.filter(id => id !== nodeId);
+        }
+    }
+    graph.setNodes(nodes);
+};
+
 export {
     getPredecessorNodesAndEdgesFromNode,
     refreshNodePositions,
@@ -167,4 +184,5 @@ export {
     generateCodeTemplate,
     getNewNodeDef,
     addEdge,
+    deleteNode,
 };
