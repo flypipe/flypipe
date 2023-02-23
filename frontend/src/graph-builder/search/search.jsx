@@ -6,7 +6,7 @@ import React, {
     useRef,
 } from "react";
 import { BsFilter } from "react-icons/bs";
-import NodeList from "./node-list";
+import NodeResultsList from "./node-results-list";
 import Fuse from "fuse.js";
 import Dropdown from "react-bootstrap/Dropdown";
 import SearchFilter from "./search-filter";
@@ -92,7 +92,6 @@ const Search = ({ nodes }) => {
     );
 
     return (
-        <>  
         <div id="search" className="search p-2">
             <div className="form-outline">
                 <input
@@ -128,9 +127,8 @@ const Search = ({ nodes }) => {
                 </Dropdown>
                 <h6 className="mb-0">{numberSearchResultsText}</h6>
             </div>
-            <NodeList nodes={searchResults} allNodes={nodes} />
+            <NodeResultsList nodes={searchResults} allNodes={nodes} />
         </div>
-        </>
     );
 };
 

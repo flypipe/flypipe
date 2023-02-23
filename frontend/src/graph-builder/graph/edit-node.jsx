@@ -7,9 +7,8 @@ import { BsInfoLg } from "react-icons/bs";
 import CustomSelect from "./CustomSelect";
 import DeleteNodeModal from "./delete-node-modal";
 import { NodeOutput } from "./node-output";
-import { NodePredecessors } from "./node-predecessors";
-import { NodeSuccessors } from "./node-successors";
 import { useFormik } from "formik";
+import NodeList from "./node-list";
 
 
 export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: handleSave }) => {
@@ -194,34 +193,22 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
                             <Form.Label className="fw-semibold">
                                 Predecessors
                             </Form.Label>
-                            {formState.values.predecessors_columns &&
-                                Object.keys(formState.values.predecessors_columns)
-                                    .length > 0 && (
-                                    <NodePredecessors
-                                        dependencies={
-                                            formState.values.predecessors_columns
-                                        }
-                                    />
-                                )}
-                            {(!formState.values.predecessors_columns ||
-                                Object.keys(formState.values.predecessors_columns)
-                                    .length == 0) && <p>No predecessors</p>}
+                            {formState.values.predecessors.length > 0 ? 
+                                <NodeList
+                                    nodeIds={formState.values.predecessors}
+                                /> : <p>No predecessors</p>
+                            }
                         </Form.Group>
 
                         <Form.Group className="mb-3">
                             <Form.Label className="fw-semibold">
                                 Successors
                             </Form.Label>
-                            {formState.values.successors &&
-                                formState.values.successors.length > 0 && (
-                                    <NodeSuccessors
-                                        successors={formState.values.successors}
-                                    />
-                                )}
-                            {(!formState.values.successors ||
-                                formState.values.successors.length == 0) && (
-                                <p>No successors</p>
-                            )}
+                            {formState.values.successors.length > 0 ? 
+                                <NodeList
+                                    nodeIds={formState.values.successors}
+                                /> : <p>No successors</p>
+                            }
                         </Form.Group>
 
                         <Form.Group className="mb-3">

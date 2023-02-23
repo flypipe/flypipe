@@ -142,10 +142,29 @@ const getNewNodeDef = ({id, name, nodeType, description, tags, output, predecess
     successors: successors || [],
 });
 
+const addEdge = (graph, edge) => {
+    const nodes = graph.getNodes();
+    const sourceNode = nodes.splice(nodes.findIndex(node => node.id === edge.source), 1)[0];
+    const targetNode = nodes.splice(nodes.findIndex(node => node.id === edge.target), 1)[0];
+    if (!edge.id) {
+        edge.id = `${edge.source}-${edge.target}`;
+    }
+    if (sourceNode.data.successors.includes(targetNode.id)) {
+        throw new Error(`${targetNode.data.label} already has a dependency on ${sourceNode.data.label}`);
+    }
+    graph.addEdges(edge);
+
+    // Update the predecessor/successor fields on the nodes the new edge is going between
+    sourceNode.data.successors = [...sourceNode.data.successors, targetNode.id];
+    targetNode.data.predecessors = [...targetNode.data.predecessors, sourceNode.id];
+    graph.setNodes([sourceNode, targetNode, ...nodes]);
+};
+
 export {
     getPredecessorNodesAndEdgesFromNode,
     refreshNodePositions,
     moveToNode,
     generateCodeTemplate,
     getNewNodeDef,
+    addEdge,
 };

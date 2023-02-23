@@ -1,20 +1,25 @@
-import React, { useCallback, useMemo, useRef, useEffect } from "react";
+import React, { useCallback, useMemo, useRef, useEffect, useContext } from "react";
 import { useReactFlow, Handle, Position, MarkerType } from "reactflow";
 import Badge from "react-bootstrap/Badge";
-import { refreshNodePositions, NODE_WIDTH, NODE_HEIGHT } from "../util";
+import { refreshNodePositions, NODE_WIDTH, NODE_HEIGHT, addEdge } from "../util";
 import classNames from "classnames";
 import textFit from "textfit";
 import { GrNew } from "react-icons/gr";
+import { NotificationContext } from "../../context";
+import uuid from "react-uuid";
 
 const BaseNode = ({ data, isNewNode }) => {
     const graph = useReactFlow();
     const { nodeType, label } = data;
+    const { setNewMessage } = useContext(NotificationContext);
 
     const handleConnect = useCallback(
         ({ source, target }) => {
+            const sourceLabel = graph.getNode(source).data.label;
+            const targetLabel = graph.getNode(target).data.label;
             const edgeId = `${source}-${target}`;
-            if (!graph.getEdge(edgeId)) {
-                graph.addEdges({
+            try {
+                addEdge(graph, {
                     id: edgeId,
                     source,
                     target,
@@ -25,9 +30,19 @@ const BaseNode = ({ data, isNewNode }) => {
                     }
                 });
                 refreshNodePositions(graph);
+                setNewMessage({
+                    msgId: uuid(),
+                    message: `Dependency on ${sourceLabel} added to ${targetLabel}`
+                });
+
+            } catch (error) {
+                setNewMessage({
+                    msgId: uuid(),
+                    message: error.message
+                });
             }
         },
-        [graph]
+        [graph, setNewMessage]
     );
 
     const color = useMemo(() => {

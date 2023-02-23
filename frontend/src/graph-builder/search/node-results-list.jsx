@@ -19,7 +19,7 @@ const SEARCH_PAGE_SIZE = 8;
 // Maximum number of pages to show at the bottom of the screen
 const SEARCH_PAGE_GROUP_SIZE = 5;
 
-const NodeList = ({ nodes, allNodes }) => {
+const NodeResultsList = ({ nodes, allNodes }) => {
     const graph = useReactFlow();
     const [currentNodes, setCurrentNodes] = useState([]);
     const [graphBuilderNodes, setGraphBuilderNodes] = useState(new Set());
@@ -118,4 +118,4 @@ const NodeList = ({ nodes, allNodes }) => {
     );
 };
 
-export default NodeList;
+export default NodeResultsList;
