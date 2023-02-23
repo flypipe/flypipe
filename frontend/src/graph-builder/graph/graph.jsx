@@ -7,19 +7,16 @@ import ReactFlow, {
     Panel,
     MiniMap,
 } from "reactflow";
-import { BsDownload } from "react-icons/bs";
 import { ExistingNode, NewNode } from "./node";
-import { refreshNodePositions, moveToNode } from "../util";
+import { refreshNodePositions, moveToNode, getNewNodeDef } from "../util";
 import "reactflow/dist/style.css";
 import { MIN_ZOOM, MAX_ZOOM } from "./config";
-import { CopyToClipboard } from "react-copy-to-clipboard";
 import { EditNode } from "./edit-node";
 import { EditEdge } from "./edit-edge";
 import { Button } from "react-bootstrap";
 import { TfiAngleLeft, TfiAngleRight } from "react-icons/tfi";
-import OverlayTrigger from "react-bootstrap/OverlayTrigger";
-import Tooltip from "react-bootstrap/Tooltip";
-import clone from 'just-clone';
+import ExportGraph from "./export-graph";
+import Tooltip from "../../tooltip";
 
 
 // TODO- get rid of this index when we introduce the new node modal
@@ -50,7 +47,7 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
         const newNode = {
             id: newNodeId,
             type: "flypipe-node-new",
-            data: {
+            data: getNewNodeDef({
                 id: newNodeId,
                 label: `Untitled-${NEW_NODE_INDEX}`,
                 isNew: false,
@@ -61,7 +58,8 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
                 predecessors: [],
                 predecessor_columns: {},
                 successors: [],
-            },
+                name: `Untitled${NEW_NODE_INDEX}`,
+            }),
             position: {
                 // dummy position, this will be automatically updated later
                 x: 0,
@@ -77,10 +75,6 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
         setEditNode(newNode);
         setShowEditNode(true);
     }, [graph]);
-
-    const onCopyToClipboard = useCallback(() => {
-        // TODO- add notification toast msg here
-    }, []);
 
     const onNodeClick = useCallback((event, node) => {
         setEditNode(node);
@@ -136,7 +130,7 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
                 onEdgeClick={onEdgeClick}
                 fitView    
             >
-                <Panel  className={`m-0 ${showSearchPanel ? 'search-show' : 'search-hide'}`}>
+                <Panel className={`m-0 ${showSearchPanel ? 'search-show' : 'search-hide'}`}>
                     <Button 
                     variant="outline-secondary flypipe" 
                     className="search-toggle-button position-absolute top-50 p-2 pt-3 pb-3" 
@@ -151,43 +145,14 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
                             <Search nodes={nodeDefsList} />
                         </div>
                         <div className="col">
-                            <OverlayTrigger
-                                key="right"
-                                placement="right"
-                                overlay={
-                                    <Tooltip id="tooltip-right">
-                                        Add new node to the graph
-                                    </Tooltip>
-                                }
-                            >
+                            <Tooltip text="Add a new node to the graph">
                                 <Button variant="outline-secondary flypipe"  className="mt-2" onClick={onClickNewNode}>New Node</Button>
-                            </OverlayTrigger>
+                            </Tooltip>
                         </div>
                     </div>
                 </Panel>
                 <Panel position="top-right">
-                    <OverlayTrigger
-                                key="right"
-                                placement="left"
-                                overlay={
-                                    <Tooltip id="tooltip-right">
-                                        Copy edited nodes source code to the clipboard
-                                    </Tooltip>
-                                }
-                            >
-                        <Button
-                        variant="outline-secondary flypipe"
-                            data-toggle="tooltip"
-                            size="md"
-                        >
-                            <CopyToClipboard
-                                text="<dummy>"
-                                onCopy={onCopyToClipboard}
-                            >
-                                <BsDownload />
-                            </CopyToClipboard>
-                        </Button>
-                    </OverlayTrigger>
+                    <ExportGraph/>
                 </Panel>
                 <Controls />
                 <Panel position="bottom-center">

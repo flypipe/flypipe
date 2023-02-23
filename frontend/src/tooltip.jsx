@@ -3,12 +3,11 @@ import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import ReactBootstrapTooltip from "react-bootstrap/Tooltip";
 
 
-const Tooltip = ({text, children}) => {
+const Tooltip = ({text, children, placement="right"}) => {
     return <OverlayTrigger
-        key="right"
-        placement="right"
+        placement={placement}
         overlay={
-            <ReactBootstrapTooltip id="tooltip-right">{text}</ReactBootstrapTooltip>
+            <ReactBootstrapTooltip>{text}</ReactBootstrapTooltip>
         }
     >
         {children}
