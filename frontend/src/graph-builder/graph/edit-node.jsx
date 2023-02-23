@@ -91,7 +91,7 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
                 scroll={true}
                 className="node"
             >
-                <Offcanvas.Header closeButton={false} className="node">
+                <Offcanvas.Header closeButton={false}>
                     <Offcanvas.Title>
                         Edit Node
                         <Button

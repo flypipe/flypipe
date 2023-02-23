@@ -10,7 +10,7 @@ export const NODE_HEIGHT = 75;
 // the positions of the nodes.
 const assignNodePositions = (nodes, edges) => {
     const dagreGraph = new dagre.graphlib.Graph();
-    dagreGraph.setGraph({ rankdir: "LR" });
+    dagreGraph.setGraph({ rankdir: "LR", nodesep: 100, ranksep: 150});
     dagreGraph.setDefaultEdgeLabel(() => ({}));
     nodes.forEach(({ id }) => {
         dagreGraph.setNode(id, { width: NODE_WIDTH, height: NODE_HEIGHT });
