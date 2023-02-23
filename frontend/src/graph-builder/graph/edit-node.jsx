@@ -11,12 +11,14 @@ import { useFormik } from "formik";
 import NodeList from "./node-list";
 
 
+const RE_LABEL = /^[a-zA-Z_]\w*$/;
+
 export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: handleSave }) => {
     const validate = (values) => {
         const errors = {};
 
-        if (!values.label) {
-            errors.label = "Name is required";
+        if (!RE_LABEL.test(values.label)) {
+            errors.label = "Invalid name- name must be a valid Python function name";
         }
 
         if (!values.nodeType) {
