@@ -93,10 +93,9 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
 
     // Show/Hide Search Panel
     const [showSearchPanel, setShowSearchPanel] = useState(true);
-
-    const toggleSearchPanel = () => {
-        setShowSearchPanel(!showSearchPanel);
-    }
+    const toggleSearchPanel = useCallback(() => {
+        setShowSearchPanel(prevShowSearchPanel => !prevShowSearchPanel);
+    }, [setShowSearchPanel]);
 
     const handleCloseEditNode = useCallback(() => {
         setShowEditNode(false);
@@ -115,11 +114,14 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
     }, [setShowEditNode]);
 
     return (
-        <div className="layoutflow" ref={graphDiv}>
+        <div className="layoutflow d-flex w-100 h-100" ref={graphDiv}>
             {showEditEdge && <EditEdge edge={editEdge} setShowEditEdge={setShowEditEdge}/>}
             {showEditNode && (
                 <EditNode node={editNode} tagSuggestions={tagSuggestions} onClose={handleCloseEditNode} onSave={handleSaveEditNode}/>
             )}
+            {showSearchPanel && <div className="col-4 search-result">
+                <Search nodes={nodeDefsList} />
+            </div>}
             <ReactFlow
                 defaultNodes={[]}
                 defaultEdges={[]}
@@ -130,35 +132,31 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
                 onEdgeClick={onEdgeClick}
                 fitView    
             >
-                <Panel className={`m-0 ${showSearchPanel ? 'search-show' : 'search-hide'}`}>
-                    <Button 
-                    variant="outline-secondary flypipe" 
-                    className="search-toggle-button position-absolute top-50 p-2 pt-3 pb-3" 
-                    size="sm"
-                    onClick={toggleSearchPanel}>
-                            {showSearchPanel && <TfiAngleLeft/>}
-                            {!showSearchPanel && <TfiAngleRight/>}
-                            
-                    </Button>
-                    <div className="row">
-                        <div className="col search-result">
-                            <Search nodes={nodeDefsList} />
-                        </div>
-                        <div className="col">
-                            <Tooltip text="Add a new node to the graph">
-                                <Button variant="outline-secondary flypipe"  className="mt-2" onClick={onClickNewNode}>New Node</Button>
-                            </Tooltip>
-                        </div>
+                <Panel position="top-left">
+                    <Tooltip text="Add a new node to the graph">
+                        <Button variant="outline-secondary flypipe"  className="mt-2" onClick={onClickNewNode}>New Node</Button>
+                    </Tooltip>
+                </Panel>
+                <Panel position="bottom-left" className="m-0">
+                    <div className="d-flex">
+                        <Button 
+                            variant="outline-secondary flypipe" 
+                            className="search-toggle-button p-2 my-3 py-3 align-self-end"
+                            size="sm"
+                            onClick={toggleSearchPanel}>
+                                {showSearchPanel ? <TfiAngleLeft/> : <TfiAngleRight/>}        
+                        </Button>
+                        <Controls className="position-relative"/>
                     </div>
                 </Panel>
                 <Panel position="top-right">
                     <ExportGraph/>
                 </Panel>
-                <Controls />
+                
                 <Panel position="bottom-center">
                     <a href="//flypipe.github.io/flypipe/" target="_blank" className="text-secondary text-decoration-none fs-5">Flypipe</a>
                 </Panel>
-                <MiniMap zoomable pannable />
+                <MiniMap zoomable pannable/>
                 <Background color="#aaa" gap={16} />
             </ReactFlow>
         </div>
