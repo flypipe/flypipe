@@ -113,18 +113,19 @@ const moveToNode = (graph, nodeId) => {
     });
 };
 
-const generateCodeTemplate = (nodeData) => {
+const generateCodeTemplate = (graph, nodeData) => {
     const {name, nodeType, description, tags, predecessors, predecessors2} = nodeData;
-    const argList = predecessors.join(', ');
     const tagList = tags.map(tag => `'${tag}'`).join(', ');
-    const dependencyList = predecessors.join(', ');
-    return `@node(
+    const dependencyList = predecessors.map(nodeId => graph.getNode(nodeId).data.name).join(', ');
+    return `from flypipe import node
+    
+@node(
     type="${nodeType}",
     description="${description}",
     tags=[${tagList}],
     dependencies=[${dependencyList}]
 )
-def ${name}(${argList}):
+def ${name}(${dependencyList}):
     # <implement logic here>
 `;
 };

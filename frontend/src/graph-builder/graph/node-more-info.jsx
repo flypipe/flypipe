@@ -5,11 +5,13 @@ import { NotificationContext } from "../../context";
 import uuid from "react-uuid";
 import CopyToClipboardWidget from "../../copy-to-clipboard-widget";
 import { generateCodeTemplate } from "../util";
+import { useReactFlow } from "reactflow";
 
 
 // Beware that nodeData is from form state not a state variable, this form state does not change object reference when 
 // it's changed so any usage of nodeData for memoisation must be on individual attributes. 
 export const NodeMoreInfo = ({ nodeData, show, onClose: handleClose }) => {
+    const graph = useReactFlow();
     const { newMessage, setNewMessage } = useContext(NotificationContext);
 
     const handleCopy = useCallback((data) => {
@@ -21,7 +23,7 @@ export const NodeMoreInfo = ({ nodeData, show, onClose: handleClose }) => {
         });
     }, [setNewMessage]);
 
-    const sourceCode = useMemo(() => nodeData.sourceCode ? nodeData.sourceCode : generateCodeTemplate(nodeData), [nodeData.tags]);
+    const sourceCode = useMemo(() => nodeData.sourceCode ? nodeData.sourceCode : generateCodeTemplate(graph, nodeData), [nodeData.tags]);
 
     return (
         <Modal

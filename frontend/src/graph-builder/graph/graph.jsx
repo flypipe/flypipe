@@ -52,7 +52,7 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
             type: "flypipe-node-new",
             data: getNewNodeDef({
                 id: newNodeId,
-                label: `Untitled-${NEW_NODE_INDEX}`,
+                label: `untitled${NEW_NODE_INDEX}`,
                 isNew: false,
                 nodeType: "pandas",
                 description: "",
@@ -61,7 +61,7 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
                 predecessors: [],
                 predecessor_columns: {},
                 successors: [],
-                name: `Untitled${NEW_NODE_INDEX}`,
+                name: `untitled${NEW_NODE_INDEX}`,
             }),
             position: {
                 // dummy position, this will be automatically updated later

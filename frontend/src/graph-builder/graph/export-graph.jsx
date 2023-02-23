@@ -26,7 +26,7 @@ const ExportGraph = () => {
         const newNodes = graph.getNodes().filter(node => node.data.isNew);
         const newNodeNames = newNodes.map(node => node.data.name);
 
-        const newNodesSourceCode = newNodes.map(node => generateCodeTemplate(node.data));
+        const newNodesSourceCode = newNodes.map(node => generateCodeTemplate(graph, node.data));
         
         setNewMessage({
             msgId: uuid(),
