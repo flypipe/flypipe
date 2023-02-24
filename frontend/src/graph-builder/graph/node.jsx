@@ -6,18 +6,23 @@ import classNames from "classnames";
 import textFit from "textfit";
 import { GrNew } from "react-icons/gr";
 import { NotificationContext } from "../../context";
-import uuid from "react-uuid";
+
 
 const BaseNode = ({ data, isNewNode }) => {
     const graph = useReactFlow();
     const { nodeType, label } = data;
-    const { setNewMessage } = useContext(NotificationContext);
+    const { addNotification } = useContext(NotificationContext);
 
     const handleConnect = useCallback(
         ({ source, target }) => {
             const sourceLabel = graph.getNode(source).data.label;
-            const targetLabel = graph.getNode(target).data.label;
+            const {label: targetLabel, isNew: targetIsNew} = graph.getNode(target).data;
             const edgeId = `${source}-${target}`;
+            // Existing nodes are immutable so cannot have new dependencies added to them
+            if (!targetIsNew) {
+                addNotification(`Unable to add new dependency on ${targetLabel}- existing nodes are immutable`);
+                return;
+            }
             try {
                 addEdge(graph, {
                     id: edgeId,
@@ -30,19 +35,12 @@ const BaseNode = ({ data, isNewNode }) => {
                     }
                 });
                 refreshNodePositions(graph);
-                setNewMessage({
-                    msgId: uuid(),
-                    message: `Dependency on ${sourceLabel} added to ${targetLabel}`
-                });
-
+                addNotification(`Dependency on ${sourceLabel} added to ${targetLabel}`);
             } catch (error) {
-                setNewMessage({
-                    msgId: uuid(),
-                    message: error.message
-                });
+                addNotification(error.message);
             }
         },
-        [graph, setNewMessage]
+        [graph, addNotification]
     );
 
     const color = useMemo(() => {

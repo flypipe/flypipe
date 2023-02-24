@@ -4,7 +4,7 @@ import ToastContainer from "react-bootstrap/ToastContainer";
 import ToastHeader from "react-bootstrap/ToastHeader";
 import ToastBody from "react-bootstrap/ToastBody";
 
-const DELAY_MILLISECONDS = 2000;
+const DELAY_MILLISECONDS = 3000;
 
 /*
 Stack of toast notifications. These notifications quietly die after DELAY_MILLISECONDS, which gave me a design 

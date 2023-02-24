@@ -32,6 +32,8 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
         initialValues: node.data,
         validate,
         onSubmit: (values) => {
+            // Name and label track the same information, so we need to sync name to any changes from label
+            values.name = values.label;
             handleSave(values);
         },
     });
