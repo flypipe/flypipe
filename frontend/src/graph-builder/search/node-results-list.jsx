@@ -96,7 +96,7 @@ const NodeResultsList = ({ nodes, allNodes }) => {
         refreshNodePositions(graph);
         setNewMessage({
             msgId: uuid(),
-            message: `Added node and ancestor nodes/edges to the graph`
+            message: `Added node ${name} and ancestor nodes/edges to the graph`
         });
         moveToNode(graph, nodeKey);
     };

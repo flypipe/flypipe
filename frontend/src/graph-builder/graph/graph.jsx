@@ -118,9 +118,7 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
             {showEditNode && (
                 <EditNode node={editNode} tagSuggestions={tagSuggestions} onClose={handleCloseEditNode} onSave={handleSaveEditNode}/>
             )}
-            {showSearchPanel && <div className="col-4 search-result">
-                <Search nodes={nodeDefsList} />
-            </div>}
+            {showSearchPanel && <Search nodes={nodeDefsList} />}
             <ReactFlow
                 defaultNodes={[]}
                 defaultEdges={[]}

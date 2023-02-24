@@ -21,7 +21,6 @@ export const DeleteNode = ({ id, label, setShowDeleteNode, setEditNode }) => {
             id: id
         },
         onSubmit: (values) => {
-            console.log("deleted id: ", values);
             // graph.deleteElements([values.id]);
             const nodes = graph.getNodes().filter((n) => n.id !== id)
             graph.setNodes(nodes);

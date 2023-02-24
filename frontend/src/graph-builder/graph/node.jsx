@@ -16,16 +16,9 @@ const BaseNode = ({ data, isNewNode }) => {
     const handleConnect = useCallback(
         ({ source, target }) => {
             const sourceLabel = graph.getNode(source).data.label;
-            const {label: targetLabel, isNew: targetIsNew} = graph.getNode(target).data;
-            const edgeId = `${source}-${target}`;
-            // Existing nodes are immutable so cannot have new dependencies added to them
-            if (!targetIsNew) {
-                addNotification(`Unable to add new dependency on ${targetLabel}- existing nodes are immutable`);
-                return;
-            }
+            const targetLabel = graph.getNode(target).data.label;
             try {
                 addEdge(graph, {
-                    id: edgeId,
                     source,
                     target,
                     markerEnd: {
@@ -85,13 +78,18 @@ const BaseNode = ({ data, isNewNode }) => {
         }
     }, [isNewNode]);
 
+    const onCheckValidConnection = useCallback(({source, target}) => {
+        return graph.getNode(target).data.isNew;
+    }, [graph]);
+
     return (
         <>
             <Handle
                 type="target"
                 position={Position.Left}
                 id="target-handle"
-                isConnectable
+                onConnect={handleConnect}
+                isValidConnection={onCheckValidConnection}
             />
             <div
                 className={klass}
@@ -121,7 +119,7 @@ const BaseNode = ({ data, isNewNode }) => {
                 position={Position.Right}
                 id="source-handle"
                 onConnect={handleConnect}
-                isConnectable
+                isValidConnection={onCheckValidConnection}
             />
         </>
     );

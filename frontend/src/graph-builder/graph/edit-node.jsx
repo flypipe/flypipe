@@ -97,8 +97,8 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
                 className="node"
             >
                 <Offcanvas.Header closeButton={false}>
-                    <Offcanvas.Title>
-                        Edit Node
+                    <Offcanvas.Title className="w-100 d-flex justify-content-between">
+                        <span>{isReadOnly ? "View Node" : "Edit Node"}</span>
                         <Button
                             variant="outline-secondary flypipe"
                             className="btn-sm float-end"

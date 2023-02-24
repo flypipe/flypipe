@@ -92,7 +92,7 @@ const Search = ({ nodes }) => {
     );
 
     return (
-        <div id="search" className="search p-2">
+        <div id="search" className="p-2 col-md-auto search-result">
             <div className="form-outline">
                 <input
                     type="search"
@@ -125,7 +125,7 @@ const Search = ({ nodes }) => {
                         {/* <Dropdown.Header>Group</Dropdown.Header> */}
                     </Dropdown.Menu>
                 </Dropdown>
-                <h6 className="mb-0">{numberSearchResultsText}</h6>
+                <h6 className="mb-0 me-2">{numberSearchResultsText}</h6>
             </div>
             <NodeResultsList nodes={searchResults} allNodes={nodes} />
         </div>
