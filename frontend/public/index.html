@@ -29,7 +29,10 @@
                     filePath: "this/is/the/path/to/t1.py",
                     importCmd: "from this.is.the.path.to.t1 import t1",
                     description: "This is the description of t1",
-                    tags: ["feature", "test"],
+                    tags: [
+                        { id: "feature", text: "feature" }, 
+                        { id: "test", text: "test" }
+                    ],
                     schema: [],
                     predecessors: [],
                     predecessor_columns: {},
@@ -50,7 +53,10 @@
                     filePath: "this/is/the/path/to/t2.py",
                     importCmd: "from this.is.the.path.to.t2 import t2",
                     description: "This is the description of t2",
-                    tags: ["feature", "test"],
+                    tags: [
+                        { id: "feature", text: "feature" }, 
+                        { id: "test", text: "test" }
+                    ],
                     schema: [],
                     predecessors: ["t1"],
                     predecessor_columns: {
@@ -73,7 +79,10 @@
                     filePath: "this/is/the/path/to/t3.py",
                     importCmd: "from this.is.the.path.to.t3 import t3",
                     description: "This is the description of t3",
-                    tags: ["feature", "test"],
+                    tags: [
+                        { id: "feature", text: "feature" }, 
+                        { id: "test", text: "test" }
+                    ],
                     schema: [],
                     predecessors: ["t1"],
                     predecessor_columns: {
@@ -107,7 +116,10 @@
                     filePath: "this/is/the/path/to/t4.py",
                     importCmd: "from this.is.the.path.to.t4 import t4",
                     description: "This is the description of t4",
-                    tags: ["feature", "test"],
+                    tags: [
+                        { id: "feature", text: "feature" }, 
+                        { id: "test", text: "test" }
+                    ],
                     schema: [],
                     predecessors: ["t2", "t3"],
                     predecessor_columns: {

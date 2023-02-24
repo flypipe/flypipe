@@ -14,6 +14,7 @@ import NodeList from "./node-list";
 const RE_LABEL = /^[a-zA-Z_]\w*$/;
 
 export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: handleSave }) => {
+    const isReadOnly = !node.data.isNew;
     const validate = (values) => {
         const errors = {};
 
@@ -117,115 +118,117 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
                     </p>
 
                     <Form onSubmit={formState.handleSubmit}>
-                        <Form.Control
-                            type="text"
-                            hidden={true}
-                            id="id"
-                            name="id"
-                            defaultValue={formState.values.label}
-                        />
-
-                        <Form.Group className="mb-3">
-                            <Form.Label className="fw-semibold">
-                                Name
-                            </Form.Label>
+                        <fieldset disabled={isReadOnly}>
                             <Form.Control
                                 type="text"
-                                id="label"
-                                name="label"
-                                value={formState.values.label}
-                                onChange={formState.handleChange}
+                                hidden={true}
+                                id="id"
+                                name="id"
+                                defaultValue={formState.values.label}
                             />
-                            {formState.errors.label ? (
-                                <div className="text-danger">
-                                    {formState.errors.label}
-                                </div>
-                            ) : null}
-                        </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label className="fw-semibold">
-                                Type
-                            </Form.Label>
-                            <CustomSelect
-                                id="nodeType"
-                                name="nodeType"
-                                options={nodeTypeOptions}
-                                value={formState.values.nodeType}
-                                onChange={(value) =>
-                                    formState.setFieldValue(
-                                        "nodeType",
-                                        value.value
-                                    )
+                            <Form.Group className="mb-3">
+                                <Form.Label className="fw-semibold">
+                                    Name
+                                </Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    id="label"
+                                    name="label"
+                                    value={formState.values.label}
+                                    onChange={formState.handleChange}
+                                />
+                                {formState.errors.label ? (
+                                    <div className="text-danger">
+                                        {formState.errors.label}
+                                    </div>
+                                ) : null}
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label className="fw-semibold">
+                                    Type
+                                </Form.Label>
+                                <CustomSelect
+                                    id="nodeType"
+                                    name="nodeType"
+                                    options={nodeTypeOptions}
+                                    value={formState.values.nodeType}
+                                    onChange={(value) =>
+                                        formState.setFieldValue(
+                                            "nodeType",
+                                            value.value
+                                        )
+                                    }
+                                />
+                                {formState.errors.nodeType ? (
+                                    <div className="text-danger">
+                                        {formState.errors.nodeType}
+                                    </div>
+                                ) : null}
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label className="fw-semibold">
+                                    Tags
+                                </Form.Label>
+                                <Tags
+                                    tags={formState.values.tags}
+                                    tagSuggestions={tagSuggestions}
+                                    onSetTags={handleSetTags}
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label className="fw-semibold">
+                                    Description
+                                </Form.Label>
+                                <Form.Control
+                                    as="textarea"
+                                    id="description"
+                                    name="description"
+                                    value={formState.values.description}
+                                    onChange={formState.handleChange}
+                                    style={{ height: "120px" }}
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label className="fw-semibold">
+                                    Predecessors
+                                </Form.Label>
+                                {formState.values.predecessors.length > 0 ? 
+                                    <NodeList
+                                        nodeIds={formState.values.predecessors}
+                                    /> : <p>No predecessors</p>
                                 }
-                            />
-                            {formState.errors.nodeType ? (
-                                <div className="text-danger">
-                                    {formState.errors.nodeType}
-                                </div>
-                            ) : null}
-                        </Form.Group>
+                            </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label className="fw-semibold">
-                                Tags
-                            </Form.Label>
-                            <Tags
-                                tags={formState.values.tags}
-                                tagSuggestions={tagSuggestions}
-                                onSetTags={handleSetTags}
-                            />
-                        </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Label className="fw-semibold">
+                                    Successors
+                                </Form.Label>
+                                {formState.values.successors.length > 0 ? 
+                                    <NodeList
+                                        nodeIds={formState.values.successors}
+                                    /> : <p>No successors</p>
+                                }
+                            </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label className="fw-semibold">
-                                Description
-                            </Form.Label>
-                            <Form.Control
-                                as="textarea"
-                                id="description"
-                                name="description"
-                                value={formState.values.description}
-                                onChange={formState.handleChange}
-                                style={{ height: "120px" }}
-                            />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label className="fw-semibold">
-                                Predecessors
-                            </Form.Label>
-                            {formState.values.predecessors.length > 0 ? 
-                                <NodeList
-                                    nodeIds={formState.values.predecessors}
-                                /> : <p>No predecessors</p>
-                            }
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label className="fw-semibold">
-                                Successors
-                            </Form.Label>
-                            {formState.values.successors.length > 0 ? 
-                                <NodeList
-                                    nodeIds={formState.values.successors}
-                                /> : <p>No successors</p>
-                            }
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label className="fw-semibold">
-                                Output Schema
-                            </Form.Label>
-                            {formState.values.output &&
-                                formState.values.output.length > 0 && (
-                                    <NodeOutput output={formState.values.output} />
+                            <Form.Group className="mb-3">
+                                <Form.Label className="fw-semibold">
+                                    Output Schema
+                                </Form.Label>
+                                {formState.values.output &&
+                                    formState.values.output.length > 0 && (
+                                        <NodeOutput output={formState.values.output} />
+                                    )}
+                                {(!formState.values.output ||
+                                    formState.values.output.length == 0) && (
+                                    <p>No output declared</p>
                                 )}
-                            {(!formState.values.output ||
-                                formState.values.output.length == 0) && (
-                                <p>No output declared</p>
-                            )}
-                        </Form.Group>
+                            </Form.Group>
+                        </fieldset>
 
                         <Row>
                             <Col>

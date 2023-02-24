@@ -53,14 +53,6 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
             data: getNewNodeDef({
                 id: newNodeId,
                 label: `untitled${NEW_NODE_INDEX}`,
-                isNew: false,
-                nodeType: "pandas",
-                description: "",
-                tags: [],
-                output: [],
-                predecessors: [],
-                predecessor_columns: {},
-                successors: [],
                 name: `untitled${NEW_NODE_INDEX}`,
             }),
             position: {
