@@ -81,7 +81,7 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
 
     return (
         <>
-            { showDeleteNode && <DeleteNodeModal nodeId={formState.values.id} onCancel={handleCancelDeleteNode} onSubmit={handleSubmitDeleteNode} handleClose={handleCancelDeleteNode} /> }
+            { showDeleteNode && <DeleteNodeModal nodeId={formState.values.nodeKey} onCancel={handleCancelDeleteNode} onSubmit={handleSubmitDeleteNode} handleClose={handleCancelDeleteNode} /> }
             <NodeMoreInfo
                 nodeData={formState.values}
                 show={showMoreInfo}

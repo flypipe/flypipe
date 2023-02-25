@@ -33,11 +33,26 @@
                         { id: "feature", text: "feature" }, 
                         { id: "test", text: "test" }
                     ],
-                    schema: [],
                     predecessors: [],
-                    predecessor_columns: {},
+                    predecessorColumns: {},
                     successors: ["t2", "t3"],
-                    output: [],
+                    output: [                      
+                        {
+                            column: "col1",
+                            type: "Integer",
+                            description: "this is a description of col 1",
+                        },
+                        {
+                            column: "col2",
+                            type: "Integer",
+                            description: "this is a description of col 2",
+                        },
+                        {
+                            column: "col3",
+                            type: "Integer",
+                            description: "this is a description of col 3",
+                        },
+                    ],
                     sourceCode:
                         "@node(\n" +
                         "   type='pandas',\n" +
@@ -57,10 +72,9 @@
                         { id: "feature", text: "feature" }, 
                         { id: "test", text: "test" }
                     ],
-                    schema: [],
                     predecessors: ["t1"],
-                    predecessor_columns: {
-                        "t1": ["col7", "col9"],
+                    predecessorColumns: {
+                        "t1": ["col1", "col3"],
                     },
                     successors: ["t4"],
                     output: [],
@@ -83,9 +97,8 @@
                         { id: "feature", text: "feature" }, 
                         { id: "test", text: "test" }
                     ],
-                    schema: [],
                     predecessors: ["t1"],
-                    predecessor_columns: {
+                    predecessorColumns: {
                         "t1": ["col3", "col4"],
                     },
                     successors: ["t4"],
@@ -120,9 +133,8 @@
                         { id: "feature", text: "feature" }, 
                         { id: "test", text: "test" }
                     ],
-                    schema: [],
                     predecessors: ["t2", "t3"],
-                    predecessor_columns: {
+                    predecessorColumns: {
                         "t2": ["col1", "col2"],
                         "t3": ["col5", "col14"],
                     },
@@ -148,8 +160,8 @@
                         { id: "feature", text: "feature" },
                         { id: "test", text: "test" },
                     ],
-                    schema: [],
                     predecessors: [],
+                    predecessorColumns: {},
                     successors: ["dummy_1"],
                     output: [
                         {
@@ -184,9 +196,8 @@
                     pythonImportCommand: "from bla.dummy import Dummy",
                     description: "<dummy>",
                     tags: [{ id: "test", text: "test" }],
-                    schema: [],
                     predecessors: ["country_code_1"],
-                    predecessor_columns: {
+                    predecessorColumns: {
                         "country_code_1": ["col1", "col2"],
                     },
                     successors: [],
@@ -233,9 +244,8 @@
                         { id: "feature2", text: "feature2" },
                         { id: "test4", text: "test4" },
                     ],
-                    schema: [],
                     predecessors: [],
-                    predecessor_columns: {},
+                    predecessorColumns: {},
                     successors: ["dummy_1"],
                     output: [],
                     sourceCode:

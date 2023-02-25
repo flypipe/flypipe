@@ -1,148 +1,190 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { Button, Form, Modal, Row, Col, Container, Offcanvas } from "react-bootstrap";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
+import { Button, Form, Modal, Row, Col, Container, Offcanvas, Alert } from "react-bootstrap";
 import { useReactFlow } from "reactflow";
-import { useFormik } from "formik";
-import { uuid } from  "react-uuid";
+import { deleteEdge } from "../util";
 
-export const EditEdge = ({ edge, setShowEditEdge }) => {
+
+export const EditEdge = ({ edge, onClose }) => {
 
     const [allChecked, setAllChecked] = useState(false);
     const [listChecked, setListChecked] = useState([]);
-    const [sourceOutputColumns, setSourceOutputColumns] = useState([]);
-    const [supersetColumns, setSupersetColumns] = useState([]);
+    const [data, setData] = useState({
+        columns: [],
+        requestedAllColumns: false,
+        isUnknownColumns: true
+    });
 
     const graph = useReactFlow();
-    const nodeSource = graph.getNode(edge.source);
-    const nodeTarget = graph.getNode(edge.target);
-    
-    console.log("Node source:", nodeSource);
-    console.log("Node target:", nodeTarget);
-
+    const [sourceNode, targetNode] = useMemo(
+        () => [graph.getNode(edge.source), graph.getNode(edge.target)], 
+        [graph, edge]
+    );
 
     useEffect(() => {
+        // When an edge is selected, we need to fill out: 
+        // a) The list of available output columns to select from the source
+        // b) The list of currently selected columns by the target
+        // Rules:
+        // - If the source node has an output schema, we fill out a) from the list of columns here. 
+        // - If the source node does not have an output schema, we fill out a) from the list of 
+        // columns requested by successor nodes on all edges where the source is the current node. 
+        // - If the target node has predecessor columns specified then we use them for b).
+        // - If the target node has no predecessor columns specified then we implicitly select all 
+        // available columns for b).
+        const availableNodeIds = new Set(graph.getNodes().map(node => node.id));
+        let availableColumns = null;
+        let requestedColumns = null;
+        let isAvailableColumnsUnknown = null;
 
-        const supersetColumns = [];
-        const outputColumns = [];
-        nodeSource.data.output.forEach((output) => {
-            outputColumns.push(output.column);
-            supersetColumns.push(output.column);
+        if (sourceNode.data.output.length > 0) {
+            availableColumns = sourceNode.data.output.map(({column}) => column);
+            isAvailableColumnsUnknown = false;
+        } else {
+            const successorNodeIds = sourceNode.data.successors;
+            availableColumns = Array.from(new Set(
+                successorNodeIds
+                    .filter(nodeId => availableNodeIds.has(nodeId))
+                    .map(successorNodeId => graph.getNode(successorNodeId).data.predecessorColumns[sourceNode.id])
+                    .reduce((accumulator, current) => [...accumulator, ...current], [])
+            )).sort();
+            isAvailableColumnsUnknown = true;
+        }
+
+        if (targetNode.data.predecessorColumns[sourceNode.id]) {
+            requestedColumns = targetNode.data.predecessorColumns[sourceNode.id];
+        } else {
+            requestedColumns = [];
+        }
+        
+        // It's not possible to not request any columns from a dependency, we therefore use it as a convenient value 
+        // to denote that all columns are selected. 
+        const requestedAllColumns = requestedColumns.length === 0;
+        setData({
+            columns: availableColumns.map(column => ({
+                column,
+                isRequested: requestedAllColumns || requestedColumns.includes(column)
+            })),
+            requestedAllColumns,
+            isUnknownColumns: isAvailableColumnsUnknown
         });
+        // setListChecked(nodeTarget.data.predecessorColumns[nodeSource.data.nodeKey]); 
 
-        if (nodeSource.data.nodeKey.has(nodeSource.data.nodeKey)){
-            nodeTarget.data.predecessor_columns[nodeSource.data.nodeKey].forEach((column) => {
-                if (!supersetColumns.includes(column)){
-                    supersetColumns.push(column);    
-                }            
-            });
-        }
-
-        setSupersetColumns(supersetColumns);
-        setSourceOutputColumns(outputColumns);
-        setListChecked(nodeTarget.data.predecessor_columns[nodeSource.data.nodeKey]); 
-
-    }, [nodeSource, nodeTarget]);
+    }, [graph, sourceNode, targetNode, setData]);
     
-    console.log("sourceOutputColumns: ",sourceOutputColumns);
-    console.log("supersetColumns: ",supersetColumns);
-    console.log("listChecked: ",listChecked);
-    
-    const handleSelectAll = useCallback((e) => {
-        if(allChecked){
-            setListChecked([]);
-        }
-        else{
-            setListChecked(supersetColumns);
-        }
+    const handleSelectAll = useCallback(() => {
+        setData(prevData => ({
+            ...prevData,
+            columns: prevData.columns.map(column => ({
+                ...column, isRequested: true
+            })),
+            requestedAllColumns: true,
+        }));      
+    }, [setData]);
 
-        setAllChecked(!allChecked);        
-    });
-
-    const handleCheck = (e) => {
-        const { id, _ } = e.target;
-        if (listChecked.includes(id)) {
-            setListChecked(prev => prev.filter(item => item !== id));
-            setAllChecked(false);
+    const handleSelectColumn = (e) => {
+        const { id: selectedColumn } = e.target;
+        const newColumns = data.columns.map(
+            ({column, isRequested}) => column === selectedColumn 
+            ? {column, isRequested: !isRequested}
+            : {column, isRequested}
+        );
+        const unselectedColumns = newColumns.filter(({isRequested}) => !isRequested);
+        let requestedAllColumns = data.requestedAllColumns;
+        // debugger;
+        if (unselectedColumns.length > 0) {
+            requestedAllColumns = false;
+        } else if (!data.isUnknownColumns) {
+            requestedAllColumns = true;
         }
-        else{
-            setListChecked([...listChecked, id]);
-        }
+        setData(prevData => ({
+            ...prevData,
+            columns: newColumns,
+            requestedAllColumns
+        }));
     }
 
-    const handleClose = () => {
-        setShowEditEdge(false);
-    };
+    const handleDelete = useCallback(() => {
+        deleteEdge(graph, edge.id);
+        onClose();
+    }, [edge, graph, onClose]);
 
-    const formik = useFormik({
-        initialValues: {
-            id: "edge.id"
-        },
-        onSubmit: (values) => {
-            handleClose();
-        },
-    });
+    const handleClose = useCallback(() => {
+        onClose();
+    }, [onClose]);
 
-    
-    const dependencies = [];
-    supersetColumns.forEach((column) => {
-        var foundInSourceOutput = "";
-        if (!sourceOutputColumns.includes(column)){
-            foundInSourceOutput = `(not found in ${nodeSource.data.label} output)`
+    const handleSave = useCallback(() => {
+        const {source: sourceNodeId, target: targetNodeId} = edge;
+        const targetNode = graph.getNode(targetNodeId);
+        const {columns, requestedAllColumns} = data;
+        if (requestedAllColumns) {
+            targetNode.data.predecessorColumns[sourceNodeId] = [];
+        } else {
+            targetNode.data.predecessorColumns[sourceNodeId] = (columns
+                .filter(({isRequested}) => isRequested)
+                .map(({column}) => column)
+            );
         }
-        
-        dependencies.push(
-            <Form.Check 
-                key={column}
-                type="checkbox"
-                label={`${column} ${foundInSourceOutput}`}
-                id={column}
-                name={column}
-                checked={listChecked.includes(column)}
-                className="ms-2"
-                onChange={handleCheck}
-            />
-        );
-    });
-    
-
-    
+        const otherNodes = graph.getNodes().filter(({id}) => id !== targetNodeId);
+        graph.setNodes([...otherNodes, targetNode]);
+        onClose();
+    }, [edge, data, graph, onClose]);
 
     return (
-        <>
         <Offcanvas
-                show
-                onHide={handleClose}
-                placement="end"
-                backdrop={false}
-                scroll={true}
-                className="node"
-            >
-                <Offcanvas.Header closeButton={false} className="node">
-                    <Offcanvas.Title>Edit Edge</Offcanvas.Title>
-                </Offcanvas.Header>
-                <Offcanvas.Body>
-                    <Form onSubmit={formik.handleSubmit}>
-
-                        <Form.Check 
-                            key="all"
+            show
+            onHide={handleClose}
+            placement="end"
+            backdrop={false}
+            scroll={true}
+            className="node"
+        >
+            <Offcanvas.Header closeButton={false} className="node">
+                <Offcanvas.Title>Edit Edge</Offcanvas.Title>
+            </Offcanvas.Header>
+            <Offcanvas.Body>
+                <h6>Requested Columns</h6>
+                <Form>
+                    <Form.Check 
+                        key="all"
+                        type="checkbox"
+                        label="all columns"
+                        checked={data.requestedAllColumns}
+                        onChange={handleSelectAll}
+                        disabled={data.requestedAllColumns}
+                    />
+                    {data.columns.map(({column, isRequested}) => 
+                        <Form.Check
+                            key={column}
                             type="checkbox"
-                            label="Select all"
-                            checked={allChecked}
-                            onChange={handleSelectAll}
+                            id={column}
+                            label={column}
+                            checked={isRequested}
+                            onChange={handleSelectColumn}
                         />
-                        {dependencies}
-                        
-                        <Row className="mt-4">                                                  
-                            <Col>                                
-                                <Button variant="outline-danger">delete</Button>
-                                <Button variant="outline-primary" className="me-2 float-end" type="submit">save</Button>
-                                <Button variant="outline-secondary flypipe" className="me-2 float-end" onClick={handleClose}>close</Button>                                    
-                            </Col>                                                    
-                        </Row>                        
-                    </Form>
-                </Offcanvas.Body>
-            </Offcanvas>
-
-        
-        </>
+                    )}
+                    {data.isUnknownColumns && <>
+                        <Form.Check
+                            key="otherColumns"
+                            type="checkbox"
+                            label="(unknown columns)"
+                            checked={data.requestedAllColumns}
+                            disabled
+                        />
+                        <br/>
+                        <Alert variant="warning">
+                            {`Source node ${sourceNode.data.label} does not define an output schema, available column suggestions are drawn from existing requested columns. There are potentially more columns available to be queried which are denoted by the 'unknown columns' box.`}
+                        </Alert>
+                    </>}
+                    
+                    <Row className="mt-4">                                                  
+                        <Col>                                
+                            <Button variant="outline-danger" onClick={handleDelete}>Delete</Button>
+                            <Button variant="outline-primary" className="me-2 float-end" onClick={handleSave}>Save</Button>
+                            <Button variant="outline-secondary flypipe" className="me-2 float-end" onClick={handleClose}>Close</Button>                                    
+                        </Col>                                                    
+                    </Row>                        
+                </Form>
+            </Offcanvas.Body>
+        </Offcanvas>
     );
 };

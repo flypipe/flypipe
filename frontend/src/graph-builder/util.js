@@ -1,5 +1,6 @@
 import dagre from "dagre";
 import { ANIMATION_SPEED, DEFAULT_ZOOM } from "./graph/config";
+import { MarkerType } from "reactflow";
 
 // This isn't the actual node width which appears to be dynamically calculated. It's a width that we must give for
 // the dagre layout calculation.
@@ -48,7 +49,7 @@ const convertNodeDefToGraphNode = (
         id: nodeDef.nodeKey,
         type: isNew ? "flypipe-node-new" : "flypipe-node-existing",
         data: {
-            id: nodeDef.nodeKey,
+            nodeKey: nodeDef.nodeKey,
             label: nodeDef.name,
             isNew,
             ...nodeDef,
@@ -131,8 +132,8 @@ def ${name}(${dependencyList}):
 `;
 };
 
-const getNewNodeDef = ({id, name, nodeType, description, tags, output, predecessors, successors}) => ({
-    id,
+const getNewNodeDef = ({nodeKey, name, nodeType, description, tags, output, predecessors, predecessorColumns, successors}) => ({
+    nodeKey,
     label: name || 'Untitled',
     isNew: true,
     name: name || 'Untitled',
@@ -141,25 +142,35 @@ const getNewNodeDef = ({id, name, nodeType, description, tags, output, predecess
     tags: tags || [],
     output: output || [],
     predecessors: predecessors || [],
+    predecessorColumns: predecessorColumns || [],
     successors: successors || [],
 });
 
-const addEdge = (graph, edge) => {
+// This is a bit weird- as far as I can tell when dragging an edge between two nodes you can't suppress the automatic 
+// edge creation so as to add an edge with custom requirements. Therefore we add the edge and immediately consolidate 
+// it by tweaking it to have the settings we want. 
+const consolidateEdge = (graph, edge) => {
     const nodes = graph.getNodes();
     const sourceNode = nodes.splice(nodes.findIndex(node => node.id === edge.source), 1)[0];
     const targetNode = nodes.splice(nodes.findIndex(node => node.id === edge.target), 1)[0];
-    if (!edge.id) {
-        edge.id = `${edge.source}-${edge.target}`;
-    }
-    if (sourceNode.data.successors.includes(targetNode.id)) {
-        throw new Error(`${targetNode.data.label} already has a dependency on ${sourceNode.data.label}`);
-    }
-    graph.addEdges(edge);
 
     // Update the predecessor/successor fields on the nodes the new edge is going between
     sourceNode.data.successors = [...sourceNode.data.successors, targetNode.id];
     targetNode.data.predecessors = [...targetNode.data.predecessors, sourceNode.id];
+    targetNode.data.predecessorColumns = {
+        ...targetNode.data.predecessorColumns,
+        [sourceNode.id]: []
+    };
     graph.setNodes([sourceNode, targetNode, ...nodes]);
+
+    const otherEdges = graph.getEdges().filter(({id}) => id !== edge.id);
+    edge.id = `${edge.source}-${edge.target}`;
+    edge.markerEnd = {
+        type: MarkerType.ArrowClosed,
+        width: 20,
+        height: 20,
+    }
+    graph.setEdges([...otherEdges, edge]);
 };
 
 const deleteNode = (graph, nodeId) => {
@@ -179,12 +190,30 @@ const deleteNode = (graph, nodeId) => {
     graph.setNodes(nodes);
 };
 
+const deleteEdge = (graph, edgeId) => {
+    const edges = graph.getEdges();
+    const edgeToDelete = edges.splice(edges.findIndex(({id}) => id === edgeId), 1)[0];
+    graph.setEdges(edges);
+
+    const {source: sourceNodeId, target: targetNodeId} = edgeToDelete;
+    const sourceNode = graph.getNode(sourceNodeId);
+    sourceNode.data.successors = sourceNode.data.successors.filter(successor => successor !== targetNodeId);
+
+    const targetNode = graph.getNode(targetNodeId);
+    targetNode.data.predecessors = targetNode.data.predecessors.filter(predecessor => predecessor !== sourceNodeId);
+    delete targetNode.data.predecessorColumns[sourceNodeId];
+
+    const otherNodes = graph.getNodes().filter(({id}) => id !== sourceNodeId && id !== targetNodeId);
+    graph.setNodes([sourceNode, targetNode, ...otherNodes]);
+};
+
 export {
     getPredecessorNodesAndEdgesFromNode,
     refreshNodePositions,
     moveToNode,
     generateCodeTemplate,
     getNewNodeDef,
-    addEdge,
+    consolidateEdge,
     deleteNode,
+    deleteEdge,
 };

@@ -32,6 +32,8 @@ const NODE_TYPES = {
 const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
     const [editNode, setEditNode] = useState(null);
     const [showEditNode, setShowEditNode] = useState(false);
+    const [editEdge, setEditEdge] = useState(false);
+    const [showEditEdge, setShowEditEdge] = useState(false);
     const { setNewMessage } = useContext(NotificationContext);
 
     const graph = useReactFlow();
@@ -51,7 +53,7 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
             id: newNodeId,
             type: "flypipe-node-new",
             data: getNewNodeDef({
-                id: newNodeId,
+                nodeKey: newNodeId,
                 label: `untitled${NEW_NODE_INDEX}`,
                 name: `untitled${NEW_NODE_INDEX}`,
             }),
@@ -78,17 +80,8 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
     const onNodeClick = useCallback((event, node) => {
         setEditNode(node);
         setShowEditNode(true);
-    }, []);
-
-    // Edge edition
-    const [showEditEdge, setShowEditEdge] = useState(false);
-    const [editEdge, setEditEdge] = useState(false);
-    
-    const onEdgeClick = useCallback((event, edge) => {
-        setShowEditEdge(true);
-        setEditEdge(edge);        
-
-    }, [graph]);
+        setShowEditEdge(false);
+    }, [setEditNode, setShowEditNode, setShowEditEdge]);
 
     // Show/Hide Search Panel
     const [showSearchPanel, setShowSearchPanel] = useState(true);
@@ -111,10 +104,20 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
         }, []);
         graph.setNodes(newNodes);
     }, [setShowEditNode]);
+    
+    const onEdgeClick = useCallback((event, edge) => {
+        setEditEdge(edge);        
+        setShowEditEdge(true);
+        setShowEditNode(false);
+    }, [setEditEdge, setShowEditEdge, setShowEditNode]);
+
+    const handleCloseEditEdge = useCallback(() => {
+        setShowEditEdge(false);
+    }, [setShowEditEdge]);
 
     return (
         <div className="layoutflow d-flex w-100 h-100" ref={graphDiv}>
-            {showEditEdge && <EditEdge edge={editEdge} setShowEditEdge={setShowEditEdge}/>}
+            {showEditEdge && <EditEdge edge={editEdge} onClose={handleCloseEditEdge} />}
             {showEditNode && (
                 <EditNode node={editNode} tagSuggestions={tagSuggestions} onClose={handleCloseEditNode} onSave={handleSaveEditNode}/>
             )}

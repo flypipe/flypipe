@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useRef, useEffect, useContext } from "react";
-import { useReactFlow, Handle, Position, MarkerType } from "reactflow";
+import { useReactFlow, Handle, Position } from "reactflow";
 import Badge from "react-bootstrap/Badge";
-import { refreshNodePositions, NODE_WIDTH, NODE_HEIGHT, addEdge } from "../util";
+import { refreshNodePositions, NODE_WIDTH, NODE_HEIGHT, consolidateEdge } from "../util";
 import classNames from "classnames";
 import textFit from "textfit";
 import { GrNew } from "react-icons/gr";
@@ -17,21 +17,11 @@ const BaseNode = ({ data, isNewNode }) => {
         ({ source, target }) => {
             const sourceLabel = graph.getNode(source).data.label;
             const targetLabel = graph.getNode(target).data.label;
-            try {
-                addEdge(graph, {
-                    source,
-                    target,
-                    markerEnd: {
-                        type: MarkerType.ArrowClosed,
-                        width: 20,
-                        height: 20,
-                    }
-                });
-                refreshNodePositions(graph);
-                addNotification(`Dependency on ${sourceLabel} added to ${targetLabel}`);
-            } catch (error) {
-                addNotification(error.message);
-            }
+            const edge = graph.getEdges().filter(
+                edge => edge.source === source && edge.target === target)[0];
+            consolidateEdge(graph, edge);
+            refreshNodePositions(graph);
+            addNotification(`Dependency on ${sourceLabel} added to ${targetLabel}`);
         },
         [graph, addNotification]
     );
