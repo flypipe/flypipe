@@ -33,8 +33,6 @@
     max-width: 850px;
 }
 
-
-
 .pointer {
     cursor: pointer;
 }
@@ -44,54 +42,51 @@
     left: 410px;
 }
 
-.search-result{
+.search-result {
     z-index: 2;
     background-color: white;
-    border: 1px solid #ced4da;    
+    border: 1px solid #ced4da;
 }
 
-.list-group-flypipe{
+.list-group-flypipe {
     height: calc(100vh - 100px);
 }
 
 .search {
-    
     max-width: 400px;
     min-width: 400px;
-    
 }
 
-.btn-outline-secondary.flypipe{
+.btn-outline-secondary.flypipe {
     --bs-btn-bg: white;
     --bs-btn-hover-bg: #f1f1f1;
     --bs-btn-border-color: #ced4da;
-    
+
     --bs-btn-hover-border-color: #6c757d;
     --bs-btn-hover-color: #6c757d;
 }
 
-.btn-light.flypipe{
+.btn-light.flypipe {
     background-color: white;
     --bs-btn-active-bg: white;
-    --bs-btn-hover-bg: white
+    --bs-btn-hover-bg: white;
 }
 
-.no-border{
-    border: none
+.no-border {
+    border: none;
 }
 
-.page-link.flypipe{
-    border: none
+.page-link.flypipe {
+    border: none;
 }
 
-.node-badge{
+.node-badge {
     top: -21px !important;
     right: -21px !important;
     padding: 12px !important;
-
 }
 
-.react-flow__handle{
+.react-flow__handle {
     width: 35px !important;
     height: 75px !important;
     border-radius: 0 !important;
@@ -99,14 +94,15 @@
     border: none !important;
 }
 
-.react-flow__handle-left{
+.react-flow__handle-left {
     left: -10px !important;
 }
 
-.react-flow__handle-right{
+.react-flow__handle-right {
     right: -10px !important;
 }
 
-.react-flow__edge-path, .react-flow__connection-path{
+.react-flow__edge-path,
+.react-flow__connection-path {
     stroke-width: 0.09em !important;
 }

@@ -8,15 +8,20 @@ export const NotificationContextProvider = ({ children }) => {
         msgId: uuid(),
         message: "",
     });
-    const addNotification = useCallback((message) => {
-        setNewMessage({
-            msgId: uuid(),
-            message
-        })
-    }, [setNewMessage, uuid]);
+    const addNotification = useCallback(
+        (message) => {
+            setNewMessage({
+                msgId: uuid(),
+                message,
+            });
+        },
+        [setNewMessage, uuid]
+    );
 
     return (
-        <NotificationContext.Provider value={{ newMessage, setNewMessage, addNotification }}>
+        <NotificationContext.Provider
+            value={{ newMessage, setNewMessage, addNotification }}
+        >
             {children}
         </NotificationContext.Provider>
     );

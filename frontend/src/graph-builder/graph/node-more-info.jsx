@@ -7,23 +7,34 @@ import CopyToClipboardWidget from "../../copy-to-clipboard-widget";
 import { generateCodeTemplate } from "../util";
 import { useReactFlow } from "reactflow";
 
-
-// Beware that nodeData is from form state not a state variable, this form state does not change object reference when 
-// it's changed so any usage of nodeData for memoisation must be on individual attributes. 
+// Beware that nodeData is from form state not a state variable, this form state does not change object reference when
+// it's changed so any usage of nodeData for memoisation must be on individual attributes.
 export const NodeMoreInfo = ({ nodeData, show, onClose: handleClose }) => {
     const graph = useReactFlow();
     const { newMessage, setNewMessage } = useContext(NotificationContext);
 
-    const handleCopy = useCallback((data) => {
-        // We have limited screen real estate in a toast message so if the copied data is too long don't show it
-        const message = (data.length > 40) ? 'Copied to clipboard' : `Copied ${data} to clipboard`;
-        setNewMessage({
-            msgId: uuid(),
-            message,
-        });
-    }, [setNewMessage]);
+    const handleCopy = useCallback(
+        (data) => {
+            // We have limited screen real estate in a toast message so if the copied data is too long don't show it
+            const message =
+                data.length > 40
+                    ? "Copied to clipboard"
+                    : `Copied ${data} to clipboard`;
+            setNewMessage({
+                msgId: uuid(),
+                message,
+            });
+        },
+        [setNewMessage]
+    );
 
-    const sourceCode = useMemo(() => nodeData.sourceCode ? nodeData.sourceCode : generateCodeTemplate(graph, nodeData), [nodeData.tags]);
+    const sourceCode = useMemo(
+        () =>
+            nodeData.sourceCode
+                ? nodeData.sourceCode
+                : generateCodeTemplate(graph, nodeData),
+        [nodeData.tags]
+    );
 
     return (
         <Modal
@@ -44,7 +55,7 @@ export const NodeMoreInfo = ({ nodeData, show, onClose: handleClose }) => {
             </Modal.Header>
             <Modal.Body>
                 <div>
-                    <span>Tags:{" "}</span>
+                    <span>Tags: </span>
                     <Badge bg="light" className="ms-2" text="dark">
                         tag_1
                     </Badge>{" "}
@@ -54,33 +65,33 @@ export const NodeMoreInfo = ({ nodeData, show, onClose: handleClose }) => {
                 </div>
                 <div>
                     <span>Location:</span>
-                    { 
-                        nodeData.filePath ? 
-                            <>
-                                <CopyToClipboardWidget
-                                    text={nodeData.filePath}
-                                    data={nodeData.filePath}
-                                    onCopy={handleCopy}
-                                >
-                                    <span>{nodeData.filePath}</span>
-                                </CopyToClipboardWidget>
-                            </>
-                        : <span className="ms-2 text-secondary">N/A</span>
-                    }
+                    {nodeData.filePath ? (
+                        <>
+                            <CopyToClipboardWidget
+                                text={nodeData.filePath}
+                                data={nodeData.filePath}
+                                onCopy={handleCopy}
+                            >
+                                <span>{nodeData.filePath}</span>
+                            </CopyToClipboardWidget>
+                        </>
+                    ) : (
+                        <span className="ms-2 text-secondary">N/A</span>
+                    )}
                 </div>
                 <div>
                     <span>Py Import:</span>
-                    { 
-                        nodeData.pythonImportCommand ? 
-                            <CopyToClipboardWidget
-                                text={nodeData.pythonImportCommand}
-                                data={nodeData.pythonImportCommand}
-                                onCopy={handleCopy}
-                            >
-                                <span>{nodeData.pythonImportCommand}</span>
-                            </CopyToClipboardWidget>
-                        : <span className="ms-2 text-secondary">N/A</span>
-                    }
+                    {nodeData.pythonImportCommand ? (
+                        <CopyToClipboardWidget
+                            text={nodeData.pythonImportCommand}
+                            data={nodeData.pythonImportCommand}
+                            onCopy={handleCopy}
+                        >
+                            <span>{nodeData.pythonImportCommand}</span>
+                        </CopyToClipboardWidget>
+                    ) : (
+                        <span className="ms-2 text-secondary">N/A</span>
+                    )}
                 </div>
 
                 <div className="position-relative">

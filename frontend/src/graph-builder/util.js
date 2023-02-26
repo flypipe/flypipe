@@ -11,7 +11,7 @@ export const NODE_HEIGHT = 75;
 // the positions of the nodes.
 const assignNodePositions = (nodes, edges) => {
     const dagreGraph = new dagre.graphlib.Graph();
-    dagreGraph.setGraph({ rankdir: "LR", nodesep: 100, ranksep: 150});
+    dagreGraph.setGraph({ rankdir: "LR", nodesep: 100, ranksep: 150 });
     dagreGraph.setDefaultEdgeLabel(() => ({}));
     nodes.forEach(({ id }) => {
         dagreGraph.setNode(id, { width: NODE_WIDTH, height: NODE_HEIGHT });
@@ -41,10 +41,7 @@ const refreshNodePositions = (graph) => {
 };
 
 // Retrieve the graph node representation of a node
-const convertNodeDefToGraphNode = (
-    nodeDef,
-    isNew = true
-) => {
+const convertNodeDefToGraphNode = (nodeDef, isNew = true) => {
     return {
         id: nodeDef.nodeKey,
         type: isNew ? "flypipe-node-new" : "flypipe-node-existing",
@@ -59,7 +56,7 @@ const convertNodeDefToGraphNode = (
             x: 0,
             y: 0,
         },
-    }
+    };
 };
 
 // Given an input node, get the list of nodes and edges of all of the input node's predecessors.
@@ -116,9 +113,12 @@ const moveToNode = (graph, nodeId) => {
 };
 
 const generateCodeTemplate = (graph, nodeData) => {
-    const {name, nodeType, description, tags, predecessors, predecessors2} = nodeData;
-    const tagList = tags.map(tag => `'${tag}'`).join(', ');
-    const dependencyList = predecessors.map(nodeId => graph.getNode(nodeId).data.name).join(', ');
+    const { name, nodeType, description, tags, predecessors, predecessors2 } =
+        nodeData;
+    const tagList = tags.map((tag) => `'${tag}'`).join(", ");
+    const dependencyList = predecessors
+        .map((nodeId) => graph.getNode(nodeId).data.name)
+        .join(", ");
     return `from flypipe import node
     
 @node(
@@ -132,11 +132,21 @@ def ${name}(${dependencyList}):
 `;
 };
 
-const getNewNodeDef = ({nodeKey, name, nodeType, description, tags, output, predecessors, predecessorColumns, successors}) => ({
+const getNewNodeDef = ({
     nodeKey,
-    label: name || 'Untitled',
+    name,
+    nodeType,
+    description,
+    tags,
+    output,
+    predecessors,
+    predecessorColumns,
+    successors,
+}) => ({
+    nodeKey,
+    label: name || "Untitled",
     isNew: true,
-    name: name || 'Untitled',
+    name: name || "Untitled",
     nodeType: nodeType || "pandas",
     description: description || "",
     tags: tags || [],
@@ -146,45 +156,68 @@ const getNewNodeDef = ({nodeKey, name, nodeType, description, tags, output, pred
     successors: successors || [],
 });
 
-// This is a bit weird- as far as I can tell when dragging an edge between two nodes you can't suppress the automatic 
-// edge creation so as to add an edge with custom requirements. Therefore we add the edge and immediately consolidate 
-// it by tweaking it to have the settings we want. 
+// This is a bit weird- as far as I can tell when dragging an edge between two nodes you can't suppress the automatic
+// edge creation so as to add an edge with custom requirements. Therefore we add the edge and immediately consolidate
+// it by tweaking it to have the settings we want.
 const consolidateEdge = (graph, edge) => {
     const nodes = graph.getNodes();
-    const sourceNode = nodes.splice(nodes.findIndex(node => node.id === edge.source), 1)[0];
-    const targetNode = nodes.splice(nodes.findIndex(node => node.id === edge.target), 1)[0];
+    const sourceNode = nodes.splice(
+        nodes.findIndex((node) => node.id === edge.source),
+        1
+    )[0];
+    const targetNode = nodes.splice(
+        nodes.findIndex((node) => node.id === edge.target),
+        1
+    )[0];
 
     // Update the predecessor/successor fields on the nodes the new edge is going between
     sourceNode.data.successors = [...sourceNode.data.successors, targetNode.id];
-    targetNode.data.predecessors = [...targetNode.data.predecessors, sourceNode.id];
+    targetNode.data.predecessors = [
+        ...targetNode.data.predecessors,
+        sourceNode.id,
+    ];
     targetNode.data.predecessorColumns = {
         ...targetNode.data.predecessorColumns,
-        [sourceNode.id]: []
+        [sourceNode.id]: [],
     };
     graph.setNodes([sourceNode, targetNode, ...nodes]);
 
-    const otherEdges = graph.getEdges().filter(({id}) => id !== edge.id);
+    const otherEdges = graph.getEdges().filter(({ id }) => id !== edge.id);
     edge.id = `${edge.source}-${edge.target}`;
     edge.markerEnd = {
         type: MarkerType.ArrowClosed,
         width: 20,
         height: 20,
-    }
+    };
     graph.setEdges([...otherEdges, edge]);
 };
 
 const deleteNode = (graph, nodeId) => {
-    const nodes = graph.getNodes().filter(node => node.id !== nodeId);
+    const nodes = graph.getNodes().filter((node) => node.id !== nodeId);
 
-    // Any nodes that have the node to be deleted listed as a successor or predecessor needs to be amended to remove 
-    // this reference. 
-    const successorNodeIds = new Set(graph.getEdges().filter(({source}) => source === nodeId).map(({target}) => target));
-    const predecessorNodeIds = new Set(graph.getEdges().filter(({target}) => target === nodeId).map(({source}) => source));
+    // Any nodes that have the node to be deleted listed as a successor or predecessor needs to be amended to remove
+    // this reference.
+    const successorNodeIds = new Set(
+        graph
+            .getEdges()
+            .filter(({ source }) => source === nodeId)
+            .map(({ target }) => target)
+    );
+    const predecessorNodeIds = new Set(
+        graph
+            .getEdges()
+            .filter(({ target }) => target === nodeId)
+            .map(({ source }) => source)
+    );
     for (const node of nodes) {
         if (successorNodeIds.has(node.id)) {
-            node.data.predecessors = node.data.predecessors.filter(id => id !== nodeId);
+            node.data.predecessors = node.data.predecessors.filter(
+                (id) => id !== nodeId
+            );
         } else if (predecessorNodeIds.has(node.id)) {
-            node.data.successors = node.data.successors.filter(id => id !== nodeId);
+            node.data.successors = node.data.successors.filter(
+                (id) => id !== nodeId
+            );
         }
     }
     graph.setNodes(nodes);
@@ -192,18 +225,27 @@ const deleteNode = (graph, nodeId) => {
 
 const deleteEdge = (graph, edgeId) => {
     const edges = graph.getEdges();
-    const edgeToDelete = edges.splice(edges.findIndex(({id}) => id === edgeId), 1)[0];
+    const edgeToDelete = edges.splice(
+        edges.findIndex(({ id }) => id === edgeId),
+        1
+    )[0];
     graph.setEdges(edges);
 
-    const {source: sourceNodeId, target: targetNodeId} = edgeToDelete;
+    const { source: sourceNodeId, target: targetNodeId } = edgeToDelete;
     const sourceNode = graph.getNode(sourceNodeId);
-    sourceNode.data.successors = sourceNode.data.successors.filter(successor => successor !== targetNodeId);
+    sourceNode.data.successors = sourceNode.data.successors.filter(
+        (successor) => successor !== targetNodeId
+    );
 
     const targetNode = graph.getNode(targetNodeId);
-    targetNode.data.predecessors = targetNode.data.predecessors.filter(predecessor => predecessor !== sourceNodeId);
+    targetNode.data.predecessors = targetNode.data.predecessors.filter(
+        (predecessor) => predecessor !== sourceNodeId
+    );
     delete targetNode.data.predecessorColumns[sourceNodeId];
 
-    const otherNodes = graph.getNodes().filter(({id}) => id !== sourceNodeId && id !== targetNodeId);
+    const otherNodes = graph
+        .getNodes()
+        .filter(({ id }) => id !== sourceNodeId && id !== targetNodeId);
     graph.setNodes([sourceNode, targetNode, ...otherNodes]);
 };
 

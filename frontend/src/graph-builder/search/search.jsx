@@ -106,7 +106,10 @@ const Search = ({ nodes }) => {
             <br />
             <div className="d-flex justify-content-between align-items-center">
                 <Dropdown>
-                    <Dropdown.Toggle variant="light flypipe" className="no-border">
+                    <Dropdown.Toggle
+                        variant="light flypipe"
+                        className="no-border"
+                    >
                         <BsFilter size={21} />
                         All filters
                     </Dropdown.Toggle>

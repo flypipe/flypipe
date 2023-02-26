@@ -15,7 +15,7 @@ import {
 } from "../util";
 import { useReactFlow, MarkerType } from "reactflow";
 import { NotificationContext } from "../../context";
-import uuid from 'react-uuid';
+import uuid from "react-uuid";
 
 // Maximum number of search entries per page
 const SEARCH_PAGE_SIZE = 8;
@@ -82,21 +82,21 @@ const NodeResultsList = ({ nodes, allNodes }) => {
         const newEdges = predecessorEdges.filter(
             ({ id }) => !currentEdges.has(id)
         );
-        
-        newEdges.forEach((e,i) => {
-            newEdges[i]['markerEnd'] = {
+
+        newEdges.forEach((e, i) => {
+            newEdges[i]["markerEnd"] = {
                 type: MarkerType.ArrowClosed,
                 width: 15,
                 height: 15,
-            }
-        })
-        
+            };
+        });
+
         graph.addNodes(newNodes);
         graph.addEdges(newEdges);
         refreshNodePositions(graph);
         setNewMessage({
             msgId: uuid(),
-            message: `Added node ${name} and ancestor nodes/edges to the graph`
+            message: `Added node ${name} and ancestor nodes/edges to the graph`,
         });
         moveToNode(graph, nodeKey);
     };

@@ -10,16 +10,21 @@ import { NodeOutput } from "./node-output";
 import { useFormik } from "formik";
 import NodeList from "./node-list";
 
-
 const RE_LABEL = /^[a-zA-Z_]\w*$/;
 
-export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: handleSave }) => {
+export const EditNode = ({
+    node,
+    tagSuggestions,
+    onClose: handleClose,
+    onSave: handleSave,
+}) => {
     const isReadOnly = !node.data.isNew;
     const validate = (values) => {
         const errors = {};
 
         if (!RE_LABEL.test(values.label)) {
-            errors.label = "Invalid name- name must be a valid Python function name";
+            errors.label =
+                "Invalid name- name must be a valid Python function name";
         }
 
         if (!values.nodeType) {
@@ -72,16 +77,23 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
         setShowMoreInfo(false);
     }, [setShowMoreInfo]);
 
-    const handleSetTags = useCallback((tags) => {
-        formState.setFieldValue(
-            "tags",
-            tags
-        )
-    }, [formState]);
+    const handleSetTags = useCallback(
+        (tags) => {
+            formState.setFieldValue("tags", tags);
+        },
+        [formState]
+    );
 
     return (
         <>
-            { showDeleteNode && <DeleteNodeModal nodeId={formState.values.nodeKey} onCancel={handleCancelDeleteNode} onSubmit={handleSubmitDeleteNode} handleClose={handleCancelDeleteNode} /> }
+            {showDeleteNode && (
+                <DeleteNodeModal
+                    nodeId={formState.values.nodeKey}
+                    onCancel={handleCancelDeleteNode}
+                    onSubmit={handleSubmitDeleteNode}
+                    handleClose={handleCancelDeleteNode}
+                />
+            )}
             <NodeMoreInfo
                 nodeData={formState.values}
                 show={showMoreInfo}
@@ -199,22 +211,26 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
                                 <Form.Label className="fw-semibold">
                                     Predecessors
                                 </Form.Label>
-                                {formState.values.predecessors.length > 0 ? 
+                                {formState.values.predecessors.length > 0 ? (
                                     <NodeList
                                         nodeIds={formState.values.predecessors}
-                                    /> : <p>No predecessors</p>
-                                }
+                                    />
+                                ) : (
+                                    <p>No predecessors</p>
+                                )}
                             </Form.Group>
 
                             <Form.Group className="mb-3">
                                 <Form.Label className="fw-semibold">
                                     Successors
                                 </Form.Label>
-                                {formState.values.successors.length > 0 ? 
+                                {formState.values.successors.length > 0 ? (
                                     <NodeList
                                         nodeIds={formState.values.successors}
-                                    /> : <p>No successors</p>
-                                }
+                                    />
+                                ) : (
+                                    <p>No successors</p>
+                                )}
                             </Form.Group>
 
                             <Form.Group className="mb-3">
@@ -223,7 +239,9 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
                                 </Form.Label>
                                 {formState.values.output &&
                                     formState.values.output.length > 0 && (
-                                        <NodeOutput output={formState.values.output} />
+                                        <NodeOutput
+                                            output={formState.values.output}
+                                        />
                                     )}
                                 {(!formState.values.output ||
                                     formState.values.output.length == 0) && (
@@ -234,7 +252,12 @@ export const EditNode = ({ node, tagSuggestions, onClose: handleClose, onSave: h
 
                         <Row>
                             <Col>
-                                <Button variant="outline-danger" onClick={handleShowDeleteNode}>Delete</Button>
+                                <Button
+                                    variant="outline-danger"
+                                    onClick={handleShowDeleteNode}
+                                >
+                                    Delete
+                                </Button>
                                 <Button
                                     variant="outline-primary"
                                     className="me-2 float-end"

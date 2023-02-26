@@ -1,12 +1,22 @@
-import React, { useCallback, useMemo, useRef, useEffect, useContext } from "react";
+import React, {
+    useCallback,
+    useMemo,
+    useRef,
+    useEffect,
+    useContext,
+} from "react";
 import { useReactFlow, Handle, Position } from "reactflow";
 import Badge from "react-bootstrap/Badge";
-import { refreshNodePositions, NODE_WIDTH, NODE_HEIGHT, consolidateEdge } from "../util";
+import {
+    refreshNodePositions,
+    NODE_WIDTH,
+    NODE_HEIGHT,
+    consolidateEdge,
+} from "../util";
 import classNames from "classnames";
 import textFit from "textfit";
 import { GrNew } from "react-icons/gr";
 import { NotificationContext } from "../../context";
-
 
 const BaseNode = ({ data, isNewNode }) => {
     const graph = useReactFlow();
@@ -17,11 +27,16 @@ const BaseNode = ({ data, isNewNode }) => {
         ({ source, target }) => {
             const sourceLabel = graph.getNode(source).data.label;
             const targetLabel = graph.getNode(target).data.label;
-            const edge = graph.getEdges().filter(
-                edge => edge.source === source && edge.target === target)[0];
+            const edge = graph
+                .getEdges()
+                .filter(
+                    (edge) => edge.source === source && edge.target === target
+                )[0];
             consolidateEdge(graph, edge);
             refreshNodePositions(graph);
-            addNotification(`Dependency on ${sourceLabel} added to ${targetLabel}`);
+            addNotification(
+                `Dependency on ${sourceLabel} added to ${targetLabel}`
+            );
         },
         [graph, addNotification]
     );
@@ -68,9 +83,12 @@ const BaseNode = ({ data, isNewNode }) => {
         }
     }, [isNewNode]);
 
-    const onCheckValidConnection = useCallback(({source, target}) => {
-        return graph.getNode(target).data.isNew;
-    }, [graph]);
+    const onCheckValidConnection = useCallback(
+        ({ source, target }) => {
+            return graph.getNode(target).data.isNew;
+        },
+        [graph]
+    );
 
     return (
         <>
@@ -100,7 +118,7 @@ const BaseNode = ({ data, isNewNode }) => {
                         title="New node"
                         size="md"
                     >
-                        <GrNew className="fs-4"/>
+                        <GrNew className="fs-4" />
                     </Badge>
                 )}
             </div>

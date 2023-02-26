@@ -79,10 +79,10 @@ const Pagination = ({ maxPage, pageGroupSize, handleClickPage }) => {
         },
         [pageGroup, maxPage, pageGroupSize]
     );
-    
+
     if (pageGroup.length == 0) {
-        return (<div className="ms-3 fw-bold fs-6">No results found</div>);
-    }    
+        return <div className="ms-3 fw-bold fs-6">No results found</div>;
+    }
     return (
         <nav aria-label="Node search result pages">
             <ul className="pagination d-flex justify-content-center">
@@ -100,9 +100,12 @@ const Pagination = ({ maxPage, pageGroupSize, handleClickPage }) => {
                 {pageGroup.map((pageNumber) => (
                     <li key={`page-${pageNumber}`} className="page-item">
                         <a
-                            className={classNames("page-link flypipe text-secondary", {
-                                "fw-bold": pageNumber === currentPage,
-                            })}
+                            className={classNames(
+                                "page-link flypipe text-secondary",
+                                {
+                                    "fw-bold": pageNumber === currentPage,
+                                }
+                            )}
                             href="#"
                             onClick={(e) => {
                                 e.preventDefault();
@@ -113,7 +116,7 @@ const Pagination = ({ maxPage, pageGroupSize, handleClickPage }) => {
                         </a>
                     </li>
                 ))}
-                
+
                 <li className="page-item">
                     <a
                         className={classNames("page-link flypipe", {

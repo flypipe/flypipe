@@ -18,8 +18,7 @@ import { TfiAngleLeft, TfiAngleRight } from "react-icons/tfi";
 import ExportGraph from "./export-graph";
 import Tooltip from "../../tooltip";
 import { NotificationContext } from "../../context";
-import uuid from 'react-uuid';
-
+import uuid from "react-uuid";
 
 // TODO- get rid of this index when we introduce the new node modal
 let NEW_NODE_INDEX = 1;
@@ -73,43 +72,55 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
         setShowEditNode(true);
         setNewMessage({
             msgId: uuid(),
-            message: `New node ${newNode.data.label} added to the graph`
+            message: `New node ${newNode.data.label} added to the graph`,
         });
     }, [graph, setNewMessage]);
 
-    const onNodeClick = useCallback((event, node) => {
-        setEditNode(node);
-        setShowEditNode(true);
-        setShowEditEdge(false);
-    }, [setEditNode, setShowEditNode, setShowEditEdge]);
+    const onNodeClick = useCallback(
+        (event, node) => {
+            setEditNode(node);
+            setShowEditNode(true);
+            setShowEditEdge(false);
+        },
+        [setEditNode, setShowEditNode, setShowEditEdge]
+    );
 
     // Show/Hide Search Panel
     const [showSearchPanel, setShowSearchPanel] = useState(true);
     const toggleSearchPanel = useCallback(() => {
-        setShowSearchPanel(prevShowSearchPanel => !prevShowSearchPanel);
+        setShowSearchPanel((prevShowSearchPanel) => !prevShowSearchPanel);
     }, [setShowSearchPanel]);
 
     const handleCloseEditNode = useCallback(() => {
         setShowEditNode(false);
     }, [setShowEditNode]);
-    const handleSaveEditNode = useCallback((editedNode) => {
-        setShowEditNode(false);
-        const nodes = graph.getNodes();
-        const newNodes = nodes.reduce((accumulator, node) => {
-            if (node.id !== editedNode.id) {
-                return [...accumulator, node];
-            } else {
-                return [...accumulator, {...node, data: {...editedNode}}];
-            }
-        }, []);
-        graph.setNodes(newNodes);
-    }, [setShowEditNode]);
-    
-    const onEdgeClick = useCallback((event, edge) => {
-        setEditEdge(edge);        
-        setShowEditEdge(true);
-        setShowEditNode(false);
-    }, [setEditEdge, setShowEditEdge, setShowEditNode]);
+    const handleSaveEditNode = useCallback(
+        (editedNode) => {
+            setShowEditNode(false);
+            const nodes = graph.getNodes();
+            const newNodes = nodes.reduce((accumulator, node) => {
+                if (node.id !== editedNode.id) {
+                    return [...accumulator, node];
+                } else {
+                    return [
+                        ...accumulator,
+                        { ...node, data: { ...editedNode } },
+                    ];
+                }
+            }, []);
+            graph.setNodes(newNodes);
+        },
+        [setShowEditNode]
+    );
+
+    const onEdgeClick = useCallback(
+        (event, edge) => {
+            setEditEdge(edge);
+            setShowEditEdge(true);
+            setShowEditNode(false);
+        },
+        [setEditEdge, setShowEditEdge, setShowEditNode]
+    );
 
     const handleCloseEditEdge = useCallback(() => {
         setShowEditEdge(false);
@@ -117,9 +128,16 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
 
     return (
         <div className="layoutflow d-flex w-100 h-100" ref={graphDiv}>
-            {showEditEdge && <EditEdge edge={editEdge} onClose={handleCloseEditEdge} />}
+            {showEditEdge && (
+                <EditEdge edge={editEdge} onClose={handleCloseEditEdge} />
+            )}
             {showEditNode && (
-                <EditNode node={editNode} tagSuggestions={tagSuggestions} onClose={handleCloseEditNode} onSave={handleSaveEditNode}/>
+                <EditNode
+                    node={editNode}
+                    tagSuggestions={tagSuggestions}
+                    onClose={handleCloseEditNode}
+                    onSave={handleSaveEditNode}
+                />
             )}
             {showSearchPanel && <Search nodes={nodeDefsList} />}
             <ReactFlow
@@ -130,33 +148,50 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
                 maxZoom={MAX_ZOOM}
                 onNodeClick={onNodeClick}
                 onEdgeClick={onEdgeClick}
-                fitView    
+                fitView
             >
                 <Panel position="top-left">
                     <Tooltip text="Add a new node to the graph">
-                        <Button variant="outline-secondary flypipe"  className="mt-2" onClick={onClickNewNode}>New Node</Button>
+                        <Button
+                            variant="outline-secondary flypipe"
+                            className="mt-2"
+                            onClick={onClickNewNode}
+                        >
+                            New Node
+                        </Button>
                     </Tooltip>
                 </Panel>
                 <Panel position="bottom-left" className="m-0">
                     <div className="d-flex">
-                        <Button 
-                            variant="outline-secondary flypipe" 
+                        <Button
+                            variant="outline-secondary flypipe"
                             className="search-toggle-button p-2 my-3 py-3 align-self-end"
                             size="sm"
-                            onClick={toggleSearchPanel}>
-                                {showSearchPanel ? <TfiAngleLeft/> : <TfiAngleRight/>}        
+                            onClick={toggleSearchPanel}
+                        >
+                            {showSearchPanel ? (
+                                <TfiAngleLeft />
+                            ) : (
+                                <TfiAngleRight />
+                            )}
                         </Button>
-                        <Controls className="position-relative"/>
+                        <Controls className="position-relative" />
                     </div>
                 </Panel>
                 <Panel position="top-right">
-                    <ExportGraph/>
+                    <ExportGraph />
                 </Panel>
-                
+
                 <Panel position="bottom-center">
-                    <a href="//flypipe.github.io/flypipe/" target="_blank" className="text-secondary text-decoration-none fs-5">Flypipe</a>
+                    <a
+                        href="//flypipe.github.io/flypipe/"
+                        target="_blank"
+                        className="text-secondary text-decoration-none fs-5"
+                    >
+                        Flypipe
+                    </a>
                 </Panel>
-                <MiniMap zoomable pannable/>
+                <MiniMap zoomable pannable />
                 <Background color="#aaa" gap={16} />
             </ReactFlow>
         </div>
