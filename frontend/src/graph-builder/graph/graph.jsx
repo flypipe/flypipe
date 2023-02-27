@@ -101,7 +101,7 @@ const Graph = ({ nodeDefs, tagSuggestions }) => {
             setShowOffcanvas(false);
             const nodes = graph.getNodes();
             const newNodes = nodes.reduce((accumulator, node) => {
-                if (node.id !== editedNode.id) {
+                if (node.id !== editedNode.nodeKey) {
                     return [...accumulator, node];
                 } else {
                     return [

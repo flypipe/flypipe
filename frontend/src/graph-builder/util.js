@@ -120,7 +120,7 @@ const generateCodeTemplate = (graph, nodeData) => {
         predecessors,
         predecessorColumns,
     } = nodeData;
-    const tagList = tags.map((tag) => `'${tag}'`).join(", ");
+    const tagList = tags.map(({ text }) => `'${text}'`).join(", ");
     const parameterList = predecessors
         .map((nodeId) => graph.getNode(nodeId).data.name)
         .join(", ");

@@ -252,12 +252,14 @@ export const EditNode = ({
 
                         <Row>
                             <Col>
-                                <Button
-                                    variant="outline-danger"
-                                    onClick={handleShowDeleteNode}
-                                >
-                                    Delete
-                                </Button>
+                                {!isReadOnly && (
+                                    <Button
+                                        variant="outline-danger"
+                                        onClick={handleShowDeleteNode}
+                                    >
+                                        Delete
+                                    </Button>
+                                )}
                                 <Button
                                     variant="outline-primary"
                                     className="me-2 float-end"

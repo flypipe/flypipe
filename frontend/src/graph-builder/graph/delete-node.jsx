@@ -3,7 +3,12 @@ import { Button, Form, Modal } from "react-bootstrap";
 import { useReactFlow } from "reactflow";
 import { useFormik } from "formik";
 
-export const DeleteNode = ({ id, label, setShowDeleteNode, setEditNode }) => {
+export const DeleteNode = ({
+    nodeKey,
+    label,
+    setShowDeleteNode,
+    setEditNode,
+}) => {
     const [deleteConfirmed, setDeleteConfirmed] = useState(false);
 
     const graph = useReactFlow();
@@ -14,11 +19,10 @@ export const DeleteNode = ({ id, label, setShowDeleteNode, setEditNode }) => {
 
     const formik = useFormik({
         initialValues: {
-            id: id,
+            nodeKey,
         },
         onSubmit: (values) => {
-            // graph.deleteElements([values.id]);
-            const nodes = graph.getNodes().filter((n) => n.id !== id);
+            const nodes = graph.getNodes().filter((n) => n.nodeKey !== nodeKey);
             graph.setNodes(nodes);
             handleClose();
             setEditNode(false);
@@ -47,7 +51,7 @@ export const DeleteNode = ({ id, label, setShowDeleteNode, setEditNode }) => {
                             hidden={true}
                             id="id"
                             name="id"
-                            defaultValue={formik.values.id}
+                            defaultValue={formik.values.nodeKey}
                         />
                         <Button type="submit" variant="outline-danger flypipe">
                             yes

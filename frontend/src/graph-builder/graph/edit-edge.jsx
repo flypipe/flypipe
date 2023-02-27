@@ -91,7 +91,6 @@ export const EditEdge = ({ edge, onClose }) => {
             requestedAllColumns,
             isUnknownColumns: isAvailableColumnsUnknown,
         });
-        // setListChecked(nodeTarget.data.predecessorColumns[nodeSource.data.nodeKey]);
     }, [graph, sourceNode, targetNode, setData]);
 
     const handleSelectAll = useCallback(() => {
@@ -116,7 +115,6 @@ export const EditEdge = ({ edge, onClose }) => {
             ({ isRequested }) => !isRequested
         );
         let requestedAllColumns = data.requestedAllColumns;
-        // debugger;
         if (unselectedColumns.length > 0) {
             requestedAllColumns = false;
         } else if (!data.isUnknownColumns) {
