@@ -62,7 +62,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
                 raise ValueError(
                     f"Node description configured as mandatory but no description provided for node {self.__name__}"
                 )
-            self.description = "No description"
+            self.description = ""
 
         # TODO: enforce tags for now, later validation can be set as optional via environment variable
         self.tags = [self.type, self.node_type.value]

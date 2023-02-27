@@ -16,12 +16,16 @@ class CatalogNode:
     def __init__(self, node):
         self.node = node
         # TODO: it's a little awkward to deal with this node function logic here, is this even the behaviour we want?
-        self.predecessors = [
-            input_node.node.__name__
-            if not isinstance(input_node.node, NodeFunction)
-            else input_node.node.expand(None)[-1].__name__
-            for input_node in node.input_nodes
-        ]
+        self.predecessors = []
+        self.predecessorColumns = {}
+        for input_node in node.input_nodes:
+            if isinstance(input_node.node, NodeFunction):
+                expanded_node = input_node.node.expand(None)[-1]
+                self.predecessors.append(expanded_node.__name__)
+                self.predecessorColumns[expanded_node.__name__] = input_node.selected_columns or []
+            else:
+                self.predecessors.append(input_node.node.__name__)
+                self.predecessorColumns[input_node.node.__name__] = input_node.selected_columns or []
         self.successors = set()
 
     def register_successor(self, successor_node):
@@ -34,14 +38,16 @@ class CatalogNode:
 
     def get_def(self):
         return {
-            "key": self.node.key,
+            "nodeKey": self.node.key,
+            "nodeType": self.node.type,
             "name": self.node.__name__,
             "description": self.node.description,
-            "tags": self.node.tags,
+            "tags": [{"id": tag, "text": tag} for tag in self.node.tags],
             "filePath": self._get_file_path(),
             "importCmd": self._get_import_cmd(),
-            "schema": self._get_schema(),
+            "output": self._get_schema(),
             "predecessors": self.predecessors,
+            "predecessorColumns": self.predecessorColumns,
             "successors": sorted(list(self.successors)),
             "sourceCode": self._get_source_code(),
         }
@@ -68,11 +74,15 @@ class CatalogNode:
 
     def _get_schema(self):
         if self.node.output_schema:
-            return [column.name for column in self.node.output_schema.columns]
+            return [{
+                'column': column.name,
+                'type': column.type.name,
+                'description': column.description,
+            } for column in self.node.output_schema.columns]
         return []
 
     def _get_source_code(self):
-        return inspect.getsource(self.node)
+        return inspect.getsource(self.node.function)
 
 
 class Catalog:

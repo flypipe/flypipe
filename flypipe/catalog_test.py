@@ -1,32 +1,50 @@
+import inspect
 from pathlib import Path
 import pandas as pd
 from flypipe.catalog import Catalog
 from flypipe import node, node_function
 from flypipe.config import config_context
 from flypipe.schema import Schema, Column
-from flypipe.schema.types import String
-
-
-@node(type="pandas", tags=["train"])
-def t1():
-    return pd.DataFrame({"c1": [1, 2, 3]})
+from flypipe.schema.types import String, Integer
 
 
 @node(
     type="pandas",
-    dependencies=[t1],
-    tags=["train", "test"],
-    output=Schema([Column("c1", String(), "bla")]),
+    tags=["train"],
+    description="Description for t1",
+    output=Schema(
+        [
+            Column("c1", String(), "c1 desc"),
+            Column("c2", String(), "c2 desc"),
+            Column("c3", Integer(), "c3 desc"),
+        ]
+    ),
 )
-def t2(t1):
-    return t1
+def t1():
+    return pd.DataFrame(
+        {
+            "c1": ["a", "b", "a"],
+            "c2": ["bla", "bla", "bla"],
+            "c3": [2, 1, 3],
+        }
+    )
+
+
+@node(
+    type="pandas",
+    dependencies=[t1.select("c2", "c3").alias("df")],
+    description="Description for t2",
+    tags=["train", "test"],
+    output=Schema([Column("c2", String(), "c2 desc")]),
+)
+def t2(df):
+    return df["c2"]
 
 
 @node(
     type="pandas",
     dependencies=[t1],
     tags=["misc"],
-    output=Schema([Column("c1", String(), "bla")]),
 )
 def t3(t1):
     return t1
@@ -73,37 +91,69 @@ class TestCatalog:
         catalog.register_node(t3)
         assert catalog.get_node_defs() == [
             {
-                "description": "No description",
+                "description": "Description for t2",
                 "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t2",
-                "key": "flypipe_catalog_test_function_t2_t2",
+                "nodeKey": "flypipe_catalog_test_function_t2_t2",
+                "nodeType": "pandas",
                 "name": "t2",
                 "predecessors": ["t1"],
-                "schema": ["c1"],
+                "predecessorColumns": {
+                    "t1": ['c2', 'c3']
+                },
+                "output": [
+                    {"column": "c2", "type": "String", "description": "c2 desc"},
+                ],
                 "successors": [],
-                "tags": ["pandas", "Transformation", "train", "test"],
+                "tags": [
+                    {"id": "pandas", "text": "pandas"},
+                    {"id": "Transformation", "text": "Transformation"},
+                    {"id": "train", "text": "train"},
+                    {"id": "test", "text": "test"},
+                ],
+                "sourceCode": inspect.getsource(t2.function),
             },
             {
-                "description": "No description",
+                "description": "Description for t1",
                 "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t1",
-                "key": "flypipe_catalog_test_function_t1_t1",
+                "nodeKey": "flypipe_catalog_test_function_t1_t1",
+                "nodeType": "pandas",
                 "name": "t1",
                 "predecessors": [],
-                "schema": [],
+                "predecessorColumns": {},
+                "output": [
+                    {"column": "c1", "type": "String", "description": "c1 desc"},
+                    {"column": "c2", "type": "String", "description": "c2 desc"},
+                    {"column": "c3", "type": "Integer", "description": "c3 desc"},
+                ],
                 "successors": ["t2", "t3"],
-                "tags": ["pandas", "Transformation", "train"],
+                "tags": [
+                    {"id": "pandas", "text": "pandas"},
+                    {"id": "Transformation", "text": "Transformation"},
+                    {"id": "train", "text": "train"},
+                ],
+                "sourceCode": inspect.getsource(t1.function),
             },
             {
-                "description": "No description",
+                "description": "",
                 "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t3",
-                "key": "flypipe_catalog_test_function_t3_t3",
+                "nodeKey": "flypipe_catalog_test_function_t3_t3",
+                "nodeType": "pandas",
                 "name": "t3",
                 "predecessors": ["t1"],
-                "schema": ["c1"],
+                "predecessorColumns": {
+                    "t1": []
+                },
+                "output": [],
                 "successors": [],
-                "tags": ["pandas", "Transformation", "misc"],
+                "tags": [
+                    {"id": "pandas", "text": "pandas"},
+                    {"id": "Transformation", "text": "Transformation"},
+                    {"id": "misc", "text": "misc"},
+                ],
+                "sourceCode": inspect.getsource(t3.function),
             },
         ]
 
@@ -150,49 +200,83 @@ class TestCatalog:
         catalog.register_node(t4)
         assert catalog.get_node_defs() == [
             {
-                "description": "No description",
+                "description": "",
                 "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t4",
-                "key": "flypipe_catalog_test_function_t4_TestCatalog_test_register_node_function__locals__t4",
+                "nodeKey": "flypipe_catalog_test_function_t4_TestCatalog_test_register_node_function__locals__t4",
+                "nodeType": "pandas",
                 "name": "t4",
                 "predecessors": ["t3"],
-                "schema": [],
+                "predecessorColumns": {
+                    "t3": []
+                },
+                "output": [],
                 "successors": [],
-                "tags": ["pandas", "Transformation"],
+                "tags": [
+                    {"id": "pandas", "text": "pandas"},
+                    {"id": "Transformation", "text": "Transformation"},
+                ],
+                "sourceCode": inspect.getsource(t4.function)
             },
             {
-                "description": "No description",
+                "description": "",
                 "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t3",
-                "key": "flypipe_catalog_test_function_t3_TestCatalog_test_register_node_function__locals__get_nodes__"
+                "nodeKey": "flypipe_catalog_test_function_t3_TestCatalog_test_register_node_function__locals__get_nodes__"
                 "locals__t3",
+                "nodeType": "pandas",
                 "name": "t3",
                 "predecessors": ["t2"],
-                "schema": [],
+                "predecessorColumns": {
+                    "t2": []
+                },
+                "output": [],
                 "successors": ["t4"],
-                "tags": ["pandas", "Transformation"],
+                "tags": [
+                    {"id": "pandas", "text": "pandas"},
+                    {"id": "Transformation", "text": "Transformation"},
+                ],
+                "sourceCode": '            @node(type="pandas", dependencies=[t2])\n'
+                "            def t3(t2):\n"
+                "                return t2\n",
             },
             {
-                "description": "No description",
+                "description": "",
                 "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t2",
-                "key": "flypipe_catalog_test_function_t2_TestCatalog_test_register_node_function__locals__get_nodes__"
+                "nodeKey": "flypipe_catalog_test_function_t2_TestCatalog_test_register_node_function__locals__get_nodes__"
                 "locals__t2",
+                "nodeType": "pandas",
                 "name": "t2",
                 "predecessors": ["t1"],
-                "schema": [],
+                "predecessorColumns": {
+                    "t1": []
+                },
+                "output": [],
                 "successors": ["t3"],
-                "tags": ["pandas", "Transformation"],
+                "tags": [
+                    {"id": "pandas", "text": "pandas"},
+                    {"id": "Transformation", "text": "Transformation"},
+                ],
+                "sourceCode": '            @node(type="pandas", dependencies=[t1])\n'
+                "            def t2(t1):\n"
+                "                return t1\n",
             },
             {
-                "description": "No description",
+                "description": "",
                 "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t1",
-                "key": "flypipe_catalog_test_function_t1_TestCatalog_test_register_node_function__locals__t1",
+                "nodeKey": "flypipe_catalog_test_function_t1_TestCatalog_test_register_node_function__locals__t1",
+                "nodeType": "pandas",
                 "name": "t1",
                 "predecessors": [],
-                "schema": [],
+                "predecessorColumns": {},
+                "output": [],
                 "successors": ["t2"],
-                "tags": ["pandas", "Transformation"],
+                "tags": [
+                    {"id": "pandas", "text": "pandas"},
+                    {"id": "Transformation", "text": "Transformation"},
+                ],
+                "sourceCode": inspect.getsource(t1.function)
             },
         ]
