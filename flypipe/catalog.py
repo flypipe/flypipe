@@ -22,10 +22,14 @@ class CatalogNode:
             if isinstance(input_node.node, NodeFunction):
                 expanded_node = input_node.node.expand(None)[-1]
                 self.predecessors.append(expanded_node.__name__)
-                self.predecessorColumns[expanded_node.__name__] = input_node.selected_columns or []
+                self.predecessorColumns[expanded_node.__name__] = (
+                    input_node.selected_columns or []
+                )
             else:
                 self.predecessors.append(input_node.node.__name__)
-                self.predecessorColumns[input_node.node.__name__] = input_node.selected_columns or []
+                self.predecessorColumns[input_node.node.__name__] = (
+                    input_node.selected_columns or []
+                )
         self.successors = set()
 
     def register_successor(self, successor_node):
@@ -74,11 +78,14 @@ class CatalogNode:
 
     def _get_schema(self):
         if self.node.output_schema:
-            return [{
-                'column': column.name,
-                'type': column.type.name,
-                'description': column.description,
-            } for column in self.node.output_schema.columns]
+            return [
+                {
+                    "column": column.name,
+                    "type": column.type.name,
+                    "description": column.description,
+                }
+                for column in self.node.output_schema.columns
+            ]
         return []
 
     def _get_source_code(self):
@@ -113,11 +120,18 @@ class Catalog:
         return get_template("catalog.html").render(
             js_bundle=js_bundle,
             nodes=json.dumps(self.get_node_defs()),
-            count_boxes=json.dumps(self.get_count_box_defs()),
+            tagSuggestions=json.dumps(self.get_tag_suggestions()),
         )
 
     def get_node_defs(self):
         return [node.get_def() for node in self.nodes.values()]
+
+    def get_tag_suggestions(self):
+        all_tags = set()
+        for catalog_node in self.nodes.values():
+            node = catalog_node.node
+            all_tags = all_tags.union(set(node.tags))
+        return [{"id": tag, "text": tag} for tag in sorted(list(all_tags))]
 
     def get_count_box_defs(self):
         """

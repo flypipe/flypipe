@@ -98,9 +98,7 @@ class TestCatalog:
                 "nodeType": "pandas",
                 "name": "t2",
                 "predecessors": ["t1"],
-                "predecessorColumns": {
-                    "t1": ['c2', 'c3']
-                },
+                "predecessorColumns": {"t1": ["c2", "c3"]},
                 "output": [
                     {"column": "c2", "type": "String", "description": "c2 desc"},
                 ],
@@ -143,9 +141,7 @@ class TestCatalog:
                 "nodeType": "pandas",
                 "name": "t3",
                 "predecessors": ["t1"],
-                "predecessorColumns": {
-                    "t1": []
-                },
+                "predecessorColumns": {"t1": []},
                 "output": [],
                 "successors": [],
                 "tags": [
@@ -207,16 +203,14 @@ class TestCatalog:
                 "nodeType": "pandas",
                 "name": "t4",
                 "predecessors": ["t3"],
-                "predecessorColumns": {
-                    "t3": []
-                },
+                "predecessorColumns": {"t3": []},
                 "output": [],
                 "successors": [],
                 "tags": [
                     {"id": "pandas", "text": "pandas"},
                     {"id": "Transformation", "text": "Transformation"},
                 ],
-                "sourceCode": inspect.getsource(t4.function)
+                "sourceCode": inspect.getsource(t4.function),
             },
             {
                 "description": "",
@@ -227,9 +221,7 @@ class TestCatalog:
                 "nodeType": "pandas",
                 "name": "t3",
                 "predecessors": ["t2"],
-                "predecessorColumns": {
-                    "t2": []
-                },
+                "predecessorColumns": {"t2": []},
                 "output": [],
                 "successors": ["t4"],
                 "tags": [
@@ -249,9 +241,7 @@ class TestCatalog:
                 "nodeType": "pandas",
                 "name": "t2",
                 "predecessors": ["t1"],
-                "predecessorColumns": {
-                    "t1": []
-                },
+                "predecessorColumns": {"t1": []},
                 "output": [],
                 "successors": ["t3"],
                 "tags": [
@@ -277,6 +267,18 @@ class TestCatalog:
                     {"id": "pandas", "text": "pandas"},
                     {"id": "Transformation", "text": "Transformation"},
                 ],
-                "sourceCode": inspect.getsource(t1.function)
+                "sourceCode": inspect.getsource(t1.function),
             },
+        ]
+
+    def test_get_tag_suggestions(self):
+        catalog = Catalog()
+        catalog.register_node(t2)
+        catalog.register_node(t3)
+        assert catalog.get_tag_suggestions() == [
+            {"id": "Transformation", "text": "Transformation"},
+            {"id": "misc", "text": "misc"},
+            {"id": "pandas", "text": "pandas"},
+            {"id": "test", "text": "test"},
+            {"id": "train", "text": "train"},
         ]

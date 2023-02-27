@@ -4,8 +4,8 @@
     <body>
         <div id="root"></div>
         <script>
-            window.count_boxes = {{ count_boxes | safe }}
             window.nodes = {{ nodes | safe }};
+            window.tagSuggestions = {{ tagSuggestions | safe }};
         </script>
         <script>{{ js_bundle|safe }}</script>
     </body>
