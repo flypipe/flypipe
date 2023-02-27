@@ -1,4 +1,10 @@
-import React, { useCallback, useRef, useState, useContext } from "react";
+import React, {
+    useCallback,
+    useRef,
+    useState,
+    useContext,
+    useEffect,
+} from "react";
 import Search from "../search/search";
 import ReactFlow, {
     useReactFlow,
@@ -19,6 +25,7 @@ import ExportGraph from "./export-graph";
 import Tooltip from "../../tooltip";
 import { NotificationContext } from "../../context";
 import uuid from "react-uuid";
+import { GraphContext } from "./graph-context";
 
 // TODO- get rid of this index when we introduce the new node modal
 let NEW_NODE_INDEX = 1;
@@ -28,21 +35,13 @@ const NODE_TYPES = {
     "flypipe-node-new": NewNode,
 };
 
-const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
-    const [editNode, setEditNode] = useState(null);
-    const [showEditNode, setShowEditNode] = useState(false);
-    const [editEdge, setEditEdge] = useState(false);
-    const [showEditEdge, setShowEditEdge] = useState(false);
+const Graph = ({ nodeDefs, tagSuggestions }) => {
+    const { currentGraphObject, setCurrentGraphObject } =
+        useContext(GraphContext);
     const { setNewMessage } = useContext(NotificationContext);
+    const [showOffcanvas, setShowOffcanvas] = useState(false);
 
     const graph = useReactFlow();
-    const nodeDefs = nodeDefsList.reduce(
-        (accumulator, nodeDef) => ({
-            ...accumulator,
-            [nodeDef.nodeKey]: nodeDef,
-        }),
-        {}
-    );
 
     const graphDiv = useRef(null);
 
@@ -68,21 +67,24 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
         refreshNodePositions(graph);
         moveToNode(graph, newNodeId);
 
-        setEditNode(newNode);
-        setShowEditNode(true);
+        setCurrentGraphObject({
+            object: newNode,
+            type: "node",
+        });
         setNewMessage({
             msgId: uuid(),
             message: `New node ${newNode.data.label} added to the graph`,
         });
-    }, [graph, setNewMessage]);
+    }, [graph, setNewMessage, setCurrentGraphObject]);
 
     const onNodeClick = useCallback(
         (event, node) => {
-            setEditNode(node);
-            setShowEditNode(true);
-            setShowEditEdge(false);
+            setCurrentGraphObject({
+                object: node,
+                type: "node",
+            });
         },
-        [setEditNode, setShowEditNode, setShowEditEdge]
+        [setCurrentGraphObject]
     );
 
     // Show/Hide Search Panel
@@ -92,11 +94,11 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
     }, [setShowSearchPanel]);
 
     const handleCloseEditNode = useCallback(() => {
-        setShowEditNode(false);
-    }, [setShowEditNode]);
+        setShowOffcanvas(false);
+    }, [setShowOffcanvas]);
     const handleSaveEditNode = useCallback(
         (editedNode) => {
-            setShowEditNode(false);
+            setShowOffcanvas(false);
             const nodes = graph.getNodes();
             const newNodes = nodes.reduce((accumulator, node) => {
                 if (node.id !== editedNode.id) {
@@ -110,36 +112,44 @@ const Graph = ({ nodeDefs: nodeDefsList, tagSuggestions }) => {
             }, []);
             graph.setNodes(newNodes);
         },
-        [setShowEditNode]
+        [setShowOffcanvas]
     );
 
     const onEdgeClick = useCallback(
         (event, edge) => {
-            setEditEdge(edge);
-            setShowEditEdge(true);
-            setShowEditNode(false);
+            setCurrentGraphObject({
+                object: edge,
+                type: "edge",
+            });
         },
-        [setEditEdge, setShowEditEdge, setShowEditNode]
+        [setCurrentGraphObject]
     );
 
+    useEffect(() => {
+        setShowOffcanvas(true);
+    }, [currentGraphObject.object, setShowOffcanvas]);
+
     const handleCloseEditEdge = useCallback(() => {
-        setShowEditEdge(false);
-    }, [setShowEditEdge]);
+        setShowOffcanvas(false);
+    }, [setShowOffcanvas]);
 
     return (
         <div className="layoutflow d-flex w-100 h-100" ref={graphDiv}>
-            {showEditEdge && (
-                <EditEdge edge={editEdge} onClose={handleCloseEditEdge} />
+            {showOffcanvas && currentGraphObject.type === "edge" && (
+                <EditEdge
+                    edge={currentGraphObject.object}
+                    onClose={handleCloseEditEdge}
+                />
             )}
-            {showEditNode && (
+            {showOffcanvas && currentGraphObject.type === "node" && (
                 <EditNode
-                    node={editNode}
+                    node={currentGraphObject.object}
                     tagSuggestions={tagSuggestions}
                     onClose={handleCloseEditNode}
                     onSave={handleSaveEditNode}
                 />
             )}
-            {showSearchPanel && <Search nodes={nodeDefsList} />}
+            {showSearchPanel && <Search nodes={nodeDefs} />}
             <ReactFlow
                 defaultNodes={[]}
                 defaultEdges={[]}

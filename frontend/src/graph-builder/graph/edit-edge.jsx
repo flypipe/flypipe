@@ -13,8 +13,7 @@ import { useReactFlow } from "reactflow";
 import { deleteEdge } from "../util";
 
 export const EditEdge = ({ edge, onClose }) => {
-    const [allChecked, setAllChecked] = useState(false);
-    const [listChecked, setListChecked] = useState([]);
+    const isReadOnly = !edge.isNew;
     const [data, setData] = useState({
         columns: [],
         requestedAllColumns: false,
@@ -167,69 +166,75 @@ export const EditEdge = ({ edge, onClose }) => {
             className="node"
         >
             <Offcanvas.Header closeButton={false} className="node">
-                <Offcanvas.Title>Edit Edge</Offcanvas.Title>
+                <Offcanvas.Title>
+                    {isReadOnly ? "View Edge" : "Edit Edge"}
+                </Offcanvas.Title>
             </Offcanvas.Header>
             <Offcanvas.Body>
+                <h6>Source: {sourceNode.data.label}</h6>
+                <h6>Target: {targetNode.data.label}</h6>
                 <h6>Requested Columns</h6>
                 <Form>
-                    <Form.Check
-                        key="all"
-                        type="checkbox"
-                        label="all columns"
-                        checked={data.requestedAllColumns}
-                        onChange={handleSelectAll}
-                        disabled={data.requestedAllColumns}
-                    />
-                    {data.columns.map(({ column, isRequested }) => (
+                    <fieldset disabled={isReadOnly}>
                         <Form.Check
-                            key={column}
+                            key="all"
                             type="checkbox"
-                            id={column}
-                            label={column}
-                            checked={isRequested}
-                            onChange={handleSelectColumn}
+                            label="all columns"
+                            checked={data.requestedAllColumns}
+                            onChange={handleSelectAll}
+                            disabled={data.requestedAllColumns}
                         />
-                    ))}
-                    {data.isUnknownColumns && (
-                        <>
+                        {data.columns.map(({ column, isRequested }) => (
                             <Form.Check
-                                key="otherColumns"
+                                key={column}
                                 type="checkbox"
-                                label="(unknown columns)"
-                                checked={data.requestedAllColumns}
-                                disabled
+                                id={column}
+                                label={column}
+                                checked={isRequested}
+                                onChange={handleSelectColumn}
                             />
-                            <br />
-                            <Alert variant="warning">
-                                {`Source node ${sourceNode.data.label} does not define an output schema, any available column suggestions are drawn from existing requested columns. There are potentially more columns available to be queried which are denoted by the 'unknown columns' box.`}
-                            </Alert>
-                        </>
-                    )}
+                        ))}
+                        {data.isUnknownColumns && (
+                            <>
+                                <Form.Check
+                                    key="otherColumns"
+                                    type="checkbox"
+                                    label="(unknown columns)"
+                                    checked={data.requestedAllColumns}
+                                    disabled
+                                />
+                                <br />
+                                <Alert variant="warning">
+                                    {`Source node ${sourceNode.data.label} does not define an output schema, any available column suggestions are drawn from existing requested columns. There are potentially more columns available to be queried which are denoted by the 'unknown columns' box.`}
+                                </Alert>
+                            </>
+                        )}
 
-                    <Row className="mt-4">
-                        <Col>
-                            <Button
-                                variant="outline-danger"
-                                onClick={handleDelete}
-                            >
-                                Delete
-                            </Button>
-                            <Button
-                                variant="outline-primary"
-                                className="me-2 float-end"
-                                onClick={handleSave}
-                            >
-                                Save
-                            </Button>
-                            <Button
-                                variant="outline-secondary flypipe"
-                                className="me-2 float-end"
-                                onClick={handleClose}
-                            >
-                                Close
-                            </Button>
-                        </Col>
-                    </Row>
+                        <Row className="mt-4">
+                            <Col>
+                                <Button
+                                    variant="outline-danger"
+                                    onClick={handleDelete}
+                                >
+                                    Delete
+                                </Button>
+                                <Button
+                                    variant="outline-primary"
+                                    className="me-2 float-end"
+                                    onClick={handleSave}
+                                >
+                                    Save
+                                </Button>
+                                <Button
+                                    variant="outline-secondary flypipe"
+                                    className="me-2 float-end"
+                                    onClick={handleClose}
+                                >
+                                    Close
+                                </Button>
+                            </Col>
+                        </Row>
+                    </fieldset>
                 </Form>
             </Offcanvas.Body>
         </Offcanvas>

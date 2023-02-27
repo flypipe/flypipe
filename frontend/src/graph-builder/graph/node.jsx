@@ -17,11 +17,13 @@ import classNames from "classnames";
 import textFit from "textfit";
 import { GrNew } from "react-icons/gr";
 import { NotificationContext } from "../../context";
+import { GraphContext } from "./graph-context";
 
 const BaseNode = ({ data, isNewNode }) => {
     const graph = useReactFlow();
     const { nodeType, label } = data;
     const { addNotification } = useContext(NotificationContext);
+    const { setCurrentGraphObject } = useContext(GraphContext);
 
     const handleConnect = useCallback(
         ({ source, target }) => {
@@ -37,8 +39,12 @@ const BaseNode = ({ data, isNewNode }) => {
             addNotification(
                 `Dependency on ${sourceLabel} added to ${targetLabel}`
             );
+            setCurrentGraphObject({
+                object: edge,
+                type: "edge",
+            });
         },
-        [graph, addNotification]
+        [graph, addNotification, setCurrentGraphObject]
     );
 
     const color = useMemo(() => {
@@ -84,7 +90,7 @@ const BaseNode = ({ data, isNewNode }) => {
     }, [isNewNode]);
 
     const onCheckValidConnection = useCallback(
-        ({ source, target }) => {
+        ({ target }) => {
             return graph.getNode(target).data.isNew;
         },
         [graph]

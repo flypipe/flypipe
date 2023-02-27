@@ -2,8 +2,6 @@ import dagre from "dagre";
 import { ANIMATION_SPEED, DEFAULT_ZOOM } from "./graph/config";
 import { MarkerType } from "reactflow";
 
-// This isn't the actual node width which appears to be dynamically calculated. It's a width that we must give for
-// the dagre layout calculation.
 export const NODE_WIDTH = 250;
 export const NODE_HEIGHT = 75;
 
@@ -82,6 +80,7 @@ const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
                 if (!edgeKeys.has(edgeKey)) {
                     const edge = {
                         id: edgeKey,
+                        isNew: false,
                         source: current.nodeKey,
                         target: successor,
                     };
@@ -113,11 +112,30 @@ const moveToNode = (graph, nodeId) => {
 };
 
 const generateCodeTemplate = (graph, nodeData) => {
-    const { name, nodeType, description, tags, predecessors, predecessors2 } =
-        nodeData;
+    const {
+        name,
+        nodeType,
+        description,
+        tags,
+        predecessors,
+        predecessorColumns,
+    } = nodeData;
     const tagList = tags.map((tag) => `'${tag}'`).join(", ");
-    const dependencyList = predecessors
+    const parameterList = predecessors
         .map((nodeId) => graph.getNode(nodeId).data.name)
+        .join(", ");
+    const dependencyList = predecessors
+        .map((nodeId) => {
+            const name = graph.getNode(nodeId).data.name;
+            if (predecessorColumns[nodeId].length > 0) {
+                const selectedColumns = predecessorColumns[nodeId]
+                    .map((column) => `'${column}'`)
+                    .join(", ");
+                return `${name}.select(${selectedColumns})`;
+            } else {
+                return name;
+            }
+        })
         .join(", ");
     return `from flypipe import node
     
@@ -127,7 +145,7 @@ const generateCodeTemplate = (graph, nodeData) => {
     tags=[${tagList}],
     dependencies=[${dependencyList}]
 )
-def ${name}(${dependencyList}):
+def ${name}(${parameterList}):
     # <implement logic here>
 `;
 };
@@ -184,6 +202,7 @@ const consolidateEdge = (graph, edge) => {
 
     const otherEdges = graph.getEdges().filter(({ id }) => id !== edge.id);
     edge.id = `${edge.source}-${edge.target}`;
+    edge.isNew = true;
     edge.markerEnd = {
         type: MarkerType.ArrowClosed,
         width: 20,
