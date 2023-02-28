@@ -1,11 +1,15 @@
 import os
 import inspect
 import json
+import logging
 from pathlib import Path
 
 from flypipe.config import get_config
 from flypipe.node_function import NodeFunction
 from flypipe.template import get_template
+
+
+logger = logging.getLogger(__name__)
 
 
 class CatalogNode:
@@ -113,7 +117,7 @@ class Catalog:
             for input_node in node.input_nodes:
                 self.register_node(input_node.node, node)
 
-    def html(self):
+    def html(self, height=1000):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         with open(os.path.join(dir_path, "js/bundle.js"), "r", encoding="utf-8") as f:
             js_bundle = f.read()
@@ -121,6 +125,7 @@ class Catalog:
             js_bundle=js_bundle,
             nodes=json.dumps(self.get_node_defs()),
             tagSuggestions=json.dumps(self.get_tag_suggestions()),
+            height=height,
         )
 
     def get_node_defs(self):

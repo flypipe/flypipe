@@ -92,7 +92,7 @@ const Search = ({ nodes }) => {
     );
 
     return (
-        <div id="search" className="p-2 col-md-auto search-result">
+        <div id="search" className="p-2 search-result">
             <div className="form-outline">
                 <input
                     type="search"
