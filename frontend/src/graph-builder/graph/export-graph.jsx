@@ -2,6 +2,7 @@ import React, { useEffect, useCallback, useContext } from "react";
 import { BsDownload } from "react-icons/bs";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import { CopyToClipboard } from "react-copy-to-clipboard";
+import copy from "copy-to-clipboard";
 import { Button } from "react-bootstrap";
 import { useReactFlow } from "reactflow";
 import Tooltip from "../../tooltip";
@@ -36,7 +37,7 @@ const ExportGraph = () => {
             )}`,
         });
 
-        navigator.clipboard.writeText(newNodesSourceCode.join("\n\n"));
+        copy(newNodesSourceCode.join("\n\n"));
     }, [graph]);
 
     return (

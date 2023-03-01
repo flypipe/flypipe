@@ -57,7 +57,7 @@ const BaseNode = ({ data, isNewNode }) => {
             "px-4",
             "py-2",
             "rounded",
-            nodeClass,
+            nodeClass
         )
     );
 
@@ -95,9 +95,9 @@ const BaseNode = ({ data, isNewNode }) => {
             />
             <div
                 className={klass}
-                style={{ 
-                    width: NODE_WIDTH, 
-                    height: NODE_HEIGHT 
+                style={{
+                    width: NODE_WIDTH,
+                    height: NODE_HEIGHT,
                 }}
             >
                 <p

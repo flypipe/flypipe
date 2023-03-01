@@ -21,11 +21,11 @@ const filterDefs = [
         title: "Description",
     },
     {
-        name: "schema",
+        name: "output.column",
         title: "Schema",
     },
     {
-        name: "tags",
+        name: "tags.text",
         title: "Tags",
     },
 ];
@@ -92,8 +92,8 @@ const Search = ({ nodes }) => {
     );
 
     return (
-        <div id="search" className="p-2 search-result">
-            <div className="form-outline">
+        <div id="search" className="search-result">
+            <div className="form-outline p-2">
                 <input
                     type="search"
                     className="form-control"

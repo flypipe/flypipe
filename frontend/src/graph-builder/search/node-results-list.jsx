@@ -102,17 +102,15 @@ const NodeResultsList = ({ nodes, allNodes }) => {
     };
 
     return (
-        <div className="list-group list-group-flush overflow-auto list-group-flypipe pb-2">
-            {currentNodes.map(
-                (node, i) => (
-                    <Node
-                        key={`node-list-item-${i}`}
-                        node={node}
-                        isInGraphBuilder={graphBuilderNodes.has(node.nodeKey)}
-                        handleClickGraphBuilder={handleClickGraphBuilder}
-                    />
-                )
-            )}
+        <div className="list-group list-group-flush overflow-auto list-group-flypipe">
+            {currentNodes.map((node, i) => (
+                <Node
+                    key={`node-list-item-${i}`}
+                    node={node}
+                    isInGraphBuilder={graphBuilderNodes.has(node.nodeKey)}
+                    handleClickGraphBuilder={handleClickGraphBuilder}
+                />
+            ))}
             <Pagination
                 maxPage={maxPage}
                 pageGroupSize={SEARCH_PAGE_GROUP_SIZE}

@@ -1,7 +1,15 @@
 import React from "react";
 import Select from "react-select";
 
-export default ({ id, name, onChange, options, value, className, isOptionDisabled }) => {
+export default ({
+    id,
+    name,
+    onChange,
+    options,
+    value,
+    className,
+    isOptionDisabled,
+}) => {
     const defaultValue = (options, value) => {
         return options ? options.find((option) => option.value === value) : "";
     };

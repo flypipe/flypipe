@@ -10,7 +10,7 @@ const GraphBuilder = () => {
         <ReactFlowProvider>
             <GraphContextProvider>
                 <NodeDetailsContextProvider>
-                    <NodeDetails/>
+                    <NodeDetails />
                     <div className="col">
                         <div>
                             <Graph

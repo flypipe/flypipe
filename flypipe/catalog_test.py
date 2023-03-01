@@ -109,7 +109,8 @@ class TestCatalog:
                     {"id": "train", "text": "train"},
                     {"id": "test", "text": "test"},
                 ],
-                "sourceCode": inspect.getsource(t2.function),
+                "sourceCode": inspect.getsource(inspect.getmodule(t2.function)),
+                "isActive": True,
             },
             {
                 "description": "Description for t1",
@@ -131,7 +132,8 @@ class TestCatalog:
                     {"id": "Transformation", "text": "Transformation"},
                     {"id": "train", "text": "train"},
                 ],
-                "sourceCode": inspect.getsource(t1.function),
+                "sourceCode": inspect.getsource(inspect.getmodule(t1.function)),
+                "isActive": True,
             },
             {
                 "description": "",
@@ -149,7 +151,8 @@ class TestCatalog:
                     {"id": "Transformation", "text": "Transformation"},
                     {"id": "misc", "text": "misc"},
                 ],
-                "sourceCode": inspect.getsource(t3.function),
+                "sourceCode": inspect.getsource(inspect.getmodule(t3.function)),
+                "isActive": True,
             },
         ]
 
@@ -210,7 +213,8 @@ class TestCatalog:
                     {"id": "pandas", "text": "pandas"},
                     {"id": "Transformation", "text": "Transformation"},
                 ],
-                "sourceCode": inspect.getsource(t4.function),
+                "sourceCode": inspect.getsource(inspect.getmodule(t4.function)),
+                "isActive": True,
             },
             {
                 "description": "",
@@ -227,9 +231,8 @@ class TestCatalog:
                     {"id": "pandas", "text": "pandas"},
                     {"id": "Transformation", "text": "Transformation"},
                 ],
-                "sourceCode": '            @node(type="pandas", dependencies=[t2])\n'
-                "            def t3(t2):\n"
-                "                return t2\n",
+                "sourceCode": inspect.getsource(inspect.getmodule(t3.function)),
+                "isActive": True,
             },
             {
                 "description": "",
@@ -246,9 +249,8 @@ class TestCatalog:
                     {"id": "pandas", "text": "pandas"},
                     {"id": "Transformation", "text": "Transformation"},
                 ],
-                "sourceCode": '            @node(type="pandas", dependencies=[t1])\n'
-                "            def t2(t1):\n"
-                "                return t1\n",
+                "sourceCode": inspect.getsource(inspect.getmodule(t2.function)),
+                "isActive": True,
             },
             {
                 "description": "",
@@ -265,7 +267,8 @@ class TestCatalog:
                     {"id": "pandas", "text": "pandas"},
                     {"id": "Transformation", "text": "Transformation"},
                 ],
-                "sourceCode": inspect.getsource(t1.function),
+                "sourceCode": inspect.getsource(inspect.getmodule(t1.function)),
+                "isActive": True,
             },
         ]
 

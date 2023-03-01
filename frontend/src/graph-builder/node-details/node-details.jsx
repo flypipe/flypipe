@@ -11,10 +11,11 @@ import { NodeDetailsContext } from "./context";
 // Beware that nodeData is from form state not a state variable, this form state does not change object reference when
 // it's changed so any usage of nodeData for memoisation must be on individual attributes.
 export const NodeDetails = () => {
-    const {nodeDetailsState, setNodeDetailsState} = useContext(NodeDetailsContext);
+    const { nodeDetailsState, setNodeDetailsState } =
+        useContext(NodeDetailsContext);
     const { newMessage, setNewMessage } = useContext(NotificationContext);
     const graph = useReactFlow();
-    const {nodeData, visible} = nodeDetailsState;
+    const { nodeData, visible } = nodeDetailsState;
 
     const handleCopy = useCallback(
         (data) => {
@@ -41,7 +42,7 @@ export const NodeDetails = () => {
 
     const nodeTypeColorClass = getNodeTypeColorClass(nodeData.nodeType);
     const handleClose = useCallback(() => {
-        setNodeDetailsState(prevState => ({...prevState, visible: false}));
+        setNodeDetailsState((prevState) => ({ ...prevState, visible: false }));
     }, [setNodeDetailsState]);
 
     return (
@@ -53,7 +54,10 @@ export const NodeDetails = () => {
             <Modal.Header closeButton>
                 <Modal.Title>
                     {nodeData.label}
-                    <Badge bg={nodeTypeColorClass} className="ms-2 fs-6 fw-light fw-light">
+                    <Badge
+                        bg={nodeTypeColorClass}
+                        className="ms-2 fs-6 fw-light fw-light"
+                    >
                         {nodeData.nodeType}
                     </Badge>
                     <Badge bg="dark" className="ms-2 fs-6 fw-light fw-light">
@@ -64,7 +68,11 @@ export const NodeDetails = () => {
             <Modal.Body>
                 <div>
                     <span>Tags: </span>
-                    {nodeData.tags.map(({id, text}) => <Badge key={id} bg="light" className="ms-2" text="dark">{text}</Badge>)}
+                    {nodeData.tags.map(({ id, text }) => (
+                        <Badge key={id} bg="light" className="ms-2" text="dark">
+                            {text}
+                        </Badge>
+                    ))}
                 </div>
                 <div>
                     <span>Location:</span>

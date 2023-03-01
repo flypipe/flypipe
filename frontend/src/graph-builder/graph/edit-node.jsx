@@ -71,7 +71,6 @@ export const EditNode = ({
 
     const { openNodeDetails } = useContext(NodeDetailsContext);
     const onClickMoreInfo = useCallback(() => {
-        debugger;
         openNodeDetails(formState.values);
     }, [openNodeDetails, formState]);
 
@@ -112,15 +111,15 @@ export const EditNode = ({
                     </Offcanvas.Title>
                 </Offcanvas.Header>
                 <Offcanvas.Body>
-                    <p>
+                    <div className="d-flex justify-content-between">
                         <span className="fw-semibold">Status</span>
                         <Badge
-                            bg="success float-end"
-                            className="text-uppercase"
+                            bg="dark"
+                            className="ms-2 fs-6 fw-light fw-light"
                         >
-                            active
+                            {node.data.isActive ? "ACTIVE" : "SKIPPED"}
                         </Badge>
-                    </p>
+                    </div>
 
                     <Form onSubmit={formState.handleSubmit}>
                         <fieldset disabled={isReadOnly}>
@@ -251,13 +250,15 @@ export const EditNode = ({
                                 >
                                     Delete
                                 </Button>
-                                {!isReadOnly && <Button
-                                    variant="outline-primary"
-                                    className="me-2 float-end"
-                                    type="submit"
-                                >
-                                    Save
-                                </Button>}
+                                {!isReadOnly && (
+                                    <Button
+                                        variant="outline-primary"
+                                        className="me-2 float-end"
+                                        type="submit"
+                                    >
+                                        Save
+                                    </Button>
+                                )}
                                 <Button
                                     variant="outline-secondary flypipe"
                                     className="me-2 float-end"

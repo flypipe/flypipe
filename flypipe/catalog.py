@@ -94,7 +94,7 @@ class CatalogNode:
         return []
 
     def _get_source_code(self):
-        return inspect.getsource(self.node.function)
+        return inspect.getsource(inspect.getmodule(self.node.function))
 
 
 class Catalog:

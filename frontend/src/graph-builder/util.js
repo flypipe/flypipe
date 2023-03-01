@@ -74,15 +74,24 @@ const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
             addedKeys.push(current.nodeKey);
             selectedNodeDefs.push(current);
         }
-        for (const successor of current.successors) {
-            if (addedKeys.includes(successor)) {
-                const edgeKey = `${current.nodeKey}-${successor}`;
+        for (const successorKey of current.successors) {
+            if (addedKeys.includes(successorKey)) {
+                const edgeKey = `${current.nodeKey}-${successorKey}`;
                 if (!edgeKeys.has(edgeKey)) {
+                    const successor = nodeDefs.find(
+                        (nodeDef) => nodeDef.nodeKey === successorKey
+                    );
                     const edge = {
                         id: edgeKey,
                         isNew: false,
                         source: current.nodeKey,
-                        target: successor,
+                        target: successorKey,
+                        animated: successor.isActive,
+                        markerEnd: {
+                            type: MarkerType.ArrowClosed,
+                            width: 20,
+                            height: 20,
+                        },
                     };
                     edges.push(edge);
                     edgeKeys.add(edgeKey);
@@ -174,7 +183,7 @@ const getNewNodeDef = ({
     predecessors: predecessors || [],
     predecessorColumns: predecessorColumns || [],
     successors: successors || [],
-    sourceCode: sourceCode || '',
+    sourceCode: sourceCode || "",
     isActive: isActive || true,
 });
 
@@ -212,6 +221,8 @@ const consolidateEdge = (graph, edge) => {
         width: 20,
         height: 20,
     };
+
+    edge.animated = targetNode.data.isActive;
     graph.setEdges([...otherEdges, edge]);
 };
 
@@ -274,18 +285,18 @@ const deleteEdge = (graph, edgeId) => {
 
 const getNodeTypeColorClass = (nodeType) => {
     switch (nodeType) {
-        case 'pyspark':
-            return 'danger';
-        case 'pandas_on_spark':
-            return 'primary';
-        case 'pandas':
-            return 'success';
-        case 'spark_sql':
-            return 'info';
+        case "pyspark":
+            return "danger";
+        case "pandas_on_spark":
+            return "primary";
+        case "pandas":
+            return "success";
+        case "spark_sql":
+            return "info";
         default:
-            return 'warning';
+            return "warning";
     }
-}
+};
 
 export {
     getPredecessorNodesAndEdgesFromNode,

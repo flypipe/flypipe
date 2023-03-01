@@ -49,6 +49,7 @@
     z-index: 2;
     background-color: white;
     border: 1px solid #ced4da;
+    min-width: 275px;
 }
 
 .list-group-flypipe {
@@ -94,7 +95,8 @@
     color: map-get($theme-colors, "danger");
     border: map-get($theme-colors, "danger");
     border-style: solid;
-    transition: background-color 200ms ease-out 100ms, color 200ms ease-out 100ms;
+    transition: background-color 200ms ease-out 100ms,
+        color 200ms ease-out 100ms;
 }
 
 .node-danger:hover {
@@ -107,7 +109,8 @@
     color: map-get($theme-colors, "primary");
     border: map-get($theme-colors, "primary");
     border-style: solid;
-    transition: background-color 200ms ease-out 100ms, color 200ms ease-out 100ms;
+    transition: background-color 200ms ease-out 100ms,
+        color 200ms ease-out 100ms;
 }
 
 .node-primary:hover {
@@ -120,7 +123,8 @@
     color: map-get($theme-colors, "success");
     border: map-get($theme-colors, "success");
     border-style: solid;
-    transition: background-color 200ms ease-out 100ms, color 200ms ease-out 100ms;
+    transition: background-color 200ms ease-out 100ms,
+        color 200ms ease-out 100ms;
 }
 
 .node-success:hover {
@@ -133,7 +137,8 @@
     color: map-get($theme-colors, "info");
     border: map-get($theme-colors, "info");
     border-style: solid;
-    transition: background-color 200ms ease-out 100ms, color 200ms ease-out 100ms;
+    transition: background-color 200ms ease-out 100ms,
+        color 200ms ease-out 100ms;
 }
 
 .node-info:hover {
@@ -146,7 +151,8 @@
     color: map-get($theme-colors, "warning");
     border: map-get($theme-colors, "warning");
     border-style: solid;
-    transition: background-color 200ms ease-out 100ms, color 200ms ease-out 100ms;
+    transition: background-color 200ms ease-out 100ms,
+        color 200ms ease-out 100ms;
 }
 
 .node-warning:hover {

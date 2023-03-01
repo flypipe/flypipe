@@ -210,19 +210,23 @@ export const EditEdge = ({ edge, onClose }) => {
                     </fieldset>
                     <Row className="mt-4">
                         <Col>
-                            {!isReadOnly && <Button
-                                variant="outline-danger"
-                                onClick={handleDelete}
-                            >
-                                Delete
-                            </Button>}
-                            {!isReadOnly && <Button
-                                variant="outline-primary"
-                                className="me-2 float-end"
-                                onClick={handleSave}
-                            >
-                                Save
-                            </Button>}
+                            {!isReadOnly && (
+                                <Button
+                                    variant="outline-danger"
+                                    onClick={handleDelete}
+                                >
+                                    Delete
+                                </Button>
+                            )}
+                            {!isReadOnly && (
+                                <Button
+                                    variant="outline-primary"
+                                    className="me-2 float-end"
+                                    onClick={handleSave}
+                                >
+                                    Save
+                                </Button>
+                            )}
                             <Button
                                 variant="outline-secondary flypipe"
                                 className="me-2 float-end"
