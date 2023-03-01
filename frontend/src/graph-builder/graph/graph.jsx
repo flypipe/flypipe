@@ -127,7 +127,7 @@ const Graph = ({ nodeDefs, tagSuggestions }) => {
 
     useEffect(() => {
         setShowOffcanvas(true);
-    }, [currentGraphObject.object, setShowOffcanvas]);
+    }, [currentGraphObject, setShowOffcanvas]);
 
     const handleCloseEditEdge = useCallback(() => {
         setShowOffcanvas(false);

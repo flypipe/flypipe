@@ -1,3 +1,6 @@
+@import "../../node_modules/bootstrap/scss/functions";
+@import "../../node_modules/bootstrap/scss/variables";
+
 .suggestionsClass {
     padding: 10px;
 
@@ -21,7 +24,7 @@
     font-weight: bold;
 }
 
-.offcanvas-header.node {
+.offcanvas-header.offcanvas {
     display: block;
 }
 
@@ -84,6 +87,71 @@
     top: -21px !important;
     right: -21px !important;
     padding: 12px !important;
+}
+
+.node-danger {
+    background-color: white;
+    color: map-get($theme-colors, "danger");
+    border: map-get($theme-colors, "danger");
+    border-style: solid;
+    transition: background-color 200ms ease-out 100ms, color 200ms ease-out 100ms;
+}
+
+.node-danger:hover {
+    background-color: map-get($theme-colors, "danger");
+    color: white;
+}
+
+.node-primary {
+    background-color: white;
+    color: map-get($theme-colors, "primary");
+    border: map-get($theme-colors, "primary");
+    border-style: solid;
+    transition: background-color 200ms ease-out 100ms, color 200ms ease-out 100ms;
+}
+
+.node-primary:hover {
+    background-color: map-get($theme-colors, "primary");
+    color: white;
+}
+
+.node-success {
+    background-color: white;
+    color: map-get($theme-colors, "success");
+    border: map-get($theme-colors, "success");
+    border-style: solid;
+    transition: background-color 200ms ease-out 100ms, color 200ms ease-out 100ms;
+}
+
+.node-success:hover {
+    background-color: map-get($theme-colors, "success");
+    color: white;
+}
+
+.node-info {
+    background-color: white;
+    color: map-get($theme-colors, "info");
+    border: map-get($theme-colors, "info");
+    border-style: solid;
+    transition: background-color 200ms ease-out 100ms, color 200ms ease-out 100ms;
+}
+
+.node-info:hover {
+    background-color: map-get($theme-colors, "info");
+    color: white;
+}
+
+.node-warning {
+    background-color: white;
+    color: map-get($theme-colors, "warning");
+    border: map-get($theme-colors, "warning");
+    border-style: solid;
+    transition: background-color 200ms ease-out 100ms, color 200ms ease-out 100ms;
+}
+
+.node-warning:hover {
+    background-color: map-get($theme-colors, "warning");
+    color: white;
 }
 
 .react-flow__handle {

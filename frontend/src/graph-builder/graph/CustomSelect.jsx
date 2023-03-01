@@ -1,7 +1,7 @@
 import React from "react";
 import Select from "react-select";
 
-export default ({ id, name, onChange, options, value, className }) => {
+export default ({ id, name, onChange, options, value, className, isOptionDisabled }) => {
     const defaultValue = (options, value) => {
         return options ? options.find((option) => option.value === value) : "";
     };
@@ -13,6 +13,7 @@ export default ({ id, name, onChange, options, value, className }) => {
                 value={defaultValue(options, value)}
                 onChange={(value) => onChange(value)}
                 options={options}
+                isOptionDisabled={isOptionDisabled}
             />
         </div>
     );

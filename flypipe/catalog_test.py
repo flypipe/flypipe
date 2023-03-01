@@ -67,7 +67,7 @@ class TestCatalog:
                 (node_def["name"], node_def["successors"])
                 for node_def in catalog.get_node_defs()
             ]
-        ) == [("t1", ["t2", "t3"]), ("t2", []), ("t3", [])]
+        ) == [("t1", ["flypipe_catalog_test_function_t2_t2", "flypipe_catalog_test_function_t3_t3"]), ("t2", []), ("t3", [])]
 
     def test_node_successor_duplicate(self):
         """
@@ -83,7 +83,7 @@ class TestCatalog:
                 (node_def["name"], node_def["successors"])
                 for node_def in catalog.get_node_defs()
             ]
-        ) == [("t1", ["t2"]), ("t2", [])]
+        ) == [("t1", ["flypipe_catalog_test_function_t2_t2"]), ("t2", [])]
 
     def test_get_node_defs(self):
         catalog = Catalog()
@@ -97,8 +97,8 @@ class TestCatalog:
                 "nodeKey": "flypipe_catalog_test_function_t2_t2",
                 "nodeType": "pandas",
                 "name": "t2",
-                "predecessors": ["t1"],
-                "predecessorColumns": {"t1": ["c2", "c3"]},
+                "predecessors": ["flypipe_catalog_test_function_t1_t1"],
+                "predecessorColumns": {"flypipe_catalog_test_function_t1_t1": ["c2", "c3"]},
                 "output": [
                     {"column": "c2", "type": "String", "description": "c2 desc"},
                 ],
@@ -125,7 +125,7 @@ class TestCatalog:
                     {"column": "c2", "type": "String", "description": "c2 desc"},
                     {"column": "c3", "type": "Integer", "description": "c3 desc"},
                 ],
-                "successors": ["t2", "t3"],
+                "successors": ["flypipe_catalog_test_function_t2_t2", "flypipe_catalog_test_function_t3_t3"],
                 "tags": [
                     {"id": "pandas", "text": "pandas"},
                     {"id": "Transformation", "text": "Transformation"},
@@ -140,8 +140,8 @@ class TestCatalog:
                 "nodeKey": "flypipe_catalog_test_function_t3_t3",
                 "nodeType": "pandas",
                 "name": "t3",
-                "predecessors": ["t1"],
-                "predecessorColumns": {"t1": []},
+                "predecessors": ["flypipe_catalog_test_function_t1_t1"],
+                "predecessorColumns": {"flypipe_catalog_test_function_t1_t1": []},
                 "output": [],
                 "successors": [],
                 "tags": [
@@ -202,8 +202,8 @@ class TestCatalog:
                 "nodeKey": "flypipe_catalog_test_function_t4_TestCatalog_test_register_node_function__locals__t4",
                 "nodeType": "pandas",
                 "name": "t4",
-                "predecessors": ["t3"],
-                "predecessorColumns": {"t3": []},
+                "predecessors": ["flypipe_catalog_test_function_t3_TestCatalog_test_register_node_function__locals__get_nodes__locals__t3"],
+                "predecessorColumns": {"flypipe_catalog_test_function_t3_TestCatalog_test_register_node_function__locals__get_nodes__locals__t3": []},
                 "output": [],
                 "successors": [],
                 "tags": [
@@ -216,14 +216,13 @@ class TestCatalog:
                 "description": "",
                 "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t3",
-                "nodeKey": "flypipe_catalog_test_function_t3_TestCatalog_test_register_node_function__locals__get_nodes__"
-                "locals__t3",
+                "nodeKey": "flypipe_catalog_test_function_t3_TestCatalog_test_register_node_function__locals__get_nodes__locals__t3",
                 "nodeType": "pandas",
                 "name": "t3",
-                "predecessors": ["t2"],
-                "predecessorColumns": {"t2": []},
+                "predecessors": ["flypipe_catalog_test_function_t2_TestCatalog_test_register_node_function__locals__get_nodes__locals__t2"],
+                "predecessorColumns": {"flypipe_catalog_test_function_t2_TestCatalog_test_register_node_function__locals__get_nodes__locals__t2": []},
                 "output": [],
-                "successors": ["t4"],
+                "successors": ["flypipe_catalog_test_function_t4_TestCatalog_test_register_node_function__locals__t4"],
                 "tags": [
                     {"id": "pandas", "text": "pandas"},
                     {"id": "Transformation", "text": "Transformation"},
@@ -236,14 +235,13 @@ class TestCatalog:
                 "description": "",
                 "filePath": str(Path("flypipe/catalog_test.py")),
                 "importCmd": "from flypipe.catalog_test import t2",
-                "nodeKey": "flypipe_catalog_test_function_t2_TestCatalog_test_register_node_function__locals__get_nodes__"
-                "locals__t2",
+                "nodeKey": "flypipe_catalog_test_function_t2_TestCatalog_test_register_node_function__locals__get_nodes__locals__t2",
                 "nodeType": "pandas",
                 "name": "t2",
-                "predecessors": ["t1"],
-                "predecessorColumns": {"t1": []},
+                "predecessors": ["flypipe_catalog_test_function_t1_TestCatalog_test_register_node_function__locals__t1"],
+                "predecessorColumns": {"flypipe_catalog_test_function_t1_TestCatalog_test_register_node_function__locals__t1": []},
                 "output": [],
-                "successors": ["t3"],
+                "successors": ["flypipe_catalog_test_function_t3_TestCatalog_test_register_node_function__locals__get_nodes__locals__t3"],
                 "tags": [
                     {"id": "pandas", "text": "pandas"},
                     {"id": "Transformation", "text": "Transformation"},
@@ -262,7 +260,7 @@ class TestCatalog:
                 "predecessors": [],
                 "predecessorColumns": {},
                 "output": [],
-                "successors": ["t2"],
+                "successors": ["flypipe_catalog_test_function_t2_TestCatalog_test_register_node_function__locals__get_nodes__locals__t2"],
                 "tags": [
                     {"id": "pandas", "text": "pandas"},
                     {"id": "Transformation", "text": "Transformation"},

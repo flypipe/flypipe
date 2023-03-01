@@ -106,7 +106,7 @@ export const EditNode = ({
                 placement="end"
                 backdrop={false}
                 scroll={true}
-                className="node"
+                className="offcanvas"
             >
                 <Offcanvas.Header closeButton={false}>
                     <Offcanvas.Title className="w-100 d-flex justify-content-between">
@@ -174,6 +174,8 @@ export const EditNode = ({
                                             value.value
                                         )
                                     }
+                                    // the dropdown does not obey fieldset disable so we need this here
+                                    isOptionDisabled={() => isReadOnly}
                                 />
                                 {formState.errors.nodeType ? (
                                     <div className="text-danger">
@@ -252,21 +254,19 @@ export const EditNode = ({
 
                         <Row>
                             <Col>
-                                {!isReadOnly && (
-                                    <Button
-                                        variant="outline-danger"
-                                        onClick={handleShowDeleteNode}
-                                    >
-                                        Delete
-                                    </Button>
-                                )}
                                 <Button
+                                    variant="outline-danger"
+                                    onClick={handleShowDeleteNode}
+                                >
+                                    Delete
+                                </Button>
+                                {!isReadOnly && <Button
                                     variant="outline-primary"
                                     className="me-2 float-end"
                                     type="submit"
                                 >
                                     Save
-                                </Button>
+                                </Button>}
                                 <Button
                                     variant="outline-secondary flypipe"
                                     className="me-2 float-end"

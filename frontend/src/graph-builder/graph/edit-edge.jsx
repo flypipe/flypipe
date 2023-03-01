@@ -161,7 +161,7 @@ export const EditEdge = ({ edge, onClose }) => {
             placement="end"
             backdrop={false}
             scroll={true}
-            className="node"
+            className="offcanvas"
         >
             <Offcanvas.Header closeButton={false} className="node">
                 <Offcanvas.Title>
@@ -207,32 +207,31 @@ export const EditEdge = ({ edge, onClose }) => {
                                 </Alert>
                             </>
                         )}
-
-                        <Row className="mt-4">
-                            <Col>
-                                <Button
-                                    variant="outline-danger"
-                                    onClick={handleDelete}
-                                >
-                                    Delete
-                                </Button>
-                                <Button
-                                    variant="outline-primary"
-                                    className="me-2 float-end"
-                                    onClick={handleSave}
-                                >
-                                    Save
-                                </Button>
-                                <Button
-                                    variant="outline-secondary flypipe"
-                                    className="me-2 float-end"
-                                    onClick={handleClose}
-                                >
-                                    Close
-                                </Button>
-                            </Col>
-                        </Row>
                     </fieldset>
+                    <Row className="mt-4">
+                        <Col>
+                            {!isReadOnly && <Button
+                                variant="outline-danger"
+                                onClick={handleDelete}
+                            >
+                                Delete
+                            </Button>}
+                            {!isReadOnly && <Button
+                                variant="outline-primary"
+                                className="me-2 float-end"
+                                onClick={handleSave}
+                            >
+                                Save
+                            </Button>}
+                            <Button
+                                variant="outline-secondary flypipe"
+                                className="me-2 float-end"
+                                onClick={handleClose}
+                            >
+                                Close
+                            </Button>
+                        </Col>
+                    </Row>
                 </Form>
             </Offcanvas.Body>
         </Offcanvas>

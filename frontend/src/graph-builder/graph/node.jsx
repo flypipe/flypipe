@@ -12,6 +12,7 @@ import {
     NODE_WIDTH,
     NODE_HEIGHT,
     consolidateEdge,
+    getNodeTypeColorClass,
 } from "../util";
 import classNames from "classnames";
 import textFit from "textfit";
@@ -47,20 +48,7 @@ const BaseNode = ({ data, isNewNode }) => {
         [graph, addNotification, setCurrentGraphObject]
     );
 
-    const color = useMemo(() => {
-        switch (nodeType) {
-            case "pyspark":
-                return "btn btn-outline-danger";
-            case "pandas_on_spark":
-                return "btn btn-outline-primary";
-            case "pandas":
-                return "btn btn-outline-success";
-            case "spark_sql":
-                return "btn btn-outline-info";
-            default:
-                return "btn btn-outline-warning";
-        }
-    }, [nodeType]);
+    const nodeClass = `node-${getNodeTypeColorClass(nodeType)}`;
     const klass = useMemo(() =>
         classNames(
             "d-flex",
@@ -69,7 +57,7 @@ const BaseNode = ({ data, isNewNode }) => {
             "px-4",
             "py-2",
             "rounded",
-            color
+            nodeClass,
         )
     );
 
@@ -107,7 +95,10 @@ const BaseNode = ({ data, isNewNode }) => {
             />
             <div
                 className={klass}
-                style={{ width: NODE_WIDTH, height: NODE_HEIGHT }}
+                style={{ 
+                    width: NODE_WIDTH, 
+                    height: NODE_HEIGHT 
+                }}
             >
                 <p
                     className={`${nameWidth} mb-0 me-2`}

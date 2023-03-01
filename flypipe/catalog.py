@@ -25,13 +25,13 @@ class CatalogNode:
         for input_node in node.input_nodes:
             if isinstance(input_node.node, NodeFunction):
                 expanded_node = input_node.node.expand(None)[-1]
-                self.predecessors.append(expanded_node.__name__)
-                self.predecessorColumns[expanded_node.__name__] = (
+                self.predecessors.append(expanded_node.key)
+                self.predecessorColumns[expanded_node.key] = (
                     input_node.selected_columns or []
                 )
             else:
-                self.predecessors.append(input_node.node.__name__)
-                self.predecessorColumns[input_node.node.__name__] = (
+                self.predecessors.append(input_node.node.key)
+                self.predecessorColumns[input_node.node.key] = (
                     input_node.selected_columns or []
                 )
         self.successors = set()
@@ -42,7 +42,7 @@ class CatalogNode:
         themselves aware of their successors. To support a list of successors we need to manually register the
         successor nodes whilst parsing a node graph.
         """
-        self.successors.add(successor_node.__name__)
+        self.successors.add(successor_node.key)
 
     def get_def(self):
         return {

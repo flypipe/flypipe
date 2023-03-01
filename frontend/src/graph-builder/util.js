@@ -268,6 +268,21 @@ const deleteEdge = (graph, edgeId) => {
     graph.setNodes([sourceNode, targetNode, ...otherNodes]);
 };
 
+const getNodeTypeColorClass = (nodeType) => {
+    switch (nodeType) {
+        case 'pyspark':
+            return 'danger';
+        case 'pandas_on_spark':
+            return 'primary';
+        case 'pandas':
+            return 'success';
+        case 'spark_sql':
+            return 'info';
+        default:
+            return 'warning';
+    }
+}
+
 export {
     getPredecessorNodesAndEdgesFromNode,
     refreshNodePositions,
@@ -277,4 +292,5 @@ export {
     consolidateEdge,
     deleteNode,
     deleteEdge,
+    getNodeTypeColorClass,
 };
