@@ -33,17 +33,18 @@ export const DeleteNode = ({
         <>
             <Modal show onHide={handleClose} backdrop="static" keyboard={false}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Are you sure?</Modal.Title>
+                    <Modal.Title>Delete Node</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="fs-5">
-                    You want to delete <span className="fw-bold">{label}</span>?
+                    Are you sure you want to delete{" "}
+                    <span className="fw-bold">{label}</span>?
                 </Modal.Body>
                 <Modal.Footer>
                     <Button
                         variant="outline-secondary flypipe"
                         onClick={handleClose}
                     >
-                        no
+                        No
                     </Button>
                     <Form onSubmit={formik.handleSubmit}>
                         <Form.Control
@@ -54,7 +55,7 @@ export const DeleteNode = ({
                             defaultValue={formik.values.nodeKey}
                         />
                         <Button type="submit" variant="outline-danger flypipe">
-                            yes
+                            Yes
                         </Button>
                     </Form>
                 </Modal.Footer>

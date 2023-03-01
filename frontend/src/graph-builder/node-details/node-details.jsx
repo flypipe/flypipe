@@ -53,7 +53,7 @@ export const NodeDetails = () => {
         >
             <Modal.Header closeButton>
                 <Modal.Title>
-                    {nodeData.label}
+                    {nodeData.name}
                     <Badge
                         bg={nodeTypeColorClass}
                         className="ms-2 fs-6 fw-light fw-light"

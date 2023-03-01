@@ -39,7 +39,7 @@ const Node = ({ node, isInGraphBuilder = false, handleClickGraphBuilder }) => {
         >
             <div className="d-flex justify-content-between">
                 <label
-                    className="form-check-label"
+                    className="form-check-label text-truncate"
                     htmlFor={`nodeCheckbox-${name}`}
                 >
                     <span className="fw-bold">{name}</span>

@@ -8,7 +8,7 @@ const DeleteNodeModal = ({ nodeId, onCancel, onSubmit }) => {
     const { addNotification } = useContext(NotificationContext);
     const graph = useReactFlow();
     const { label } = useMemo(
-        () => graph.getNodes().find((n) => n.id === nodeId),
+        () => graph.getNodes().find((n) => n.id === nodeId).data,
         [nodeId]
     );
 
@@ -23,17 +23,18 @@ const DeleteNodeModal = ({ nodeId, onCancel, onSubmit }) => {
     return (
         <Modal show onHide={onCancel} backdrop="static" keyboard={false}>
             <Modal.Header closeButton>
-                <Modal.Title>Are you sure?</Modal.Title>
+                <Modal.Title>Delete Node</Modal.Title>
             </Modal.Header>
             <Modal.Body className="fs-5">
-                You want to delete <span className="fw-bold">{label}</span>?
+                Are you sure you want to delete{" "}
+                <span className="fw-bold">{label}</span>?
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="outline-secondary flypipe" onClick={onCancel}>
-                    no
+                    No
                 </Button>
                 <Button variant="outline-danger flypipe" onClick={handleSubmit}>
-                    yes
+                    Yes
                 </Button>
             </Modal.Footer>
         </Modal>
