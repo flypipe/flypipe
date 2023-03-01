@@ -1,14 +1,15 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useContext } from "react";
 import classNames from "classnames";
+import { Badge } from "react-bootstrap";
+import { NodeDetailsContext } from '../node-details/context';
 
 const Node = ({
-    nodeKey,
-    name,
-    importCmd,
-    description,
+    node,
     isInGraphBuilder = false,
     handleClickGraphBuilder,
 }) => {
+    const {nodeKey, name, description, tags} = node;
+    const { openNodeDetails } = useContext(NodeDetailsContext);
     const graphBuilderButton = useMemo(() => {
         return (
             <button
@@ -25,9 +26,18 @@ const Node = ({
             </button>
         );
     }, [isInGraphBuilder, nodeKey]);
+    const handleNodeClick = useCallback((e) => {
+        // A click on the graph builder button will also activate the node click since the button is inside the div 
+        // this is registered too, we need to ensure we skip the click event in this situation. 
+        if (e.target.nodeName === 'BUTTON') {
+            return;
+        }
+        openNodeDetails(node);
+    }, []);
 
     return (
-        <a className={classNames("list-group-item", "list-group-item-action")}>
+        // <a className={classNames("list-group-item", "list-group-item-action")} onClick={() => {console.log('I got clicked!')}}>
+        <div className={classNames("list-group-item", "list-group-item-action")} onClick={handleNodeClick}>
             <div className="d-flex justify-content-between">
                 <label
                     className="form-check-label"
@@ -37,8 +47,9 @@ const Node = ({
                 </label>
                 {graphBuilderButton}
             </div>
+            {tags.map(({id, text}) => <Badge key={id} bg="secondary" className="me-2 mt-2">{text}</Badge>)}
             <p>{description}</p>
-        </a>
+        </div>
     );
 };
 

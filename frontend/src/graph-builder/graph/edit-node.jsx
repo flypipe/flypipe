@@ -1,14 +1,14 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useContext } from "react";
 import { Button, Offcanvas, Badge, Row, Col } from "react-bootstrap";
 import Form from "react-bootstrap/Form";
 import { Tags } from "./tags";
-import { NodeMoreInfo } from "./node-more-info";
 import { BsInfoLg } from "react-icons/bs";
 import CustomSelect from "./CustomSelect";
 import DeleteNodeModal from "./delete-node-modal";
 import { NodeOutput } from "./node-output";
 import { useFormik } from "formik";
 import NodeList from "./node-list";
+import { NodeDetailsContext } from "../node-details/context";
 
 const RE_LABEL = /^[a-zA-Z_]\w*$/;
 
@@ -69,13 +69,11 @@ export const EditNode = ({
         handleClose();
     }, [setShowDeleteNode, handleClose]);
 
-    const [showMoreInfo, setShowMoreInfo] = useState(false);
+    const { openNodeDetails } = useContext(NodeDetailsContext);
     const onClickMoreInfo = useCallback(() => {
-        setShowMoreInfo(true);
-    }, [setShowMoreInfo]);
-    const onClickCloseMoreInfo = useCallback(() => {
-        setShowMoreInfo(false);
-    }, [setShowMoreInfo]);
+        debugger;
+        openNodeDetails(formState.values);
+    }, [openNodeDetails, formState]);
 
     const handleSetTags = useCallback(
         (tags) => {
@@ -94,15 +92,8 @@ export const EditNode = ({
                     handleClose={handleCancelDeleteNode}
                 />
             )}
-            <NodeMoreInfo
-                nodeData={formState.values}
-                show={showMoreInfo}
-                onClose={onClickCloseMoreInfo}
-            />
-
             <Offcanvas
                 show={show}
-                // onHide={handleClose}
                 placement="end"
                 backdrop={false}
                 scroll={true}

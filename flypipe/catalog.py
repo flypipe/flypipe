@@ -58,6 +58,7 @@ class CatalogNode:
             "predecessorColumns": self.predecessorColumns,
             "successors": sorted(list(self.successors)),
             "sourceCode": self._get_source_code(),
+            "isActive": True,
         }
 
     def _get_file_path(self):
@@ -117,7 +118,7 @@ class Catalog:
             for input_node in node.input_nodes:
                 self.register_node(input_node.node, node)
 
-    def html(self, height=1000):
+    def html(self, height=850):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         with open(os.path.join(dir_path, "js/bundle.js"), "r", encoding="utf-8") as f:
             js_bundle = f.read()

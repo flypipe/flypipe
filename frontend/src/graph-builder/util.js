@@ -160,6 +160,8 @@ const getNewNodeDef = ({
     predecessors,
     predecessorColumns,
     successors,
+    sourceCode,
+    isActive,
 }) => ({
     nodeKey,
     label: name || "Untitled",
@@ -172,6 +174,8 @@ const getNewNodeDef = ({
     predecessors: predecessors || [],
     predecessorColumns: predecessorColumns || [],
     successors: successors || [],
+    sourceCode: sourceCode || '',
+    isActive: isActive || true,
 });
 
 // This is a bit weird- as far as I can tell when dragging an edge between two nodes you can't suppress the automatic

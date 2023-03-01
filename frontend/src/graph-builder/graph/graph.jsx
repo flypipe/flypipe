@@ -160,11 +160,10 @@ const Graph = ({ nodeDefs, tagSuggestions }) => {
                 onEdgeClick={onEdgeClick}
                 fitView
             >
-                <Panel position="top-left">
+                <Panel position="top-left" className="mt-2">
                     <Tooltip text="Add a new node to the graph">
                         <Button
                             variant="outline-secondary flypipe"
-                            className="mt-2"
                             onClick={onClickNewNode}
                         >
                             New Node
@@ -188,7 +187,7 @@ const Graph = ({ nodeDefs, tagSuggestions }) => {
                         <Controls className="position-relative" />
                     </div>
                 </Panel>
-                <Panel position="top-right">
+                <Panel position="top-right" className="mt-2">
                     <ExportGraph />
                 </Panel>
 

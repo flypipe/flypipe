@@ -104,14 +104,11 @@ const NodeResultsList = ({ nodes, allNodes }) => {
     return (
         <div className="list-group list-group-flush overflow-auto list-group-flypipe pb-2">
             {currentNodes.map(
-                ({ nodeKey, name, importCmd, description }, i) => (
+                (node, i) => (
                     <Node
                         key={`node-list-item-${i}`}
-                        nodeKey={nodeKey}
-                        name={name}
-                        importCmd={importCmd}
-                        description={description}
-                        isInGraphBuilder={graphBuilderNodes.has(nodeKey)}
+                        node={node}
+                        isInGraphBuilder={graphBuilderNodes.has(node.nodeKey)}
                         handleClickGraphBuilder={handleClickGraphBuilder}
                     />
                 )
