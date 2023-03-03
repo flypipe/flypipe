@@ -3,7 +3,7 @@ import { Button, Offcanvas, Badge, Row, Col } from "react-bootstrap";
 import Form from "react-bootstrap/Form";
 import { Tags } from "./tags";
 import { BsInfoLg } from "react-icons/bs";
-import CustomSelect from "./CustomSelect";
+import CustomSelect from "./custom-select";
 import DeleteNodeModal from "./delete-node-modal";
 import { NodeOutput } from "./node-output";
 import { useFormik } from "formik";

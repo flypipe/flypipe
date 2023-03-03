@@ -17,7 +17,7 @@ import {
 import classNames from "classnames";
 import textFit from "textfit";
 import { GrNew } from "react-icons/gr";
-import { NotificationContext } from "../../context";
+import { NotificationContext } from "../notifications/context";
 import { GraphContext } from "./graph-context";
 
 const BaseNode = ({ data, isNewNode }) => {

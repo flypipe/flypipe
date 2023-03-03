@@ -1,7 +1,7 @@
 import React from "react";
 import Select from "react-select";
 
-export default ({
+const CustomSelect = ({
     id,
     name,
     onChange,
@@ -26,3 +26,5 @@ export default ({
         </div>
     );
 };
+
+export default CustomSelect;

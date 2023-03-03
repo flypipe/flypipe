@@ -1,16 +1,35 @@
-import React, { useState, useContext } from "react";
-import GraphBuilder from "./graph-builder/graph-builder";
-import Notifications from "./catalog/notifications";
-import { NotificationContext } from "./context";
+import React, { useContext } from "react";
+import { ReactFlowProvider } from "reactflow";
+import Graph from "./graph/graph";
+import { GraphContextProvider } from "./graph/graph-context";
+import { NodeDetailsContextProvider } from "./node-details/context";
+import { NodeDetails } from "./node-details/node-details";
+import Notifications from "./notifications/notifications";
+import { NotificationContext } from "./notifications/context";
 
 const App = () => {
-    const [content, setContent] = useState(<GraphBuilder />);
     const { newMessage } = useContext(NotificationContext);
 
     return (
         <>
             <Notifications newMessage={newMessage} />
-            <div className="d-flex w-100 h-100">{content}</div>
+            <div className="d-flex w-100 h-100">
+                <ReactFlowProvider>
+                    <GraphContextProvider>
+                        <NodeDetailsContextProvider>
+                            <NodeDetails />
+                            <div className="col">
+                                <div>
+                                    <Graph
+                                        nodeDefs={nodes}
+                                        tagSuggestions={tagSuggestions}
+                                    />
+                                </div>
+                            </div>
+                        </NodeDetailsContextProvider>
+                    </GraphContextProvider>
+                </ReactFlowProvider>
+            </div>
         </>
     );
 };

@@ -22,8 +22,8 @@ import { EditEdge } from "./edit-edge";
 import { Button } from "react-bootstrap";
 import { TfiAngleLeft, TfiAngleRight } from "react-icons/tfi";
 import ExportGraph from "./export-graph";
-import Tooltip from "../../tooltip";
-import { NotificationContext } from "../../context";
+import Tooltip from "../tooltip";
+import { NotificationContext } from "../notifications/context";
 import uuid from "react-uuid";
 import { GraphContext } from "./graph-context";
 

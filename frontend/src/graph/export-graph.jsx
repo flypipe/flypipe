@@ -1,12 +1,10 @@
-import React, { useEffect, useCallback, useContext } from "react";
+import React, { useCallback, useContext } from "react";
 import { BsDownload } from "react-icons/bs";
-import OverlayTrigger from "react-bootstrap/OverlayTrigger";
-import { CopyToClipboard } from "react-copy-to-clipboard";
 import copy from "copy-to-clipboard";
 import { Button } from "react-bootstrap";
 import { useReactFlow } from "reactflow";
-import Tooltip from "../../tooltip";
-import { NotificationContext } from "../../context";
+import Tooltip from "../tooltip";
+import { NotificationContext } from "../notifications/context";
 import uuid from "react-uuid";
 import { generateCodeTemplate } from "../util";
 

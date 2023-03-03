@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback, useContext } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
 import { useReactFlow } from "reactflow";
-import { NotificationContext } from "../../context";
+import { NotificationContext } from "../notifications/context";
 import { deleteNode } from "../util";
 
 const DeleteNodeModal = ({ nodeId, onCancel, onSubmit }) => {

@@ -14,7 +14,7 @@ import {
     refreshNodePositions,
 } from "../util";
 import { useReactFlow, MarkerType } from "reactflow";
-import { NotificationContext } from "../../context";
+import { NotificationContext } from "../notifications/context";
 import uuid from "react-uuid";
 
 // Maximum number of search entries per page

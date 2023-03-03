@@ -1,9 +1,9 @@
 import React, { useCallback, useContext, useMemo } from "react";
 import { Modal, Button, Badge } from "react-bootstrap";
 import SyntaxHighlighter from "react-syntax-highlighter";
-import { NotificationContext } from "../../context";
+import { NotificationContext } from "../notifications/context";
 import uuid from "react-uuid";
-import CopyToClipboardWidget from "../../copy-to-clipboard-widget";
+import CopyToClipboardWidget from "../copy-to-clipboard-widget";
 import { generateCodeTemplate, getNodeTypeColorClass } from "../util";
 import { useReactFlow } from "reactflow";
 import { NodeDetailsContext } from "./context";

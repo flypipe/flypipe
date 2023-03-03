@@ -1,11 +1,11 @@
 // Import Bootstrap css
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./scss/styles.scss";
+import "../styles/styles.scss";
 
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
-import { NotificationContextProvider } from "./context";
+import { NotificationContextProvider } from "./notifications/context";
 ReactDOM.render(
     <NotificationContextProvider>
         <App />
