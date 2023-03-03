@@ -6,6 +6,7 @@ from pathlib import Path
 
 from flypipe.config import get_config
 from flypipe.node_function import NodeFunction
+from flypipe.node_graph import RunStatus
 from flypipe.template import get_template
 
 
@@ -17,8 +18,9 @@ class CatalogNode:
     Wrapper around a regular node that contains some extra attributes that are important for the catalog.
     """
 
-    def __init__(self, node):
+    def __init__(self, node, node_graph=None):
         self.node = node
+        self.node_graph = node_graph
         # TODO: it's a little awkward to deal with this node function logic here, is this even the behaviour we want?
         self.predecessors = []
         self.predecessorColumns = {}
@@ -58,8 +60,13 @@ class CatalogNode:
             "predecessorColumns": self.predecessorColumns,
             "successors": sorted(list(self.successors)),
             "sourceCode": self._get_source_code(),
-            "isActive": True,
+            "isActive": self._get_is_active(),
         }
+
+    def _get_is_active(self):
+        if getattr(self, 'node_graph'):
+            return self.node_graph.get_node(self.node.key)['status'] != RunStatus.SKIP
+        return True
 
     def _get_file_path(self):
         """
@@ -105,18 +112,34 @@ class Catalog:
 
     def __init__(self):
         self.nodes = {}
+        self.initial_nodes = []
 
-    def register_node(self, node, successor=None):
+    def register_node(self, node, successor=None, node_graph=None):
         if isinstance(node, NodeFunction):
             expanded_nodes = node.expand(None)
-            self.register_node(expanded_nodes[-1], successor)
+            self.register_node(expanded_nodes[-1], successor, node_graph)
         else:
+            if node.node_graph is not None:
+                # The node graph gives us certain information about the nodes in the context of a single run, use this
+                # if available.
+                node_graph = node.node_graph
             if node.key not in self.nodes:
-                self.nodes[node.key] = CatalogNode(node)
+                self.nodes[node.key] = CatalogNode(node, node_graph)
             if successor:
                 self.nodes[node.key].register_successor(successor)
             for input_node in node.input_nodes:
-                self.register_node(input_node.node, node)
+                self.register_node(input_node.node, node, node_graph)
+
+    def add_node_to_graph(self, node):
+        """
+        Ordinarily the catalog graph start out as empty but we can add nodes to it here such that the graph starts with
+        them present.
+        """
+        if isinstance(node, NodeFunction):
+            expanded_nodes = node.expand(None)
+            self.initial_nodes.append(expanded_nodes[-1].key)
+        else:
+            self.initial_nodes.append(node.key)
 
     def html(self, height=850):
         dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -125,6 +148,7 @@ class Catalog:
         return get_template("catalog.html").render(
             js_bundle=js_bundle,
             nodes=json.dumps(self.get_node_defs()),
+            initialNodes=self.initial_nodes,
             tagSuggestions=json.dumps(self.get_tag_suggestions()),
             height=height,
         )

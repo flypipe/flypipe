@@ -396,7 +396,6 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
     def html(  # pylint: disable=too-many-arguments
         self,
-        width=None,
         height=1000,
         inputs=None,
         pandas_on_spark_use_pandas=False,
@@ -429,16 +428,16 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
         # This import needs to be here to avoid a circular import issue (graph_html -> node_graph -> imports node)
         # pylint: disable-next=import-outside-toplevel,cyclic-import
-        from flypipe.printer.graph_html import (
-            GraphHTML,
-        )
+        from flypipe.catalog import Catalog
 
-        width = width or -1
         skipped_nodes = inputs or {}
         self._create_graph(
             [node.key for node in skipped_nodes], pandas_on_spark_use_pandas, parameters
         )
-        return GraphHTML(self.node_graph, width=width, height=height).html()
+        catalog = Catalog()
+        catalog.register_node(self, node_graph=self.node_graph)
+        catalog.add_node_to_graph(self)
+        return catalog.html(height)
 
     def __eq__(self, other):
         return self.key == other.key

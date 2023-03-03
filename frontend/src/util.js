@@ -58,7 +58,7 @@ const convertNodeDefToGraphNode = (nodeDef, isNew = true) => {
 };
 
 // Given an input node, get the list of nodes and edges of all of the input node's predecessors.
-const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
+const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
     const nodeDef = nodeDefs.find((nodeDef) => nodeDef.nodeKey === nodeKey);
     const frontier = [...nodeDef.predecessors];
     const selectedNodeDefs = [nodeDef];
@@ -108,6 +108,22 @@ const getPredecessorNodesAndEdgesFromNode = (nodeDefs, nodeKey) => {
         ),
         edges,
     ];
+};
+
+const addNodeAndPredecessors = (graph, nodeDefs, nodeKey) => {
+    const [predecessorNodes, predecessorEdges] = getPredecessorNodesAndEdges(
+        nodeDefs,
+        nodeKey
+    );
+    // Add the node and any predecessor nodes/edges to the graph that aren't already there.
+    const currentNodes = new Set(graph.getNodes().map(({ id }) => id));
+    const currentEdges = new Set(graph.getEdges().map(({ id }) => id));
+    const newNodes = predecessorNodes.filter(({ id }) => !currentNodes.has(id));
+    const newEdges = predecessorEdges.filter(({ id }) => !currentEdges.has(id));
+
+    graph.addNodes(newNodes);
+    graph.addEdges(newEdges);
+    refreshNodePositions(graph);
 };
 
 const moveToNode = (graph, nodeId) => {
@@ -299,7 +315,8 @@ const getNodeTypeColorClass = (nodeType) => {
 };
 
 export {
-    getPredecessorNodesAndEdgesFromNode,
+    getPredecessorNodesAndEdges,
+    addNodeAndPredecessors,
     refreshNodePositions,
     moveToNode,
     generateCodeTemplate,

@@ -3,7 +3,7 @@ import classNames from "classnames";
 import { Badge } from "react-bootstrap";
 import { NodeDetailsContext } from "../node-details/context";
 
-const Node = ({ node, isInGraphBuilder = false, handleClickGraphBuilder }) => {
+const Node = ({ node, handleClickGraphBuilder }) => {
     const { nodeKey, name, description, tags } = node;
     const { openNodeDetails } = useContext(NodeDetailsContext);
     const graphBuilderButton = useMemo(() => {
@@ -21,7 +21,7 @@ const Node = ({ node, isInGraphBuilder = false, handleClickGraphBuilder }) => {
                 Add
             </button>
         );
-    }, [isInGraphBuilder, nodeKey]);
+    }, [nodeKey]);
     const handleNodeClick = useCallback(
         (e) => {
             // A click on the graph builder button will also activate the node click since the button is inside the div

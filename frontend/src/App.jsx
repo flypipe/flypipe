@@ -21,6 +21,7 @@ const App = () => {
                             <div className="col">
                                 <div>
                                     <Graph
+                                        initialNodes={initialNodes}
                                         nodeDefs={nodes}
                                         tagSuggestions={tagSuggestions}
                                     />

@@ -14,7 +14,12 @@ import ReactFlow, {
     MiniMap,
 } from "reactflow";
 import { ExistingNode, NewNode } from "./node";
-import { refreshNodePositions, moveToNode, getNewNodeDef } from "../util";
+import {
+    refreshNodePositions,
+    moveToNode,
+    getNewNodeDef,
+    addNodeAndPredecessors,
+} from "../util";
 import "reactflow/dist/style.css";
 import { MIN_ZOOM, MAX_ZOOM } from "./config";
 import { EditNode } from "./edit-node";
@@ -35,15 +40,23 @@ const NODE_TYPES = {
     "flypipe-node-new": NewNode,
 };
 
-const Graph = ({ nodeDefs, tagSuggestions }) => {
+const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
     const { currentGraphObject, setCurrentGraphObject } =
         useContext(GraphContext);
     const { setNewMessage } = useContext(NotificationContext);
     const [showOffcanvas, setShowOffcanvas] = useState(false);
 
     const graph = useReactFlow();
-
     const graphDiv = useRef(null);
+
+    const handleInit = useCallback(() => {
+        if (initialNodes.length > 0) {
+            initialNodes.forEach((nodeKey) =>
+                addNodeAndPredecessors(graph, nodeDefs, nodeKey)
+            );
+            moveToNode(graph, initialNodes[initialNodes.length - 1]);
+        }
+    }, [initialNodes, graph]);
 
     const onClickNewNode = useCallback(() => {
         const newNodeId = `new-node-${NEW_NODE_INDEX}`;
@@ -153,6 +166,7 @@ const Graph = ({ nodeDefs, tagSuggestions }) => {
             <ReactFlow
                 defaultNodes={[]}
                 defaultEdges={[]}
+                onInit={handleInit}
                 nodeTypes={NODE_TYPES}
                 minZoom={MIN_ZOOM}
                 maxZoom={MAX_ZOOM}
