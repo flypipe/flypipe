@@ -25,6 +25,7 @@ export const EditEdge = ({ edge, onClose }) => {
         () => [graph.getNode(edge.source), graph.getNode(edge.target)],
         [graph, edge]
     );
+    const [formError, setFormError] = useState("");
 
     useEffect(() => {
         // When an edge is selected, we need to fill out:
@@ -93,16 +94,19 @@ export const EditEdge = ({ edge, onClose }) => {
         });
     }, [graph, sourceNode, targetNode, setData]);
 
-    const handleSelectAll = useCallback(() => {
-        setData((prevData) => ({
-            ...prevData,
-            columns: prevData.columns.map((column) => ({
-                ...column,
-                isRequested: true,
-            })),
-            requestedAllColumns: true,
-        }));
-    }, [setData]);
+    const handleSelectAll = useCallback(
+        (e) => {
+            setData((prevData) => ({
+                ...prevData,
+                columns: prevData.columns.map((column) => ({
+                    ...column,
+                    isRequested: e.target.checked,
+                })),
+                requestedAllColumns: e.target.checked,
+            }));
+        },
+        [setData]
+    );
 
     const handleSelectColumn = (e) => {
         const { id: selectedColumn } = e.target;
@@ -126,6 +130,17 @@ export const EditEdge = ({ edge, onClose }) => {
             requestedAllColumns,
         }));
     };
+
+    useEffect(() => {
+        const selectedColumns = data.columns.filter(
+            ({ isRequested }) => isRequested
+        );
+        if (selectedColumns.length === 0) {
+            setFormError("At least one column must be selected");
+        } else {
+            setFormError("");
+        }
+    }, [data, setFormError]);
 
     const handleDelete = useCallback(() => {
         deleteEdge(graph, edge.id);
@@ -180,7 +195,6 @@ export const EditEdge = ({ edge, onClose }) => {
                             label="all columns"
                             checked={data.requestedAllColumns}
                             onChange={handleSelectAll}
-                            disabled={data.requestedAllColumns}
                         />
                         {data.columns.map(({ column, isRequested }) => (
                             <Form.Check
@@ -208,6 +222,7 @@ export const EditEdge = ({ edge, onClose }) => {
                             </>
                         )}
                     </fieldset>
+                    {formError && <Alert variant="danger">{formError}</Alert>}
                     <Row className="mt-4">
                         <Col>
                             {!isReadOnly && (
@@ -223,6 +238,7 @@ export const EditEdge = ({ edge, onClose }) => {
                                     variant="outline-primary"
                                     className="me-2 float-end"
                                     onClick={handleSave}
+                                    disabled={formError}
                                 >
                                     Save
                                 </Button>
