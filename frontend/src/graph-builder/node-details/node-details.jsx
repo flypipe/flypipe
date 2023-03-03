@@ -32,13 +32,8 @@ export const NodeDetails = () => {
         [setNewMessage]
     );
 
-    const sourceCode = useMemo(
-        () =>
-            nodeData.sourceCode
-                ? nodeData.sourceCode
-                : generateCodeTemplate(graph, nodeData),
-        [nodeData.tags]
-    );
+    const sourceCode =
+        nodeData.sourceCode || generateCodeTemplate(graph, nodeData);
 
     const nodeTypeColorClass = getNodeTypeColorClass(nodeData.nodeType);
     const handleClose = useCallback(() => {

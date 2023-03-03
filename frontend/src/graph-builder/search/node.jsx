@@ -22,17 +22,19 @@ const Node = ({ node, isInGraphBuilder = false, handleClickGraphBuilder }) => {
             </button>
         );
     }, [isInGraphBuilder, nodeKey]);
-    const handleNodeClick = useCallback((e) => {
-        // A click on the graph builder button will also activate the node click since the button is inside the div
-        // this is registered too, we need to ensure we skip the click event in this situation.
-        if (e.target.nodeName === "BUTTON") {
-            return;
-        }
-        openNodeDetails(node);
-    }, []);
+    const handleNodeClick = useCallback(
+        (e) => {
+            // A click on the graph builder button will also activate the node click since the button is inside the div
+            // this is registered too, we need to ensure we skip the click event in this situation.
+            if (e.target.nodeName === "BUTTON") {
+                return;
+            }
+            openNodeDetails(node);
+        },
+        [node, openNodeDetails]
+    );
 
     return (
-        // <a className={classNames("list-group-item", "list-group-item-action")} onClick={() => {console.log('I got clicked!')}}>
         <div
             className={classNames("list-group-item", "list-group-item-action")}
             onClick={handleNodeClick}
@@ -47,7 +49,7 @@ const Node = ({ node, isInGraphBuilder = false, handleClickGraphBuilder }) => {
                 {graphBuilderButton}
             </div>
             {tags.map(({ id, text }) => (
-                <Badge key={id} bg="secondary" className="me-2 mt-2">
+                <Badge key={id} bg="light" text="dark" className="me-2 mt-2">
                     {text}
                 </Badge>
             ))}
