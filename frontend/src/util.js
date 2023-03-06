@@ -86,12 +86,14 @@ const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
                         isNew: false,
                         source: current.nodeKey,
                         target: successorKey,
-                        animated: successor.isActive,
                         markerEnd: {
                             type: MarkerType.ArrowClosed,
                             width: 20,
                             height: 20,
                         },
+                        ...(successor.isActive || {style: {
+                            strokeDasharray: "5,5"
+                        }}),
                     };
                     edges.push(edge);
                     edgeKeys.add(edgeKey);
@@ -237,8 +239,12 @@ const consolidateEdge = (graph, edge) => {
         width: 20,
         height: 20,
     };
+    if (!targetNode.data.isActive) {
+        edge.style = {
+            strokeDasharray: "5,5"
+        }
+    }
 
-    edge.animated = targetNode.data.isActive;
     graph.setEdges([...otherEdges, edge]);
 };
 
