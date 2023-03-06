@@ -152,10 +152,8 @@ const generateCodeTemplate = (graph, nodeData) => {
         ...predecessors.map((nodeId) => graph.getNode(nodeId).data.importCmd).filter((importCmd) => importCmd !== "")
     ];
     const imports = importList.join("\n");
+
     const tagList = tags.map(({ text }) => `'${text}'`).join(", ");
-    const parameterList = predecessors
-        .map((nodeId) => graph.getNode(nodeId).data.name)
-        .join(", ");
     const dependencyList = predecessors
         .map((nodeId) => {
             const name = graph.getNode(nodeId).data.name;
@@ -169,15 +167,23 @@ const generateCodeTemplate = (graph, nodeData) => {
             }
         })
         .join(", ");
+    const nodeParameters = [
+        `type="${nodeType}"`,
+        ...(description ? [`description=${description}`] : []),
+        ...(tagList.length > 0 ? [`tags=[${tagList}]`] : []),
+        ...(dependencyList.length > 0 ? [`dependencies=[${dependencyList}]`] : [])
+    ];
+
+    const argumentList = predecessors
+        .map((nodeId) => graph.getNode(nodeId).data.name)
+        .join(", ");
+
     return `${imports}
     
 @node(
-    type="${nodeType}",
-    description="${description}",
-    tags=[${tagList}],
-    dependencies=[${dependencyList}]
+    ${nodeParameters.join(',\n    ')}
 )
-def ${name}(${parameterList}):
+def ${name}(${argumentList}):
     # <implement logic here>
 `;
 };
