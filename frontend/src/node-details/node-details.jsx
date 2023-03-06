@@ -47,27 +47,29 @@ export const NodeDetails = () => {
             dialogClassName="modal-more-info modal-dialog-scrollable"
         >
             <Modal.Header closeButton>
-                <Modal.Title>
+                <Modal.Title className="d-flex justify-content-between">
                     {nodeData.name}
-                    <Badge
-                        bg={nodeTypeColorClass}
-                        className="ms-2 fs-6 fw-light fw-light"
-                    >
-                        {nodeData.nodeType}
-                    </Badge>
-                    <Badge bg="dark" className="ms-2 fs-6 fw-light fw-light">
-                        {nodeData.isActive ? "ACTIVE" : "SKIPPED"}
-                    </Badge>
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <div>
+                    <Badge
+                        bg={nodeTypeColorClass}
+                        className="fw-light"
+                    >
+                        {nodeData.nodeType}
+                    </Badge>
+                    <Badge bg="dark" className="ms-2 fw-light">
+                        {nodeData.isActive ? "ACTIVE" : "SKIPPED"}
+                    </Badge>
+                </div>
+                <div>
                     <span>Tags: </span>
-                    {nodeData.tags.map(({ id, text }) => (
+                    {nodeData.tags.length > 0 ? nodeData.tags.map(({ id, text }) => (
                         <Badge key={id} bg="light" className="ms-2" text="dark">
                             {text}
                         </Badge>
-                    ))}
+                    )) : "N/A"}
                 </div>
                 <div>
                     <span>Location:</span>

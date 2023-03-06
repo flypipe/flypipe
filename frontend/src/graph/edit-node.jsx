@@ -99,7 +99,7 @@ export const EditNode = ({
                         <span className="fw-semibold">Status</span>
                         <Badge
                             bg="dark"
-                            className="ms-2 fs-6 fw-light fw-light"
+                            className="ms-2 fw-light"
                         >
                             {node.data.isActive ? "ACTIVE" : "SKIPPED"}
                         </Badge>
