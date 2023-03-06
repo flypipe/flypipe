@@ -4,11 +4,11 @@ import Form from "react-bootstrap/Form";
 import { Tags } from "./tags";
 import { BsInfoLg } from "react-icons/bs";
 import CustomSelect from "./custom-select";
-import DeleteNodeModal from "./delete-node-modal";
 import { NodeOutput } from "./node-output";
 import { useFormik } from "formik";
 import NodeList from "./node-list";
 import { NodeDetailsContext } from "../node-details/context";
+import { DeleteNode } from "./delete/delete";
 
 const RE_LABEL = /^[a-zA-Z_]\w*$/;
 
@@ -56,18 +56,10 @@ export const EditNode = ({
     ];
 
     const [show, setShow] = useState(true);
-    const [showDeleteNode, setShowDeleteNode] = useState(false);
 
-    const handleShowDeleteNode = useCallback(() => {
-        setShowDeleteNode(true);
-    }, [setShowDeleteNode]);
-    const handleCancelDeleteNode = useCallback(() => {
-        setShowDeleteNode(false);
-    }, [setShowDeleteNode]);
     const handleSubmitDeleteNode = useCallback(() => {
-        setShowDeleteNode(false);
         handleClose();
-    }, [setShowDeleteNode, handleClose]);
+    }, [handleClose]);
 
     const { openNodeDetails } = useContext(NodeDetailsContext);
     const onClickMoreInfo = useCallback(() => {
@@ -83,14 +75,6 @@ export const EditNode = ({
 
     return (
         <>
-            {showDeleteNode && (
-                <DeleteNodeModal
-                    nodeId={formState.values.nodeKey}
-                    onCancel={handleCancelDeleteNode}
-                    onSubmit={handleSubmitDeleteNode}
-                    handleClose={handleCancelDeleteNode}
-                />
-            )}
             <Offcanvas
                 show={show}
                 placement="end"
@@ -244,12 +228,10 @@ export const EditNode = ({
 
                         <Row>
                             <Col>
-                                <Button
-                                    variant="outline-danger"
-                                    onClick={handleShowDeleteNode}
-                                >
-                                    Delete
-                                </Button>
+                                <DeleteNode
+                                    nodeId={node.id}
+                                    onDelete={handleSubmitDeleteNode}
+                                />
                                 {!isReadOnly && (
                                     <Button
                                         variant="outline-primary"

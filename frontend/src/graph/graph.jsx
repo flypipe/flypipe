@@ -31,6 +31,7 @@ import Tooltip from "../tooltip";
 import { NotificationContext } from "../notifications/context";
 import uuid from "react-uuid";
 import { GraphContext } from "./graph-context";
+import { ClearGraph } from "./delete/delete";
 
 // TODO- get rid of this index when we introduce the new node modal
 let NEW_NODE_INDEX = 1;
@@ -202,7 +203,12 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
                     </div>
                 </Panel>
                 <Panel position="top-right" className="mt-2">
-                    <ExportGraph />
+                    <div className="d-flex">
+                        <div className="me-2">
+                            <ClearGraph />
+                        </div>
+                        <ExportGraph />
+                    </div>
                 </Panel>
 
                 <Panel position="bottom-center">

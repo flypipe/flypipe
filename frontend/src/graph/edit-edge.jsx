@@ -11,6 +11,7 @@ import {
 } from "react-bootstrap";
 import { useReactFlow } from "reactflow";
 import { deleteEdge } from "../util";
+import { DeleteEdge } from "./delete/delete";
 
 export const EditEdge = ({ edge, onClose }) => {
     const isReadOnly = !edge.isNew;
@@ -142,10 +143,9 @@ export const EditEdge = ({ edge, onClose }) => {
         }
     }, [data, setFormError]);
 
-    const handleDelete = useCallback(() => {
-        deleteEdge(graph, edge.id);
-        onClose();
-    }, [edge, graph, onClose]);
+    const handleSubmitDeleteEdge = useCallback(() => {
+        handleClose();
+    }, [handleClose]);
 
     const handleClose = useCallback(() => {
         onClose();
@@ -226,12 +226,10 @@ export const EditEdge = ({ edge, onClose }) => {
                     <Row className="mt-4">
                         <Col>
                             {!isReadOnly && (
-                                <Button
-                                    variant="outline-danger"
-                                    onClick={handleDelete}
-                                >
-                                    Delete
-                                </Button>
+                                <DeleteEdge
+                                    edgeId={edge.id}
+                                    onDelete={handleSubmitDeleteEdge}
+                                />
                             )}
                             {!isReadOnly && (
                                 <Button
