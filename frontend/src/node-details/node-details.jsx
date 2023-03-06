@@ -87,13 +87,13 @@ export const NodeDetails = () => {
                 </div>
                 <div>
                     <span>Py Import:</span>
-                    {nodeData.pythonImportCommand ? (
+                    {nodeData.importCmd ? (
                         <CopyToClipboardWidget
-                            text={nodeData.pythonImportCommand}
-                            data={nodeData.pythonImportCommand}
+                            text={nodeData.importCmd}
+                            data={nodeData.importCmd}
                             onCopy={handleCopy}
                         >
-                            <span>{nodeData.pythonImportCommand}</span>
+                            <span>{nodeData.importCmd}</span>
                         </CopyToClipboardWidget>
                     ) : (
                         <span className="ms-2 text-secondary">N/A</span>

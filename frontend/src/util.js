@@ -147,6 +147,11 @@ const generateCodeTemplate = (graph, nodeData) => {
         predecessors,
         predecessorColumns,
     } = nodeData;
+    const importList = [
+        'from flypipe import node', 
+        ...predecessors.map((nodeId) => graph.getNode(nodeId).data.importCmd).filter((importCmd) => importCmd !== "")
+    ];
+    const imports = importList.join("\n");
     const tagList = tags.map(({ text }) => `'${text}'`).join(", ");
     const parameterList = predecessors
         .map((nodeId) => graph.getNode(nodeId).data.name)
@@ -164,7 +169,7 @@ const generateCodeTemplate = (graph, nodeData) => {
             }
         })
         .join(", ");
-    return `from flypipe import node
+    return `${imports}
     
 @node(
     type="${nodeType}",
