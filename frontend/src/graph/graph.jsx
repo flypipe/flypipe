@@ -15,10 +15,11 @@ import ReactFlow, {
 } from "reactflow";
 import { ExistingNode, NewNode } from "./node";
 import {
-    refreshNodePositions,
     moveToNode,
     getNewNodeDef,
     addNodeAndPredecessors,
+    NODE_WIDTH,
+    NODE_HEIGHT,
 } from "../util";
 import "reactflow/dist/style.css";
 import { MIN_ZOOM, MAX_ZOOM } from "./config";
@@ -48,7 +49,7 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
     const [showOffcanvas, setShowOffcanvas] = useState(false);
 
     const graph = useReactFlow();
-    const graphDiv = useRef(null);
+    const graphDivRef = useRef(null);
 
     const handleInit = useCallback(() => {
         if (initialNodes.length > 0) {
@@ -59,7 +60,24 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
         }
     }, [initialNodes, graph]);
 
-    const onClickNewNode = useCallback(() => {
+    const handleDragStart = useCallback((event) => {
+        event.dataTransfer.effectAllowed = 'copy';
+    }, []);
+    const handleDragOver = useCallback((event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+    }, []);
+    const handleDropNewNode = useCallback((event) => {
+        const {x: graphX, y: graphY} = graphDivRef.current.getBoundingClientRect();
+        const cursorPosition = {
+            x: event.clientX - graphX,
+            y: event.clientY - graphY,
+        };
+        const graphPosition = graph.project(cursorPosition);
+        graphPosition.x -= (NODE_WIDTH / 2);
+        graphPosition.y -= (NODE_HEIGHT / 2);
+        
+        // Add a new node to the graph at the cursor's position
         const newNodeId = `new-node-${NEW_NODE_INDEX}`;
         const newNode = {
             id: newNodeId,
@@ -69,17 +87,10 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
                 label: `untitled${NEW_NODE_INDEX}`,
                 name: `untitled${NEW_NODE_INDEX}`,
             }),
-            position: {
-                // dummy position, this will be automatically updated later
-                x: 0,
-                y: 0,
-            },
+            position: graphPosition
         };
         NEW_NODE_INDEX += 1;
-
         graph.addNodes(newNode);
-        refreshNodePositions(graph);
-        moveToNode(graph, newNodeId);
 
         setCurrentGraphObject({
             object: newNode,
@@ -89,7 +100,7 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
             msgId: uuid(),
             message: `New node ${newNode.data.label} added to the graph`,
         });
-    }, [graph, setNewMessage, setCurrentGraphObject]);
+    }, [graphDivRef, graph, setCurrentGraphObject, setNewMessage]);
 
     const onNodeClick = useCallback(
         (event, node) => {
@@ -148,7 +159,7 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
     }, [setShowOffcanvas]);
 
     return (
-        <div className="layoutflow d-flex w-100 h-100" ref={graphDiv}>
+        <div className="layoutflow d-flex w-100 h-100">
             {showOffcanvas && currentGraphObject.type === "edge" && (
                 <EditEdge
                     edge={currentGraphObject.object}
@@ -173,13 +184,17 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
                 maxZoom={MAX_ZOOM}
                 onNodeClick={onNodeClick}
                 onEdgeClick={onEdgeClick}
+                onDrop={handleDropNewNode}
+                onDragOver={handleDragOver}
                 fitView
+                ref={graphDivRef}
             >
                 <Panel position="top-left" className="mt-2">
-                    <Tooltip text="Add a new node to the graph">
+                    <Tooltip text="Click & drag to add a new node to the graph in a particular position">
                         <Button
                             variant="outline-secondary flypipe"
-                            onClick={onClickNewNode}
+                            onDragStart={handleDragStart}
+                            draggable
                         >
                             New Node
                         </Button>

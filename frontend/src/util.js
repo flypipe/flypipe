@@ -33,9 +33,20 @@ const assignNodePositions = (nodes, edges) => {
 };
 
 const refreshNodePositions = (graph) => {
-    const nodes = graph.getNodes();
-    assignNodePositions(nodes, graph.getEdges());
-    graph.setNodes(nodes);
+    // Exclude new nodes that have no edges, the idea being that after a new node is dragged into the graph the 
+    // position remains under the user's discretion until it is connected into other nodes. 
+    const calculatedNodes = [];
+    const ignoredNodes = [];
+    graph.getNodes().forEach((node) => {
+        if (node.data.isNew && node.data.predecessors.length === 0 && node.data.successors.length === 0) {
+            ignoredNodes.push(node);
+        } else {
+            calculatedNodes.push(node);
+        }
+    });
+
+    assignNodePositions(calculatedNodes, graph.getEdges());
+    graph.setNodes([...ignoredNodes, ...calculatedNodes]);
 };
 
 // Retrieve the graph node representation of a node
