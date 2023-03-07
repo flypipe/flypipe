@@ -30,7 +30,7 @@ version.py
 node_modules
 dist
 *.bak
-flypipe/js
+flypipe/js/*.js
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
