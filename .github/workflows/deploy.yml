@@ -46,6 +46,10 @@ jobs:
           git add changelog.txt
           git commit -m 'chore: update version file'
           git push origin "release/${{ env.VERSION_NUMBER }}"
+      - name: Build frontend
+        run: |
+          cd frontend
+          yarn build
       - name: Upload to pypi
         run: |
           flit publish

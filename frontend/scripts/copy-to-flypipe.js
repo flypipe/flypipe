@@ -6,6 +6,7 @@ var fs = require("fs");
 fs.copyFile("dist/bundle.js", "../flypipe/js/bundle.js", (err) => {
     if (err) {
         console.log("ERROR copying bundle.js to Flypipe Python code");
+        console.log(err);
     } else {
         console.log("Successfully copied bundle.js to Flypipe Python code");
     }

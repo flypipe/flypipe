@@ -30,8 +30,12 @@ jobs:
           fetch-depth: 0
       - name: Setup dependencies
         uses: ./.github/actions/setup-dependencies
-      - name: Run formatter (black)
+      - name: Run formatter on backend (black)
         run: black flypipe --check
+      - name: Run formatter on frontend (prettier)
+        run: |
+          cd frontend
+          yarn prettier-check
       - name: Run linter (pylint)
         run: python -m pylint flypipe
       - name: Run unit tests
