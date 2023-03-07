@@ -2,6 +2,7 @@ import os
 import inspect
 import json
 import logging
+import types
 from pathlib import Path
 
 from flypipe.config import get_config
@@ -23,17 +24,17 @@ class CatalogNode:
         self.node_graph = node_graph
         # TODO: it's a little awkward to deal with this node function logic here, is this even the behaviour we want?
         self.predecessors = []
-        self.predecessorColumns = {}
+        self.predecessor_columns = {}
         for input_node in node.input_nodes:
             if isinstance(input_node.node, NodeFunction):
                 expanded_node = input_node.node.expand(None)[-1]
                 self.predecessors.append(expanded_node.key)
-                self.predecessorColumns[expanded_node.key] = (
+                self.predecessor_columns[expanded_node.key] = (
                     input_node.selected_columns or []
                 )
             else:
                 self.predecessors.append(input_node.node.key)
-                self.predecessorColumns[input_node.node.key] = (
+                self.predecessor_columns[input_node.node.key] = (
                     input_node.selected_columns or []
                 )
         self.successors = set()
@@ -57,15 +58,15 @@ class CatalogNode:
             "importCmd": self._get_import_cmd(),
             "output": self._get_schema(),
             "predecessors": self.predecessors,
-            "predecessorColumns": self.predecessorColumns,
+            "predecessorColumns": self.predecessor_columns,
             "successors": sorted(list(self.successors)),
             "sourceCode": self._get_source_code(),
             "isActive": self._get_is_active(),
         }
 
     def _get_is_active(self):
-        if getattr(self, 'node_graph'):
-            return self.node_graph.get_node(self.node.key)['status'] != RunStatus.SKIP
+        if getattr(self, "node_graph"):
+            return self.node_graph.get_node(self.node.key)["status"] != RunStatus.SKIP
         return True
 
     def _get_file_path(self):
@@ -77,6 +78,8 @@ class CatalogNode:
         The method used to calculate the path relative to the project root is simply to iterate over the parent
         directories one by one until we reach a directory that doesn't contain an __init__.py file.
         """
+        if self._is_in_notebook():
+            return ""
         absolute_path = inspect.getfile(self.node.function)
         base = Path(absolute_path).parent
         while (base / "__init__.py").is_file():
@@ -84,6 +87,9 @@ class CatalogNode:
         return os.path.relpath(absolute_path, start=base)
 
     def _get_import_cmd(self):
+        if self._is_in_notebook():
+            # We can't import functions from notebooks directly
+            return ""
         # Remove the .py extension and convert the directory separator / into full stops
         module_path = self._get_file_path()[:-3].replace("/", ".").replace("\\", ".")
         return f"from {module_path} import {self.node.__name__}"
@@ -101,7 +107,19 @@ class CatalogNode:
         return []
 
     def _get_source_code(self):
+        """
+        Get the source code of the node. We try in the first instance to load the entire module which is holding the
+        node, if the function is defined inside a notebook we can't do this and just load the source code for the node
+        function.
+        """
+        if self._is_in_notebook():
+            return inspect.getsource(self.node.function)
         return inspect.getsource(inspect.getmodule(self.node.function))
+
+    def _is_in_notebook(self):
+        """Determine if the node is defined inside a notebook."""
+        code_module = inspect.getmodule(self.node.function)
+        return not isinstance(code_module, types.ModuleType)
 
 
 class Catalog:

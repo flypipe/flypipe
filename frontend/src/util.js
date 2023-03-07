@@ -33,12 +33,16 @@ const assignNodePositions = (nodes, edges) => {
 };
 
 const refreshNodePositions = (graph) => {
-    // Exclude new nodes that have no edges, the idea being that after a new node is dragged into the graph the 
-    // position remains under the user's discretion until it is connected into other nodes. 
+    // Exclude new nodes that have no edges, the idea being that after a new node is dragged into the graph the
+    // position remains under the user's discretion until it is connected into other nodes.
     const calculatedNodes = [];
     const ignoredNodes = [];
     graph.getNodes().forEach((node) => {
-        if (node.data.isNew && node.data.predecessors.length === 0 && node.data.successors.length === 0) {
+        if (
+            node.data.isNew &&
+            node.data.predecessors.length === 0 &&
+            node.data.successors.length === 0
+        ) {
             ignoredNodes.push(node);
         } else {
             calculatedNodes.push(node);
@@ -102,9 +106,11 @@ const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
                             width: 20,
                             height: 20,
                         },
-                        ...(successor.isActive || {style: {
-                            strokeDasharray: "5,5"
-                        }}),
+                        ...(successor.isActive || {
+                            style: {
+                                strokeDasharray: "5,5",
+                            },
+                        }),
                     };
                     edges.push(edge);
                     edgeKeys.add(edgeKey);
@@ -159,8 +165,10 @@ const generateCodeTemplate = (graph, nodeData) => {
         predecessorColumns,
     } = nodeData;
     const importList = [
-        'from flypipe import node', 
-        ...predecessors.map((nodeId) => graph.getNode(nodeId).data.importCmd).filter((importCmd) => importCmd !== "")
+        "from flypipe import node",
+        ...predecessors
+            .map((nodeId) => graph.getNode(nodeId).data.importCmd)
+            .filter((importCmd) => importCmd !== ""),
     ];
     const imports = importList.join("\n");
 
@@ -179,10 +187,12 @@ const generateCodeTemplate = (graph, nodeData) => {
         })
         .join(", ");
     const nodeParameters = [
-        `type="${nodeType}"`,
-        ...(description ? [`description=${description}`] : []),
+        `type='${nodeType}'`,
+        ...(description ? [`description='${description}'`] : []),
         ...(tagList.length > 0 ? [`tags=[${tagList}]`] : []),
-        ...(dependencyList.length > 0 ? [`dependencies=[${dependencyList}]`] : [])
+        ...(dependencyList.length > 0
+            ? [`dependencies=[${dependencyList}]`]
+            : []),
     ];
 
     const argumentList = predecessors
@@ -192,7 +202,7 @@ const generateCodeTemplate = (graph, nodeData) => {
     return `${imports}
     
 @node(
-    ${nodeParameters.join(',\n    ')}
+    ${nodeParameters.join(",\n    ")}
 )
 def ${name}(${argumentList}):
     # <implement logic here>
@@ -263,8 +273,8 @@ const consolidateEdge = (graph, edge) => {
     };
     if (!targetNode.data.isActive) {
         edge.style = {
-            strokeDasharray: "5,5"
-        }
+            strokeDasharray: "5,5",
+        };
     }
 
     graph.setEdges([...otherEdges, edge]);

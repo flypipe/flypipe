@@ -61,46 +61,50 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
     }, [initialNodes, graph]);
 
     const handleDragStart = useCallback((event) => {
-        event.dataTransfer.effectAllowed = 'copy';
+        event.dataTransfer.effectAllowed = "copy";
     }, []);
     const handleDragOver = useCallback((event) => {
         event.preventDefault();
-        event.dataTransfer.dropEffect = 'copy';
+        event.dataTransfer.dropEffect = "copy";
     }, []);
-    const handleDropNewNode = useCallback((event) => {
-        const {x: graphX, y: graphY} = graphDivRef.current.getBoundingClientRect();
-        const cursorPosition = {
-            x: event.clientX - graphX,
-            y: event.clientY - graphY,
-        };
-        const graphPosition = graph.project(cursorPosition);
-        graphPosition.x -= (NODE_WIDTH / 2);
-        graphPosition.y -= (NODE_HEIGHT / 2);
-        
-        // Add a new node to the graph at the cursor's position
-        const newNodeId = `new-node-${NEW_NODE_INDEX}`;
-        const newNode = {
-            id: newNodeId,
-            type: "flypipe-node-new",
-            data: getNewNodeDef({
-                nodeKey: newNodeId,
-                label: `untitled${NEW_NODE_INDEX}`,
-                name: `untitled${NEW_NODE_INDEX}`,
-            }),
-            position: graphPosition
-        };
-        NEW_NODE_INDEX += 1;
-        graph.addNodes(newNode);
+    const handleDropNewNode = useCallback(
+        (event) => {
+            const { x: graphX, y: graphY } =
+                graphDivRef.current.getBoundingClientRect();
+            const cursorPosition = {
+                x: event.clientX - graphX,
+                y: event.clientY - graphY,
+            };
+            const graphPosition = graph.project(cursorPosition);
+            graphPosition.x -= NODE_WIDTH / 2;
+            graphPosition.y -= NODE_HEIGHT / 2;
 
-        setCurrentGraphObject({
-            object: newNode,
-            type: "node",
-        });
-        setNewMessage({
-            msgId: uuid(),
-            message: `New node ${newNode.data.label} added to the graph`,
-        });
-    }, [graphDivRef, graph, setCurrentGraphObject, setNewMessage]);
+            // Add a new node to the graph at the cursor's position
+            const newNodeId = `new-node-${NEW_NODE_INDEX}`;
+            const newNode = {
+                id: newNodeId,
+                type: "flypipe-node-new",
+                data: getNewNodeDef({
+                    nodeKey: newNodeId,
+                    label: `untitled${NEW_NODE_INDEX}`,
+                    name: `untitled${NEW_NODE_INDEX}`,
+                }),
+                position: graphPosition,
+            };
+            NEW_NODE_INDEX += 1;
+            graph.addNodes(newNode);
+
+            setCurrentGraphObject({
+                object: newNode,
+                type: "node",
+            });
+            setNewMessage({
+                msgId: uuid(),
+                message: `New node ${newNode.data.label} added to the graph`,
+            });
+        },
+        [graphDivRef, graph, setCurrentGraphObject, setNewMessage]
+    );
 
     const onNodeClick = useCallback(
         (event, node) => {

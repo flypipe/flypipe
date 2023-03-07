@@ -53,10 +53,7 @@ export const NodeDetails = () => {
             </Modal.Header>
             <Modal.Body>
                 <div>
-                    <Badge
-                        bg={nodeTypeColorClass}
-                        className="fw-light"
-                    >
+                    <Badge bg={nodeTypeColorClass} className="fw-light">
                         {nodeData.nodeType}
                     </Badge>
                     <Badge bg="dark" className="ms-2 fw-light">
@@ -65,11 +62,20 @@ export const NodeDetails = () => {
                 </div>
                 <div>
                     <span>Tags: </span>
-                    {nodeData.tags.length > 0 ? nodeData.tags.map(({ id, text }) => (
-                        <Badge key={id} bg="light" className="ms-2" text="dark">
-                            {text}
-                        </Badge>
-                    )) : "N/A"}
+                    {nodeData.tags.length > 0 ? (
+                        nodeData.tags.map(({ id, text }) => (
+                            <Badge
+                                key={id}
+                                bg="light"
+                                className="ms-2"
+                                text="dark"
+                            >
+                                {text}
+                            </Badge>
+                        ))
+                    ) : (
+                        <span className="ms-2 text-secondary">N/A</span>
+                    )}
                 </div>
                 <div>
                     <span>Location:</span>

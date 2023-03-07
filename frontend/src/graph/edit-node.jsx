@@ -97,10 +97,7 @@ export const EditNode = ({
                 <Offcanvas.Body>
                     <div className="d-flex justify-content-between">
                         <span className="fw-semibold">Status</span>
-                        <Badge
-                            bg="dark"
-                            className="ms-2 fw-light"
-                        >
+                        <Badge bg="dark" className="ms-2 fw-light">
                             {node.data.isActive ? "ACTIVE" : "SKIPPED"}
                         </Badge>
                     </div>
