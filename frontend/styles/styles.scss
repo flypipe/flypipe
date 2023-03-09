@@ -1,6 +1,10 @@
 @import "../node_modules/bootstrap/scss/functions";
 @import "../node_modules/bootstrap/scss/variables";
 
+html {
+    height: 100%
+}
+
 .suggestionsClass {
     padding: 10px;
 

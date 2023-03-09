@@ -163,7 +163,7 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
     }, [setShowOffcanvas]);
 
     return (
-        <div className="layoutflow d-flex w-100 h-100">
+        <div className="d-flex w-100 h-100 align-items-stretch">
             {showOffcanvas && currentGraphObject.type === "edge" && (
                 <EditEdge
                     edge={currentGraphObject.object}
@@ -179,69 +179,72 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
                 />
             )}
             {showSearchPanel && <Search nodes={nodeDefs} />}
-            <ReactFlow
-                defaultNodes={[]}
-                defaultEdges={[]}
-                onInit={handleInit}
-                nodeTypes={NODE_TYPES}
-                minZoom={MIN_ZOOM}
-                maxZoom={MAX_ZOOM}
-                onNodeClick={onNodeClick}
-                onEdgeClick={onEdgeClick}
-                onDrop={handleDropNewNode}
-                onDragOver={handleDragOver}
-                fitView
-                ref={graphDivRef}
-            >
-                <Panel position="top-left" className="mt-2">
-                    <Tooltip text="Click & drag to add a new node to the graph in a particular position">
-                        <Button
-                            variant="outline-secondary flypipe"
-                            onDragStart={handleDragStart}
-                            draggable
-                        >
-                            New Node
-                        </Button>
-                    </Tooltip>
-                </Panel>
-                <Panel position="bottom-left" className="m-0">
-                    <div className="d-flex">
-                        <Button
-                            variant="outline-secondary flypipe"
-                            className="search-toggle-button p-2 my-3 py-3 align-self-end"
-                            size="sm"
-                            onClick={toggleSearchPanel}
-                        >
-                            {showSearchPanel ? (
-                                <TfiAngleLeft />
-                            ) : (
-                                <TfiAngleRight />
-                            )}
-                        </Button>
-                        <Controls className="position-relative" />
-                    </div>
-                </Panel>
-                <Panel position="top-right" className="mt-2">
-                    <div className="d-flex">
-                        <div className="me-2">
-                            <ClearGraph />
+            {/* Don't remove this div, there's this weird bug with the graph having height 0 in jupyter notebooks that this fixes */}
+            <div className="w-100">
+                <ReactFlow
+                    defaultNodes={[]}
+                    defaultEdges={[]}
+                    onInit={handleInit}
+                    nodeTypes={NODE_TYPES}
+                    minZoom={MIN_ZOOM}
+                    maxZoom={MAX_ZOOM}
+                    onNodeClick={onNodeClick}
+                    onEdgeClick={onEdgeClick}
+                    onDrop={handleDropNewNode}
+                    onDragOver={handleDragOver}
+                    fitView
+                    ref={graphDivRef}
+                >
+                    <Panel position="top-left" className="mt-2">
+                        <Tooltip text="Click & drag to add a new node to the graph in a particular position">
+                            <Button
+                                variant="outline-secondary flypipe"
+                                onDragStart={handleDragStart}
+                                draggable
+                            >
+                                New Node
+                            </Button>
+                        </Tooltip>
+                    </Panel>
+                    <Panel position="bottom-left" className="m-0">
+                        <div className="d-flex">
+                            <Button
+                                variant="outline-secondary flypipe"
+                                className="search-toggle-button p-2 my-3 py-3 align-self-end"
+                                size="sm"
+                                onClick={toggleSearchPanel}
+                            >
+                                {showSearchPanel ? (
+                                    <TfiAngleLeft />
+                                ) : (
+                                    <TfiAngleRight />
+                                )}
+                            </Button>
+                            <Controls className="position-relative" />
                         </div>
-                        <ExportGraph />
-                    </div>
-                </Panel>
+                    </Panel>
+                    <Panel position="top-right" className="mt-2">
+                        <div className="d-flex">
+                            <div className="me-2">
+                                <ClearGraph />
+                            </div>
+                            <ExportGraph />
+                        </div>
+                    </Panel>
 
-                <Panel position="bottom-center">
-                    <a
-                        href="//flypipe.github.io/flypipe/"
-                        target="_blank"
-                        className="text-secondary text-decoration-none fs-5"
-                    >
-                        Flypipe
-                    </a>
-                </Panel>
-                <MiniMap zoomable pannable />
-                <Background color="#aaa" gap={16} />
-            </ReactFlow>
+                    <Panel position="bottom-center">
+                        <a
+                            href="//flypipe.github.io/flypipe/"
+                            target="_blank"
+                            className="text-secondary text-decoration-none fs-5"
+                        >
+                            Flypipe
+                        </a>
+                    </Panel>
+                    <MiniMap zoomable pannable />
+                    <Background color="#aaa" gap={16} />
+                </ReactFlow>
+            </div>
         </div>
     );
 };
