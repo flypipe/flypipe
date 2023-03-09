@@ -119,7 +119,9 @@ class CatalogNode:
     def _is_in_notebook(self):
         """Determine if the node is defined inside a notebook."""
         code_module = inspect.getmodule(self.node.function)
-        return (not isinstance(code_module, types.ModuleType)) or code_module.__name__ == '__main__'
+        return (
+            not isinstance(code_module, types.ModuleType)
+        ) or code_module.__name__ == "__main__"
 
 
 class Catalog:
