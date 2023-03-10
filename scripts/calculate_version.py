@@ -28,9 +28,12 @@ all_branches = (
 release_branches = [
     branch for branch in all_branches if branch.startswith("origin/release/")
 ]
+print(f'Current list of release branches: {release_branches}')
+print('Current branch: ' + subprocess.check_output("git branch").decode("utf-8"))
 if not release_branches:
     # Unable to find a previous release
     latest_version = [0, 0, 0]
+    print(f'Command to get the list of commits: git rev-list HEAD --no-merges')
     commit_list = (
         subprocess.check_output(f"git rev-list HEAD --no-merges", shell=True)
         .decode("utf-8")
@@ -39,6 +42,7 @@ if not release_branches:
 else:
     latest_version_branch_name = max(release_branches)
     latest_version = [int(num) for num in latest_version_branch_name[15:].split(".")]
+    print(f'Command to get the list of commits: git rev-list {latest_version_branch_name}..HEAD --no-merges')
     commit_list = (
         subprocess.check_output(
             f"git rev-list {latest_version_branch_name}..HEAD --no-merges", shell=True
@@ -56,6 +60,7 @@ for commit_id in commit_list:
     commit_message = subprocess.check_output(
         f"git show {commit_id} -s --format=%B", shell=True
     ).decode("utf-8")
+    print(f'Checking msg {commit_message} (commit id {commit_id})')
     commit_message_summary = commit_message.split("\n", maxsplit=1)[0]
     print(f'Check commit "{commit_message_summary}"')
     commit_type_match = re.search(RE_COMMIT_TYPE, commit_message_summary)
