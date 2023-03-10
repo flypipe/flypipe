@@ -27,3 +27,6 @@ dependencies  = [
 
 [project.urls]
 Home = "https://github.com/flypipe/flypipe.git"
+
+[tool.flit.sdist]
+include = ["flypipe/js"]

@@ -1,0 +1,186 @@
+@import "../node_modules/bootstrap/scss/functions";
+@import "../node_modules/bootstrap/scss/variables";
+
+html {
+    height: 100%;
+}
+
+.suggestionsClass {
+    padding: 10px;
+
+    background-color: white;
+    border: 1px solid #ced4da;
+}
+
+.suggestionsClass > ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.accordion-item {
+    border: none;
+}
+
+.accordion-button:not(.collapsed) {
+    color: black;
+    background-color: white;
+    font-weight: bold;
+}
+
+.offcanvas-header.offcanvas {
+    display: block;
+}
+
+.modal-more-info {
+    max-width: 60%;
+}
+
+.modal-edit-edge {
+    max-width: 850px;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.search-toggle-button {
+    z-index: 1;
+    left: 410px;
+}
+
+.search-result {
+    z-index: 2;
+    background-color: white;
+    border: 1px solid #ced4da;
+    width: 400px;
+}
+
+.list-group-flypipe {
+    height: calc(100vh - 100px);
+}
+
+.search {
+    max-width: 400px;
+    min-width: 400px;
+}
+
+.btn-outline-secondary.flypipe {
+    --bs-btn-bg: white;
+    --bs-btn-hover-bg: #f1f1f1;
+    --bs-btn-border-color: #ced4da;
+
+    --bs-btn-hover-border-color: #6c757d;
+    --bs-btn-hover-color: #6c757d;
+}
+
+.btn-light.flypipe {
+    background-color: white;
+    --bs-btn-active-bg: white;
+    --bs-btn-hover-bg: white;
+}
+
+.no-border {
+    border: none;
+}
+
+.page-link.flypipe {
+    border: none;
+}
+
+.node-badge {
+    top: -21px !important;
+    right: -21px !important;
+    padding: 12px !important;
+}
+
+.node-danger {
+    background-color: white;
+    color: map-get($theme-colors, "danger");
+    border: map-get($theme-colors, "danger");
+    border-style: solid;
+    transition: background-color 200ms ease-out 100ms,
+        color 200ms ease-out 100ms;
+}
+
+.node-danger:hover {
+    background-color: map-get($theme-colors, "danger");
+    color: white;
+}
+
+.node-primary {
+    background-color: white;
+    color: map-get($theme-colors, "primary");
+    border: map-get($theme-colors, "primary");
+    border-style: solid;
+    transition: background-color 200ms ease-out 100ms,
+        color 200ms ease-out 100ms;
+}
+
+.node-primary:hover {
+    background-color: map-get($theme-colors, "primary");
+    color: white;
+}
+
+.node-success {
+    background-color: white;
+    color: map-get($theme-colors, "success");
+    border: map-get($theme-colors, "success");
+    border-style: solid;
+    transition: background-color 200ms ease-out 100ms,
+        color 200ms ease-out 100ms;
+}
+
+.node-success:hover {
+    background-color: map-get($theme-colors, "success");
+    color: white;
+}
+
+.node-info {
+    background-color: white;
+    color: map-get($theme-colors, "info");
+    border: map-get($theme-colors, "info");
+    border-style: solid;
+    transition: background-color 200ms ease-out 100ms,
+        color 200ms ease-out 100ms;
+}
+
+.node-info:hover {
+    background-color: map-get($theme-colors, "info");
+    color: white;
+}
+
+.node-warning {
+    background-color: white;
+    color: map-get($theme-colors, "warning");
+    border: map-get($theme-colors, "warning");
+    border-style: solid;
+    transition: background-color 200ms ease-out 100ms,
+        color 200ms ease-out 100ms;
+}
+
+.node-warning:hover {
+    background-color: map-get($theme-colors, "warning");
+    color: white;
+}
+
+.react-flow__handle {
+    width: 35px !important;
+    height: 75px !important;
+    border-radius: 0 !important;
+    background: none !important;
+    border: none !important;
+}
+
+.react-flow__handle-left {
+    left: -10px !important;
+}
+
+.react-flow__handle-right {
+    right: -10px !important;
+}
+
+.react-flow__edge-path,
+.react-flow__connection-path {
+    stroke-width: 0.09em !important;
+}

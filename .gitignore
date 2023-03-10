@@ -27,6 +27,10 @@ share/python-wheels/
 *.egg
 MANIFEST
 version.py
+node_modules
+dist
+*.bak
+flypipe/js/*.js
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

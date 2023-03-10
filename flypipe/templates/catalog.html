@@ -1,0 +1,13 @@
+<html>
+    <head>
+    </head>
+    <body>
+        <div id="root" style="height: {{ height }}px;"></div>
+        <script>
+            window.nodes = {{ nodes | safe }};
+            window.tagSuggestions = {{ tagSuggestions | safe }};
+            window.initialNodes = {{ initialNodes | safe }};
+        </script>
+        <script>{{ js_bundle|safe }}</script>
+    </body>
+</html>

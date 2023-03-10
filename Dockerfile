@@ -12,7 +12,7 @@ WORKDIR .
 RUN pip install -r requirements.txt
 RUN pip install -r requirements_dev.txt
 
-RUN wget https://dlcdn.apache.org/spark/spark-3.3.1/spark-3.3.1-bin-hadoop3-scala2.13.tgz
+RUN wget https://archive.apache.org/dist/spark/spark-3.3.1/spark-3.3.1-bin-hadoop3-scala2.13.tgz
 RUN tar xf spark-*
 run mv spark-3.3.1-bin-hadoop3-scala2.13 /opt/spark
 

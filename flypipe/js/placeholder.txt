@@ -1,0 +1,1 @@
+Placeholder so git adds the js folder. When running locally this folder should contain bundle.js which is generated from running `yarn build` in the frontend code. 
