@@ -29,7 +29,7 @@ release_branches = [
     branch for branch in all_branches if branch.startswith("origin/release/")
 ]
 print(f'Current list of release branches: {release_branches}')
-print('Current branch: ' + subprocess.check_output("git branch").decode("utf-8"))
+print('Current branch: ' + subprocess.check_output("git branch", shell=True).decode("utf-8"))
 if not release_branches:
     # Unable to find a previous release
     latest_version = [0, 0, 0]
