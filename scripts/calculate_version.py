@@ -31,6 +31,7 @@ release_branches = [
 if not release_branches:
     # Unable to find a previous release
     latest_version = [0, 0, 0]
+    print(f'Check diff for HEAD')
     commit_list = (
         subprocess.check_output(f"git rev-list HEAD --no-merges", shell=True)
         .decode("utf-8")
@@ -39,6 +40,7 @@ if not release_branches:
 else:
     latest_version_branch_name = max(release_branches)
     latest_version = [int(num) for num in latest_version_branch_name[15:].split(".")]
+    print(f'Check diff between {latest_version_branch_name} and HEAD')
     commit_list = (
         subprocess.check_output(
             f"git rev-list {latest_version_branch_name}..HEAD --no-merges", shell=True
@@ -52,10 +54,12 @@ if not commit_list:
     raise Exception("Release would be made without any commits, aborting")
 is_breaking_change = False
 is_feature_change = False
+print('*** Start checking through list of commits ***')
 for commit_id in commit_list:
     commit_message = subprocess.check_output(
         f"git show {commit_id} -s --format=%B", shell=True
     ).decode("utf-8")
+    print(f'Checking msg {commit_message} (commit id {commit_id})')
     commit_message_summary = commit_message.split("\n", maxsplit=1)[0]
     print(f'Check commit "{commit_message_summary}"')
     commit_type_match = re.search(RE_COMMIT_TYPE, commit_message_summary)
@@ -68,12 +72,19 @@ for commit_id in commit_list:
         elif commit_type_str == "feat":
             print(' *** detected feature')
             is_feature_change = True
+print('*** Finished checking through list of commits ***')
 
 if is_breaking_change:
+    print('Conclusion- breaking change, incrementing major version')
     new_version[0] += 1
+    new_version[1] = 0
+    new_version[2] = 0
 elif is_feature_change:
+    print('Conclusion- backwards compatible feature change, incrementing minor version')
     new_version[1] += 1
+    new_version[2] = 0
 else:
+    print('Conclusion- minor change, incrementing patch version')
     new_version[2] += 1
 
 new_version_string = ".".join([str(num) for num in new_version])
