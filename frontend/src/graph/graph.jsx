@@ -84,12 +84,17 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
             const newNode = {
                 id: newNodeId,
                 type: "flypipe-node-new",
+                parentNode: "",
                 data: getNewNodeDef({
                     nodeKey: newNodeId,
                     label: `untitled${NEW_NODE_INDEX}`,
                     name: `untitled${NEW_NODE_INDEX}`,
                 }),
                 position: graphPosition,
+                style: {
+                    width: NODE_WIDTH,
+                    height: NODE_HEIGHT,
+                },
             };
             NEW_NODE_INDEX += 1;
             graph.addNodes(newNode);

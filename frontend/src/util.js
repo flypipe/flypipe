@@ -9,10 +9,13 @@ export const NODE_HEIGHT = 75;
 // the positions of the nodes.
 const assignNodePositions = (nodes, edges) => {
     const dagreGraph = new dagre.graphlib.Graph();
+    console.info("Start dagre");
     dagreGraph.setGraph({ rankdir: "LR", nodesep: 100, ranksep: 150 });
     dagreGraph.setDefaultEdgeLabel(() => ({}));
-    nodes.forEach(({ id }) => {
-        dagreGraph.setNode(id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+    nodes.forEach(({ id, style }) => {
+        const { width, height } = style;
+        console.info(`Add node ${id} to dagre w,h=${width}, ${height}`);
+        dagreGraph.setNode(id, { width: 250, height: 75 });
     });
 
     edges.forEach(({ source, target }) => {
@@ -29,7 +32,9 @@ const assignNodePositions = (nodes, edges) => {
             x: nodeWithPosition.x - NODE_WIDTH / 2,
             y: nodeWithPosition.y - NODE_HEIGHT / 2,
         };
+        console.log(`Position of node ${node.id}: ${node.position.x}, ${node.position.y}`);
     });
+    console.info("End dagre");
 };
 
 const refreshNodePositions = (graph) => {
@@ -39,6 +44,7 @@ const refreshNodePositions = (graph) => {
     const ignoredNodes = [];
     graph.getNodes().forEach((node) => {
         if (
+            node.type !== 'group' &&
             node.data.isNew &&
             node.data.predecessors.length === 0 &&
             node.data.successors.length === 0
@@ -49,8 +55,78 @@ const refreshNodePositions = (graph) => {
         }
     });
 
-    assignNodePositions(calculatedNodes, graph.getEdges());
-    graph.setNodes([...ignoredNodes, ...calculatedNodes]);
+    const groups = calculatedNodes.filter(({type}) => type === "group");
+    const nodes = calculatedNodes.filter(({type}) => type !== "group");
+    groups.forEach(group => {
+        const groupNodes = nodes.filter(({id}) => group.data.nodes.has(id));
+        const groupEdges = graph.getEdges().filter(({source, target}) => group.data.nodes.has(source) || group.data.nodes.has(target));
+        assignNodePositions(
+            groupNodes, 
+            groupEdges
+        );
+        group.position = {
+            x: group.position.x - 50,
+            y: group.position.y - 50,
+        }
+        group.style = {
+            width: Math.max(...groupNodes.map(groupNode => groupNode.position.x + groupNode.style.width + 50)),
+            height: Math.max(...groupNodes.map(groupNode => groupNode.position.y + groupNode.style.height + 50))
+        };
+    });
+    const groupsAndUngroupedNodes = calculatedNodes.filter(node => node.type === "group" || !node.data.group);
+    assignNodePositions(
+        groupsAndUngroupedNodes,
+        graph.getEdges().filter(
+            ({source, target}) => (
+                groupsAndUngroupedNodes.map(({id}) => id).includes(source) || 
+                groupsAndUngroupedNodes.map(({id}) => id).includes(target)
+            )
+        )
+    );
+    graph.setNodes([...calculatedNodes, ...ignoredNodes]);
+};
+
+const refreshGroups = (graph) => {
+    const nodes = graph.getNodes().filter(({type}) => type !== "group");
+    const groups = [...graph.getNodes().filter(({type}) => type === "group")];    
+
+    const edges = graph.getEdges();
+
+    // Handle group expansion/minimisation
+    groups.forEach(group => {
+        if (group.data.isExpanded) {
+            group.data.nodes.forEach(nodeId => {
+                const node = nodes.find(n => n.id === nodeId);
+                node.hidden = false;
+            });
+            edges.filter(({source, target}) => source === group.id || target === group.id).forEach(edge => {
+                if (edge.source === group.id) {
+                    edge.source = edge.tmp;
+                } else if (edge.target === group.id) {
+                    edge.target = edge.tmp;
+                }
+            });
+        } else {
+            // If a group is minimised, then all the nodes inside the graph should be hidden, any incoming edges to these 
+            // nodes should be replaced by edges targeting the group node, and any outgoing edges from these nodes should be 
+            // replaced by edges originating from the group node. 
+            group.data.nodes.forEach(nodeId => {
+                const node = nodes.find(n => n.id === nodeId);
+                node.hidden = true;
+                edges.filter(({source, target}) => source === nodeId || target === nodeId).forEach(edge => {
+                    if (edge.source === nodeId) {
+                        edge.tmp = nodeId;
+                        edge.source = group.id;
+                    } else if (edge.target === nodeId) {
+                        edge.tmp = nodeId;
+                        edge.target = group.id;
+                    }
+                });
+            });
+        }
+    });
+
+    graph.setNodes([...groups, ...nodes]);
 };
 
 // Retrieve the graph node representation of a node
@@ -58,6 +134,7 @@ const convertNodeDefToGraphNode = (nodeDef, isNew = true) => {
     return {
         id: nodeDef.nodeKey,
         type: isNew ? "flypipe-node-new" : "flypipe-node-existing",
+        parentNode: nodeDef.group || "",
         data: {
             nodeKey: nodeDef.nodeKey,
             label: nodeDef.name,
@@ -69,6 +146,10 @@ const convertNodeDefToGraphNode = (nodeDef, isNew = true) => {
             x: 0,
             y: 0,
         },
+        style: {
+            width: NODE_WIDTH,
+            height: NODE_HEIGHT,
+        }
     };
 };
 
@@ -139,9 +220,40 @@ const addNodeAndPredecessors = (graph, nodeDefs, nodeKey) => {
     const currentEdges = new Set(graph.getEdges().map(({ id }) => id));
     const newNodes = predecessorNodes.filter(({ id }) => !currentNodes.has(id));
     const newEdges = predecessorEdges.filter(({ id }) => !currentEdges.has(id));
+    const nodes = graph.getNodes().filter(({type}) => type !== "group");
+    const groups = graph.getNodes().filter(({type}) => type === "group");
 
-    graph.addNodes(newNodes);
+    newNodes.forEach(node => {
+        const groupId = node.data.group;
+        if (groupId) {
+            if (!groups.find(({id}) => id === groupId)) {
+                // If any of the new nodes are in groups that don't yet exist in the graph we'll need to create them
+                groups.push({
+                    id: groupId,
+                    type: "group",
+                    data: {
+                        label: groupId,
+                        isExpanded: false,
+                        nodes: new Set([node.id]),
+                    },
+                    position: {
+                        // dummy position, this will be automatically updated later
+                        x: 0,
+                        y: 0,
+                    },
+                })
+            } else {
+                groups.find(({id}) => id === groupId).data.nodes.add(node.id);
+            }
+        }
+    });
+
+    // debugger;
+
+    graph.setNodes([...groups, ...nodes, ...newNodes]);
     graph.addEdges(newEdges);
+
+    // refreshGroups(graph);
     refreshNodePositions(graph);
 };
 
