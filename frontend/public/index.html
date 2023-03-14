@@ -14,7 +14,7 @@
                     predecessors: [],
                     predecessorColumns: {},
                     output: [],
-                    successors: ['flypipe_catalog_test_function_t2_t2'],
+                    successors: ["flypipe_catalog_test_function_t2_t2"],
                     tags: [],
                     sourceCode: "...",
                     isActive: true,
@@ -27,12 +27,12 @@
                     nodeType: "pandas",
                     name: "t2",
                     group: "group_1",
-                    predecessors: ['flypipe_catalog_test_function_t1_t1'],
+                    predecessors: ["flypipe_catalog_test_function_t1_t1"],
                     predecessorColumns: {
                         flypipe_catalog_test_function_t1_t1: [],
                     },
                     output: [],
-                    successors: ['flypipe_catalog_test_function_t3_t3'],
+                    successors: ["flypipe_catalog_test_function_t3_t3"],
                     tags: [],
                     sourceCode: "...",
                     isActive: true,
@@ -44,13 +44,13 @@
                     nodeKey: "flypipe_catalog_test_function_t3_t3",
                     nodeType: "pandas",
                     name: "t3",
-                    group: "group_2",
-                    predecessors: ['flypipe_catalog_test_function_t2_t2'],
+                    group: "group_1",
+                    predecessors: ["flypipe_catalog_test_function_t2_t2"],
                     predecessorColumns: {
                         flypipe_catalog_test_function_t2_t2: [],
                     },
                     output: [],
-                    successors: ['flypipe_catalog_test_function_t4_t4'],
+                    successors: ["flypipe_catalog_test_function_t4_t4"],
                     tags: [],
                     sourceCode: "...",
                     isActive: true,
@@ -62,7 +62,7 @@
                     nodeKey: "flypipe_catalog_test_function_t4_t4",
                     nodeType: "pandas",
                     name: "t4",
-                    predecessors: ['flypipe_catalog_test_function_t3_t3'],
+                    predecessors: ["flypipe_catalog_test_function_t3_t3"],
                     predecessorColumns: {
                         flypipe_catalog_test_function_t3_t3: [],
                     },
@@ -75,17 +75,17 @@
             ];
             window.groups = [
                 {
-                    "id": "group_1",
-                    "name": "Group 1",
-                    "nodes": [
+                    id: "group_1",
+                    name: "Group 1",
+                    nodes: [
                         "flypipe_catalog_catalog_test_function_t2_t2",
                         "flypipe_catalog_catalog_test_function_t3_t3",
                     ],
                 },
                 {
-                    "id": "group_2",
-                    "name": "Group 2",
-                    "nodes": [
+                    id: "group_2",
+                    name: "Group 2",
+                    nodes: [
                         "flypipe_catalog_catalog_test_function_t2_t2",
                         "flypipe_catalog_catalog_test_function_t3_t3",
                     ],

@@ -22,6 +22,7 @@ import { NotificationContext } from "../notifications/context";
 import { GraphContext } from "./graph-context";
 
 const BaseNode = ({ data, isNewNode }) => {
+    // debugger;
     const graph = useReactFlow();
     const { nodeType, label } = data;
     const { addNotification } = useContext(NotificationContext);

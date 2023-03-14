@@ -33,6 +33,7 @@ import { NotificationContext } from "../notifications/context";
 import uuid from "react-uuid";
 import { GraphContext } from "./graph-context";
 import { ClearGraph } from "./delete/delete";
+import GroupNode from "./group";
 
 // TODO- get rid of this index when we introduce the new node modal
 let NEW_NODE_INDEX = 1;
@@ -53,7 +54,7 @@ const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
     const graphDivRef = useRef(null);
 
     const handleInit = useCallback(() => {
-        groupDefs.forEach(group => {
+        groupDefs.forEach((group) => {
             graph.addNodes({
                 id: group.id,
                 type: "group",
@@ -68,6 +69,10 @@ const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
                     x: 0,
                     y: 0,
                 },
+                style: {
+                    width: 0,
+                    height: 0,
+                }
             });
         });
         if (initialNodes.length > 0) {
@@ -103,6 +108,7 @@ const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
                 id: newNodeId,
                 type: "flypipe-node-new",
                 parentNode: "",
+                extent: "parent",
                 data: getNewNodeDef({
                     nodeKey: newNodeId,
                     label: `untitled${NEW_NODE_INDEX}`,
@@ -112,7 +118,7 @@ const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
                 style: {
                     width: NODE_WIDTH,
                     height: NODE_HEIGHT,
-                },
+                }
             };
             NEW_NODE_INDEX += 1;
             graph.addNodes(newNode);
