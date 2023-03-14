@@ -26,7 +26,7 @@
                     nodeKey: "flypipe_catalog_test_function_t2_t2",
                     nodeType: "pandas",
                     name: "t2",
-                    group: "group1",
+                    group: "group_1",
                     predecessors: ['flypipe_catalog_test_function_t1_t1'],
                     predecessorColumns: {
                         flypipe_catalog_test_function_t1_t1: [],
@@ -44,7 +44,7 @@
                     nodeKey: "flypipe_catalog_test_function_t3_t3",
                     nodeType: "pandas",
                     name: "t3",
-                    group: "group2",
+                    group: "group_2",
                     predecessors: ['flypipe_catalog_test_function_t2_t2'],
                     predecessorColumns: {
                         flypipe_catalog_test_function_t2_t2: [],
@@ -71,6 +71,24 @@
                     tags: [],
                     sourceCode: "...",
                     isActive: true,
+                },
+            ];
+            window.groups = [
+                {
+                    "id": "group_1",
+                    "name": "Group 1",
+                    "nodes": [
+                        "flypipe_catalog_catalog_test_function_t2_t2",
+                        "flypipe_catalog_catalog_test_function_t3_t3",
+                    ],
+                },
+                {
+                    "id": "group_2",
+                    "name": "Group 2",
+                    "nodes": [
+                        "flypipe_catalog_catalog_test_function_t2_t2",
+                        "flypipe_catalog_catalog_test_function_t3_t3",
+                    ],
                 },
             ];
             window.tagSuggestions = [

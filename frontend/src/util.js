@@ -14,8 +14,8 @@ const assignNodePositions = (nodes, edges) => {
     dagreGraph.setDefaultEdgeLabel(() => ({}));
     nodes.forEach(({ id, style }) => {
         const { width, height } = style;
-        console.info(`Add node ${id} to dagre w,h=${width}, ${height}`);
-        dagreGraph.setNode(id, { width: 250, height: 75 });
+        // console.info(`Add node ${id} to dagre w,h=${width}, ${height}`);
+        dagreGraph.setNode(id, { width, height });
     });
 
     edges.forEach(({ source, target }) => {
@@ -32,7 +32,7 @@ const assignNodePositions = (nodes, edges) => {
             x: nodeWithPosition.x - NODE_WIDTH / 2,
             y: nodeWithPosition.y - NODE_HEIGHT / 2,
         };
-        console.log(`Position of node ${node.id}: ${node.position.x}, ${node.position.y}`);
+        // console.log(`Position of node ${node.id}: ${node.position.x}, ${node.position.y}`);
     });
     console.info("End dagre");
 };
@@ -44,7 +44,7 @@ const refreshNodePositions = (graph) => {
     const ignoredNodes = [];
     graph.getNodes().forEach((node) => {
         if (
-            node.type !== 'group' &&
+            node.type !== "group" &&
             node.data.isNew &&
             node.data.predecessors.length === 0 &&
             node.data.successors.length === 0
@@ -159,7 +159,6 @@ const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
     const frontier = [...nodeDef.predecessors];
     const selectedNodeDefs = [nodeDef];
     const edges = [];
-    const edgeKeys = new Set();
     const addedKeys = [nodeDef.nodeKey];
     while (frontier.length > 0) {
         const currentKey = frontier.pop();
@@ -172,30 +171,7 @@ const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
         }
         for (const successorKey of current.successors) {
             if (addedKeys.includes(successorKey)) {
-                const edgeKey = `${current.nodeKey}-${successorKey}`;
-                if (!edgeKeys.has(edgeKey)) {
-                    const successor = nodeDefs.find(
-                        (nodeDef) => nodeDef.nodeKey === successorKey
-                    );
-                    const edge = {
-                        id: edgeKey,
-                        isNew: false,
-                        source: current.nodeKey,
-                        target: successorKey,
-                        markerEnd: {
-                            type: MarkerType.ArrowClosed,
-                            width: 20,
-                            height: 20,
-                        },
-                        ...(successor.isActive || {
-                            style: {
-                                strokeDasharray: "5,5",
-                            },
-                        }),
-                    };
-                    edges.push(edge);
-                    edgeKeys.add(edgeKey);
-                }
+                edges.push([current.nodeKey, successorKey]);
             }
         }
         for (const predecessor of current.predecessors) {
@@ -210,48 +186,89 @@ const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
     ];
 };
 
+const getEdgeDef = (graph, source, target) => {
+    const successor = graph.getNode(target);
+    return {
+        id: `${source}-${target}`,
+        isNew: successor.data.isNew || false,
+        source,
+        target,
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 20,
+            height: 20,
+        },
+        ...(successor.isActive || {
+            style: {
+                strokeDasharray: "5,5",
+            },
+        }),
+    };
+};
+
+const addOrReplaceEdge = (graph, edge) => {
+    console.info('Adding or replacing edge');
+    console.info(edge);
+    const edges = graph.getEdges();
+    const otherEdges = edges.filter(({id}) => id !== edge.id);
+    graph.setEdges([edge, ...otherEdges]);
+
+    const nodes = graph.getNodes();
+    const sourceNode = nodes.find(({id}) => id === edge.source);
+    const targetNode = nodes.find(({id}) => id === edge.target);
+    if (sourceNode.type !== "group" && targetNode.type !== "group") {
+        // Update the predecessor/successor fields on the nodes the edge is going between
+        if (!sourceNode.data.successors.includes(targetNode.id)) {
+            sourceNode.data.successors.push(targetNode.id);
+        }
+        if (!targetNode.data.predecessors.includes(sourceNode.id)) {
+            targetNode.data.predecessors.push(sourceNode.id);
+        }
+        targetNode.data.predecessorColumns = {
+            ...targetNode.data.predecessorColumns,
+            [sourceNode.id]: [],
+        };
+
+        // If the source and/or the target node have groups and they aren't the same group then we need to create an 
+        // extra hidden edge to the group node
+        const sourceGroup = sourceNode.data.group;
+        const targetGroup = targetNode.data.group;
+        if (sourceGroup !== targetGroup) {
+            const source = sourceGroup || sourceNode.id;
+            const target = targetGroup || targetNode.id;
+            addOrReplaceEdge(graph, getEdgeDef(graph, source, target));
+        }
+        graph.setNodes(nodes);
+    }
+};
+
 const addNodeAndPredecessors = (graph, nodeDefs, nodeKey) => {
+    // Add a node to the graph, we also add any ancestor nodes/edges
     const [predecessorNodes, predecessorEdges] = getPredecessorNodesAndEdges(
         nodeDefs,
         nodeKey
     );
+
     // Add the node and any predecessor nodes/edges to the graph that aren't already there.
     const currentNodes = new Set(graph.getNodes().map(({ id }) => id));
     const currentEdges = new Set(graph.getEdges().map(({ id }) => id));
     const newNodes = predecessorNodes.filter(({ id }) => !currentNodes.has(id));
-    const newEdges = predecessorEdges.filter(({ id }) => !currentEdges.has(id));
     const nodes = graph.getNodes().filter(({type}) => type !== "group");
     const groups = graph.getNodes().filter(({type}) => type === "group");
 
     newNodes.forEach(node => {
         const groupId = node.data.group;
         if (groupId) {
-            if (!groups.find(({id}) => id === groupId)) {
-                // If any of the new nodes are in groups that don't yet exist in the graph we'll need to create them
-                groups.push({
-                    id: groupId,
-                    type: "group",
-                    data: {
-                        label: groupId,
-                        isExpanded: false,
-                        nodes: new Set([node.id]),
-                    },
-                    position: {
-                        // dummy position, this will be automatically updated later
-                        x: 0,
-                        y: 0,
-                    },
-                })
-            } else {
-                groups.find(({id}) => id === groupId).data.nodes.add(node.id);
-            }
+            const group = groups.find(({id}) => id === groupId);
+            group.data.nodes.add(node.id);
+            group.hidden = false;
         }
     });
-
-    // debugger;
-
     graph.setNodes([...groups, ...nodes, ...newNodes]);
-    graph.addEdges(newEdges);
+    predecessorEdges.forEach((edgeDef) => {
+        const [source, target] = edgeDef;
+        addOrReplaceEdge(graph, getEdgeDef(graph, source, target));
+    });
 
     // refreshGroups(graph);
     refreshNodePositions(graph);
@@ -349,49 +366,6 @@ const getNewNodeDef = ({
     isActive: isActive || true,
 });
 
-// This is a bit weird- as far as I can tell when dragging an edge between two nodes you can't suppress the automatic
-// edge creation so as to add an edge with custom requirements. Therefore we add the edge and immediately consolidate
-// it by tweaking it to have the settings we want.
-const consolidateEdge = (graph, edge) => {
-    const nodes = graph.getNodes();
-    const sourceNode = nodes.splice(
-        nodes.findIndex((node) => node.id === edge.source),
-        1
-    )[0];
-    const targetNode = nodes.splice(
-        nodes.findIndex((node) => node.id === edge.target),
-        1
-    )[0];
-
-    // Update the predecessor/successor fields on the nodes the new edge is going between
-    sourceNode.data.successors = [...sourceNode.data.successors, targetNode.id];
-    targetNode.data.predecessors = [
-        ...targetNode.data.predecessors,
-        sourceNode.id,
-    ];
-    targetNode.data.predecessorColumns = {
-        ...targetNode.data.predecessorColumns,
-        [sourceNode.id]: [],
-    };
-    graph.setNodes([sourceNode, targetNode, ...nodes]);
-
-    const otherEdges = graph.getEdges().filter(({ id }) => id !== edge.id);
-    edge.id = `${edge.source}-${edge.target}`;
-    edge.isNew = true;
-    edge.markerEnd = {
-        type: MarkerType.ArrowClosed,
-        width: 20,
-        height: 20,
-    };
-    if (!targetNode.data.isActive) {
-        edge.style = {
-            strokeDasharray: "5,5",
-        };
-    }
-
-    graph.setEdges([...otherEdges, edge]);
-};
-
 const deleteNode = (graph, nodeId) => {
     const nodes = graph.getNodes().filter((node) => node.id !== nodeId);
 
@@ -465,13 +439,13 @@ const getNodeTypeColorClass = (nodeType) => {
 };
 
 export {
-    getPredecessorNodesAndEdges,
     addNodeAndPredecessors,
     refreshNodePositions,
     moveToNode,
     generateCodeTemplate,
     getNewNodeDef,
-    consolidateEdge,
+    getEdgeDef,
+    addOrReplaceEdge,
     deleteNode,
     deleteEdge,
     getNodeTypeColorClass,

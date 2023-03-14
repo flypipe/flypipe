@@ -40,9 +40,10 @@ let NEW_NODE_INDEX = 1;
 const NODE_TYPES = {
     "flypipe-node-existing": ExistingNode,
     "flypipe-node-new": NewNode,
+    "flypipe-group": ExistingNode,
 };
 
-const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
+const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
     const { currentGraphObject, setCurrentGraphObject } =
         useContext(GraphContext);
     const { setNewMessage } = useContext(NotificationContext);
@@ -52,13 +53,30 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
     const graphDivRef = useRef(null);
 
     const handleInit = useCallback(() => {
+        groupDefs.forEach(group => {
+            graph.addNodes({
+                id: group.id,
+                type: "group",
+                hidden: true,
+                data: {
+                    label: group.name,
+                    isExpanded: false,
+                    nodes: new Set(),
+                },
+                position: {
+                    // dummy position, this will be automatically updated later
+                    x: 0,
+                    y: 0,
+                },
+            });
+        });
         if (initialNodes.length > 0) {
             initialNodes.forEach((nodeKey) =>
                 addNodeAndPredecessors(graph, nodeDefs, nodeKey)
             );
             moveToNode(graph, initialNodes[initialNodes.length - 1]);
         }
-    }, [initialNodes, graph]);
+    }, [groupDefs, initialNodes, graph]);
 
     const handleDragStart = useCallback((event) => {
         event.dataTransfer.effectAllowed = "copy";

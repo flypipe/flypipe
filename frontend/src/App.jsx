@@ -23,6 +23,7 @@ const App = () => {
                                     <Graph
                                         initialNodes={initialNodes}
                                         nodeDefs={nodes}
+                                        groupDefs={groups}
                                         tagSuggestions={tagSuggestions}
                                     />
                                 </div>
