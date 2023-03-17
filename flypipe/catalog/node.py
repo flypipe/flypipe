@@ -56,6 +56,7 @@ class CatalogNode:
             "successors": sorted(list(self.successors)),
             "sourceCode": self._get_source_code(),
             "isActive": self._get_is_active(),
+            "group": self.node.group,
         }
 
     def _get_is_active(self):

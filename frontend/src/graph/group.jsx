@@ -2,9 +2,8 @@ import React, { useEffect, useState } from "react";
 import { BsPlusLg, BsDashLg } from "react-icons/bs";
 import { Handle, Position, useReactFlow } from "reactflow";
 import { Badge } from "react-bootstrap";
-import Group from '../group';
+import Group from "../group";
 import { refreshNodePositions } from "../util";
-
 
 const GroupNode = ({ id, data }) => {
     const graph = useReactFlow();
@@ -13,15 +12,18 @@ const GroupNode = ({ id, data }) => {
     const [isMinimised, setIsMinimised] = useState(true);
     useEffect(() => {
         const nodes = graph.getNodes();
-        const group = nodes.find(({id}) => id === groupId);
+        const group = nodes.find(({ id }) => id === groupId);
         group.data.isMinimised = isMinimised;
         graph.setNodes(nodes);
         refreshNodePositions(graph);
     }, [graph, groupId, isMinimised]);
     return (
-        <div className="w-100 h-100" style={{
-            border: "solid grey"
-        }}>
+        <div
+            className="w-100 h-100"
+            style={{
+                border: "solid grey",
+            }}
+        >
             <Handle
                 type="target"
                 position={Position.Left}
@@ -30,17 +32,17 @@ const GroupNode = ({ id, data }) => {
             />
             <div className="d-flex justify-content-center">
                 <span
-                    className={'mb-0 me-2 h3'}
+                    className={"mb-0 me-2 h3"}
                     style={{ textAlign: "center" }}
                 >
                     {label}
-                </span>    
+                </span>
             </div>
             <Badge
                 pill
                 bg="secondary"
                 className={`align-self-start fs-6 position-absolute node-badge`}
-                style={{cursor: "pointer"}}
+                style={{ cursor: "pointer" }}
                 title="New node"
                 size="md"
                 onClick={(e) => {
@@ -48,7 +50,11 @@ const GroupNode = ({ id, data }) => {
                     setIsMinimised(!isMinimised);
                 }}
             >
-                {isMinimised ? <BsPlusLg className="fs-1"/> : <BsDashLg className="fs-1"/>}
+                {isMinimised ? (
+                    <BsPlusLg className="fs-1" />
+                ) : (
+                    <BsDashLg className="fs-1" />
+                )}
             </Badge>
             <Handle
                 type="source"

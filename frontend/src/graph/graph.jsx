@@ -73,7 +73,7 @@ const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
                 style: {
                     width: 0,
                     height: 0,
-                }
+                },
             });
         });
         if (initialNodes.length > 0) {
@@ -119,7 +119,7 @@ const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
                 style: {
                     width: NODE_WIDTH,
                     height: NODE_HEIGHT,
-                }
+                },
             };
             NEW_NODE_INDEX += 1;
             graph.addNodes(newNode);
@@ -180,10 +180,12 @@ const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
 
     const onEdgeClick = useCallback(
         (event, edge) => {
-            // Edges that link directly to minimised group nodes are placeholders to substitute for the edges to the 
-            // nodes inside the group which are invisible. We should use the linked edge instead of the physical edge 
-            // in such cases. 
-            const currentEdge = edge.linkedEdge ? graph.getEdges().find(({id}) => id === edge.linkedEdge) : edge;
+            // Edges that link directly to minimised group nodes are placeholders to substitute for the edges to the
+            // nodes inside the group which are invisible. We should use the linked edge instead of the physical edge
+            // in such cases.
+            const currentEdge = edge.linkedEdge
+                ? graph.getEdges().find(({ id }) => id === edge.linkedEdge)
+                : edge;
             setCurrentGraphObject({
                 object: currentEdge,
                 type: "edge",
