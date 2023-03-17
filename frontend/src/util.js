@@ -13,7 +13,6 @@ export const NODE_RANK_SEPERATOR = 150;
 // the positions of the nodes.
 const assignNodePositions = (nodes, edges, dagreOptions={}) => {
     const dagreGraph = new dagre.graphlib.Graph();
-    console.info("***Start dagre");
     dagreGraph.setGraph({
         rankdir: "LR",
         nodesep: 100,
@@ -23,12 +22,10 @@ const assignNodePositions = (nodes, edges, dagreOptions={}) => {
     dagreGraph.setDefaultEdgeLabel(() => ({}));
     nodes.forEach(({ id, style }) => {
         const { width, height } = style;
-        console.info(`******Add node ${id} to dagre w,h=${width}, ${height}`);
         dagreGraph.setNode(id, { width, height });
     });
 
     edges.forEach(({ source, target }) => {
-        console.info(`******Add edge between ${source} & ${target} to dagre`);
         dagreGraph.setEdge(source, target);
     });
     dagre.layout(dagreGraph);
@@ -43,11 +40,7 @@ const assignNodePositions = (nodes, edges, dagreOptions={}) => {
             x: nodeWithPosition.x - width / 2,
             y: nodeWithPosition.y - height / 2,
         };
-        console.log(
-            `Position of node ${node.id}: ${node.position.x}, ${node.position.y}`
-        );
     });
-    console.info("***End dagre");
 };
 
 const refreshNodePositions = (graph) => {
@@ -168,8 +161,6 @@ const getEdgeDef = (graph, source, target, linkedEdge=null) => {
 };
 
 const addOrReplaceEdge = (graph, edge) => {
-    console.info("Adding or replacing edge");
-    console.info(edge);
     const edges = graph.getEdges();
     const otherEdges = edges.filter(({ id }) => id !== edge.id);
     graph.setEdges([edge, ...otherEdges]);

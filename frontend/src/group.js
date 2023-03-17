@@ -35,8 +35,10 @@ class Group {
 
         group.data.isMinimised = isMinimise;
         if (isMinimise) {
-            group.style.width = NODE_WIDTH;
-            group.style.height = NODE_HEIGHT;
+            group.style = {
+                width: NODE_WIDTH,
+                height: NODE_HEIGHT,
+            }
         } else {
             assignNodePositions(groupNodes, groupEdges, {
                 marginx: GROUP_MARGIN,
