@@ -147,19 +147,19 @@ const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
 };
 
 const getEdgeDef = (graph, source, target, linkedEdge=null) => {
-    const successor = graph.getNode(target);
+    const targetNode = graph.getNode(linkedEdge ? linkedEdge.target : target);
     return {
         id: `${source}-${target}`,
-        isNew: successor.data.isNew || false,
+        isNew: targetNode.data.isNew || false,
         source,
         target,
-        linkedEdge,
+        ...(linkedEdge && {linkedEdge: linkedEdge.id}),
         markerEnd: {
             type: MarkerType.ArrowClosed,
             width: 20,
             height: 20,
         },
-        ...(successor.isActive || {
+        ...(targetNode.data.isActive || {
             style: {
                 strokeDasharray: "5,5",
             },
@@ -197,7 +197,7 @@ const addOrReplaceEdge = (graph, edge) => {
         if (sourceGroup !== targetGroup) {
             const source = sourceGroup || sourceNode.id;
             const target = targetGroup || targetNode.id;
-            addOrReplaceEdge(graph, getEdgeDef(graph, source, target, edge.id));
+            addOrReplaceEdge(graph, getEdgeDef(graph, source, target, edge));
         }
         graph.setNodes(nodes);
     }
