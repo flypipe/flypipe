@@ -1,42 +1,39 @@
 import dagre from "dagre";
 import { ANIMATION_SPEED, DEFAULT_ZOOM } from "./graph/config";
 import { MarkerType } from "reactflow";
+import Group from "./group";
 
 // Fixed size of a regular node
 export const NODE_WIDTH = 250;
 export const NODE_HEIGHT = 75;
 // Number of pixels between adjacent ranks in the x-axis for the dagre layout
 export const NODE_RANK_SEPERATOR = 150;
-// Margin around the sides of a group subgraph
-export const GROUP_MARGIN = 50;
 
 // Given the nodes & edges from the graph, construct a dagre graph to automatically assign
 // the positions of the nodes.
-const assignNodePositions = (nodes, edges) => {
+const assignNodePositions = (nodes, edges, dagreOptions={}) => {
     const dagreGraph = new dagre.graphlib.Graph();
     console.info("***Start dagre");
     dagreGraph.setGraph({
         rankdir: "LR",
         nodesep: 100,
         ranksep: 150,
-        marginx: GROUP_MARGIN,
-        marginy: GROUP_MARGIN,
+        ...dagreOptions,
     });
     dagreGraph.setDefaultEdgeLabel(() => ({}));
-    const visibleNodes = nodes.filter(({ hidden }) => !hidden);
-    visibleNodes.forEach(({ id, style }) => {
+    nodes.forEach(({ id, style }) => {
         const { width, height } = style;
-        console.info(`Add node ${id} to dagre w,h=${width}, ${height}`);
+        console.info(`******Add node ${id} to dagre w,h=${width}, ${height}`);
         dagreGraph.setNode(id, { width, height });
     });
 
     edges.forEach(({ source, target }) => {
-        console.info(`Add edge between ${source} & ${target} to dagre`);
+        console.info(`******Add edge between ${source} & ${target} to dagre`);
         dagreGraph.setEdge(source, target);
     });
     dagre.layout(dagreGraph);
 
-    visibleNodes.forEach((node) => {
+    nodes.forEach((node) => {
         const nodeWithPosition = dagreGraph.node(node.id);
         const { width, height } = node.style;
 
@@ -56,126 +53,39 @@ const assignNodePositions = (nodes, edges) => {
 const refreshNodePositions = (graph) => {
     // Exclude new nodes that have no edges, the idea being that after a new node is dragged into the graph the
     // position remains under the user's discretion until it is connected into other nodes.
-    const calculatedNodes = [];
-    const ignoredNodes = [];
-    graph.getNodes().forEach((node) => {
-        if (
-            node.type !== "group" &&
-            node.data.isNew &&
-            node.data.predecessors.length === 0 &&
-            node.data.successors.length === 0
-        ) {
-            ignoredNodes.push(node);
-        } else {
-            calculatedNodes.push(node);
-        }
+    graph.getNodes().filter(({type}) => type === "flypipe-group").forEach(({id}) => {
+        const group = new Group(graph, id);
+        group.refresh();
     });
 
-    const groups = calculatedNodes.filter(({ type }) => type === "group");
-    const nodes = calculatedNodes.filter(({ type }) => type !== "group");
-    groups.forEach((group) => {
-        const groupNodes = nodes.filter(({ id }) => group.data.nodes.has(id));
-        const groupEdges = graph
-            .getEdges()
-            .filter(
-                ({ source, target }) =>
-                    group.data.nodes.has(source) && group.data.nodes.has(target)
-            );
-        assignNodePositions(groupNodes, groupEdges);
-        group.position = {
-            x: group.position.x,
-            y: group.position.y,
-        };
-        group.style = {
-            width: Math.max(
-                ...groupNodes.map(
-                    (groupNode) =>
-                        groupNode.position.x +
-                        groupNode.style.width +
-                        GROUP_MARGIN
-                )
-            ),
-            height: Math.max(
-                ...groupNodes.map(
-                    (groupNode) =>
-                        groupNode.position.y +
-                        groupNode.style.height +
-                        GROUP_MARGIN
-                )
+    const nodes = graph.getNodes();
+    const ignoredNodes = nodes.filter(node => (
+        node.data.isNew && 
+        node.data.predecessors.length === 0 && 
+        node.data.successors.length === 0
+    ));
+    const topLevelNodes = nodes.filter(node => {
+        return (
+            node.type === "flypipe-group" ||
+            (
+                !node.data.group &&
+                !ignoredNodes.map(({id}) => id).includes(node.id)
             )
-        };
-        console.log(
-            `Group ${group.id} has width ${group.style.width} and height ${group.style.height}`
         );
     });
-    const groupsAndUngroupedNodes = calculatedNodes.filter(
-        (node) => node.type === "group" || !node.data.group
-    );
+    const topLevelNodeIds = topLevelNodes.map(({id}) => id);
+    
     assignNodePositions(
-        groupsAndUngroupedNodes,
+        topLevelNodes,
         graph
             .getEdges()
             .filter(
                 ({ source, target }) =>
-                    groupsAndUngroupedNodes
-                        .map(({ id }) => id)
-                        .includes(source) &&
-                    groupsAndUngroupedNodes.map(({ id }) => id).includes(target)
+                    topLevelNodeIds.includes(source) &&
+                    topLevelNodeIds.includes(target)
             )
     );
-    graph.setNodes([...calculatedNodes, ...ignoredNodes]);
-};
-
-const refreshGroups = (graph) => {
-    const nodes = graph.getNodes().filter(({ type }) => type !== "group");
-    const groups = [...graph.getNodes().filter(({ type }) => type === "group")];
-
-    const edges = graph.getEdges();
-
-    // Handle group expansion/minimisation
-    groups.forEach((group) => {
-        if (group.data.isExpanded) {
-            group.data.nodes.forEach((nodeId) => {
-                const node = nodes.find((n) => n.id === nodeId);
-                node.hidden = false;
-            });
-            edges
-                .filter(
-                    ({ source, target }) =>
-                        source === group.id || target === group.id
-                )
-                .forEach((edge) => {
-                    if (edge.source === group.id) {
-                        edge.source = edge.tmp;
-                    } else if (edge.target === group.id) {
-                        edge.target = edge.tmp;
-                    }
-                });
-        } else {
-            // If a group is minimised, then all the nodes inside the graph should be hidden, any incoming edges to these
-            // nodes should be replaced by edges targeting the group node, and any outgoing edges from these nodes should be
-            // replaced by edges originating from the group node.
-            group.data.nodes.forEach((nodeId) => {
-                const node = nodes.find((n) => n.id === nodeId);
-                node.hidden = true;
-                edges
-                    .filter(
-                        ({ source, target }) =>
-                            source === nodeId || target === nodeId
-                    )
-                    .forEach((edge) => {
-                        if (edge.source === nodeId) {
-                            edge.tmp = nodeId;
-                            edge.source = group.id;
-                        } else if (edge.target === nodeId) {
-                            edge.tmp = nodeId;
-                            edge.target = group.id;
-                        }
-                    });
-            });
-        }
-    });
-    graph.setNodes([...groups, ...nodes]);
+    graph.setNodes(nodes);
 };
 
 // Retrieve the graph node representation of a node
@@ -184,7 +94,7 @@ const convertNodeDefToGraphNode = (nodeDef, isNew = true) => {
         id: nodeDef.nodeKey,
         type: isNew ? "flypipe-node-new" : "flypipe-node-existing",
         parentNode: nodeDef.group || "",
-        extent: "parent",
+        ...(nodeDef.group && {extent: "parent"}),
         data: {
             nodeKey: nodeDef.nodeKey,
             label: nodeDef.name,
@@ -236,13 +146,14 @@ const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
     ];
 };
 
-const getEdgeDef = (graph, source, target) => {
+const getEdgeDef = (graph, source, target, linkedEdge=null) => {
     const successor = graph.getNode(target);
     return {
         id: `${source}-${target}`,
         isNew: successor.data.isNew || false,
         source,
         target,
+        linkedEdge,
         markerEnd: {
             type: MarkerType.ArrowClosed,
             width: 20,
@@ -266,7 +177,7 @@ const addOrReplaceEdge = (graph, edge) => {
     const nodes = graph.getNodes();
     const sourceNode = nodes.find(({ id }) => id === edge.source);
     const targetNode = nodes.find(({ id }) => id === edge.target);
-    if (sourceNode.type !== "group" && targetNode.type !== "group") {
+    if (sourceNode.type !== "flypipe-group" && targetNode.type !== "flypipe-group") {
         // Update the predecessor/successor fields on the nodes the edge is going between
         if (!sourceNode.data.successors.includes(targetNode.id)) {
             sourceNode.data.successors.push(targetNode.id);
@@ -286,7 +197,7 @@ const addOrReplaceEdge = (graph, edge) => {
         if (sourceGroup !== targetGroup) {
             const source = sourceGroup || sourceNode.id;
             const target = targetGroup || targetNode.id;
-            addOrReplaceEdge(graph, getEdgeDef(graph, source, target));
+            addOrReplaceEdge(graph, getEdgeDef(graph, source, target, edge.id));
         }
         graph.setNodes(nodes);
     }
@@ -303,8 +214,8 @@ const addNodeAndPredecessors = (graph, nodeDefs, nodeKey) => {
     const currentNodes = new Set(graph.getNodes().map(({ id }) => id));
     const currentEdges = new Set(graph.getEdges().map(({ id }) => id));
     const newNodes = predecessorNodes.filter(({ id }) => !currentNodes.has(id));
-    const nodes = graph.getNodes().filter(({ type }) => type !== "group");
-    const groups = graph.getNodes().filter(({ type }) => type === "group");
+    const nodes = graph.getNodes().filter(({ type }) => type !== "flypipe-group");
+    const groups = graph.getNodes().filter(({ type }) => type === "flypipe-group");
 
     newNodes.forEach((node) => {
         const groupId = node.data.group;
@@ -320,7 +231,6 @@ const addNodeAndPredecessors = (graph, nodeDefs, nodeKey) => {
         addOrReplaceEdge(graph, getEdgeDef(graph, source, target));
     });
 
-    // refreshGroups(graph);
     refreshNodePositions(graph);
 };
 
@@ -434,6 +344,10 @@ const deleteNode = (graph, nodeId) => {
             .map(({ source }) => source)
     );
     for (const node of nodes) {
+        if (node.type === "flypipe-group") {
+            // Groups have no predecessor/successor so we skip over them
+            continue;
+        }
         if (successorNodeIds.has(node.id)) {
             node.data.predecessors = node.data.predecessors.filter(
                 (id) => id !== nodeId
@@ -445,6 +359,7 @@ const deleteNode = (graph, nodeId) => {
         }
     }
     graph.setNodes(nodes);
+    refreshNodePositions(graph);
 };
 
 const deleteEdge = (graph, edgeId) => {
@@ -471,6 +386,7 @@ const deleteEdge = (graph, edgeId) => {
         .getNodes()
         .filter(({ id }) => id !== sourceNodeId && id !== targetNodeId);
     graph.setNodes([sourceNode, targetNode, ...otherNodes]);
+    refreshNodePositions(graph);
 };
 
 const getNodeTypeColorClass = (nodeType) => {
@@ -489,6 +405,7 @@ const getNodeTypeColorClass = (nodeType) => {
 };
 
 export {
+    assignNodePositions,
     addNodeAndPredecessors,
     refreshNodePositions,
     moveToNode,

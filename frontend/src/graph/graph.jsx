@@ -41,7 +41,7 @@ let NEW_NODE_INDEX = 1;
 const NODE_TYPES = {
     "flypipe-node-existing": ExistingNode,
     "flypipe-node-new": NewNode,
-    "flypipe-group": ExistingNode,
+    "flypipe-group": GroupNode,
 };
 
 const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
@@ -57,11 +57,12 @@ const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
         groupDefs.forEach((group) => {
             graph.addNodes({
                 id: group.id,
-                type: "group",
+                type: "flypipe-group",
                 hidden: true,
+                zIndex: -1001,
                 data: {
                     label: group.name,
-                    isExpanded: false,
+                    isMinimised: true,
                     nodes: new Set(),
                 },
                 position: {
@@ -137,6 +138,10 @@ const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
 
     const onNodeClick = useCallback(
         (event, node) => {
+            if (node.type === "flypipe-group") {
+                // Ignore group nodes
+                return;
+            }
             setCurrentGraphObject({
                 object: node,
                 type: "node",
@@ -175,12 +180,16 @@ const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
 
     const onEdgeClick = useCallback(
         (event, edge) => {
+            // Edges that link directly to minimised group nodes are placeholders to substitute for the edges to the 
+            // nodes inside the group which are invisible. We should use the linked edge instead of the physical edge 
+            // in such cases. 
+            const currentEdge = edge.linkedEdge ? graph.getEdges().find(({id}) => id === edge.linkedEdge) : edge;
             setCurrentGraphObject({
-                object: edge,
+                object: currentEdge,
                 type: "edge",
             });
         },
-        [setCurrentGraphObject]
+        [graph, setCurrentGraphObject]
     );
 
     useEffect(() => {
