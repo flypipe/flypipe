@@ -216,7 +216,6 @@ const addNodeAndPredecessors = (graph, nodeDefs, nodeKey) => {
 
     // Add the node and any predecessor nodes/edges to the graph that aren't already there.
     const currentNodes = new Set(graph.getNodes().map(({ id }) => id));
-    const currentEdges = new Set(graph.getEdges().map(({ id }) => id));
     const newNodes = predecessorNodes.filter(({ id }) => !currentNodes.has(id));
     const nodes = graph
         .getNodes()

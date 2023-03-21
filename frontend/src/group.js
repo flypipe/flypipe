@@ -102,7 +102,8 @@ export class Group {
                 ...group.data,
                 isMinimised: isMinimise,
             },
-            style: isMinimise
+            hidden: groupNodes.length === 0,
+            style: isMinimise || groupNodes.length === 0
                 ? {
                       width: NODE_WIDTH,
                       height: NODE_HEIGHT,
