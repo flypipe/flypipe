@@ -103,29 +103,30 @@ export class Group {
                 isMinimised: isMinimise,
             },
             hidden: groupNodes.length === 0,
-            style: isMinimise || groupNodes.length === 0
-                ? {
-                      width: NODE_WIDTH,
-                      height: NODE_HEIGHT,
-                  }
-                : {
-                      width: Math.max(
-                          ...groupNodes.map(
-                              (groupNode) =>
-                                  groupNode.position.x +
-                                  groupNode.style.width +
-                                  GROUP_MARGIN
-                          )
-                      ),
-                      height: Math.max(
-                          ...groupNodes.map(
-                              (groupNode) =>
-                                  groupNode.position.y +
-                                  groupNode.style.height +
-                                  GROUP_MARGIN
-                          )
-                      ),
-                  },
+            style:
+                isMinimise || groupNodes.length === 0
+                    ? {
+                          width: NODE_WIDTH,
+                          height: NODE_HEIGHT,
+                      }
+                    : {
+                          width: Math.max(
+                              ...groupNodes.map(
+                                  (groupNode) =>
+                                      groupNode.position.x +
+                                      groupNode.style.width +
+                                      GROUP_MARGIN
+                              )
+                          ),
+                          height: Math.max(
+                              ...groupNodes.map(
+                                  (groupNode) =>
+                                      groupNode.position.y +
+                                      groupNode.style.height +
+                                      GROUP_MARGIN
+                              )
+                          ),
+                      },
         };
         this.groupId = newGroupId;
 
