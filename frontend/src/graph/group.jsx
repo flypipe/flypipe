@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { BsPlusLg, BsDashLg } from "react-icons/bs";
 import { Handle, Position, useReactFlow } from "reactflow";
 import { Badge } from "react-bootstrap";
@@ -8,15 +8,19 @@ import { refreshNodePositions } from "../util";
 const GroupNode = ({ id, data }) => {
     const graph = useReactFlow();
     const groupId = id;
-    const { label } = data;
-    const [isMinimised, setIsMinimised] = useState(true);
-    useEffect(() => {
-        const nodes = graph.getNodes();
-        const group = nodes.find(({ id }) => id === groupId);
-        group.data.isMinimised = isMinimised;
-        graph.setNodes(nodes);
-        refreshNodePositions(graph);
-    }, [graph, groupId, isMinimised]);
+    const { label, isMinimised } = data;
+
+    const onMaximiseMinimise = useCallback(
+        (e) => {
+            e.stopPropagation();
+            const nodes = graph.getNodes();
+            const group = nodes.find(({ id }) => id === groupId);
+            group.data.isMinimised = !group.data.isMinimised;
+            graph.setNodes(nodes);
+            refreshNodePositions(graph);
+        },
+        [graph, groupId, isMinimised]
+    );
     return (
         <div
             className="w-100 h-100"
@@ -45,10 +49,7 @@ const GroupNode = ({ id, data }) => {
                 style={{ cursor: "pointer" }}
                 title="New node"
                 size="md"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setIsMinimised(!isMinimised);
-                }}
+                onClick={onMaximiseMinimise}
             >
                 {isMinimised ? (
                     <BsPlusLg className="fs-1" />

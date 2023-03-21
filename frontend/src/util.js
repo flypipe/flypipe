@@ -1,7 +1,7 @@
 import dagre from "dagre";
 import { ANIMATION_SPEED, DEFAULT_ZOOM } from "./graph/config";
 import { MarkerType } from "reactflow";
-import Group from "./group";
+import { Group, getGroup } from "./group";
 
 // Fixed size of a regular node
 export const NODE_WIDTH = 250;
@@ -84,11 +84,12 @@ const refreshNodePositions = (graph) => {
 };
 
 // Retrieve the graph node representation of a node
-const convertNodeDefToGraphNode = (nodeDef, isNew = true) => {
+const convertNodeDefToGraphNode = (graph, nodeDef, isNew = true) => {
+    const group = nodeDef.group ? getGroup(graph, nodeDef.group) : null;
     return {
         id: nodeDef.nodeKey,
         type: isNew ? "flypipe-node-new" : "flypipe-node-existing",
-        parentNode: nodeDef.group || "",
+        parentNode: group?.id || "",
         ...(nodeDef.group && { extent: "parent" }),
         data: {
             nodeKey: nodeDef.nodeKey,
@@ -109,7 +110,7 @@ const convertNodeDefToGraphNode = (nodeDef, isNew = true) => {
 };
 
 // Given an input node, get the list of nodes and edges of all of the input node's predecessors.
-const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
+const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
     const nodeDef = nodeDefs.find((nodeDef) => nodeDef.nodeKey === nodeKey);
     const frontier = [...nodeDef.predecessors];
     const selectedNodeDefs = [nodeDef];
@@ -135,7 +136,7 @@ const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
     }
     return [
         selectedNodeDefs.map((nodeDef) =>
-            convertNodeDefToGraphNode(nodeDef, false)
+            convertNodeDefToGraphNode(graph, nodeDef, false)
         ),
         edges,
     ];
@@ -164,7 +165,9 @@ const getEdgeDef = (graph, source, target, linkedEdge = null) => {
 
 const addOrReplaceEdge = (graph, edge) => {
     const edges = graph.getEdges();
-    const otherEdges = edges.filter(({ id }) => id !== edge.id);
+    const otherEdges = edges.filter(
+        ({ source, target }) => source !== edge.source || target !== edge.target
+    );
     graph.setEdges([edge, ...otherEdges]);
 
     const nodes = graph.getNodes();
@@ -191,8 +194,12 @@ const addOrReplaceEdge = (graph, edge) => {
         const sourceGroup = sourceNode.data.group;
         const targetGroup = targetNode.data.group;
         if (sourceGroup !== targetGroup) {
-            const source = sourceGroup || sourceNode.id;
-            const target = targetGroup || targetNode.id;
+            const source = sourceGroup
+                ? getGroup(graph, sourceGroup).id
+                : sourceNode.id;
+            const target = targetGroup
+                ? getGroup(graph, targetGroup).id
+                : targetNode.id;
             addOrReplaceEdge(graph, getEdgeDef(graph, source, target, edge));
         }
         graph.setNodes(nodes);
@@ -202,6 +209,7 @@ const addOrReplaceEdge = (graph, edge) => {
 const addNodeAndPredecessors = (graph, nodeDefs, nodeKey) => {
     // Add a node to the graph, we also add any ancestor nodes/edges
     const [predecessorNodes, predecessorEdges] = getPredecessorNodesAndEdges(
+        graph,
         nodeDefs,
         nodeKey
     );
@@ -220,7 +228,9 @@ const addNodeAndPredecessors = (graph, nodeDefs, nodeKey) => {
     newNodes.forEach((node) => {
         const groupId = node.data.group;
         if (groupId) {
-            const group = groups.find(({ id }) => id === groupId);
+            const group = groups.find(
+                ({ id }) => id === getGroup(graph, groupId).id
+            );
             group.data.nodes.add(node.id);
             group.hidden = false;
         }

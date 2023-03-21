@@ -56,7 +56,7 @@ const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
     const handleInit = useCallback(() => {
         groupDefs.forEach((group) => {
             graph.addNodes({
-                id: group.id,
+                id: `${group.id}-minimised`,
                 type: "flypipe-group",
                 hidden: true,
                 zIndex: -1001,
