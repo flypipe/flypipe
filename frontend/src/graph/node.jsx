@@ -11,7 +11,8 @@ import {
     refreshNodePositions,
     NODE_WIDTH,
     NODE_HEIGHT,
-    consolidateEdge,
+    getEdgeDef,
+    addOrReplaceEdge,
     getNodeTypeColorClass,
 } from "../util";
 import classNames from "classnames";
@@ -30,12 +31,8 @@ const BaseNode = ({ data, isNewNode }) => {
         ({ source, target }) => {
             const sourceLabel = graph.getNode(source).data.label;
             const targetLabel = graph.getNode(target).data.label;
-            const edge = graph
-                .getEdges()
-                .filter(
-                    (edge) => edge.source === source && edge.target === target
-                )[0];
-            consolidateEdge(graph, edge);
+            const edge = getEdgeDef(graph, source, target);
+            addOrReplaceEdge(graph, edge);
             refreshNodePositions(graph);
             addNotification(
                 `Dependency on ${sourceLabel} added to ${targetLabel}`
@@ -98,6 +95,7 @@ const BaseNode = ({ data, isNewNode }) => {
                 style={{
                     width: NODE_WIDTH,
                     height: NODE_HEIGHT,
+                    cursor: "pointer",
                 }}
             >
                 <p

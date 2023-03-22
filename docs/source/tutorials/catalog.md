@@ -36,22 +36,36 @@ def b(a):
 
 @node(
     type='pandas',
-    dependencies=[a]
+    dependencies=[a],
+    group="group_c"
 )
-def c(a):
+def c1(a):
     return a
 
 @node(
     type='pandas',
-    dependencies=[b, c]
+    dependencies=[c1],
+    group="group_c"
 )
-def d(b, c):
-    return pd.concat([b, c], axis=1)
+def c2(c1):
+    return c1
+
+@node(
+    type='pandas',
+    dependencies=[b, c2]
+)
+def d(b, c2):
+    return pd.concat([b, c2], axis=1)
 ```
 
 ```
 # Visualise the pipeline by invoking the html method
+# Note- in Databricks there's a displayHTML that allows for direct rendering of html:
 displayHTML(d.html(height=850))
+# Outside of Databricks, we'll need to put the output into a html file and load it in a browser: 
+with open('test.html', 'w', encoding='utf-8') as f:
+    f.write(d.html(height=850))
+# <open test.html in browser after running this>
 ```
 
 ![Catalog Graph](../_static/images/catalog1.png)

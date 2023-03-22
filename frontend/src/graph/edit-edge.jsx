@@ -14,6 +14,7 @@ import { deleteEdge } from "../util";
 import { DeleteEdge } from "./delete/delete";
 
 export const EditEdge = ({ edge, onClose }) => {
+    console.log(edge);
     const isReadOnly = !edge.isNew;
     const [data, setData] = useState({
         columns: [],

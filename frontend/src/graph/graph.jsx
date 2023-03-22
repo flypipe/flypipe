@@ -33,6 +33,7 @@ import { NotificationContext } from "../notifications/context";
 import uuid from "react-uuid";
 import { GraphContext } from "./graph-context";
 import { ClearGraph } from "./delete/delete";
+import GroupNode from "./group";
 
 // TODO- get rid of this index when we introduce the new node modal
 let NEW_NODE_INDEX = 1;
@@ -40,9 +41,10 @@ let NEW_NODE_INDEX = 1;
 const NODE_TYPES = {
     "flypipe-node-existing": ExistingNode,
     "flypipe-node-new": NewNode,
+    "flypipe-group": GroupNode,
 };
 
-const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
+const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
     const { currentGraphObject, setCurrentGraphObject } =
         useContext(GraphContext);
     const { setNewMessage } = useContext(NotificationContext);
@@ -52,13 +54,35 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
     const graphDivRef = useRef(null);
 
     const handleInit = useCallback(() => {
+        groupDefs.forEach((group) => {
+            graph.addNodes({
+                id: `${group.id}-minimised`,
+                type: "flypipe-group",
+                hidden: true,
+                zIndex: -1001,
+                data: {
+                    label: group.name,
+                    isMinimised: true,
+                    nodes: new Set(),
+                },
+                position: {
+                    // dummy position, this will be automatically updated later
+                    x: 0,
+                    y: 0,
+                },
+                style: {
+                    width: 0,
+                    height: 0,
+                },
+            });
+        });
         if (initialNodes.length > 0) {
             initialNodes.forEach((nodeKey) =>
                 addNodeAndPredecessors(graph, nodeDefs, nodeKey)
             );
             moveToNode(graph, initialNodes[initialNodes.length - 1]);
         }
-    }, [initialNodes, graph]);
+    }, [groupDefs, initialNodes, graph]);
 
     const handleDragStart = useCallback((event) => {
         event.dataTransfer.effectAllowed = "copy";
@@ -84,12 +108,18 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
             const newNode = {
                 id: newNodeId,
                 type: "flypipe-node-new",
+                parentNode: "",
+                extent: "parent",
                 data: getNewNodeDef({
                     nodeKey: newNodeId,
                     label: `untitled${NEW_NODE_INDEX}`,
                     name: `untitled${NEW_NODE_INDEX}`,
                 }),
                 position: graphPosition,
+                style: {
+                    width: NODE_WIDTH,
+                    height: NODE_HEIGHT,
+                },
             };
             NEW_NODE_INDEX += 1;
             graph.addNodes(newNode);
@@ -108,6 +138,10 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
 
     const onNodeClick = useCallback(
         (event, node) => {
+            if (node.type === "flypipe-group") {
+                // Ignore group nodes
+                return;
+            }
             setCurrentGraphObject({
                 object: node,
                 type: "node",
@@ -146,12 +180,18 @@ const Graph = ({ initialNodes, nodeDefs, tagSuggestions }) => {
 
     const onEdgeClick = useCallback(
         (event, edge) => {
+            // Edges that link directly to minimised group nodes are placeholders to substitute for the edges to the
+            // nodes inside the group which are invisible. We should use the linked edge instead of the physical edge
+            // in such cases.
+            const currentEdge = edge.linkedEdge
+                ? graph.getEdges().find(({ id }) => id === edge.linkedEdge)
+                : edge;
             setCurrentGraphObject({
-                object: edge,
+                object: currentEdge,
                 type: "edge",
             });
         },
-        [setCurrentGraphObject]
+        [graph, setCurrentGraphObject]
     );
 
     useEffect(() => {

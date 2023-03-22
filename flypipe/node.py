@@ -36,6 +36,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         function,
         type: str,  # pylint: disable=redefined-builtin
         description=None,
+        group=None,
         tags=None,
         dependencies: List[InputNode] = None,
         output=None,
@@ -63,6 +64,8 @@ class Node:  # pylint: disable=too-many-instance-attributes
                     f"Node description configured as mandatory but no description provided for node {self.__name__}"
                 )
             self.description = ""
+
+        self.group = group
 
         # TODO: enforce tags for now, later validation can be set as optional via environment variable
         self.tags = [self.type, self.node_type.value]
@@ -476,6 +479,8 @@ def node(type, *args, **kwargs):  # pylint: disable=redefined-builtin
             Type of the node transformation "pandas", "pandas_on_spark", "pyspark", "spark_sql"
     description : str, optional
         Description of the node (default is None)
+    group : str, optional
+        Group the node falls under, nodes in the same group are clustered together in the Catalog UI.
     tags : List[str], optional
         List of tags for the node (default is None)
     dependencies : List[Node], optional

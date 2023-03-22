@@ -1,18 +1,28 @@
 import dagre from "dagre";
 import { ANIMATION_SPEED, DEFAULT_ZOOM } from "./graph/config";
 import { MarkerType } from "reactflow";
+import { Group, getGroup } from "./group";
 
+// Fixed size of a regular node
 export const NODE_WIDTH = 250;
 export const NODE_HEIGHT = 75;
+// Number of pixels between adjacent ranks in the x-axis for the dagre layout
+export const NODE_RANK_SEPERATOR = 150;
 
 // Given the nodes & edges from the graph, construct a dagre graph to automatically assign
 // the positions of the nodes.
-const assignNodePositions = (nodes, edges) => {
+const assignNodePositions = (nodes, edges, dagreOptions = {}) => {
     const dagreGraph = new dagre.graphlib.Graph();
-    dagreGraph.setGraph({ rankdir: "LR", nodesep: 100, ranksep: 150 });
+    dagreGraph.setGraph({
+        rankdir: "LR",
+        nodesep: 100,
+        ranksep: 150,
+        ...dagreOptions,
+    });
     dagreGraph.setDefaultEdgeLabel(() => ({}));
-    nodes.forEach(({ id }) => {
-        dagreGraph.setNode(id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+    nodes.forEach(({ id, style }) => {
+        const { width, height } = style;
+        dagreGraph.setNode(id, { width, height });
     });
 
     edges.forEach(({ source, target }) => {
@@ -22,12 +32,13 @@ const assignNodePositions = (nodes, edges) => {
 
     nodes.forEach((node) => {
         const nodeWithPosition = dagreGraph.node(node.id);
+        const { width, height } = node.style;
 
         // We are shifting the dagre node position (anchor=center center) to the top left
         // so it matches the React Flow node anchor point (top left).
         node.position = {
-            x: nodeWithPosition.x - NODE_WIDTH / 2,
-            y: nodeWithPosition.y - NODE_HEIGHT / 2,
+            x: nodeWithPosition.x - width / 2,
+            y: nodeWithPosition.y - height / 2,
         };
     });
 };
@@ -35,29 +46,51 @@ const assignNodePositions = (nodes, edges) => {
 const refreshNodePositions = (graph) => {
     // Exclude new nodes that have no edges, the idea being that after a new node is dragged into the graph the
     // position remains under the user's discretion until it is connected into other nodes.
-    const calculatedNodes = [];
-    const ignoredNodes = [];
-    graph.getNodes().forEach((node) => {
-        if (
+    graph
+        .getNodes()
+        .filter(({ type }) => type === "flypipe-group")
+        .forEach(({ id }) => {
+            const group = new Group(graph, id);
+            group.refresh();
+        });
+
+    const nodes = graph.getNodes();
+    const ignoredNodes = nodes.filter(
+        (node) =>
             node.data.isNew &&
             node.data.predecessors.length === 0 &&
             node.data.successors.length === 0
-        ) {
-            ignoredNodes.push(node);
-        } else {
-            calculatedNodes.push(node);
-        }
+    );
+    const topLevelNodes = nodes.filter((node) => {
+        return (
+            node.type === "flypipe-group" ||
+            (!node.data.group &&
+                !ignoredNodes.map(({ id }) => id).includes(node.id))
+        );
     });
+    const topLevelNodeIds = topLevelNodes.map(({ id }) => id);
 
-    assignNodePositions(calculatedNodes, graph.getEdges());
-    graph.setNodes([...ignoredNodes, ...calculatedNodes]);
+    assignNodePositions(
+        topLevelNodes,
+        graph
+            .getEdges()
+            .filter(
+                ({ source, target }) =>
+                    topLevelNodeIds.includes(source) &&
+                    topLevelNodeIds.includes(target)
+            )
+    );
+    graph.setNodes(nodes);
 };
 
 // Retrieve the graph node representation of a node
-const convertNodeDefToGraphNode = (nodeDef, isNew = true) => {
+const convertNodeDefToGraphNode = (graph, nodeDef, isNew = true) => {
+    const group = nodeDef.group ? getGroup(graph, nodeDef.group) : null;
     return {
         id: nodeDef.nodeKey,
         type: isNew ? "flypipe-node-new" : "flypipe-node-existing",
+        parentNode: group?.id || "",
+        ...(nodeDef.group && { extent: "parent" }),
         data: {
             nodeKey: nodeDef.nodeKey,
             label: nodeDef.name,
@@ -69,16 +102,19 @@ const convertNodeDefToGraphNode = (nodeDef, isNew = true) => {
             x: 0,
             y: 0,
         },
+        style: {
+            width: NODE_WIDTH,
+            height: NODE_HEIGHT,
+        },
     };
 };
 
 // Given an input node, get the list of nodes and edges of all of the input node's predecessors.
-const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
+const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
     const nodeDef = nodeDefs.find((nodeDef) => nodeDef.nodeKey === nodeKey);
     const frontier = [...nodeDef.predecessors];
     const selectedNodeDefs = [nodeDef];
     const edges = [];
-    const edgeKeys = new Set();
     const addedKeys = [nodeDef.nodeKey];
     while (frontier.length > 0) {
         const currentKey = frontier.pop();
@@ -91,30 +127,7 @@ const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
         }
         for (const successorKey of current.successors) {
             if (addedKeys.includes(successorKey)) {
-                const edgeKey = `${current.nodeKey}-${successorKey}`;
-                if (!edgeKeys.has(edgeKey)) {
-                    const successor = nodeDefs.find(
-                        (nodeDef) => nodeDef.nodeKey === successorKey
-                    );
-                    const edge = {
-                        id: edgeKey,
-                        isNew: false,
-                        source: current.nodeKey,
-                        target: successorKey,
-                        markerEnd: {
-                            type: MarkerType.ArrowClosed,
-                            width: 20,
-                            height: 20,
-                        },
-                        ...(successor.isActive || {
-                            style: {
-                                strokeDasharray: "5,5",
-                            },
-                        }),
-                    };
-                    edges.push(edge);
-                    edgeKeys.add(edgeKey);
-                }
+                edges.push([current.nodeKey, successorKey]);
             }
         }
         for (const predecessor of current.predecessors) {
@@ -123,25 +136,110 @@ const getPredecessorNodesAndEdges = (nodeDefs, nodeKey) => {
     }
     return [
         selectedNodeDefs.map((nodeDef) =>
-            convertNodeDefToGraphNode(nodeDef, false)
+            convertNodeDefToGraphNode(graph, nodeDef, false)
         ),
         edges,
     ];
 };
 
+const getEdgeDef = (graph, source, target, linkedEdge = null) => {
+    const targetNode = graph.getNode(linkedEdge ? linkedEdge.target : target);
+    return {
+        id: `${source}-${target}`,
+        isNew: targetNode.data.isNew || false,
+        source,
+        target,
+        ...(linkedEdge && { linkedEdge: linkedEdge.id }),
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 20,
+            height: 20,
+        },
+        ...(targetNode.data.isActive || {
+            style: {
+                strokeDasharray: "5,5",
+            },
+        }),
+    };
+};
+
+const addOrReplaceEdge = (graph, edge) => {
+    const edges = graph.getEdges();
+    const otherEdges = edges.filter(
+        ({ source, target }) => source !== edge.source || target !== edge.target
+    );
+    graph.setEdges([edge, ...otherEdges]);
+
+    const nodes = graph.getNodes();
+    const sourceNode = nodes.find(({ id }) => id === edge.source);
+    const targetNode = nodes.find(({ id }) => id === edge.target);
+    if (
+        sourceNode.type !== "flypipe-group" &&
+        targetNode.type !== "flypipe-group"
+    ) {
+        // Update the predecessor/successor fields on the nodes the edge is going between
+        if (!sourceNode.data.successors.includes(targetNode.id)) {
+            sourceNode.data.successors.push(targetNode.id);
+        }
+        if (!targetNode.data.predecessors.includes(sourceNode.id)) {
+            targetNode.data.predecessors.push(sourceNode.id);
+        }
+        targetNode.data.predecessorColumns = {
+            ...targetNode.data.predecessorColumns,
+            [sourceNode.id]: [],
+        };
+
+        // If the source and/or the target node have groups and they aren't the same group then we need to create an
+        // extra hidden edge to the group node
+        const sourceGroup = sourceNode.data.group;
+        const targetGroup = targetNode.data.group;
+        if (sourceGroup !== targetGroup) {
+            const source = sourceGroup
+                ? getGroup(graph, sourceGroup).id
+                : sourceNode.id;
+            const target = targetGroup
+                ? getGroup(graph, targetGroup).id
+                : targetNode.id;
+            addOrReplaceEdge(graph, getEdgeDef(graph, source, target, edge));
+        }
+        graph.setNodes(nodes);
+    }
+};
+
 const addNodeAndPredecessors = (graph, nodeDefs, nodeKey) => {
+    // Add a node to the graph, we also add any ancestor nodes/edges
     const [predecessorNodes, predecessorEdges] = getPredecessorNodesAndEdges(
+        graph,
         nodeDefs,
         nodeKey
     );
+
     // Add the node and any predecessor nodes/edges to the graph that aren't already there.
     const currentNodes = new Set(graph.getNodes().map(({ id }) => id));
-    const currentEdges = new Set(graph.getEdges().map(({ id }) => id));
     const newNodes = predecessorNodes.filter(({ id }) => !currentNodes.has(id));
-    const newEdges = predecessorEdges.filter(({ id }) => !currentEdges.has(id));
+    const nodes = graph
+        .getNodes()
+        .filter(({ type }) => type !== "flypipe-group");
+    const groups = graph
+        .getNodes()
+        .filter(({ type }) => type === "flypipe-group");
 
-    graph.addNodes(newNodes);
-    graph.addEdges(newEdges);
+    newNodes.forEach((node) => {
+        const groupId = node.data.group;
+        if (groupId) {
+            const group = groups.find(
+                ({ id }) => id === getGroup(graph, groupId).id
+            );
+            group.data.nodes.add(node.id);
+            group.hidden = false;
+        }
+    });
+    graph.setNodes([...groups, ...nodes, ...newNodes]);
+    predecessorEdges.forEach((edgeDef) => {
+        const [source, target] = edgeDef;
+        addOrReplaceEdge(graph, getEdgeDef(graph, source, target));
+    });
+
     refreshNodePositions(graph);
 };
 
@@ -237,49 +335,6 @@ const getNewNodeDef = ({
     isActive: isActive || true,
 });
 
-// This is a bit weird- as far as I can tell when dragging an edge between two nodes you can't suppress the automatic
-// edge creation so as to add an edge with custom requirements. Therefore we add the edge and immediately consolidate
-// it by tweaking it to have the settings we want.
-const consolidateEdge = (graph, edge) => {
-    const nodes = graph.getNodes();
-    const sourceNode = nodes.splice(
-        nodes.findIndex((node) => node.id === edge.source),
-        1
-    )[0];
-    const targetNode = nodes.splice(
-        nodes.findIndex((node) => node.id === edge.target),
-        1
-    )[0];
-
-    // Update the predecessor/successor fields on the nodes the new edge is going between
-    sourceNode.data.successors = [...sourceNode.data.successors, targetNode.id];
-    targetNode.data.predecessors = [
-        ...targetNode.data.predecessors,
-        sourceNode.id,
-    ];
-    targetNode.data.predecessorColumns = {
-        ...targetNode.data.predecessorColumns,
-        [sourceNode.id]: [],
-    };
-    graph.setNodes([sourceNode, targetNode, ...nodes]);
-
-    const otherEdges = graph.getEdges().filter(({ id }) => id !== edge.id);
-    edge.id = `${edge.source}-${edge.target}`;
-    edge.isNew = true;
-    edge.markerEnd = {
-        type: MarkerType.ArrowClosed,
-        width: 20,
-        height: 20,
-    };
-    if (!targetNode.data.isActive) {
-        edge.style = {
-            strokeDasharray: "5,5",
-        };
-    }
-
-    graph.setEdges([...otherEdges, edge]);
-};
-
 const deleteNode = (graph, nodeId) => {
     const nodes = graph.getNodes().filter((node) => node.id !== nodeId);
 
@@ -298,6 +353,10 @@ const deleteNode = (graph, nodeId) => {
             .map(({ source }) => source)
     );
     for (const node of nodes) {
+        if (node.type === "flypipe-group") {
+            // Groups have no predecessor/successor so we skip over them
+            continue;
+        }
         if (successorNodeIds.has(node.id)) {
             node.data.predecessors = node.data.predecessors.filter(
                 (id) => id !== nodeId
@@ -309,6 +368,7 @@ const deleteNode = (graph, nodeId) => {
         }
     }
     graph.setNodes(nodes);
+    refreshNodePositions(graph);
 };
 
 const deleteEdge = (graph, edgeId) => {
@@ -335,6 +395,7 @@ const deleteEdge = (graph, edgeId) => {
         .getNodes()
         .filter(({ id }) => id !== sourceNodeId && id !== targetNodeId);
     graph.setNodes([sourceNode, targetNode, ...otherNodes]);
+    refreshNodePositions(graph);
 };
 
 const getNodeTypeColorClass = (nodeType) => {
@@ -353,13 +414,14 @@ const getNodeTypeColorClass = (nodeType) => {
 };
 
 export {
-    getPredecessorNodesAndEdges,
+    assignNodePositions,
     addNodeAndPredecessors,
     refreshNodePositions,
     moveToNode,
     generateCodeTemplate,
     getNewNodeDef,
-    consolidateEdge,
+    getEdgeDef,
+    addOrReplaceEdge,
     deleteNode,
     deleteEdge,
     getNodeTypeColorClass,
