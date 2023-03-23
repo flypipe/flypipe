@@ -137,7 +137,7 @@ export const EditEdge = ({ edge, onClose }) => {
         const selectedColumns = data.columns.filter(
             ({ isRequested }) => isRequested
         );
-        if (selectedColumns.length === 0) {
+        if (data.columns.length > 0 && selectedColumns.length === 0) {
             setFormError("At least one column must be selected");
         } else {
             setFormError("");

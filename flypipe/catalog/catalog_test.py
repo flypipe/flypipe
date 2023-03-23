@@ -115,10 +115,10 @@ class TestCatalog:
                 ],
                 "successors": [],
                 "tags": [
-                    {"id": "pandas", "text": "pandas"},
-                    {"id": "Transformation", "text": "Transformation"},
-                    {"id": "train", "text": "train"},
-                    {"id": "test", "text": "test"},
+                    {"id": "pandas", "name": "pandas"},
+                    {"id": "Transformation", "name": "Transformation"},
+                    {"id": "train", "name": "train"},
+                    {"id": "test", "name": "test"},
                 ],
                 "sourceCode": inspect.getsource(inspect.getmodule(t2.function)),
                 "isActive": True,
@@ -143,9 +143,9 @@ class TestCatalog:
                     "flypipe_catalog_catalog_test_function_t3_t3",
                 ],
                 "tags": [
-                    {"id": "pandas", "text": "pandas"},
-                    {"id": "Transformation", "text": "Transformation"},
-                    {"id": "train", "text": "train"},
+                    {"id": "pandas", "name": "pandas"},
+                    {"id": "Transformation", "name": "Transformation"},
+                    {"id": "train", "name": "train"},
                 ],
                 "sourceCode": inspect.getsource(inspect.getmodule(t1.function)),
                 "isActive": True,
@@ -165,9 +165,9 @@ class TestCatalog:
                 "output": [],
                 "successors": [],
                 "tags": [
-                    {"id": "pandas", "text": "pandas"},
-                    {"id": "Transformation", "text": "Transformation"},
-                    {"id": "misc", "text": "misc"},
+                    {"id": "pandas", "name": "pandas"},
+                    {"id": "Transformation", "name": "Transformation"},
+                    {"id": "misc", "name": "misc"},
                 ],
                 "sourceCode": inspect.getsource(inspect.getmodule(t3.function)),
                 "isActive": True,
@@ -228,11 +228,11 @@ class TestCatalog:
         catalog.register_node(t2)
         catalog.register_node(t3)
         assert catalog.get_tag_suggestions() == [
-            {"id": "Transformation", "text": "Transformation"},
-            {"id": "misc", "text": "misc"},
-            {"id": "pandas", "text": "pandas"},
-            {"id": "test", "text": "test"},
-            {"id": "train", "text": "train"},
+            {"id": "Transformation", "name": "Transformation"},
+            {"id": "misc", "name": "misc"},
+            {"id": "pandas", "name": "pandas"},
+            {"id": "test", "name": "test"},
+            {"id": "train", "name": "train"},
         ]
 
     def test_get_groups(self):

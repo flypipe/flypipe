@@ -47,7 +47,7 @@ class CatalogNode:
             "nodeType": self.node.type,
             "name": self.node.__name__,
             "description": self.node.description,
-            "tags": [{"id": tag, "text": tag} for tag in self.node.tags],
+            "tags": [{"id": tag, "name": tag} for tag in self.node.tags],
             "filePath": self._get_file_path(),
             "importCmd": self._get_import_cmd(),
             "output": self._get_schema(),

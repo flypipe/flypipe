@@ -80,7 +80,7 @@ class Catalog:
         for catalog_node in self.nodes.values():
             node = catalog_node.node
             all_tags = all_tags.union(set(node.tags))
-        return [{"id": tag, "text": tag} for tag in sorted(list(all_tags))]
+        return [{"id": tag, "name": tag} for tag in sorted(list(all_tags))]
 
     def get_count_box_defs(self):
         """
