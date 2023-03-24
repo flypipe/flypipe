@@ -8,5 +8,5 @@ For convenience sake we aren't publishing this as a standalone package to npm. T
 
 -   Install nodejs (https://nodejs.org/en/download/)
 -   Install yarn `npm install --global yarn`
--   Navigate in a terminal to flypipe/frontend and run `yarn install` to install the dependencies the project requires.
+-   Navigate in a terminal to `flypipe/frontend` and run `yarn install` to install the dependencies the project requires.
 -   Run either `yarn start` to run the frontend standalone on a development server or `yarn build` to build the javascript artifacts. Note that `yarn build` also copies the built artifact (`frontend/dist/bundle.js`) over to the Python project (`flypipe/js/bundle.js`) which is necessary for the Flypipe project to be able to use the frontend code.
