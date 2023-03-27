@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { BsPlusLg, BsDashLg } from "react-icons/bs";
+import { AiOutlinePlusCircle } from "react-icons/ai";
+
 import { Handle, Position, useReactFlow } from "reactflow";
 import { Badge } from "react-bootstrap";
 import Group from "../group";
@@ -25,7 +27,7 @@ const GroupNode = ({ id, data }) => {
         <div
             className="w-100 h-100"
             style={{
-                border: "solid grey",
+                border: "0.1em solid grey",
             }}
         >
             <Handle
@@ -44,17 +46,16 @@ const GroupNode = ({ id, data }) => {
             </div>
             <Badge
                 pill
-                bg="secondary"
-                className={`align-self-start fs-6 position-absolute node-badge`}
-                style={{ cursor: "pointer" }}
-                title="New node"
+                bg="light"
+                className={`align-self-start fs-6 position-absolute node-badge group-expand-collapse`}
+                title={isMinimised ? "Expand" : "Collapse"}
                 size="md"
                 onClick={onMaximiseMinimise}
             >
                 {isMinimised ? (
-                    <BsPlusLg className="fs-1" />
+                    <BsPlusLg className="fs-6" fill="dark" />
                 ) : (
-                    <BsDashLg className="fs-1" />
+                    <BsDashLg className="fs-6" fill="dark" />
                 )}
             </Badge>
             <Handle
