@@ -270,7 +270,7 @@ const generateCodeTemplate = (graph, nodeData) => {
     ];
     const imports = importList.join("\n");
 
-    const tagList = tags.map(({ text }) => `'${text}'`).join(", ");
+    const tagList = tags.map(({ name }) => `'${name}'`).join(", ");
     const dependencyList = predecessors
         .map((nodeId) => {
             const name = graph.getNode(nodeId).data.name;
