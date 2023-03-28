@@ -191,8 +191,8 @@ const addOrReplaceEdge = (graph, edge) => {
 
         // If the source and/or the target node have groups and they aren't the same group then we need to create an
         // extra hidden edge to the group node
-        const sourceGroup = sourceNode.data.group;
-        const targetGroup = targetNode.data.group;
+        const sourceGroup = sourceNode.data.group || null;
+        const targetGroup = targetNode.data.group || null;
         if (sourceGroup !== targetGroup) {
             const source = sourceGroup
                 ? getGroup(graph, sourceGroup).id
