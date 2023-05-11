@@ -8,7 +8,7 @@ class Column:  # pylint: disable=too-few-public-methods
     """
 
     def __init__(
-        self, name: str, type: Type, description: str = ""
+        self, name: str, type: Type, description: str = "n/a"
     ):  # pylint: disable=redefined-builtin
         self.name = name
         self.type = type
