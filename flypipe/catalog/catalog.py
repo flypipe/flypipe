@@ -26,21 +26,21 @@ class Catalog:
     def register_node(self, node, successor=None, node_graph=None):
         if isinstance(node, NodeFunction):
             raise RuntimeError("Can not register node functions")
-        else:
-            if node.node_graph is not None:
-                # The node graph gives us certain information about the nodes in the context of a single run, use this
-                # if available.
-                node_graph = node.node_graph
-            if node.key not in self.nodes:
-                self.nodes[node.key] = CatalogNode(node, node_graph)
-            if node.group:
-                if node.group not in self.groups:
-                    self.groups[node.group] = Group(node.group)
-                self.groups[node.group].add_node(node)
-            if successor:
-                self.nodes[node.key].register_successor(successor)
-            for input_node in node.input_nodes:
-                self.register_node(input_node.node, node, node_graph)
+
+        if node.node_graph is not None:
+            # The node graph gives us certain information about the nodes in the context of a single run, use this
+            # if available.
+            node_graph = node.node_graph
+        if node.key not in self.nodes:
+            self.nodes[node.key] = CatalogNode(node, node_graph)
+        if node.group:
+            if node.group not in self.groups:
+                self.groups[node.group] = Group(node.group)
+            self.groups[node.group].add_node(node)
+        if successor:
+            self.nodes[node.key].register_successor(successor)
+        for input_node in node.input_nodes:
+            self.register_node(input_node.node, node, node_graph)
 
     def add_node_to_graph(self, node):
         """

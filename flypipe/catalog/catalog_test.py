@@ -216,7 +216,7 @@ class TestCatalog:
         def t4(t3):
             return t3
 
-        t4._create_graph()
+        t4._create_graph() # pylint: disable=protected-access)
         catalog = Catalog()
 
         end_node_name = t4.node_graph.get_end_node_name()
