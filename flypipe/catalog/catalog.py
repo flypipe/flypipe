@@ -25,7 +25,7 @@ class Catalog:
 
     def register_node(self, node, successor=None, node_graph=None):
         if isinstance(node, NodeFunction):
-            raise RuntimeError('Can not register node functions')
+            raise RuntimeError("Can not register node functions")
         else:
             if node.node_graph is not None:
                 # The node graph gives us certain information about the nodes in the context of a single run, use this

@@ -156,12 +156,9 @@ class TestNodeGraph:
         }
 
     def test_graph_node_function_runs(self):
-
         @node_function()
         def t_wrapper():
-            @node(
-                type="pandas"
-            )
+            @node(type="pandas")
             def t():
                 return pd.DataFrame(data={"col1": [1]})
 

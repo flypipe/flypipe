@@ -224,7 +224,6 @@ class TestCatalog:
 
         catalog.register_node(end_node, node_graph=t4.node_graph)
 
-
         assert [node["name"] for node in catalog.get_nodes()] == [
             "t4",
             "get_nodes",
