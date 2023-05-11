@@ -1,6 +1,8 @@
 import inspect
 from pathlib import Path
 import pandas as pd
+import pytest
+
 from flypipe.catalog import Catalog
 from flypipe import node, node_function
 from flypipe.config import config_context
@@ -214,14 +216,33 @@ class TestCatalog:
         def t4(t3):
             return t3
 
+        t4._create_graph()
         catalog = Catalog()
-        catalog.register_node(t4)
+
+        end_node_name = t4.node_graph.get_end_node_name()
+        end_node = t4.node_graph.get_transformation(end_node_name)
+
+        catalog.register_node(end_node, node_graph=t4.node_graph)
+
+
         assert [node["name"] for node in catalog.get_nodes()] == [
             "t4",
-            "t3",
+            "get_nodes",
             "t2",
             "t1",
         ]
+
+    def test_catalog_node_function_fails(self):
+        @node_function()
+        def t1():
+            @node(type="pandas")
+            def t2():
+                return pd.DataFrame(data={"co1": 1})
+
+        catalog = Catalog()
+
+        with pytest.raises(RuntimeError):
+            catalog.register_node(t1)
 
     def test_get_tag_suggestions(self):
         catalog = Catalog()

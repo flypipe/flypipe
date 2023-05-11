@@ -1,3 +1,5 @@
+import pandas as pd
+from flypipe import node_function
 from flypipe.node import node
 from flypipe.node_graph import NodeGraph, RunStatus
 
@@ -152,3 +154,17 @@ class TestNodeGraph:
             3: [t4.key],
             4: [t5.key],
         }
+
+    def test_graph_node_function_runs(self):
+
+        @node_function()
+        def t_wrapper():
+            @node(
+                type="pandas"
+            )
+            def t():
+                return pd.DataFrame(data={"col1": [1]})
+
+            return t
+
+        t_wrapper.html()

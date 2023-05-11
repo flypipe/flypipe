@@ -25,8 +25,7 @@ class Catalog:
 
     def register_node(self, node, successor=None, node_graph=None):
         if isinstance(node, NodeFunction):
-            expanded_nodes = node.expand(None)
-            self.register_node(expanded_nodes[-1], successor, node_graph)
+            raise RuntimeError('Can not register node functions')
         else:
             if node.node_graph is not None:
                 # The node graph gives us certain information about the nodes in the context of a single run, use this
@@ -48,11 +47,7 @@ class Catalog:
         Ordinarily the catalog graph start out as empty but we can add nodes to it here such that the graph starts with
         them present.
         """
-        if isinstance(node, NodeFunction):
-            expanded_nodes = node.expand(None)
-            self.initial_nodes.append(expanded_nodes[-1].key)
-        else:
-            self.initial_nodes.append(node.key)
+        self.initial_nodes.append(node.key)
 
     def html(self, height=850):
         dir_path = os.path.dirname(os.path.realpath(__file__))
