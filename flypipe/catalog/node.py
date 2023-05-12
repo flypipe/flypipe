@@ -4,7 +4,6 @@ import os
 
 from pathlib import Path
 from flypipe.node_graph import RunStatus
-from flypipe.node_function import NodeFunction
 
 
 class CatalogNode:
