@@ -25,34 +25,29 @@ class Catalog:
 
     def register_node(self, node, successor=None, node_graph=None):
         if isinstance(node, NodeFunction):
-            expanded_nodes = node.expand(None)
-            self.register_node(expanded_nodes[-1], successor, node_graph)
-        else:
-            if node.node_graph is not None:
-                # The node graph gives us certain information about the nodes in the context of a single run, use this
-                # if available.
-                node_graph = node.node_graph
-            if node.key not in self.nodes:
-                self.nodes[node.key] = CatalogNode(node, node_graph)
-            if node.group:
-                if node.group not in self.groups:
-                    self.groups[node.group] = Group(node.group)
-                self.groups[node.group].add_node(node)
-            if successor:
-                self.nodes[node.key].register_successor(successor)
-            for input_node in node.input_nodes:
-                self.register_node(input_node.node, node, node_graph)
+            raise RuntimeError("Can not register node functions")
+
+        if node.node_graph is not None:
+            # The node graph gives us certain information about the nodes in the context of a single run, use this
+            # if available.
+            node_graph = node.node_graph
+        if node.key not in self.nodes:
+            self.nodes[node.key] = CatalogNode(node, node_graph)
+        if node.group:
+            if node.group not in self.groups:
+                self.groups[node.group] = Group(node.group)
+            self.groups[node.group].add_node(node)
+        if successor:
+            self.nodes[node.key].register_successor(successor)
+        for input_node in node.input_nodes:
+            self.register_node(input_node.node, node, node_graph)
 
     def add_node_to_graph(self, node):
         """
         Ordinarily the catalog graph start out as empty but we can add nodes to it here such that the graph starts with
         them present.
         """
-        if isinstance(node, NodeFunction):
-            expanded_nodes = node.expand(None)
-            self.initial_nodes.append(expanded_nodes[-1].key)
-        else:
-            self.initial_nodes.append(node.key)
+        self.initial_nodes.append(node.key)
 
     def html(self, height=850):
         dir_path = os.path.dirname(os.path.realpath(__file__))

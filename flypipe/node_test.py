@@ -130,7 +130,7 @@ class TestNode:  # pylint: disable=too-many-public-methods
         t1.run(spark, parallel=False)
         assert spy.call_args.args[1].columns == ["c1"]
 
-    def test_alias(self):
+    def test_alias_run(self):
         """
         Ensure we can set up a node dependency with an alias.
         """
@@ -973,3 +973,44 @@ class TestNode:  # pylint: disable=too-many-public-methods
 
         result = t5.run(parallel=True)
         assert_frame_equal(result, pd.DataFrame({"c1": [4, 30, 9]}))
+
+    def test_select(self):
+        """
+        Assert only selected columns (ordered) are being selected
+        """
+
+        @node(type="pandas")
+        def t0():
+            return pd.DataFrame(data={"col1": [1], "col2": [2], "col3": [3]})
+
+        input_node = t0.select("col3", "col2")
+
+        # pylint: disable=protected-access
+        assert input_node._selected_columns == [
+            "col2",
+            "col3",
+        ]
+
+    def test_output(self):
+        @node(
+            type="pandas", output=Schema([Column("col1", String(), "description col1")])
+        )
+        def t0():
+            return pd.DataFrame(data={"col1": [1]})
+
+        assert isinstance(t0.output_schema, Schema)
+
+        columns_t0 = t0.output_schema.columns[0]
+
+        assert columns_t0.name == "col1"
+        assert isinstance(columns_t0.type, String)
+        assert columns_t0.description == "description col1"
+
+    def test_alias(self):
+        @node(type="pandas")
+        def t0():
+            return pd.DataFrame(data={"col1": [1]})
+
+        input_node = t0.alias("my_alias")
+        assert input_node.key == t0.key
+        assert input_node.get_alias() == "my_alias"
