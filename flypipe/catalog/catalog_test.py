@@ -216,7 +216,7 @@ class TestCatalog:
         def t4(t3):
             return t3
 
-        t4._create_graph()  # pylint: disable=protected-access)
+        t4._create_graph()  # pylint: disable=protected-access
         catalog = Catalog()
 
         end_node_name = t4.node_graph.get_end_node_name()
@@ -230,18 +230,6 @@ class TestCatalog:
             "t2",
             "t1",
         ]
-
-    def test_catalog_node_function_fails(self):
-        @node_function()
-        def t1():
-            @node(type="pandas")
-            def t2():
-                return pd.DataFrame(data={"co1": 1})
-
-        catalog = Catalog()
-
-        with pytest.raises(RuntimeError):
-            catalog.register_node(t1)
 
     def test_get_tag_suggestions(self):
         catalog = Catalog()
@@ -269,3 +257,19 @@ class TestCatalog:
                 ],
             }
         ]
+
+    def test_catalog_node_function_fails(self):
+        @node_function()
+        def t1():
+            @node(type="pandas")
+            def t2():
+                return pd.DataFrame(data={"co1": 1})
+
+        catalog = Catalog()
+
+        with pytest.raises(RuntimeError):
+            catalog.register_node(t1)
+
+    def test_add_node_to_graph(self):
+        catalog = Catalog()
+        catalog.add_node_to_graph(t2)
