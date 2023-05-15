@@ -3,60 +3,59 @@
     <body>
         <div id="root" style="width: 100%; height: 100%"></div>
         <script>
-
             window.nodes = [
                 {
-                    "nodeKey":
-                    "__main___function_t1_t1",
-                    "nodeType": "pandas",
-                    "name": "t1",
-                    "description": "",
-                    "tags": [
-                        {"id": "pandas", "name": "pandas"},
-                        {"id": "Transformation", "name": "Transformation"},
-                        {"id": "pandas", "name": "pandas"},
-                        {"id": "Transformation", "name": "Transformation"}
+                    nodeKey: "__main___function_t1_t1",
+                    nodeType: "pandas",
+                    name: "t1",
+                    description: "",
+                    tags: [
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
                     ],
-                    "filePath": "",
-                    "importCmd": "",
-                    "output": [],
-                    "predecessors": ["__main___function_t0_t0"],
-                    "predecessorColumns": {"__main___function_t0_t0": []},
-                    "successors": [],
-                    "sourceCode": "@node(\n    type=\"pandas\",\n    dependencies=[t0]\n)\ndef t1(t0):\n    t0['col1'] = t0['col1'] + 1\n    return pd.DataFrame(data={'col1': [1]})\n",
-                    "isActive": true,
-                    "group": null
+                    filePath: "",
+                    importCmd: "",
+                    output: [],
+                    predecessors: ["__main___function_t0_t0"],
+                    predecessorColumns: { __main___function_t0_t0: [] },
+                    successors: [],
+                    sourceCode:
+                        "@node(\n    type=\"pandas\",\n    dependencies=[t0]\n)\ndef t1(t0):\n    t0['col1'] = t0['col1'] + 1\n    return pd.DataFrame(data={'col1': [1]})\n",
+                    isActive: true,
+                    group: null,
                 },
 
                 {
-                    "nodeKey": "__main___function_t0_t0",
-                    "nodeType": "pandas",
-                    "name": "t0",
-                    "description": "",
-                    "tags": [
-                        {"id": "pandas", "name": "pandas"},
-                        {"id": "Transformation", "name": "Transformation"},
-                        {"id": "pandas", "name": "pandas"},
-                        {"id": "Transformation", "name": "Transformation"}
+                    nodeKey: "__main___function_t0_t0",
+                    nodeType: "pandas",
+                    name: "t0",
+                    description: "",
+                    tags: [
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
                     ],
-                    "filePath": "",
-                    "importCmd": "",
-                    "output": [],
-                    "predecessors": [],
-                    "predecessorColumns": {},
-                    "successors": ["__main___function_t1_t1"],
-                    "sourceCode": "@node(type=\"pandas\")\ndef t0():\n    return pd.DataFrame(data={'col1': [1]})\n",
-                    "isActive": false,
-                    "group": null
-                }
+                    filePath: "",
+                    importCmd: "",
+                    output: [],
+                    predecessors: [],
+                    predecessorColumns: {},
+                    successors: ["__main___function_t1_t1"],
+                    sourceCode:
+                        "@node(type=\"pandas\")\ndef t0():\n    return pd.DataFrame(data={'col1': [1]})\n",
+                    isActive: false,
+                    group: null,
+                },
             ];
             window.tagSuggestions = [
-                {"id": "Transformation", "name": "Transformation"},
-                {"id": "pandas", "name": "pandas"}
+                { id: "Transformation", name: "Transformation" },
+                { id: "pandas", name: "pandas" },
             ];
-            window.initialNodes = ['__main___function_t1_t1'];
+            window.initialNodes = ["__main___function_t1_t1"];
             window.groups = [];
-
         </script>
         <script src="../dist/bundle.js"></script>
     </body>
