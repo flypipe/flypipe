@@ -45,11 +45,31 @@ class NodeFunction(Node):
                 )
             for dependency in node.input_nodes:
                 if dependency not in nodes and dependency not in self.node_dependencies:
-                    raise ValueError(
-                        f"Unknown node {dependency.key} in node function {self._key} dependencies "
-                        f"{[n._key for n in self.node_dependencies]}, all external dependencies must be defined in "
-                        f"node function parameter node_dependencies"
+                    raise RuntimeError(
+                        f"Unknown node `{dependency.node.function.__name__}` in node function "
+                        f"`{self.function.__name__}` dependencies "
+                        f"`{[n.function.__name__ for n in self.node_dependencies]}`, all external dependencies must be "
+                        f"defined in node function parameter node_dependencies"
                     )
+
+        for node_dependency in self.node_dependencies:
+            dependency_in_some_node = False
+            for node in nodes:
+                for input_node in node.input_nodes:
+                    if input_node.node == node_dependency:
+                        dependency_in_some_node = True
+                        break
+
+                if dependency_in_some_node:
+                    break
+
+            if not dependency_in_some_node:
+                raise RuntimeError(
+                    f"Node `{node_dependency.function.__name__}` has been declared by node function `{self.function.__name__}` "
+                    f"as a node dependency, however no internal node is using it. Whether remove it from node function "
+                    f"`node_dependencies` field, or add `{self.function.__name__}` as dependency of some internal"
+                    f"node returned by the node function"
+                )
 
         return list(nodes)
 

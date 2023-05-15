@@ -43,7 +43,7 @@ class TestNodeFunction:
 
             return a
 
-        with pytest.raises(ValueError):
+        with pytest.raises(RuntimeError):
             func.expand(None)
 
     def test_expand(self):
@@ -78,3 +78,21 @@ class TestNodeFunction:
             return t2
 
         t1.run(parameters={t1: {"param1": 10, "param2": 20}})
+
+    def test_expand_node_dependency(self):
+        @node(type="pandas")
+        def t0():
+            return pd.DataFrame(data={"col1": [1]})
+
+        @node_function(node_dependencies=[t0])
+        def node_f():
+            @node(
+                type="pandas",
+            )
+            def t1():
+                return pd.DataFrame(data={"col1": [2]})
+
+            return t1
+
+        with pytest.raises(RuntimeError):
+            node_f.run()
