@@ -3,83 +3,60 @@
     <body>
         <div id="root" style="width: 100%; height: 100%"></div>
         <script>
+
             window.nodes = [
                 {
-                    description: "Description for t1",
-                    filePath: "flypipe/catalog_test.py",
-                    importCmd: "from flypipe.catalog_test import t1",
-                    nodeKey: "flypipe_catalog_test_function_t1_t1",
-                    nodeType: "pandas",
-                    name: "t1",
-                    group: "group_1",
-                    predecessors: [],
-                    predecessorColumns: {},
-                    output: [],
-                    successors: [
-                        "flypipe_catalog_test_function_t2_t2",
-                        "flypipe_catalog_test_function_t3_t3",
+                    "nodeKey":
+                    "__main___function_t1_t1",
+                    "nodeType": "pandas",
+                    "name": "t1",
+                    "description": "",
+                    "tags": [
+                        {"id": "pandas", "name": "pandas"},
+                        {"id": "Transformation", "name": "Transformation"},
+                        {"id": "pandas", "name": "pandas"},
+                        {"id": "Transformation", "name": "Transformation"}
                     ],
-                    tags: [],
-                    sourceCode: "...",
-                    isActive: true,
+                    "filePath": "",
+                    "importCmd": "",
+                    "output": [],
+                    "predecessors": ["__main___function_t0_t0"],
+                    "predecessorColumns": {"__main___function_t0_t0": []},
+                    "successors": [],
+                    "sourceCode": "@node(\n    type=\"pandas\",\n    dependencies=[t0]\n)\ndef t1(t0):\n    t0['col1'] = t0['col1'] + 1\n    return pd.DataFrame(data={'col1': [1]})\n",
+                    "isActive": true,
+                    "group": null
                 },
+
                 {
-                    description: "Description for t2",
-                    filePath: "flypipe/catalog_test.py",
-                    importCmd: "from flypipe.catalog_test import t2",
-                    nodeKey: "flypipe_catalog_test_function_t2_t2",
-                    nodeType: "pandas",
-                    name: "t2",
-                    group: "group_2",
-                    predecessors: ["flypipe_catalog_test_function_t1_t1"],
-                    predecessorColumns: {
-                        flypipe_catalog_test_function_t1_t1: [],
-                    },
-                    output: [],
-                    successors: ["flypipe_catalog_test_function_t3_t3"],
-                    tags: [],
-                    sourceCode: "...",
-                    isActive: true,
-                },
-                {
-                    description: "Description for t3",
-                    filePath: "flypipe/catalog_test.py",
-                    importCmd: "from flypipe.catalog_test import t3",
-                    nodeKey: "flypipe_catalog_test_function_t3_t3",
-                    nodeType: "pandas",
-                    name: "t3",
-                    predecessors: [
-                        "flypipe_catalog_test_function_t1_t1",
-                        "flypipe_catalog_test_function_t2_t2",
+                    "nodeKey": "__main___function_t0_t0",
+                    "nodeType": "pandas",
+                    "name": "t0",
+                    "description": "",
+                    "tags": [
+                        {"id": "pandas", "name": "pandas"},
+                        {"id": "Transformation", "name": "Transformation"},
+                        {"id": "pandas", "name": "pandas"},
+                        {"id": "Transformation", "name": "Transformation"}
                     ],
-                    predecessorColumns: {
-                        flypipe_catalog_test_function_t1_t1: [],
-                        flypipe_catalog_test_function_t2_t2: [],
-                    },
-                    output: [],
-                    successors: [],
-                    tags: [],
-                    sourceCode: "...",
-                    isActive: true,
-                },
-            ];
-            window.groups = [
-                {
-                    id: "group_1",
-                    name: "Group 1",
-                    nodes: ["flypipe_catalog_test_function_t1_t1"],
-                },
-                {
-                    id: "group_2",
-                    name: "Group 2",
-                    nodes: ["flypipe_catalog_test_function_t2_t2"],
-                },
+                    "filePath": "",
+                    "importCmd": "",
+                    "output": [],
+                    "predecessors": [],
+                    "predecessorColumns": {},
+                    "successors": ["__main___function_t1_t1"],
+                    "sourceCode": "@node(type=\"pandas\")\ndef t0():\n    return pd.DataFrame(data={'col1': [1]})\n",
+                    "isActive": false,
+                    "group": null
+                }
             ];
             window.tagSuggestions = [
-                { id: "Tag_1", name: "Tag_1" },
-                { id: "Tag_2", name: "Tag_2" },
+                {"id": "Transformation", "name": "Transformation"},
+                {"id": "pandas", "name": "pandas"}
             ];
-            window.initialNodes = [];
+            window.initialNodes = ['__main___function_t1_t1'];
+            window.groups = [];
+
         </script>
         <script src="../dist/bundle.js"></script>
     </body>

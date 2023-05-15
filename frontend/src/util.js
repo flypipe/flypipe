@@ -144,6 +144,7 @@ const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
 
 const getEdgeDef = (graph, source, target, linkedEdge = null) => {
     const targetNode = graph.getNode(linkedEdge ? linkedEdge.target : target);
+    const sourceNode = graph.getNode(linkedEdge ? linkedEdge.source : source);
     return {
         id: `${source}-${target}`,
         isNew: targetNode.data.isNew || false,
@@ -155,7 +156,7 @@ const getEdgeDef = (graph, source, target, linkedEdge = null) => {
             width: 20,
             height: 20,
         },
-        ...(targetNode.data.isActive || {
+        ...((sourceNode.data.isActive && targetNode.data.isActive) || {
             style: {
                 strokeDasharray: "5,5",
             },
