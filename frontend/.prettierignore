@@ -3,3 +3,8 @@ node_modules
 package-lock.json
 yarn.lock
 .prettierignore
+.babelrc
+.prettierrc.json
+package.json
+README.md
+webpack.config.js
