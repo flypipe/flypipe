@@ -65,10 +65,10 @@ class NodeFunction(Node):
 
             if not dependency_in_some_node:
                 raise RuntimeError(
-                    f"Node `{node_dependency.function.__name__}` has been declared by node function `{self.function.__name__}` "
-                    f"as a node dependency, however no internal node is using it. Whether remove it from node function "
-                    f"`node_dependencies` field, or add `{self.function.__name__}` as dependency of some internal"
-                    f"node returned by the node function"
+                    f"Node `{node_dependency.function.__name__}` has been declared by node function "
+                    f"`{self.function.__name__}` as a node dependency, however no internal node is using it. "
+                    f"Whether remove it from node function `node_dependencies` field, or add "
+                    f"`{self.function.__name__}` as dependency of some internal node returned by the node function"
                 )
 
         return list(nodes)
