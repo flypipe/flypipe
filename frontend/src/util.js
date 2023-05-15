@@ -156,7 +156,7 @@ const getEdgeDef = (graph, source, target, linkedEdge = null) => {
             width: 20,
             height: 20,
         },
-        ...((sourceNode.data.isActive) || {
+        ...(targetNode.data.isActive || {
             style: {
                 strokeDasharray: "5,5",
             },

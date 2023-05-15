@@ -5,9 +5,9 @@
         <script>
             window.nodes = [
                 {
-                    nodeKey: "__main___function_t1_t1",
+                    nodeKey: "__main___function_t3_t3",
                     nodeType: "pandas",
-                    name: "t1",
+                    name: "t3",
                     description: "",
                     tags: [
                         { id: "pandas", name: "pandas" },
@@ -18,15 +18,48 @@
                     filePath: "",
                     importCmd: "",
                     output: [],
-                    predecessors: ["__main___function_t0_t0"],
-                    predecessorColumns: { __main___function_t0_t0: [] },
+                    predecessors: [
+                        "__main___function_t2_t2",
+                        "__main___function_t4_t4",
+                    ],
+                    predecessorColumns: {
+                        __main___function_t2_t2: [],
+                        __main___function_t4_t4: [],
+                    },
                     successors: [],
                     sourceCode:
-                        "@node(\n    type=\"pandas\",\n    dependencies=[t0]\n)\ndef t1(t0):\n    t0['col1'] = t0['col1'] + 1\n    return pd.DataFrame(data={'col1': [1]})\n",
+                        '@node(\n    type="pandas",\n    dependencies=[t2, t4],\n)\ndef t3(t2, t4):\n    return t2\n',
                     isActive: true,
                     group: null,
                 },
-
+                {
+                    nodeKey: "__main___function_t2_t2",
+                    nodeType: "pandas",
+                    name: "t2",
+                    description: "",
+                    tags: [
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                    ],
+                    filePath: "",
+                    importCmd: "",
+                    output: [],
+                    predecessors: [
+                        "__main___function_t0_t0",
+                        "__main___function_t1_t1",
+                    ],
+                    predecessorColumns: {
+                        __main___function_t0_t0: [],
+                        __main___function_t1_t1: [],
+                    },
+                    successors: ["__main___function_t3_t3"],
+                    sourceCode:
+                        '@node(\n    type="pandas",\n    dependencies=[t0, t1]\n)\ndef t2(t0, t1):\n    return t0\n',
+                    isActive: true,
+                    group: null,
+                },
                 {
                     nodeKey: "__main___function_t0_t0",
                     nodeType: "pandas",
@@ -43,9 +76,56 @@
                     output: [],
                     predecessors: [],
                     predecessorColumns: {},
-                    successors: ["__main___function_t1_t1"],
+                    successors: ["__main___function_t2_t2"],
                     sourceCode:
-                        "@node(type=\"pandas\")\ndef t0():\n    return pd.DataFrame(data={'col1': [1]})\n",
+                        '@node(type="pandas")\ndef t0():\n    return pd.DataFrame(data={"t0": [1]})\n',
+                    isActive: true,
+                    group: null,
+                },
+                {
+                    nodeKey: "__main___function_t1_t1",
+                    nodeType: "pandas",
+                    name: "t1",
+                    description: "",
+                    tags: [
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                    ],
+                    filePath: "",
+                    importCmd: "",
+                    output: [],
+                    predecessors: [],
+                    predecessorColumns: {},
+                    successors: [
+                        "__main___function_t2_t2",
+                        "__main___function_t4_t4",
+                    ],
+                    sourceCode:
+                        '@node(type="pandas")\ndef t1():\n    return pd.DataFrame(data={"t1": [1]})\n',
+                    isActive: true,
+                    group: null,
+                },
+                {
+                    nodeKey: "__main___function_t4_t4",
+                    nodeType: "pandas",
+                    name: "t4",
+                    description: "",
+                    tags: [
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                    ],
+                    filePath: "",
+                    importCmd: "",
+                    output: [],
+                    predecessors: ["__main___function_t1_t1"],
+                    predecessorColumns: { __main___function_t1_t1: [] },
+                    successors: ["__main___function_t3_t3"],
+                    sourceCode:
+                        '@node(\n    type="pandas",\n    dependencies=[t1],\n    cache=cache\n)\ndef t4(t1):\n    return t1\n',
                     isActive: false,
                     group: null,
                 },
@@ -54,7 +134,7 @@
                 { id: "Transformation", name: "Transformation" },
                 { id: "pandas", name: "pandas" },
             ];
-            window.initialNodes = ["__main___function_t1_t1"];
+            window.initialNodes = ["__main___function_t3_t3"];
             window.groups = [];
         </script>
         <script src="../dist/bundle.js"></script>
