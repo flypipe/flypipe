@@ -38,10 +38,12 @@ jobs:
           yarn prettier-check
       - name: Run linter (pylint)
         run: python -m pylint flypipe
+      - name: Run unit tests
+        run:
+          coverage run --source=flypipe -m pytest flypipe
       - name: Check total unit test coverage >= 80%
         run:
           coverage report --fail-under=80
-      - name: Run unit tests
-        run: coverage run --source=flypipe -m pytest flypipe
+
 
 
