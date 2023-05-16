@@ -2,11 +2,12 @@ import os
 
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 
 from flypipe import node_function
 from flypipe.cache import Cache
 from flypipe.node import node
-from flypipe.node_graph import NodeGraph, RunStatus
+from flypipe.node_graph import RunStatus
 
 
 @pytest.fixture(scope="function")
@@ -25,20 +26,18 @@ def run_around_tests():
     if os.path.exists('test.csv'):
         os.remove('test.csv')
 
+def read():
+    return pd.read_csv('test.csv')
+
+def write(df):
+    df.to_csv('test.csv', index=False)
+
+def exists():
+    return os.path.exists('test.csv')
+
 @pytest.fixture(scope='function')
 def cache():
-    def read():
-        return pd.read_csv('test.csv')
-
-    def write(df):
-        df.to_csv('test.csv', index=False)
-
-    def exists():
-        return os.path.exists('test.csv')
-
-    cache = Cache(read=read, write=write, exists=exists)
-
-    return cache
+    return Cache(read=read, write=write, exists=exists)
 
 class TestCache:
     """Unit tests on the Node class"""
@@ -270,3 +269,102 @@ class TestCache:
         assert spy_writter.call_count == 0
         assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
+
+
+    def test_cases(self, cache, mocker):
+        """
+
+        | Case | Input Provided | Cache Disabled? | Cache has been written? | Action |
+        | --- | --- | --- | --- | --- |
+        | 1 | Yes | Any | Any | return provided input (do not run transformation, neither query/write cache) |
+        | 2 | No | Yes | No | Run transformation (do not save cache) |
+        | 3 | No | No | No | Run transformation and save cache |
+        | 4 | No | No | Yes | query existing cache (do not run transformation) |
+        | 5 | No | Yes | Yes | Run transformation (do not query cache or save cache) |
+
+
+
+        """
+
+        t_df = pd.DataFrame(data={"col1": [1]})
+
+        @node(
+            type="pandas",
+            cache=cache
+        )
+        def t():
+            return t_df
+
+        spy_writter = mocker.spy(cache, "write")
+        spy_reader = mocker.spy(cache, "read")
+        spy_exists = mocker.spy(cache, "exists")
+
+        # Case 1
+        spy_writter.reset_mock()
+        spy_reader.reset_mock()
+        spy_exists.reset_mock()
+
+        input_df = pd.DataFrame(data={"col1": [2]})
+        output_df = t.run(inputs={t: input_df})
+        assert_frame_equal(input_df, output_df)
+
+        assert spy_writter.call_count == 0
+        assert spy_reader.call_count == 0
+        assert spy_exists.call_count == 0
+
+        # Case 2
+        spy_writter.reset_mock()
+        spy_reader.reset_mock()
+        spy_exists.reset_mock()
+
+        assert not exists()
+        output_df = t.run(cache={'disable': [t]})
+        assert_frame_equal(t_df, output_df)
+        assert not exists()
+        assert spy_writter.call_count == 0
+        assert spy_reader.call_count == 0
+        assert spy_exists.call_count == 0
+
+        # Case 3
+        spy_writter.reset_mock()
+        spy_reader.reset_mock()
+        spy_exists.reset_mock()
+
+        assert not exists()
+        output_df = t.run()
+        assert_frame_equal(t_df, output_df)
+        assert exists()
+
+        assert spy_writter.call_count == 1
+        assert spy_reader.call_count == 0
+        assert spy_exists.call_count == 2
+
+
+        # Case 4
+        spy_writter.reset_mock()
+        spy_reader.reset_mock()
+        spy_exists.reset_mock()
+
+        assert exists()
+        output_df = t.run()
+        assert_frame_equal(t_df, output_df)
+        assert exists()
+
+        assert spy_writter.call_count == 0
+        assert spy_reader.call_count == 1
+        assert spy_exists.call_count == 1
+
+
+        # Case 5
+        spy_writter.reset_mock()
+        spy_reader.reset_mock()
+        spy_exists.reset_mock()
+
+        assert exists()
+        output_df = t.run(cache={'disable': [t]})
+        assert_frame_equal(t_df, output_df)
+        assert exists()
+
+        assert spy_writter.call_count == 0
+        assert spy_reader.call_count == 0
+        assert spy_exists.call_count == 0

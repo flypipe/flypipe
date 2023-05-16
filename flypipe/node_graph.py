@@ -34,6 +34,7 @@ class NodeGraph:
             parameters=None,
             spark=None,
             load_cache=True,
+            cache_context=None
     ):
         parameters = parameters or {}
         parameters = {node.key: params for node, params in parameters.items()}
@@ -52,7 +53,7 @@ class NodeGraph:
                 transformation, pandas_on_spark_use_pandas, parameters
             )
 
-        self.caches = self.calculate_graph_run_status(spark, load_cache=load_cache)
+        self.caches = self.calculate_graph_run_status(spark, load_cache=load_cache, cache_context=cache_context)
 
     def add_node(  # pylint: disable=too-many-arguments
             self,
@@ -308,7 +309,7 @@ class NodeGraph:
                 return name
         return None
 
-    def calculate_graph_run_status(self, spark, load_cache):
+    def calculate_graph_run_status(self, spark, load_cache, cache_context):
 
         # because the last node can be a generator, we have to get the last node node
         # after building the graph
@@ -322,8 +323,15 @@ class NodeGraph:
         run_status = RunStatus.ACTIVE
         if node_name in skipped_node_keys:
             run_status = RunStatus.SKIP
-        elif node['transformation'].cache and node['transformation'].cache.exists(spark):
-            run_status = RunStatus.CACHED
+
+        elif node['transformation'].cache:
+
+            if cache_context.is_disabled(node['transformation']):
+                node['transformation'].cache = None
+
+            elif node['transformation'].cache.exists(spark):
+                run_status = RunStatus.CACHED
+
 
         frontier = [(node_name, run_status)]
         while len(frontier) != 0:
@@ -339,11 +347,16 @@ class NodeGraph:
                     if ancestor_name in skipped_node_keys:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
+                    elif ancestor_node.cache and cache_context.is_disabled(ancestor_node):
+                        ancestor_node.cache = None
+                        frontier.append((ancestor_name, RunStatus.ACTIVE))
+
                     elif ancestor_node.cache and ancestor_node.cache.exists(spark):
                         frontier.append((ancestor_name, RunStatus.CACHED))
 
                     else:
                         frontier.append((ancestor_name, RunStatus.ACTIVE))
+
             elif descendent_status == RunStatus.CACHED:
                 current_node["status"] = RunStatus.SKIP
 
@@ -430,14 +443,15 @@ class NodeGraph:
         nx.draw(graph, with_labels=True)
         plt.show()
 
-    def get_execution_graph(self, spark):
+    def get_execution_graph(self, spark, cache_context):
         """
         Return an execution graph for this node graph. Practically, this is a copy of the graph with inactive nodes
         filtered out.
         """
         self.skipped_node_keys = self.skipped_node_keys + list(self.caches.keys())
         execution_graph = NodeGraph(
-            None, graph=self.graph.copy(), skipped_node_keys=self.skipped_node_keys, spark=spark, load_cache=False
+            None, graph=self.graph.copy(), skipped_node_keys=self.skipped_node_keys, spark=spark, load_cache=False,
+            cache_context=cache_context
         )
         to_remove = []
 
