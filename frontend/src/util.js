@@ -271,7 +271,7 @@ const generateCodeTemplate = (graph, nodeData) => {
     const dependencyList = predecessors
         .map((nodeId) => {
             const name = graph.getNode(nodeId).data.name;
-            if (predecessorColumns[nodeId].length > 0) {
+            if (predecessorColumns[nodeId] !== undefined && predecessorColumns[nodeId].length > 0) {
                 const selectedColumns = predecessorColumns[nodeId]
                     .map((column) => `'${column}'`)
                     .join(", ");
@@ -281,6 +281,8 @@ const generateCodeTemplate = (graph, nodeData) => {
             }
         })
         .join(", ");
+
+
     const nodeParameters = [
         `type='${nodeType}'`,
         ...(description ? [`description='${description}'`] : []),
