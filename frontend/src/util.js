@@ -185,10 +185,6 @@ const addOrReplaceEdge = (graph, edge) => {
         if (!targetNode.data.predecessors.includes(sourceNode.id)) {
             targetNode.data.predecessors.push(sourceNode.id);
         }
-        targetNode.data.predecessorColumns = {
-            ...targetNode.data.predecessorColumns,
-            [sourceNode.id]: [],
-        };
 
         // If the source and/or the target node have groups and they aren't the same group then we need to create an
         // extra hidden edge to the group node
