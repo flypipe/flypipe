@@ -16,6 +16,7 @@ class CatalogNode:
         self.node_graph = node_graph
         self.predecessors = []
         self.predecessor_columns = {}
+
         for input_node in node.input_nodes:
             self.predecessors.append(input_node.node.key)
             self.predecessor_columns[input_node.node.key] = (
@@ -46,6 +47,7 @@ class CatalogNode:
             "successors": sorted(list(self.successors)),
             "sourceCode": self._get_source_code(),
             "isActive": self._get_is_active(),
+            "hasCache": self.node.cache is not None,
             "group": self.node.group,
         }
 

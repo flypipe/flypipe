@@ -316,6 +316,7 @@ const getNewNodeDef = ({
     successors,
     sourceCode,
     isActive,
+    hasCache,
 }) => ({
     nodeKey,
     label: name || "Untitled",
@@ -330,6 +331,7 @@ const getNewNodeDef = ({
     successors: successors || [],
     sourceCode: sourceCode || "",
     isActive: isActive || true,
+    hasCache: hasCache || false,
 });
 
 const deleteNode = (graph, nodeId) => {

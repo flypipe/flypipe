@@ -5,12 +5,10 @@ from flypipe.cache_context import CacheContext
 from flypipe.node import node
 
 
-
 class TestCacheContext:
     """Unit tests on the Node class"""
 
     def test_cache_context(self):
-
         @node(type="pandas")
         def t0():
             return pd.DataFrame(data={"col1": [1]})
@@ -23,13 +21,11 @@ class TestCacheContext:
 
             return t1
 
-        cache = {
-            'disable': [t0, tf]
-        }
+        cache = {"disable": [t0, tf]}
 
         cache_context = CacheContext(cache)
 
-        assert cache_context._disable == [t0, tf]
+        assert cache_context._disable == [t0, tf]  # pylint: disable=protected-access
 
     def test_is_disabled(self):
         @node(type="pandas")
@@ -44,9 +40,7 @@ class TestCacheContext:
 
             return t1
 
-        cache = {
-            'disable': [t0]
-        }
+        cache = {"disable": [t0]}
 
         cache_context = CacheContext(cache)
 

@@ -18,15 +18,17 @@ import {
 import classNames from "classnames";
 import textFit from "textfit";
 import { GrNew } from "react-icons/gr";
+import { FiDatabase } from "react-icons/fi";
+
 import { NotificationContext } from "../notifications/context";
 import { GraphContext } from "./graph-context";
 
 const BaseNode = ({ data, isNewNode }) => {
     const graph = useReactFlow();
-    const { nodeType, label } = data;
+    const { nodeType, label, hasCache, isActive } = data;
     const { addNotification } = useContext(NotificationContext);
     const { setCurrentGraphObject } = useContext(GraphContext);
-
+    console.log(nodeType, label, hasCache, isActive);
     const handleConnect = useCallback(
         ({ source, target }) => {
             const sourceLabel = graph.getNode(source).data.label;
@@ -54,6 +56,7 @@ const BaseNode = ({ data, isNewNode }) => {
             "px-4",
             "py-2",
             "rounded",
+            isActive ? "" : "node-dashed",
             nodeClass
         )
     );
@@ -114,6 +117,17 @@ const BaseNode = ({ data, isNewNode }) => {
                         size="md"
                     >
                         <GrNew className="fs-4" />
+                    </Badge>
+                )}
+                {hasCache && (
+                    <Badge
+                        pill
+                        bg="light"
+                        className={`${badgeWidth} align-self-start fs-6 position-absolute node-badge`}
+                        title="Cache"
+                        size="md"
+                    >
+                        <FiDatabase className="fs-4" color="black" />
                     </Badge>
                 )}
             </div>

@@ -13,31 +13,38 @@ from flypipe.node_graph import RunStatus
 @pytest.fixture(scope="function")
 def spark():
     from flypipe.tests.spark import spark  # pylint: disable=import-outside-toplevel
+
     return spark
+
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
     # Code that will run before your test, for example:
-    if os.path.exists('test.csv'):
-        os.remove('test.csv')
+    if os.path.exists("test.csv"):
+        os.remove("test.csv")
     # A test function will be run at this point
     yield
     # Code that will run after your test, for example:
-    if os.path.exists('test.csv'):
-        os.remove('test.csv')
+    if os.path.exists("test.csv"):
+        os.remove("test.csv")
+
 
 def read():
-    return pd.read_csv('test.csv')
+    return pd.read_csv("test.csv")
+
 
 def write(df):
-    df.to_csv('test.csv', index=False)
+    df.to_csv("test.csv", index=False)
+
 
 def exists():
-    return os.path.exists('test.csv')
+    return os.path.exists("test.csv")
 
-@pytest.fixture(scope='function')
+
+@pytest.fixture(scope="function")
 def cache():
     return Cache(read=read, write=write, exists=exists)
+
 
 class TestCache:
     """Unit tests on the Node class"""
@@ -55,7 +62,6 @@ class TestCache:
         spy_exists = mocker.spy(cache, "exists")
         t1.run()
 
-
         assert spy_writter.call_count == 1
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 2
@@ -69,28 +75,35 @@ class TestCache:
         assert spy_exists.call_count == 1
 
     def test_cache_spark_provided(self, spark, mocker):
-
         def read(spark):
-            return spark.read.option("inferSchema", True).option("header", True).csv('test.csv')
+            return (
+                spark.read.option("inferSchema", True)
+                .option("header", True)
+                .csv("test.csv")
+            )
 
         def write(spark, df):
-            df.toPandas().to_csv('test.csv', index=False)
+            df.toPandas().to_csv("test.csv", index=False)
 
         def exists(spark):
-            if os.path.exists('test.csv'):
-               return spark.read.option("header", True).csv('test.csv').count() > 0
+            if os.path.exists("test.csv"):
+                return spark.read.option("header", True).csv("test.csv").count() > 0
 
             return False
 
         cache = Cache(read=read, write=write, exists=exists, spark_context=True)
 
-        @node(
-            type="pyspark",
-            cache=cache,
-            spark_context=True
-        )
+        @node(type="pyspark", cache=cache, spark_context=True)
         def t1(spark):
-            return spark.createDataFrame(schema=("c0", "c1"), data=[(0, 1,)],)
+            return spark.createDataFrame(
+                schema=("c0", "c1"),
+                data=[
+                    (
+                        0,
+                        1,
+                    )
+                ],
+            )
 
         spy_writter = mocker.spy(cache, "write")
         spy_reader = mocker.spy(cache, "read")
@@ -119,6 +132,7 @@ class TestCache:
 
 
         """
+
         @node(type="pandas")
         def t0():
             return pd.DataFrame(data={"t0": [1]})
@@ -127,11 +141,7 @@ class TestCache:
         def t1():
             return pd.DataFrame(data={"t1": [1]})
 
-        @node(
-            type="pandas",
-            cache=cache,
-            dependencies=[t0, t1]
-        )
+        @node(type="pandas", cache=cache, dependencies=[t0, t1])
         def t2(t0, t1):
             return t0
 
@@ -142,18 +152,20 @@ class TestCache:
         def t3(t2):
             return t2
 
-        #to write cache
+        # to write cache
         t3.run()
 
         # to read cache
         t3.run()
 
         for node_name in t3.node_graph.graph.nodes:
-            if node_name == "flypipe_cache_test_function_t3_TestCache_test_query_cache__locals__t3":
-                assert t3.node_graph.get_node(node_name)['status'] == RunStatus.ACTIVE
+            if (
+                node_name
+                == "flypipe_cache_test_function_t3_TestCache_test_query_cache__locals__t3"
+            ):
+                assert t3.node_graph.get_node(node_name)["status"] == RunStatus.ACTIVE
             else:
-                assert t3.node_graph.get_node(node_name)['status'] == RunStatus.SKIP
-
+                assert t3.node_graph.get_node(node_name)["status"] == RunStatus.SKIP
 
     def test_query_cache1(self, cache, mocker):
         """
@@ -167,7 +179,6 @@ class TestCache:
 
         """
 
-
         @node(type="pandas")
         def t0():
             return pd.DataFrame(data={"t0": [1]})
@@ -176,18 +187,11 @@ class TestCache:
         def t1():
             return pd.DataFrame(data={"t1": [1]})
 
-        @node(
-            type="pandas",
-            dependencies=[t1]
-        )
+        @node(type="pandas", dependencies=[t1])
         def t4(t1):
             return t1
 
-        @node(
-            type="pandas",
-            cache=cache,
-            dependencies=[t0, t1]
-        )
+        @node(type="pandas", cache=cache, dependencies=[t0, t1])
         def t2(t0, t1):
             return t0
 
@@ -210,16 +214,17 @@ class TestCache:
             if node_name in [
                 "flypipe_cache_test_function_t3_TestCache_test_query_cache1__locals__t3",
                 "flypipe_cache_test_function_t4_TestCache_test_query_cache1__locals__t4",
-                "flypipe_cache_test_function_t1_TestCache_test_query_cache1__locals__t1"
+                "flypipe_cache_test_function_t1_TestCache_test_query_cache1__locals__t1",
             ]:
-                assert t3.node_graph.get_node(node_name)['status'] == RunStatus.ACTIVE
+                assert t3.node_graph.get_node(node_name)["status"] == RunStatus.ACTIVE
             else:
-                assert t3.node_graph.get_node(node_name)['status'] == RunStatus.SKIP
+                assert t3.node_graph.get_node(node_name)["status"] == RunStatus.SKIP
 
     def test_cache_non_spark_provided_input(self, cache, mocker):
         """
         If input is provided, it does not uses caches at all.
         """
+
         @node(
             type="pandas",
             cache=cache,
@@ -230,19 +235,14 @@ class TestCache:
         spy_writter = mocker.spy(cache, "write")
         spy_reader = mocker.spy(cache, "read")
         spy_exists = mocker.spy(cache, "exists")
-        t1.run(inputs={
-            t1: pd.DataFrame(data={"col1": [1]})
-        })
+        t1.run(inputs={t1: pd.DataFrame(data={"col1": [1]})})
         assert spy_writter.call_count == 0
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 0
 
-
     def test_cache_node_function(self, cache, mocker):
-
         @node_function()
         def t1f():
-
             @node(
                 type="pandas",
                 cache=cache,
@@ -251,7 +251,6 @@ class TestCache:
                 return pd.DataFrame(data={"col1": [1], "col2": [2]})
 
             return t1
-
 
         spy_writter = mocker.spy(cache, "write")
         spy_reader = mocker.spy(cache, "read")
@@ -270,7 +269,6 @@ class TestCache:
         assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
 
-
     def test_cases(self, cache, mocker):
         """
 
@@ -288,10 +286,7 @@ class TestCache:
 
         t_df = pd.DataFrame(data={"col1": [1]})
 
-        @node(
-            type="pandas",
-            cache=cache
-        )
+        @node(type="pandas", cache=cache)
         def t():
             return t_df
 
@@ -318,7 +313,7 @@ class TestCache:
         spy_exists.reset_mock()
 
         assert not exists()
-        output_df = t.run(cache={'disable': [t]})
+        output_df = t.run(cache={"disable": [t]})
         assert_frame_equal(t_df, output_df)
         assert not exists()
         assert spy_writter.call_count == 0
@@ -339,7 +334,6 @@ class TestCache:
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 2
 
-
         # Case 4
         spy_writter.reset_mock()
         spy_reader.reset_mock()
@@ -354,14 +348,13 @@ class TestCache:
         assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
 
-
         # Case 5
         spy_writter.reset_mock()
         spy_reader.reset_mock()
         spy_exists.reset_mock()
 
         assert exists()
-        output_df = t.run(cache={'disable': [t]})
+        output_df = t.run(cache={"disable": [t]})
         assert_frame_equal(t_df, output_df)
         assert exists()
 

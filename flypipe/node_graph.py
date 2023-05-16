@@ -26,15 +26,15 @@ class NodeGraph:
     """
 
     def __init__(  # pylint: disable=too-many-arguments
-            self,
-            transformation: Union[Node, None],
-            graph=None,
-            skipped_node_keys=None,
-            pandas_on_spark_use_pandas=False,
-            parameters=None,
-            spark=None,
-            load_cache=True,
-            cache_context=None
+        self,
+        transformation: Union[Node, None],
+        graph=None,
+        skipped_node_keys=None,
+        pandas_on_spark_use_pandas=False,
+        parameters=None,
+        spark=None,
+        load_cache=True,
+        cache_context=None,
     ):
         parameters = parameters or {}
         parameters = {node.key: params for node, params in parameters.items()}
@@ -53,16 +53,18 @@ class NodeGraph:
                 transformation, pandas_on_spark_use_pandas, parameters
             )
 
-        self.caches = self.calculate_graph_run_status(spark, load_cache=load_cache, cache_context=cache_context)
+        self.caches = self.calculate_graph_run_status(
+            spark, load_cache=load_cache, cache_context=cache_context
+        )
 
     def add_node(  # pylint: disable=too-many-arguments
-            self,
-            graph: DiGraph,
-            node_name: str,
-            transformation: Node,
-            run_status: RunStatus = None,
-            output_columns: list = None,
-            run_context: NodeRunContext = None,
+        self,
+        graph: DiGraph,
+        node_name: str,
+        transformation: Node,
+        run_status: RunStatus = None,
+        output_columns: list = None,
+        run_context: NodeRunContext = None,
     ) -> DiGraph:
         run_status = run_status or RunStatus.UNKNOWN
         run_context = run_context or NodeRunContext()
@@ -81,7 +83,7 @@ class NodeGraph:
         self.graph.remove_node(node_name)
 
     def _build_graph(
-            self, transformation: Node, pandas_on_spark_use_pandas: bool, parameters: dict
+        self, transformation: Node, pandas_on_spark_use_pandas: bool, parameters: dict
     ):
         transformation = transformation.copy()
         graph = nx.DiGraph()
@@ -121,8 +123,8 @@ class NodeGraph:
             # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state
             # is cleared
             if (
-                    pandas_on_spark_use_pandas
-                    and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
+                pandas_on_spark_use_pandas
+                and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
             ):
                 transformation.type = "pandas"
 
@@ -141,7 +143,7 @@ class NodeGraph:
         return graph
 
     def _expand_node_functions(
-            self, graph: DiGraph
+        self, graph: DiGraph
     ):  # pylint: disable=too-many-branches
         """
         Expand all node functions. Given a node graph, return the same node graph with all node functions expanded.
@@ -229,10 +231,10 @@ class NodeGraph:
         return graph
 
     def _expand_node_function(
-            self,
-            node_function: NodeFunction,
-            requested_columns: list,
-            run_context: NodeRunContext,
+        self,
+        node_function: NodeFunction,
+        requested_columns: list,
+        run_context: NodeRunContext,
     ):
         """
         Expand a node function in the graph and replace it with the nodes it returns. There are a few additional steps:
@@ -319,19 +321,17 @@ class NodeGraph:
         node = self.graph.nodes[node_name]
         skipped_node_keys = set(self.skipped_node_keys)
 
-
         run_status = RunStatus.ACTIVE
         if node_name in skipped_node_keys:
             run_status = RunStatus.SKIP
 
-        elif node['transformation'].cache:
+        elif node["transformation"].cache:
 
-            if cache_context.is_disabled(node['transformation']):
-                node['transformation'].cache = None
+            if cache_context.is_disabled(node["transformation"]):
+                node["transformation"].cache = None
 
-            elif node['transformation'].cache.exists(spark):
+            elif node["transformation"].cache.exists(spark):
                 run_status = RunStatus.CACHED
-
 
         frontier = [(node_name, run_status)]
         while len(frontier) != 0:
@@ -342,12 +342,14 @@ class NodeGraph:
                 current_node["status"] = RunStatus.ACTIVE
 
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    ancestor_node = self.graph.nodes[ancestor_name]['transformation']
+                    ancestor_node = self.graph.nodes[ancestor_name]["transformation"]
 
                     if ancestor_name in skipped_node_keys:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
-                    elif ancestor_node.cache and cache_context.is_disabled(ancestor_node):
+                    elif ancestor_node.cache and cache_context.is_disabled(
+                        ancestor_node
+                    ):
                         ancestor_node.cache = None
                         frontier.append((ancestor_name, RunStatus.ACTIVE))
 
@@ -361,7 +363,9 @@ class NodeGraph:
                 current_node["status"] = RunStatus.SKIP
 
                 if load_cache:
-                    caches[current_node_name] = current_node['transformation'].cache.read(spark)
+                    caches[current_node_name] = current_node[
+                        "transformation"
+                    ].cache.read(spark)
                 else:
                     caches[current_node_name] = True
 
@@ -450,8 +454,12 @@ class NodeGraph:
         """
         self.skipped_node_keys = self.skipped_node_keys + list(self.caches.keys())
         execution_graph = NodeGraph(
-            None, graph=self.graph.copy(), skipped_node_keys=self.skipped_node_keys, spark=spark, load_cache=False,
-            cache_context=cache_context
+            None,
+            graph=self.graph.copy(),
+            skipped_node_keys=self.skipped_node_keys,
+            spark=spark,
+            load_cache=False,
+            cache_context=cache_context,
         )
         to_remove = []
 

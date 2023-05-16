@@ -7,9 +7,7 @@ class Mode(Enum):
     EXISTS = 2
 
 
-
-class Cache():
-
+class Cache:
     def __init__(self, read, write, exists, spark_context=False):
         self._read = read
         self._write = write
@@ -32,5 +30,3 @@ class Cache():
             return self._write(spark, df)
 
         return self._write(df)
-
-
