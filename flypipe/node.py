@@ -42,6 +42,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         output=None,
         spark_context=False,
         requested_columns=False,
+        cache=None
     ):
         self._key = None
         self.name = None
@@ -82,6 +83,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         self.spark_context = spark_context
         self.requested_columns = requested_columns
         self.node_graph = None
+        self.cache = cache
 
     @property
     def output(self):
@@ -176,7 +178,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         return self.function.__doc__
 
     def _create_graph(
-        self, skipped_node_keys=None, pandas_on_spark_use_pandas=False, parameters=None
+        self, skipped_node_keys=None, pandas_on_spark_use_pandas=False, parameters=None, spark=None, load_cache=True
     ):
         # This import is here to avoid a circular import issue
         # pylint: disable-next=import-outside-toplevel,cyclic-import
@@ -189,6 +191,8 @@ class Node:  # pylint: disable=too-many-instance-attributes
             skipped_node_keys=skipped_node_keys,
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
             parameters=parameters,
+            spark=spark,
+            load_cache=load_cache,
         )
 
     def select(self, *columns):
@@ -233,16 +237,30 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
         provided_inputs = {node.key: df for node, df in inputs.items()}
         self._create_graph(
-            list(provided_inputs.keys()), pandas_on_spark_use_pandas, parameters
+            list(provided_inputs.keys()), pandas_on_spark_use_pandas, parameters, spark=spark, load_cache=True
         )
 
+        # re-create graph again with nodes caches
+        provided_inputs = { **provided_inputs, **self.node_graph.caches}
         if provided_inputs is None:
             provided_inputs = {}
         outputs = {
             key: NodeResult(spark, df, schema=None)
             for key, df in provided_inputs.items()
         }
-        execution_graph = self.node_graph.get_execution_graph()
+
+        execution_graph = self.node_graph.get_execution_graph(spark)
+
+        # In case end_node has been given as input, the execution graph will be empty,
+        # in that case return the provided input for the end node
+        if execution_graph.is_empty():
+            end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
+            end_node = self.node_graph.get_transformation(end_node_name)
+            return (
+                outputs[end_node_name]
+                .as_type(end_node.dataframe_type)
+                .get_df()
+            )
 
         if parallel is None:
             parallel = get_config("default_run_mode") == RunMode.PARALLEL.value
@@ -392,6 +410,11 @@ class Node:  # pylint: disable=too-many-instance-attributes
                     "Unable to run spark_sql type node without spark being provided in the transformation.run call"
                 )
             result = spark.sql(result)
+
+        # If cache exists, and the transformation has run, then save its cache
+        if self.cache:
+            self.cache.write(spark, result)
+
         return result
 
     def plot(self):
@@ -399,6 +422,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
     def html(  # pylint: disable=too-many-arguments
         self,
+        spark=None,
         height=1000,
         inputs=None,
         pandas_on_spark_use_pandas=False,
@@ -433,15 +457,17 @@ class Node:  # pylint: disable=too-many-instance-attributes
         # pylint: disable-next=import-outside-toplevel,cyclic-import
         from flypipe.catalog import Catalog
 
-        skipped_nodes = inputs or {}
+        inputs = inputs or {}
+        provided_inputs = {node.key: df for node, df in inputs.items()}
         self._create_graph(
-            [node.key for node in skipped_nodes], pandas_on_spark_use_pandas, parameters
+            list(provided_inputs.keys()), pandas_on_spark_use_pandas, parameters, spark=spark, load_cache=False
         )
+
         catalog = Catalog()
 
         # The graph created had its node_functions expanded and internal nodes are renamed with node function
         # name. In case the last nod is a node function, we have to register the end node of the expanded graph
-        end_node_name = self.node_graph.get_end_node_name()
+        end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
         end_node = self.node_graph.get_transformation(end_node_name)
 
         catalog.register_node(end_node, node_graph=self.node_graph)
@@ -465,6 +491,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
             output=None if self.output_schema is None else self.output_schema.copy(),
             spark_context=self.spark_context,
             requested_columns=self.requested_columns,
+            cache=self.cache
         )
         node.name = self.name
         # Accessing protected members in a deep copy method is necessary

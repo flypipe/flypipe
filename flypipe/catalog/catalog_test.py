@@ -219,7 +219,7 @@ class TestCatalog:
         t4._create_graph()  # pylint: disable=protected-access
         catalog = Catalog()
 
-        end_node_name = t4.node_graph.get_end_node_name()
+        end_node_name = t4.node_graph.get_end_node_name(t4.node_graph.graph)
         end_node = t4.node_graph.get_transformation(end_node_name)
 
         catalog.register_node(end_node, node_graph=t4.node_graph)
