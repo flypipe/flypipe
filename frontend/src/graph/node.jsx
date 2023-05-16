@@ -28,7 +28,7 @@ const BaseNode = ({ data, isNewNode }) => {
     const { nodeType, label, hasCache, isActive } = data;
     const { addNotification } = useContext(NotificationContext);
     const { setCurrentGraphObject } = useContext(GraphContext);
-    console.log(nodeType, label, hasCache, isActive);
+
     const handleConnect = useCallback(
         ({ source, target }) => {
             const sourceLabel = graph.getNode(source).data.label;
