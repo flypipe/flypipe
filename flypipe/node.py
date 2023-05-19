@@ -4,7 +4,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Mapping, List
 
-from flypipe.cache_context import CacheContext
+from flypipe.cache.cache_context import CacheContext
 from flypipe.config import get_config, RunMode
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
@@ -183,8 +183,6 @@ class Node:  # pylint: disable=too-many-instance-attributes
         skipped_node_keys=None,
         pandas_on_spark_use_pandas=False,
         parameters=None,
-        spark=None,
-        load_cache=True,
         cache_context=None,
     ):
         # This import is here to avoid a circular import issue
@@ -198,8 +196,6 @@ class Node:  # pylint: disable=too-many-instance-attributes
             skipped_node_keys=skipped_node_keys,
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
             parameters=parameters,
-            spark=spark,
-            load_cache=load_cache,
             cache_context=cache_context,
         )
 
@@ -244,20 +240,21 @@ class Node:  # pylint: disable=too-many-instance-attributes
         if not inputs:
             inputs = {}
 
-        cache_context = CacheContext({} if cache is None else cache)
+        cache_context = CacheContext({} if cache is None else cache, spark)
 
         provided_inputs = {node.key: df for node, df in inputs.items()}
         self._create_graph(
             list(provided_inputs.keys()),
             pandas_on_spark_use_pandas,
             parameters,
-            spark=spark,
-            load_cache=True,
             cache_context=cache_context,
         )
 
         # re-create graph again with nodes caches
-        provided_inputs = {**provided_inputs, **self.node_graph.caches}
+        provided_inputs = {
+            **provided_inputs,
+            **self.node_graph.load_caches()
+        }
         if provided_inputs is None:
             provided_inputs = {}
         outputs = {
@@ -265,7 +262,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
             for key, df in provided_inputs.items()
         }
 
-        execution_graph = self.node_graph.get_execution_graph(spark, cache_context)
+        execution_graph = self.node_graph.get_execution_graph()
 
         # In case end_node has been given as input, the execution graph will be empty,
         # in that case return the provided input for the end node
@@ -425,7 +422,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
         # If cache exists, and the transformation has run, then save its cache
         if self.cache:
-            self.cache.write(spark, result)
+            self.cache.write(result)
 
         return result
 
@@ -470,7 +467,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         # pylint: disable-next=import-outside-toplevel,cyclic-import
         from flypipe.catalog import Catalog
 
-        cache_context = CacheContext({} if cache is None else cache)
+        cache_context = CacheContext({} if cache is None else cache, spark)
 
         inputs = inputs or {}
         provided_inputs = {node.key: df for node, df in inputs.items()}
@@ -478,8 +475,6 @@ class Node:  # pylint: disable=too-many-instance-attributes
             list(provided_inputs.keys()),
             pandas_on_spark_use_pandas,
             parameters,
-            spark=spark,
-            load_cache=False,
             cache_context=cache_context,
         )
 

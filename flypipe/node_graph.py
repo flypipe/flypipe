@@ -3,6 +3,8 @@ from typing import List, Union
 from matplotlib import pyplot as plt
 import networkx as nx
 from networkx import DiGraph
+
+from flypipe.cache.cache_context import CacheContext
 from flypipe.node import Node
 from flypipe.node_function import NodeFunction
 from flypipe.node_run_context import NodeRunContext
@@ -32,10 +34,10 @@ class NodeGraph:
         skipped_node_keys=None,
         pandas_on_spark_use_pandas=False,
         parameters=None,
-        spark=None,
-        load_cache=True,
         cache_context=None,
+        existent_cache_nodes=None
     ):
+        self.existent_cache_nodes = existent_cache_nodes or []
         parameters = parameters or {}
         parameters = {node.key: params for node, params in parameters.items()}
 
@@ -50,12 +52,10 @@ class NodeGraph:
             self.node_output_columns = None
             self.edges = None
             self.graph = self._build_graph(
-                transformation, pandas_on_spark_use_pandas, parameters
+                transformation, pandas_on_spark_use_pandas, parameters, cache_context=cache_context
             )
 
-        self.caches = self.calculate_graph_run_status(
-            spark, load_cache=load_cache, cache_context=cache_context
-        )
+            self.existent_cache_nodes = self.calculate_graph_run_status()
 
     def add_node(  # pylint: disable=too-many-arguments
         self,
@@ -83,7 +83,7 @@ class NodeGraph:
         self.graph.remove_node(node_name)
 
     def _build_graph(
-        self, transformation: Node, pandas_on_spark_use_pandas: bool, parameters: dict
+        self, transformation: Node, pandas_on_spark_use_pandas: bool, parameters: dict, cache_context: CacheContext
     ):
         transformation = transformation.copy()
         graph = nx.DiGraph()
@@ -114,8 +114,8 @@ class NodeGraph:
                 graph.add_edge(dependency.key, current_transformation.key)
         graph = self._compute_requested_columns(graph)
         graph = self._expand_node_functions(graph)
-
         graph = self._compute_edge_selected_columns(graph)
+        graph = self._create_cache_contexts(graph, cache_context)
 
         for node_key in graph.nodes:
             transformation = graph.nodes[node_key]["transformation"]
@@ -129,6 +129,26 @@ class NodeGraph:
                 transformation.type = "pandas"
 
         return graph
+
+    def _create_cache_contexts(self, graph, cache_context):
+        if cache_context:
+            for node_key in graph.nodes:
+                node = graph.nodes[node_key]
+                # should we overwrite the node cache?
+                # or should we create node['transformation'].cache_context = cache_context.create(node)?
+                node['transformation'].cache = cache_context.create(node['transformation'])
+
+        return graph
+
+    def load_caches(self):
+        caches = {}
+        for node_name in self.graph.nodes:
+            node = self.get_node(node_name)
+            if node['transformation'].cache and node_name in self.existent_cache_nodes:
+
+                caches[node_name] = node['transformation'].cache.read()
+
+        return caches
 
     def _compute_edge_selected_columns(self, graph):
         for node_key in graph.nodes:
@@ -311,12 +331,11 @@ class NodeGraph:
                 return name
         return None
 
-    def calculate_graph_run_status(self, spark, load_cache, cache_context):
+    def calculate_graph_run_status(self):
 
         # because the last node can be a generator, we have to get the last node node
         # after building the graph
-        caches = {}
-
+        existent_cache_nodes = set()
         node_name = self.get_end_node_name(self.graph)
         node = self.graph.nodes[node_name]
         skipped_node_keys = set(self.skipped_node_keys)
@@ -325,13 +344,8 @@ class NodeGraph:
         if node_name in skipped_node_keys:
             run_status = RunStatus.SKIP
 
-        elif node["transformation"].cache:
-
-            if cache_context.is_disabled(node["transformation"]):
-                node["transformation"].cache = None
-
-            elif node["transformation"].cache.exists(spark):
-                run_status = RunStatus.CACHED
+        elif node["transformation"].cache and node["transformation"].cache.exists():
+            run_status = RunStatus.CACHED
 
         frontier = [(node_name, run_status)]
         while len(frontier) != 0:
@@ -347,13 +361,7 @@ class NodeGraph:
                     if ancestor_name in skipped_node_keys:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
-                    elif ancestor_node.cache and cache_context.is_disabled(
-                        ancestor_node
-                    ):
-                        ancestor_node.cache = None
-                        frontier.append((ancestor_name, RunStatus.ACTIVE))
-
-                    elif ancestor_node.cache and ancestor_node.cache.exists(spark):
+                    elif ancestor_node.cache and ancestor_node.cache.exists():
                         frontier.append((ancestor_name, RunStatus.CACHED))
 
                     else:
@@ -362,12 +370,7 @@ class NodeGraph:
             elif descendent_status == RunStatus.CACHED:
                 current_node["status"] = RunStatus.SKIP
 
-                if load_cache:
-                    caches[current_node_name] = current_node[
-                        "transformation"
-                    ].cache.read(spark)
-                else:
-                    caches[current_node_name] = True
+                existent_cache_nodes.add(current_node_name)
 
                 for ancestor_name in self.graph.predecessors(current_node_name):
                     if self.graph.nodes[ancestor_name]["status"] != RunStatus.ACTIVE:
@@ -380,7 +383,7 @@ class NodeGraph:
                     if self.graph.nodes[ancestor_name]["status"] != RunStatus.ACTIVE:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
-        return caches
+        return list(existent_cache_nodes)
 
     def get_dependency_map(self):
         dependencies = {}
@@ -447,19 +450,16 @@ class NodeGraph:
         nx.draw(graph, with_labels=True)
         plt.show()
 
-    def get_execution_graph(self, spark, cache_context):
+    def get_execution_graph(self):
         """
         Return an execution graph for this node graph. Practically, this is a copy of the graph with inactive nodes
         filtered out.
         """
-        self.skipped_node_keys = self.skipped_node_keys + list(self.caches.keys())
         execution_graph = NodeGraph(
             None,
             graph=self.graph.copy(),
-            skipped_node_keys=self.skipped_node_keys,
-            spark=spark,
-            load_cache=False,
-            cache_context=cache_context,
+            skipped_node_keys=self.skipped_node_keys + self.existent_cache_nodes,
+            existent_cache_nodes=self.existent_cache_nodes
         )
         to_remove = []
 

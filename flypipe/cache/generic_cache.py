@@ -1,13 +1,5 @@
-from enum import Enum
 
-
-class Mode(Enum):
-    READ = 0
-    WRITE = 1
-    EXISTS = 2
-
-
-class Cache:
+class GenericCache:
     def __init__(self, read, write, exists, spark_context=False):
         self._read = read
         self._write = write

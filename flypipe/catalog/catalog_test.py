@@ -125,6 +125,7 @@ class TestCatalog:
                 "sourceCode": inspect.getsource(inspect.getmodule(t2.function)),
                 "isActive": True,
                 "group": "Training Thing",
+                "hasCache": False,
             },
             {
                 "description": "Description for t1",
@@ -152,6 +153,7 @@ class TestCatalog:
                 "sourceCode": inspect.getsource(inspect.getmodule(t1.function)),
                 "isActive": True,
                 "group": None,
+                "hasCache": False,
             },
             {
                 "description": "",
@@ -174,6 +176,7 @@ class TestCatalog:
                 "sourceCode": inspect.getsource(inspect.getmodule(t3.function)),
                 "isActive": True,
                 "group": "Training Thing",
+                "hasCache": False,
             },
         ]
 
