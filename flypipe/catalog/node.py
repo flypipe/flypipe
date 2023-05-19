@@ -4,7 +4,6 @@ import os
 
 from pathlib import Path
 from flypipe.node_graph import RunStatus
-from flypipe.node_function import NodeFunction
 
 
 class CatalogNode:
@@ -18,19 +17,10 @@ class CatalogNode:
         self.predecessors = []
         self.predecessor_columns = {}
         for input_node in node.input_nodes:
-            # TODO: it's a little awkward to deal with this node function logic here, is this even the behaviour we
-            # want?
-            if isinstance(input_node.node, NodeFunction):
-                expanded_node = input_node.node.expand(None)[-1]
-                self.predecessors.append(expanded_node.key)
-                self.predecessor_columns[expanded_node.key] = (
-                    input_node.selected_columns or []
-                )
-            else:
-                self.predecessors.append(input_node.node.key)
-                self.predecessor_columns[input_node.node.key] = (
-                    input_node.selected_columns or []
-                )
+            self.predecessors.append(input_node.node.key)
+            self.predecessor_columns[input_node.node.key] = (
+                input_node.selected_columns or []
+            )
         self.successors = set()
 
     def register_successor(self, successor_node):

@@ -5,81 +5,114 @@
         <script>
             window.nodes = [
                 {
-                    description: "Description for t1",
-                    filePath: "flypipe/catalog_test.py",
-                    importCmd: "from flypipe.catalog_test import t1",
-                    nodeKey: "flypipe_catalog_test_function_t1_t1",
-                    nodeType: "pandas",
-                    name: "t1",
-                    group: "group_1",
-                    predecessors: [],
-                    predecessorColumns: {},
-                    output: [],
-                    successors: [
-                        "flypipe_catalog_test_function_t2_t2",
-                        "flypipe_catalog_test_function_t3_t3",
-                    ],
-                    tags: [],
-                    sourceCode: "...",
-                    isActive: true,
-                },
-                {
-                    description: "Description for t2",
-                    filePath: "flypipe/catalog_test.py",
-                    importCmd: "from flypipe.catalog_test import t2",
-                    nodeKey: "flypipe_catalog_test_function_t2_t2",
-                    nodeType: "pandas",
-                    name: "t2",
-                    group: "group_2",
-                    predecessors: ["flypipe_catalog_test_function_t1_t1"],
-                    predecessorColumns: {
-                        flypipe_catalog_test_function_t1_t1: [],
-                    },
-                    output: [],
-                    successors: ["flypipe_catalog_test_function_t3_t3"],
-                    tags: [],
-                    sourceCode: "...",
-                    isActive: true,
-                },
-                {
-                    description: "Description for t3",
-                    filePath: "flypipe/catalog_test.py",
-                    importCmd: "from flypipe.catalog_test import t3",
-                    nodeKey: "flypipe_catalog_test_function_t3_t3",
+                    nodeKey: "__main___function_t3_t3",
                     nodeType: "pandas",
                     name: "t3",
+                    description: "",
+                    tags: [
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                    ],
+                    filePath: "",
+                    importCmd: "",
+                    output: [],
                     predecessors: [
-                        "flypipe_catalog_test_function_t1_t1",
-                        "flypipe_catalog_test_function_t2_t2",
+                        "__main___function_t1_t1",
+                        "__main___function_t2_t2",
                     ],
                     predecessorColumns: {
-                        flypipe_catalog_test_function_t1_t1: [],
-                        flypipe_catalog_test_function_t2_t2: [],
+                        __main___function_t1_t1: [],
+                        __main___function_t2_t2: [],
                     },
-                    output: [],
                     successors: [],
-                    tags: [],
-                    sourceCode: "...",
+                    sourceCode:
+                        '@node(\n    type="pandas",\n    dependencies=[t1, t2]\n)\ndef t3(t1,t2):\n    return t1\n',
                     isActive: true,
-                },
-            ];
-            window.groups = [
-                {
-                    id: "group_1",
-                    name: "Group 1",
-                    nodes: ["flypipe_catalog_test_function_t1_t1"],
+                    group: null,
                 },
                 {
-                    id: "group_2",
-                    name: "Group 2",
-                    nodes: ["flypipe_catalog_test_function_t2_t2"],
+                    nodeKey: "__main___function_t1_t1",
+                    nodeType: "pandas",
+                    name: "t1",
+                    description: "",
+                    tags: [
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                    ],
+                    filePath: "",
+                    importCmd: "",
+                    output: [],
+                    predecessors: ["__main___function_t0_t0"],
+                    predecessorColumns: {
+                        __main___function_t0_t0: ["col1"],
+                    },
+                    successors: ["__main___function_t3_t3"],
+                    sourceCode:
+                        '@node(\n    type="pandas",\n    dependencies=[t0.select("col1")]\n)\ndef t1(t0):\n    return t0\n',
+                    isActive: true,
+                    group: null,
+                },
+                {
+                    nodeKey: "__main___function_t0_t0",
+                    nodeType: "pandas",
+                    name: "t0",
+                    description: "",
+                    tags: [
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                    ],
+                    filePath: "",
+                    importCmd: "",
+                    output: [
+                        { column: "col1", type: "String", description: "" },
+                        { column: "col2", type: "String", description: "" },
+                    ],
+                    predecessors: [],
+                    predecessorColumns: {},
+                    successors: [
+                        "__main___function_t1_t1",
+                        "__main___function_t2_t2",
+                    ],
+                    sourceCode:
+                        '@node(\n    type="pandas",\n    output=Schema([\n        Column("col1", String()),\n        Column("col2", String())\n    ])\n)\ndef t0():\n    return pd.DataFrame(data={"col1", ["a"], "col2", ["b"]})\n',
+                    isActive: true,
+                    group: null,
+                },
+                {
+                    nodeKey: "__main___function_t2_t2",
+                    nodeType: "pandas",
+                    name: "t2",
+                    description: "",
+                    tags: [
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                        { id: "pandas", name: "pandas" },
+                        { id: "Transformation", name: "Transformation" },
+                    ],
+                    filePath: "",
+                    importCmd: "",
+                    output: [],
+                    predecessors: ["__main___function_t0_t0"],
+                    predecessorColumns: { __main___function_t0_t0: [] },
+                    successors: ["__main___function_t3_t3"],
+                    sourceCode:
+                        '@node(\n    type="pandas",\n    dependencies=[t0]\n)\ndef t2(t0):\n    return t0\n',
+                    isActive: true,
+                    group: null,
                 },
             ];
             window.tagSuggestions = [
-                { id: "Tag_1", name: "Tag_1" },
-                { id: "Tag_2", name: "Tag_2" },
+                { id: "Transformation", name: "Transformation" },
+                { id: "pandas", name: "pandas" },
             ];
-            window.initialNodes = [];
+            window.initialNodes = ["__main___function_t3_t3"];
+            window.groups = [];
         </script>
         <script src="../dist/bundle.js"></script>
     </body>
