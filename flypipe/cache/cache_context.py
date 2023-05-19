@@ -1,6 +1,11 @@
 from flypipe.cache import CacheOperation
 
+
 class CacheContext:
+    """
+
+    """
+
     def __init__(self, cache_operation=None, spark=None, cache=None):
         self.cache_operation = cache_operation or {}
         self.spark = spark

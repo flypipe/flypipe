@@ -1,7 +1,6 @@
 from enum import Enum
-from typing import List, Union
+from typing import List
 
-import networkx
 import networkx as nx
 from matplotlib import pyplot as plt
 from networkx import DiGraph
@@ -32,7 +31,7 @@ class NodeGraph:
     def __init__(  # pylint: disable=too-many-arguments
             self,
             transformation: Node = None,
-            graph: networkx.DiGraph = None,
+            graph: nx.DiGraph = None,
             skipped_node_keys: List[str] = None,
             pandas_on_spark_use_pandas: bool = False,
             parameters: dict = None,

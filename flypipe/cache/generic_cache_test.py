@@ -43,7 +43,7 @@ def exists():
 
 
 @pytest.fixture(scope="function")
-def cache(): # pylint: disable=duplicate-code)
+def cache(): # pylint: disable=duplicate-code
     return GenericCache(read=read, write=write, exists=exists)
 
 
