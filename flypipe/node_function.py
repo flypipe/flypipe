@@ -34,44 +34,38 @@ class NodeFunction(Node):
         if self.requested_columns:
             kwargs["requested_columns"] = requested_columns
 
-        nodes = self.function(**kwargs)
-        if isinstance(nodes, Node):
-            nodes = (nodes,)
+        expanded_nodes = self.function(**kwargs)
+        if isinstance(expanded_nodes, Node):
+            expanded_nodes = (expanded_nodes,)
 
-        for node in nodes:
+        external_node_dependencies = set()
+        for node in expanded_nodes:
             if isinstance(node, NodeFunction):
                 raise ValueError(
                     "Illegal operation - node functions cannot be returned from node functions"
                 )
-            for dependency in node.input_nodes:
-                if dependency not in nodes and dependency not in self.node_dependencies:
-                    raise RuntimeError(
-                        f"Unknown node `{dependency.node.function.__name__}` in node function "
-                        f"`{self.function.__name__}` dependencies "
-                        f"`{[n.function.__name__ for n in self.node_dependencies]}`, all external dependencies must be "
-                        f"defined in node function parameter node_dependencies"
-                    )
+            for input_node in node.input_nodes:
+                if input_node.node not in expanded_nodes:
+                    external_node_dependencies.add(input_node.node)
 
-        for node_dependency in self.node_dependencies:
-            dependency_in_some_node = False
-            for node in nodes:
-                for input_node in node.input_nodes:
-                    if input_node.node == node_dependency:
-                        dependency_in_some_node = True
-                        break
+        declared_node_dependencies = set(self.node_dependencies)
+        missing_declared_node_dependencies = external_node_dependencies - declared_node_dependencies
+        if missing_declared_node_dependencies:
+            missing_nodes_str = ', '.join(dep.function.__name__ for dep in missing_declared_node_dependencies)
+            raise ValueError(
+                f"Unknown node(s) {missing_nodes_str} in node function `{self.function.__name__}`, all dependencies on "
+                f"external nodes defined in nodes returned by node functions must be listed in the node function "
+                f"decorator parameter `node_dependencies`."
+            )
+        excess_declared_node_dependencies = declared_node_dependencies - external_node_dependencies
+        if excess_declared_node_dependencies:
+            excess_declared_nodes_str = ', '.join(dep.function.__name__ for dep in excess_declared_node_dependencies)
+            raise ValueError(
+                f'Node(s) {excess_declared_nodes_str} defined as node dependencies on node function '
+                f'`{self.function.__name__}` but are not used in nodes returned by the node function.'
+            )
 
-                if dependency_in_some_node:
-                    break
-
-            if not dependency_in_some_node:
-                raise RuntimeError(
-                    f"Node `{node_dependency.function.__name__}` has been declared by node function "
-                    f"`{self.function.__name__}` as a node dependency, however no internal node is using it. "
-                    f"Whether remove it from node function `node_dependencies` field, or add "
-                    f"`{self.function.__name__}` as dependency of some internal node returned by the node function"
-                )
-
-        return list(nodes)
+        return list(expanded_nodes)
 
     def copy(self):
         node_function = NodeFunction(

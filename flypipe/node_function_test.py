@@ -25,27 +25,6 @@ class TestNodeFunction:
             def func():
                 pass
 
-    def test_expand_undefined_node_dependency(self):
-        """
-        If any dependencies in the node function are not returned in the node function and aren't defined in
-        node_dependencies then throw an error.
-        """
-
-        @node(type="pandas")
-        def b():
-            return pd.DataFrame({"c1": [1, 2], "c2": ["Joe", "John"]})
-
-        @node_function()
-        def func():
-            @node(type="pandas", dependencies=[b])
-            def a(b):
-                return b
-
-            return a
-
-        with pytest.raises(RuntimeError):
-            func.expand(None)
-
     def test_expand(self):
         @node(type="pandas")
         def c():
@@ -79,7 +58,34 @@ class TestNodeFunction:
 
         t1.run(parameters={t1: {"param1": 10, "param2": 20}})
 
-    def test_expand_node_dependency(self):
+    def test_expand_mismatched_node_dependency_1(self):
+        """
+        Any node dependencies on external nodes (i.e nodes defined outside the node function) must be defined in the
+        node_function decorator, in the node_dependencies parameter. An error should be issued if an external node is a
+        dependency and isn't in the node_function decorator.
+        """
+
+        @node(type="pandas")
+        def b():
+            return pd.DataFrame({"c1": [1, 2], "c2": ["Joe", "John"]})
+
+        @node_function()
+        def func():
+            @node(type="pandas", dependencies=[b])
+            def a(b):
+                return b
+
+            return a
+
+        with pytest.raises(ValueError):
+            func.expand(None)
+
+    def test_expand_mismatched_node_dependency_2(self):
+        """
+        Inverse of test_expand_mismatched_node_dependency_1, if a node is defined in the node_function decorator as an
+        external dependency, Flypipe expects that at least one of the nodes the node function returns will have this
+        node as a node dependency, an exception will be thrown if this isn't the case.
+        """
         @node(type="pandas")
         def t0():
             return pd.DataFrame(data={"col1": [1]})
@@ -94,5 +100,5 @@ class TestNodeFunction:
 
             return t1
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             node_f.run()
