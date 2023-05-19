@@ -19,7 +19,7 @@ def spark():
 
 
 @pytest.fixture(autouse=True)
-def run_around_tests():
+def clean_up():
 
     if os.path.exists("test.csv"):
         os.remove("test.csv")
@@ -43,7 +43,7 @@ def exists():
 
 
 @pytest.fixture(scope="function")
-def cache():
+def cache(): # pylint: disable=duplicate-code)
     return GenericCache(read=read, write=write, exists=exists)
 
 
@@ -51,7 +51,6 @@ class TestGenericCache:
     """Unit tests on the Node class"""
 
     def test_cache_non_spark(self, cache, mocker):
-
         @node(
             type="pandas",
             cache=cache,
@@ -83,6 +82,7 @@ class TestGenericCache:
                 .csv("test.csv")
             )
 
+        # pylint: disable=unused-argument
         def write(spark, df):
             df.toPandas().to_csv("test.csv", index=False)
 
@@ -122,7 +122,7 @@ class TestGenericCache:
         assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
 
-    def test_query_cache(self, cache, mocker):
+    def test_query_cache(self, cache):
         """
 
         t0 (skipped)
@@ -143,7 +143,7 @@ class TestGenericCache:
             return pd.DataFrame(data={"t1": [1]})
 
         @node(type="pandas", cache=cache, dependencies=[t0, t1])
-        def t2(t0, t1):
+        def t2(t0, t1): # pylint: disable=unused-argument
             return t0
 
         @node(
@@ -159,13 +159,13 @@ class TestGenericCache:
         # to read cache
         t3.run()
         for node_name in t3.node_graph.graph.nodes:
-            node_ = t3.node_graph.get_node(node_name)
-            if node_['transformation'].function.__name__ == "t3":
-                assert node_["status"] == RunStatus.ACTIVE
+            node_graph = t3.node_graph.get_node(node_name)
+            if node_graph["transformation"].function.__name__ == "t3":
+                assert node_graph["status"] == RunStatus.ACTIVE
             else:
-                assert node_["status"] == RunStatus.SKIP
+                assert node_graph["status"] == RunStatus.SKIP
 
-    def test_query_cache1(self, cache, mocker):
+    def test_query_cache1(self, cache):
         """
 
         t0 (skipped)
@@ -190,14 +190,14 @@ class TestGenericCache:
             return t1
 
         @node(type="pandas", cache=cache, dependencies=[t0, t1])
-        def t2(t0, t1):
+        def t2(t0, t1): # pylint: disable=unused-argument
             return t0
 
         @node(
             type="pandas",
             dependencies=[t2, t4],
         )
-        def t3(t2, t4):
+        def t3(t2, t4): # pylint: disable=unused-argument
             return t2
 
         # to write cache
@@ -207,11 +207,11 @@ class TestGenericCache:
         t3.run()
 
         for node_name in t3.node_graph.graph.nodes:
-            node_ = t3.node_graph.get_node(node_name)
-            if node_['transformation'].function.__name__ in ["t3", "t4", "t1"]:
-                assert node_["status"] == RunStatus.ACTIVE
+            node_graph = t3.node_graph.get_node(node_name)
+            if node_graph["transformation"].function.__name__ in ["t3", "t4", "t1"]:
+                assert node_graph["status"] == RunStatus.ACTIVE
             else:
-                assert node_["status"] == RunStatus.SKIP
+                assert node_graph["status"] == RunStatus.SKIP
 
     def test_cache_non_spark_provided_input(self, cache, mocker):
         """
@@ -262,6 +262,7 @@ class TestGenericCache:
         assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
 
+    # pylint: disable=too-many-statements
     def test_cases(self, cache, mocker):
         """
 

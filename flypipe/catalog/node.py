@@ -1,8 +1,8 @@
 import inspect
-import types
 import os
-
+import types
 from pathlib import Path
+
 from flypipe.node_graph import RunStatus
 
 

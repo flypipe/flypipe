@@ -1,5 +1,7 @@
+from flypipe.cache.cache import Cache
 
-class GenericCache:
+
+class GenericCache(Cache):
     def __init__(self, read, write, exists, spark_context=False):
         self._read = read
         self._write = write

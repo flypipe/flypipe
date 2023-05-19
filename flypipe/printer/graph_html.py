@@ -3,8 +3,8 @@ import os
 
 from flypipe.node_graph import RunStatus, NodeGraph
 from flypipe.node_type import NodeType
-from flypipe.template import get_template
 from flypipe.schema.types import Unknown
+from flypipe.template import get_template
 from flypipe.utils import DataFrameType
 
 

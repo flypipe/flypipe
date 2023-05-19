@@ -1,10 +1,11 @@
 import inspect
 from pathlib import Path
+
 import pandas as pd
 import pytest
 
-from flypipe.catalog import Catalog
 from flypipe import node, node_function
+from flypipe.catalog import Catalog
 from flypipe.config import config_context
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String, Integer

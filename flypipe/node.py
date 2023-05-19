@@ -4,6 +4,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Mapping, List
 
+from flypipe.cache.cache import Cache
 from flypipe.cache.cache_context import CacheContext
 from flypipe.config import get_config, RunMode
 from flypipe.node_input import InputNode
@@ -13,7 +14,6 @@ from flypipe.node_type import NodeType
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import Unknown
 from flypipe.utils import DataFrameType
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,17 +33,17 @@ class Node:  # pylint: disable=too-many-instance-attributes
     }
 
     def __init__(  # pylint: disable=too-many-arguments
-        self,
-        function,
-        type: str,  # pylint: disable=redefined-builtin
-        description=None,
-        group=None,
-        tags=None,
-        dependencies: List[InputNode] = None,
-        output=None,
-        spark_context=False,
-        requested_columns=False,
-        cache=None,
+            self,
+            function,
+            type: str,  # pylint: disable=redefined-builtin
+            description: str =None,
+            group: str =None,
+            tags: List[str] =None,
+            dependencies: List[InputNode] = None,
+            output: Schema = None,
+            spark_context: bool = False,
+            requested_columns: List[str] = False,
+            cache: Cache = None,
     ):
         self._key = None
         self.name = None
@@ -179,11 +179,11 @@ class Node:  # pylint: disable=too-many-instance-attributes
         return self.function.__doc__
 
     def _create_graph(
-        self,
-        skipped_node_keys=None,
-        pandas_on_spark_use_pandas=False,
-        parameters=None,
-        cache_context=None,
+            self,
+            skipped_node_keys=None,
+            pandas_on_spark_use_pandas=False,
+            parameters=None,
+            cache_context=None,
     ):
         # This import is here to avoid a circular import issue
         # pylint: disable-next=import-outside-toplevel,cyclic-import
@@ -229,13 +229,13 @@ class Node:  # pylint: disable=too-many-instance-attributes
         return self.function(*args)
 
     def run(  # pylint: disable=too-many-arguments
-        self,
-        spark=None,
-        parallel=None,
-        inputs=None,
-        pandas_on_spark_use_pandas=False,
-        parameters=None,
-        cache=None,
+            self,
+            spark=None,
+            parallel=None,
+            inputs=None,
+            pandas_on_spark_use_pandas=False,
+            parameters=None,
+            cache=None,
     ):
         if not inputs:
             inputs = {}
@@ -251,10 +251,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         )
 
         # re-create graph again with nodes caches
-        provided_inputs = {
-            **provided_inputs,
-            **self.node_graph.load_caches()
-        }
+        provided_inputs = {**provided_inputs, **self.node_graph.load_caches()}
         if provided_inputs is None:
             provided_inputs = {}
         outputs = {
@@ -282,7 +279,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         return self.DATAFRAME_TYPE_MAP[self.type]
 
     def _run_parallel(
-        self, spark, execution_graph, outputs
+            self, spark, execution_graph, outputs
     ):  # pylint: disable=too-many-locals
         def execute(node):
             dependency_values = node["transformation"].get_node_inputs(outputs)
@@ -305,7 +302,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
         logger.info("Starting parallel processing of node %s", node.__name__)
         with ThreadPoolExecutor(
-            max_workers=get_config("node_run_max_workers")
+                max_workers=get_config("node_run_max_workers")
         ) as executor:
             visited = set()
             jobs = set()
@@ -397,7 +394,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         return schema
 
     def process_transformation(
-        self, spark, requested_columns: list, run_context: NodeRunContext, **inputs
+            self, spark, requested_columns: list, run_context: NodeRunContext, **inputs
     ):
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in
         # self.dependencies_selected_columns
@@ -430,13 +427,13 @@ class Node:  # pylint: disable=too-many-instance-attributes
         self.node_graph.plot()
 
     def html(  # pylint: disable=too-many-arguments
-        self,
-        spark=None,
-        height=1000,
-        inputs=None,
-        pandas_on_spark_use_pandas=False,
-        parameters=None,
-        cache=None,
+            self,
+            spark=None,
+            height=1000,
+            inputs=None,
+            pandas_on_spark_use_pandas=False,
+            parameters=None,
+            cache=None,
     ):
         """
         Retrieves html string of the graph to be executed.

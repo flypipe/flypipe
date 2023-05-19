@@ -3,7 +3,6 @@ import os
 import pandas as pd
 import pytest
 
-from flypipe import node_function
 from flypipe.cache import CacheOperation
 from flypipe.cache.cache_context import CacheContext
 from flypipe.cache.generic_cache import GenericCache
@@ -14,9 +13,9 @@ from flypipe.node import node
 def run_around_tests():
     if os.path.exists("test.csv"):
         os.remove("test.csv")
-    # A test function will be run at this point
+
     yield
-    # Code that will run after your test, for example:
+
     if os.path.exists("test.csv"):
         os.remove("test.csv")
 
@@ -35,11 +34,9 @@ def exists():
 
 @pytest.fixture(scope="function")
 def node_cache():
-    @node(
-        type="pandas",
-        cache=GenericCache(read=read, write=write, exists=exists)
-    )
-    def t0():
+
+    @node(type="pandas", cache=GenericCache(read=read, write=write, exists=exists))
+    def t0(): # pylint: disable=duplicate-code)
         return pd.DataFrame(data={"col1": [1]})
 
     return t0
@@ -58,9 +55,7 @@ class TestCacheContext:
         assert not cache_context.disabled
 
     def test_create_non_cached_node(self):
-        @node(
-            type="pandas"
-        )
+        @node(type="pandas")
         def t0():
             return pd.DataFrame(data={"col1": [1]})
 

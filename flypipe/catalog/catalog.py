@@ -1,13 +1,12 @@
-import os
 import json
 import logging
+import os
 
 from flypipe.catalog.group import Group
 from flypipe.catalog.node import CatalogNode
 from flypipe.config import get_config
 from flypipe.node_function import NodeFunction
 from flypipe.template import get_template
-
 
 logger = logging.getLogger(__name__)
 

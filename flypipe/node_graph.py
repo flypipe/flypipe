@@ -1,7 +1,9 @@
 from enum import Enum
 from typing import List, Union
-from matplotlib import pyplot as plt
+
+import networkx
 import networkx as nx
+from matplotlib import pyplot as plt
 from networkx import DiGraph
 
 from flypipe.cache.cache_context import CacheContext
@@ -28,14 +30,14 @@ class NodeGraph:
     """
 
     def __init__(  # pylint: disable=too-many-arguments
-        self,
-        transformation: Union[Node, None],
-        graph=None,
-        skipped_node_keys=None,
-        pandas_on_spark_use_pandas=False,
-        parameters=None,
-        cache_context=None,
-        existent_cache_nodes=None
+            self,
+            transformation: Node = None,
+            graph: networkx.DiGraph = None,
+            skipped_node_keys: List[str] = None,
+            pandas_on_spark_use_pandas: bool = False,
+            parameters: dict = None,
+            cache_context: CacheContext = None,
+            existent_cache_nodes: List[str] = None,
     ):
         self.existent_cache_nodes = existent_cache_nodes or []
         parameters = parameters or {}
@@ -52,19 +54,22 @@ class NodeGraph:
             self.node_output_columns = None
             self.edges = None
             self.graph = self._build_graph(
-                transformation, pandas_on_spark_use_pandas, parameters, cache_context=cache_context
+                transformation,
+                pandas_on_spark_use_pandas,
+                parameters,
+                cache_context=cache_context,
             )
 
             self.existent_cache_nodes = self.calculate_graph_run_status()
 
     def add_node(  # pylint: disable=too-many-arguments
-        self,
-        graph: DiGraph,
-        node_name: str,
-        transformation: Node,
-        run_status: RunStatus = None,
-        output_columns: list = None,
-        run_context: NodeRunContext = None,
+            self,
+            graph: DiGraph,
+            node_name: str,
+            transformation: Node,
+            run_status: RunStatus = None,
+            output_columns: list = None,
+            run_context: NodeRunContext = None,
     ) -> DiGraph:
         run_status = run_status or RunStatus.UNKNOWN
         run_context = run_context or NodeRunContext()
@@ -83,7 +88,11 @@ class NodeGraph:
         self.graph.remove_node(node_name)
 
     def _build_graph(
-        self, transformation: Node, pandas_on_spark_use_pandas: bool, parameters: dict, cache_context: CacheContext
+            self,
+            transformation: Node,
+            pandas_on_spark_use_pandas: bool,
+            parameters: dict,
+            cache_context: CacheContext,
     ):
         transformation = transformation.copy()
         graph = nx.DiGraph()
@@ -123,8 +132,8 @@ class NodeGraph:
             # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state
             # is cleared
             if (
-                pandas_on_spark_use_pandas
-                and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
+                    pandas_on_spark_use_pandas
+                    and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
             ):
                 transformation.type = "pandas"
 
@@ -136,7 +145,9 @@ class NodeGraph:
                 node = graph.nodes[node_key]
                 # should we overwrite the node cache?
                 # or should we create node['transformation'].cache_context = cache_context.create(node)?
-                node['transformation'].cache = cache_context.create(node['transformation'])
+                node["transformation"].cache = cache_context.create(
+                    node["transformation"]
+                )
 
         return graph
 
@@ -144,9 +155,8 @@ class NodeGraph:
         caches = {}
         for node_name in self.graph.nodes:
             node = self.get_node(node_name)
-            if node['transformation'].cache and node_name in self.existent_cache_nodes:
-
-                caches[node_name] = node['transformation'].cache.read()
+            if node["transformation"].cache and node_name in self.existent_cache_nodes:
+                caches[node_name] = node["transformation"].cache.read()
 
         return caches
 
@@ -163,7 +173,7 @@ class NodeGraph:
         return graph
 
     def _expand_node_functions(
-        self, graph: DiGraph
+            self, graph: DiGraph
     ):  # pylint: disable=too-many-branches
         """
         Expand all node functions. Given a node graph, return the same node graph with all node functions expanded.
@@ -251,10 +261,10 @@ class NodeGraph:
         return graph
 
     def _expand_node_function(
-        self,
-        node_function: NodeFunction,
-        requested_columns: list,
-        run_context: NodeRunContext,
+            self,
+            node_function: NodeFunction,
+            requested_columns: list,
+            run_context: NodeRunContext,
     ):
         """
         Expand a node function in the graph and replace it with the nodes it returns. There are a few additional steps:
@@ -331,6 +341,7 @@ class NodeGraph:
                 return name
         return None
 
+    # pylint: disable=too-many-branches
     def calculate_graph_run_status(self):
 
         # because the last node can be a generator, we have to get the last node node
@@ -459,7 +470,7 @@ class NodeGraph:
             None,
             graph=self.graph.copy(),
             skipped_node_keys=self.skipped_node_keys + self.existent_cache_nodes,
-            existent_cache_nodes=self.existent_cache_nodes
+            existent_cache_nodes=self.existent_cache_nodes,
         )
         to_remove = []
 

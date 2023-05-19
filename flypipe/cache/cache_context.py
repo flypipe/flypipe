@@ -1,8 +1,7 @@
 from flypipe.cache import CacheOperation
 
-
 class CacheContext:
-    def __init__(self, cache_operation={}, spark=None, cache=None):
+    def __init__(self, cache_operation=None, spark=None, cache=None):
         self.cache_operation = cache_operation or {}
         self.spark = spark
         self.cache = cache
@@ -12,7 +11,9 @@ class CacheContext:
         if node.cache is None:
             return None
 
-        cache_operation = self.cache_operation[node] if node in self.cache_operation else None
+        cache_operation = (
+            self.cache_operation[node] if node in self.cache_operation else None
+        )
         cache_context = CacheContext(cache_operation, self.spark, node.cache)
 
         if cache_context.disabled:
@@ -38,5 +39,3 @@ class CacheContext:
         if self.disabled:
             raise RuntimeError("Cache disabled, cannot check if exists")
         return self.cache.exists(self.spark)
-
-
