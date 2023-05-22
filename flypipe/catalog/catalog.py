@@ -2,6 +2,7 @@ import json
 import logging
 import os
 
+from flypipe.cache.cache_context import CacheContext
 from flypipe.catalog.group import Group
 from flypipe.catalog.node import CatalogNode
 from flypipe.config import get_config
@@ -17,36 +18,52 @@ class Catalog:
     interactive node builder. The nodes in the catalog need to be manually registered before the catalog is rendered.
     """
 
-    def __init__(self):
+    def __init__(self, spark=None):
         self.nodes = {}
         self.groups = {}
         self.initial_nodes = []
+        self.spark = spark
 
     def register_node(self, node, successor=None, node_graph=None):
-        if isinstance(node, NodeFunction):
-            raise RuntimeError("Can not register node functions")
+        # if isinstance(node, NodeFunction):
+        #     raise RuntimeError("Can not register node functions")
 
-        if node.node_graph is not None:
-            # The node graph gives us certain information about the nodes in the context of a single run, use this
-            # if available.
-            node_graph = node.node_graph
-        if node.key not in self.nodes:
-            self.nodes[node.key] = CatalogNode(node, node_graph)
-        if node.group:
-            if node.group not in self.groups:
-                self.groups[node.group] = Group(node.group)
-            self.groups[node.group].add_node(node)
-        if successor:
-            self.nodes[node.key].register_successor(successor)
-        for input_node in node.input_nodes:
-            self.register_node(input_node.node, node, node_graph)
+        if isinstance(node, NodeFunction):
+            cache_context = CacheContext(spark=self.spark)
+            node._create_graph(cache_context=cache_context) #it will expand the node functions
+            end_node_name = node.node_graph.get_end_node_name(node.node_graph.graph)
+            end_node = node.node_graph.get_transformation(end_node_name)
+            self.register_node(end_node, successor, node.node_graph)
+        else:
+
+            if node.node_graph is not None:
+                # The node graph gives us certain information about the nodes in the context of a single run, use this
+                # if available.
+                node_graph = node.node_graph
+            if node.key not in self.nodes:
+                self.nodes[node.key] = CatalogNode(node, node_graph)
+            if node.group:
+                if node.group not in self.groups:
+                    self.groups[node.group] = Group(node.group)
+                self.groups[node.group].add_node(node)
+            if successor:
+                self.nodes[node.key].register_successor(successor)
+            for input_node in node.input_nodes:
+                self.register_node(input_node.node, node, node_graph)
 
     def add_node_to_graph(self, node):
         """
         Ordinarily the catalog graph start out as empty but we can add nodes to it here such that the graph starts with
         them present.
         """
-        self.initial_nodes.append(node.key)
+        if isinstance(node, NodeFunction):
+            cache_context = CacheContext(spark=self.spark)
+            node._create_graph(cache_context=cache_context)  # it will expand the node functions
+            end_node_name = node.node_graph.get_end_node_name(node.node_graph.graph)
+            end_node = node.node_graph.get_transformation(end_node_name)
+            self.initial_nodes.append(end_node.key)
+        else:
+            self.initial_nodes.append(node.key)
 
     def html(self, height=850):
         dir_path = os.path.dirname(os.path.realpath(__file__))
