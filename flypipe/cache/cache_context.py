@@ -2,9 +2,6 @@ from flypipe.cache import CacheOperation
 
 
 class CacheContext:
-    """
-
-    """
 
     def __init__(self, cache_operation=None, spark=None, cache=None):
         self.cache_operation = cache_operation or {}
@@ -29,6 +26,10 @@ class CacheContext:
     @property
     def disabled(self):
         return self.cache_operation == CacheOperation.DISABLE
+
+    @property
+    def merge(self):
+        return self.cache_operation == CacheOperation.MERGE
 
     def read(self):
         if self.disabled:

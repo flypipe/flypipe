@@ -354,7 +354,9 @@ class NodeGraph:
         if node_name in skipped_node_keys:
             run_status = RunStatus.SKIP
 
-        elif node["transformation"].cache and node["transformation"].cache.exists():
+        elif node["transformation"].cache and \
+                not node["transformation"].cache.merge and \
+                node["transformation"].cache.exists():
             run_status = RunStatus.CACHED
 
         frontier = [(node_name, run_status)]
@@ -371,7 +373,9 @@ class NodeGraph:
                     if ancestor_name in skipped_node_keys:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
-                    elif ancestor_node.cache and ancestor_node.cache.exists():
+                    elif ancestor_node.cache and \
+                            not ancestor_node.cache.merge and \
+                            ancestor_node.cache.exists():
                         frontier.append((ancestor_name, RunStatus.CACHED))
 
                     else:

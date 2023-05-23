@@ -16,11 +16,9 @@ class GenericCache(Cache):
     def exists(self, spark):
         if self.spark_context:
             return self._exists(spark)
-
         return self._exists()
 
     def write(self, spark, df):
         if self.spark_context:
             return self._write(spark, df)
-
         return self._write(df)

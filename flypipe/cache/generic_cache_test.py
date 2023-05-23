@@ -20,7 +20,6 @@ def spark():
 
 @pytest.fixture(autouse=True)
 def clean_up():
-
     if os.path.exists("test.csv"):
         os.remove("test.csv")
 
@@ -43,7 +42,8 @@ def exists():
 
 
 @pytest.fixture(scope="function")
-def cache(): # pylint: disable=duplicate-code
+def cache():  # pylint: disable=duplicate-code
+
     return GenericCache(read=read, write=write, exists=exists)
 
 
@@ -143,7 +143,7 @@ class TestGenericCache:
             return pd.DataFrame(data={"t1": [1]})
 
         @node(type="pandas", cache=cache, dependencies=[t0, t1])
-        def t2(t0, t1): # pylint: disable=unused-argument
+        def t2(t0, t1):  # pylint: disable=unused-argument
             return t0
 
         @node(
@@ -190,14 +190,14 @@ class TestGenericCache:
             return t1
 
         @node(type="pandas", cache=cache, dependencies=[t0, t1])
-        def t2(t0, t1): # pylint: disable=unused-argument
+        def t2(t0, t1):  # pylint: disable=unused-argument
             return t0
 
         @node(
             type="pandas",
             dependencies=[t2, t4],
         )
-        def t3(t2, t4): # pylint: disable=unused-argument
+        def t3(t2, t4):  # pylint: disable=unused-argument
             return t2
 
         # to write cache
@@ -355,3 +355,44 @@ class TestGenericCache:
         assert spy_writter.call_count == 0
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 0
+
+    def test_cache_merge(self, mocker):
+
+        class MyCache:
+            def read(self, spark):
+                return pd.read_csv("test.csv")
+
+            def write(self, spark, df):
+                if self.exists(spark):
+                    df = pd.DataFrame(data={"col1": [1, 2], "col2": [2, 3]})
+                    df.to_csv("test.csv", index=False)
+                else:
+                    df.to_csv("test.csv", index=False)
+
+            def exists(self, spark):
+                return os.path.exists("test.csv")
+
+        cache = MyCache()
+
+        @node(
+            type="pandas",
+            cache=cache,
+        )
+        def t1():
+            return pd.DataFrame(data={"col1": [1], "col2": [2]})
+
+        spy_writter = mocker.spy(t1.cache, "write")
+        spy_reader = mocker.spy(t1.cache, "read")
+        spy_exists = mocker.spy(t1.cache, "exists")
+        t1.run()
+        assert spy_writter.call_count == 1
+        assert spy_reader.call_count == 0
+        assert spy_exists.call_count == 2
+
+        spy_writter.reset_mock()
+        spy_reader.reset_mock()
+        spy_exists.reset_mock()
+        t1.run(cache={t1: CacheOperation.MERGE})
+        assert spy_writter.call_count == 1
+        assert spy_reader.call_count == 0
+        assert spy_exists.call_count == 1
