@@ -240,7 +240,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         if not inputs:
             inputs = {}
 
-        cache_context = CacheContext({} if cache is None else cache, spark)
+        cache_context = CacheContext(cache_operation={} if cache is None else cache, spark=spark)
 
         provided_inputs = {node.key: df for node, df in inputs.items()}
         self._create_graph(
@@ -464,7 +464,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         # pylint: disable-next=import-outside-toplevel,cyclic-import
         from flypipe.catalog import Catalog
 
-        cache_context = CacheContext({} if cache is None else cache, spark)
+        cache_context = CacheContext(cache_operation={} if cache is None else cache, spark=spark)
 
         inputs = inputs or {}
         provided_inputs = {node.key: df for node, df in inputs.items()}

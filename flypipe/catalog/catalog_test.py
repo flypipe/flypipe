@@ -262,7 +262,21 @@ class TestCatalog:
             }
         ]
 
-    def test_catalog_node_function_fails(self):
+    def test_add_node_function_fails(self):
+        @node_function()
+        def t1():
+            @node(type="pandas")
+            def t2():
+                return pd.DataFrame(data={"co1": 1})
+
+            return t2
+
+        catalog = Catalog()
+
+        with pytest.raises(RuntimeError):
+            catalog.add_node_to_graph(t1)
+
+    def test_register_node_function_pass(self):
         @node_function()
         def t1():
             @node(type="pandas")
