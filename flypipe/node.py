@@ -475,7 +475,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
             cache_context=cache_context,
         )
 
-        catalog = Catalog()
+        catalog = Catalog(spark=spark)
 
         # The graph created had its node_functions expanded and internal nodes are renamed with node function
         # name. In case the last nod is a node function, we have to register the end node of the expanded graph
