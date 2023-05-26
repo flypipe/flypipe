@@ -497,6 +497,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         node = Node(
             self.function,
             self.type,
+            group=self.group,
             description=self.description,
             tags=list(self.tags),
             dependencies=[input_node.copy() for input_node in self.input_nodes],
