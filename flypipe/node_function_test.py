@@ -86,6 +86,7 @@ class TestNodeFunction:
         external dependency, Flypipe expects that at least one of the nodes the node function returns will have this
         node as a node dependency, an exception will be thrown if this isn't the case.
         """
+
         @node(type="pandas")
         def t0():
             return pd.DataFrame(data={"col1": [1]})

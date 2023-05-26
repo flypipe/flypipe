@@ -49,20 +49,28 @@ class NodeFunction(Node):
                     external_node_dependencies.add(input_node.node)
 
         declared_node_dependencies = set(self.node_dependencies)
-        missing_declared_node_dependencies = external_node_dependencies - declared_node_dependencies
+        missing_declared_node_dependencies = (
+            external_node_dependencies - declared_node_dependencies
+        )
         if missing_declared_node_dependencies:
-            missing_nodes_str = ', '.join(dep.function.__name__ for dep in missing_declared_node_dependencies)
+            missing_nodes_str = ", ".join(
+                dep.function.__name__ for dep in missing_declared_node_dependencies
+            )
             raise ValueError(
                 f"Unknown node(s) {missing_nodes_str} in node function `{self.function.__name__}`, all dependencies on "
                 f"external nodes defined in nodes returned by node functions must be listed in the node function "
                 f"decorator parameter `node_dependencies`."
             )
-        excess_declared_node_dependencies = declared_node_dependencies - external_node_dependencies
+        excess_declared_node_dependencies = (
+            declared_node_dependencies - external_node_dependencies
+        )
         if excess_declared_node_dependencies:
-            excess_declared_nodes_str = ', '.join(dep.function.__name__ for dep in excess_declared_node_dependencies)
+            excess_declared_nodes_str = ", ".join(
+                dep.function.__name__ for dep in excess_declared_node_dependencies
+            )
             raise ValueError(
-                f'Node(s) {excess_declared_nodes_str} defined as node dependencies on node function '
-                f'`{self.function.__name__}` but are not used in nodes returned by the node function.'
+                f"Node(s) {excess_declared_nodes_str} defined as node dependencies on node function "
+                f"`{self.function.__name__}` but are not used in nodes returned by the node function."
             )
 
         return list(expanded_nodes)
