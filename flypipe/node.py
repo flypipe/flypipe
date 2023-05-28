@@ -4,6 +4,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Mapping, List
 
+from flypipe.cache.cache import Cache
 from flypipe.config import get_config, RunMode
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
@@ -42,6 +43,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         output=None,
         spark_context=False,
         requested_columns=False,
+        cache: Cache = None,
     ):
         self._key = None
         self.name = None
@@ -82,6 +84,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         self.spark_context = spark_context
         self.requested_columns = requested_columns
         self.node_graph = None
+        self.cache = cache
 
     @property
     def output(self):
@@ -176,7 +179,11 @@ class Node:  # pylint: disable=too-many-instance-attributes
         return self.function.__doc__
 
     def _create_graph(
-        self, skipped_node_keys=None, pandas_on_spark_use_pandas=False, parameters=None
+        self,
+        inputs=None,
+        pandas_on_spark_use_pandas=False,
+        parameters=None,
+        cache_mode=None,
     ):
         # This import is here to avoid a circular import issue
         # pylint: disable-next=import-outside-toplevel,cyclic-import
@@ -186,9 +193,10 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
         self.node_graph = NodeGraph(
             self,
-            skipped_node_keys=skipped_node_keys,
+            inputs=inputs,
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
             parameters=parameters,
+            cache_mode=cache_mode,
         )
 
     def select(self, *columns):
@@ -227,17 +235,17 @@ class Node:  # pylint: disable=too-many-instance-attributes
         inputs=None,
         pandas_on_spark_use_pandas=False,
         parameters=None,
+        cache_mode=None,
     ):
         if not inputs:
             inputs = {}
 
         provided_inputs = {node.key: df for node, df in inputs.items()}
-        self._create_graph(
-            list(provided_inputs.keys()), pandas_on_spark_use_pandas, parameters
-        )
+        cache_mode_map = cache_mode or {}
 
-        if provided_inputs is None:
-            provided_inputs = {}
+        self._create_graph(
+            provided_inputs, pandas_on_spark_use_pandas, parameters, cache_mode_map
+        )
         outputs = {
             key: NodeResult(spark, df, schema=None)
             for key, df in provided_inputs.items()
@@ -403,6 +411,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         inputs=None,
         pandas_on_spark_use_pandas=False,
         parameters=None,
+        cache_mode=None,
     ):
         """
         Retrieves html string of the graph to be executed.
@@ -433,9 +442,11 @@ class Node:  # pylint: disable=too-many-instance-attributes
         # pylint: disable-next=import-outside-toplevel,cyclic-import
         from flypipe.catalog import Catalog
 
-        skipped_nodes = inputs or {}
         self._create_graph(
-            [node.key for node in skipped_nodes], pandas_on_spark_use_pandas, parameters
+            {node.key: df for node, df in inputs.items()},
+            pandas_on_spark_use_pandas,
+            parameters,
+            cache_mode,
         )
         catalog = Catalog()
 
@@ -465,6 +476,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
             output=None if self.output_schema is None else self.output_schema.copy(),
             spark_context=self.spark_context,
             requested_columns=self.requested_columns,
+            cache=self.cache,
         )
         node.name = self.name
         # Accessing protected members in a deep copy method is necessary

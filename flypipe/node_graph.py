@@ -3,6 +3,8 @@ from typing import List, Union
 from matplotlib import pyplot as plt
 import networkx as nx
 from networkx import DiGraph
+
+from flypipe.cache.cache_context import CacheContext
 from flypipe.node import Node
 from flypipe.node_function import NodeFunction
 from flypipe.node_run_context import NodeRunContext
@@ -16,6 +18,7 @@ class RunStatus(Enum):
     UNKNOWN = 0
     ACTIVE = 1
     SKIP = 2
+    CACHED = 3
 
 
 class NodeGraph:
@@ -28,9 +31,10 @@ class NodeGraph:
         self,
         transformation: Union[Node, None],
         graph=None,
-        skipped_node_keys=None,
+        inputs=None,
         pandas_on_spark_use_pandas=False,
         parameters=None,
+        cache_mode=None,
     ):
         parameters = parameters or {}
         parameters = {node.key: params for node, params in parameters.items()}
@@ -45,9 +49,8 @@ class NodeGraph:
                 transformation, pandas_on_spark_use_pandas, parameters
             )
 
-        if not skipped_node_keys:
-            skipped_node_keys = []
-        self.skipped_node_keys = skipped_node_keys
+        self.node_overrides = inputs or {}
+        self.cache_mode = cache_mode or {}
         self.calculate_graph_run_status()
 
     def add_node(  # pylint: disable=too-many-arguments
@@ -312,12 +315,11 @@ class NodeGraph:
         # because the last node can be a generator, we have to get the last node node
         # after building the graph
         node_name = self.get_end_node_name()
-        skipped_node_keys = set(self.skipped_node_keys)
 
         frontier = [
             (
                 node_name,
-                RunStatus.SKIP if node_name in skipped_node_keys else RunStatus.ACTIVE,
+                self._get_node_run_status(self.graph.nodes[node_name]),
             )
         ]
         while len(frontier) != 0:
@@ -326,15 +328,27 @@ class NodeGraph:
             if descendent_status == RunStatus.ACTIVE:
                 current_node["status"] = RunStatus.ACTIVE
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    if ancestor_name in skipped_node_keys:
-                        frontier.append((ancestor_name, RunStatus.SKIP))
-                    else:
-                        frontier.append((ancestor_name, RunStatus.ACTIVE))
+                    ancestor_node = self.graph.nodes[ancestor_name]
+                    ancestor_run_status = self._get_node_run_status(ancestor_node)
+                    frontier.append((ancestor_name, ancestor_run_status))
             else:
-                current_node["status"] = RunStatus.SKIP
+                current_node["status"] = descendent_status
                 for ancestor_name in self.graph.predecessors(current_node_name):
                     if self.graph.nodes[ancestor_name]["status"] != RunStatus.ACTIVE:
                         frontier.append((ancestor_name, RunStatus.SKIP))
+
+    def _get_node_run_status(self, node):
+        if node["transformation"].key in self.node_overrides:
+            return RunStatus.SKIP
+        if node["transformation"].cache:
+            cache_context = (
+                CacheContext(self.cache_mode[node])
+                if node["transformation"] in self.cache_mode
+                else CacheContext()
+            )
+            if node["transformation"].cache.exists(cache_context):
+                return RunStatus.CACHED
+        return RunStatus.ACTIVE
 
     def get_dependency_map(self):
         dependencies = {}
@@ -407,7 +421,10 @@ class NodeGraph:
         filtered out.
         """
         execution_graph = NodeGraph(
-            None, graph=self.graph.copy(), skipped_node_keys=self.skipped_node_keys
+            None,
+            graph=self.graph.copy(),
+            inputs=self.node_overrides,
+            cache_mode=self.cache_mode,
         )
         to_remove = []
         for node_name in execution_graph.graph.nodes:
