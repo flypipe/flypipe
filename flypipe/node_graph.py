@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import networkx as nx
 from networkx import DiGraph
 
-from flypipe.cache.cache_context import CacheContext
+from flypipe.cache.cache_context import CacheMode
 from flypipe.node import Node
 from flypipe.node_function import NodeFunction
 from flypipe.node_run_context import NodeRunContext
@@ -312,7 +312,7 @@ class NodeGraph:
         return None
 
     def calculate_graph_run_status(self):
-        # because the last node can be a generator, we have to get the last node node
+        # because the last node can be a generator, we have to get the last node
         # after building the graph
         node_name = self.get_end_node_name()
 
@@ -340,14 +340,9 @@ class NodeGraph:
     def _get_node_run_status(self, node):
         if node["transformation"].key in self.node_overrides:
             return RunStatus.SKIP
-        if node["transformation"].cache:
-            cache_context = (
-                CacheContext(self.cache_mode[node])
-                if node["transformation"] in self.cache_mode
-                else CacheContext()
-            )
-            if node["transformation"].cache.exists(cache_context):
-                return RunStatus.CACHED
+        cache_mode = self.cache_mode.get(node["transformation"], CacheMode.DEFAULT)
+        if node["transformation"].cache.exists(cache_mode):
+            return RunStatus.CACHED
         return RunStatus.ACTIVE
 
     def get_dependency_map(self):

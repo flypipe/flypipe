@@ -5,6 +5,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Mapping, List
 
 from flypipe.cache.cache import Cache
+from flypipe.cache.cache_context import CacheMode
+from flypipe.cache.null_cache import DummyCache
+from flypipe.cache.spark_cache import SparkCache
 from flypipe.config import get_config, RunMode
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
@@ -84,7 +87,10 @@ class Node:  # pylint: disable=too-many-instance-attributes
         self.spark_context = spark_context
         self.requested_columns = requested_columns
         self.node_graph = None
-        self.cache = cache
+        if cache is None:
+            self.cache = DummyCache()
+        else:
+            self.cache = cache
 
     @property
     def output(self):
@@ -255,25 +261,26 @@ class Node:  # pylint: disable=too-many-instance-attributes
         if parallel is None:
             parallel = get_config("default_run_mode") == RunMode.PARALLEL.value
         if parallel:
-            return self._run_parallel(spark, execution_graph, outputs)
-        return self._run_sequential(spark, execution_graph, outputs)
+            return self._run_parallel(spark, execution_graph, outputs, cache_mode_map)
+        return self._run_sequential(spark, execution_graph, outputs, cache_mode_map)
 
     @property
     def dataframe_type(self):
         return self.DATAFRAME_TYPE_MAP[self.type]
 
     def _run_parallel(
-        self, spark, execution_graph, outputs
+        self, spark, execution_graph, outputs, cache_mode_map
     ):  # pylint: disable=too-many-locals
         def execute(node):
             dependency_values = node["transformation"].get_node_inputs(outputs)
 
             result = NodeResult(
                 spark,
-                node["transformation"].process_transformation(
+                node["transformation"].process_transformation_with_cache(
                     spark,
                     node["output_columns"],
                     node["run_context"],
+                    cache_mode_map,
                     **dependency_values,
                 ),
                 schema=self._get_consolidated_output_schema(
@@ -324,7 +331,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
                 jobs = jobs - to_remove
         return outputs[self.key].as_type(self.dataframe_type).get_df()
 
-    def _run_sequential(self, spark, execution_graph, outputs):
+    def _run_sequential(self, spark, execution_graph, outputs, cache_mode_map):
         runnable_node = None
         while not execution_graph.is_empty():
             runnable_nodes = execution_graph.get_runnable_transformations()
@@ -340,10 +347,11 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
                 result = NodeResult(
                     spark,
-                    runnable_node["transformation"].process_transformation(
+                    runnable_node["transformation"].process_transformation_with_cache(
                         spark,
                         runnable_node["output_columns"],
                         runnable_node["run_context"],
+                        cache_mode_map,
                         **dependency_values,
                     ),
                     schema=self._get_consolidated_output_schema(
@@ -376,6 +384,24 @@ class Node:  # pylint: disable=too-many-instance-attributes
         else:
             schema = None
         return schema
+
+    def process_transformation_with_cache(
+        self, spark, requested_columns: list, run_context: NodeRunContext, cache_mode_map: dict, **inputs
+    ):
+        cache_args = [
+            cache_mode_map.get(self.key, CacheMode.DEFAULT)
+        ]
+        if isinstance(self.cache, SparkCache):
+            cache_args.append(spark)
+
+        if self.cache.exists(*cache_args):
+            return self.cache.read(*cache_args)
+
+        result = self.process_transformation(spark, requested_columns, run_context, **inputs)
+
+        # If the node is backed by a cache then fill it with the result
+        self.cache.write(*cache_args, result)
+        return result
 
     def process_transformation(
         self, spark, requested_columns: list, run_context: NodeRunContext, **inputs

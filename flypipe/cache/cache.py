@@ -1,4 +1,4 @@
-from flypipe.cache.cache_context import CacheContext, CacheMode
+from flypipe.cache.cache_context import CacheMode
 
 
 class Cache:
@@ -8,22 +8,24 @@ class Cache:
     to make it more beginner friendly.
     """
 
-    def __init__(self, read, write, exists):
+    def __init__(self, read, write, exists, *args, **kwargs):
         self._read = read
         self._write = write
         self._exists = exists
+        self.args = args
+        self.kwargs = kwargs
 
-    def read(self, cache_context: CacheContext):
-        if cache_context.mode == CacheMode.DISABLE:
+    def read(self, mode):
+        if mode == CacheMode.DISABLE:
             raise Exception("Illegal operation- cache disabled")
-        return self._read(cache_context)
+        return self._read(*self.args, **self.kwargs)
 
-    def write(self, cache_context: CacheContext):
-        if cache_context.mode == CacheMode.DISABLE:
+    def write(self, mode, result):
+        if mode == CacheMode.DISABLE:
             raise Exception("Illegal operation- cache disabled")
-        self._write(cache_context)
+        self._write(result, *self.args, **self.kwargs)
 
-    def exists(self, cache_context: CacheContext):
-        if cache_context.mode in (CacheMode.DISABLE, CacheMode.MERGE):
+    def exists(self, mode):
+        if mode in (CacheMode.DISABLE, CacheMode.MERGE):
             return False
-        return self._exists(cache_context)
+        return self._exists(*self.args, **self.kwargs)
