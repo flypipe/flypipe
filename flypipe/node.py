@@ -298,6 +298,22 @@ class Node:  # pylint: disable=too-many-instance-attributes
                 ),
             )
 
+            # If cache exists, and the transformation has run, then save its cache
+            if runnable_node["transformation"].cache:
+                runnable_node["transformation"].cache.write(
+                    result.as_type(runnable_node["transformation"].dataframe_type).get_df()
+                )
+
+                # If cached we want to reload the dataframe and break the query planning
+                result = NodeResult(
+                    spark,
+                    runnable_node["transformation"].cache.read(),
+                    schema=self._get_consolidated_output_schema(
+                        node["transformation"].output_schema,
+                        node["output_columns"],
+                    ),
+                )
+
             return node["transformation"].key, result
 
         logger.info("Starting parallel processing of node %s", node.__name__)
@@ -368,7 +384,25 @@ class Node:  # pylint: disable=too-many-instance-attributes
                     ),
                 )
 
+                # If cache exists, and the transformation has run, then save its cache
+                if runnable_node["transformation"].cache:
+                    runnable_node["transformation"].cache.write(
+                        result.as_type(runnable_node["transformation"].dataframe_type).get_df()
+                    )
+
+                    # If cached we want to reload the dataframe and break the query planning
+                    result = NodeResult(
+                        spark,
+                        runnable_node["transformation"].cache.read(),
+                        schema=self._get_consolidated_output_schema(
+                            runnable_node["transformation"].output_schema,
+                            runnable_node["output_columns"],
+                        ),
+                    )
+
                 outputs[runnable_node["transformation"].key] = result
+
+
 
         return (
             outputs[runnable_node["transformation"].key]
@@ -416,10 +450,6 @@ class Node:  # pylint: disable=too-many-instance-attributes
                     "Unable to run spark_sql type node without spark being provided in the transformation.run call"
                 )
             result = spark.sql(result)
-
-        # If cache exists, and the transformation has run, then save its cache
-        if self.cache:
-            self.cache.write(result)
 
         return result
 

@@ -9,6 +9,8 @@ from flypipe.cache import CacheOperation
 from flypipe.cache.generic_cache import GenericCache
 from flypipe.node import node
 from flypipe.node_graph import RunStatus
+from flypipe.schema import Schema, Column
+from flypipe.schema.types import Integer
 
 
 @pytest.fixture(scope="function")
@@ -63,7 +65,7 @@ class TestGenericCache:
         spy_exists = mocker.spy(t1.cache, "exists")
         t1.run()
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 0
+        assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
 
         spy_writter.reset_mock()
@@ -111,7 +113,7 @@ class TestGenericCache:
         spy_exists = mocker.spy(cache, "exists")
         t1.run(spark)
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 0
+        assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
 
         spy_writter.reset_mock()
@@ -250,7 +252,7 @@ class TestGenericCache:
         spy_exists = mocker.spy(cache, "exists")
         t1f.run()
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 0
+        assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
 
         spy_writter.reset_mock()
@@ -325,7 +327,7 @@ class TestGenericCache:
         assert exists()
 
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 0
+        assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
 
         # Case 4
@@ -386,7 +388,7 @@ class TestGenericCache:
         spy_exists = mocker.spy(t1.cache, "exists")
         t1.run()
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 0
+        assert spy_reader.call_count == 1
         assert spy_exists.call_count == 2
 
         spy_writter.reset_mock()
@@ -394,5 +396,38 @@ class TestGenericCache:
         spy_exists.reset_mock()
         t1.run(cache={t1: CacheOperation.MERGE})
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 0
+        assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
+
+    def test_cache_requested_columns(self, cache, mocker):
+        @node(
+            type="pandas",
+            cache=cache,
+            output=Schema(
+                Column("col1", Integer()),
+                Column("col2", Integer()),
+            )
+        )
+        def t1():
+            return pd.DataFrame(data={"col1": [1], "col2": [2]})
+
+        @node(
+            type="pandas",
+            dependencies=[t1.select("col1")],
+        )
+        def t2(t1):
+            return t1
+
+        assert not os.path.exists("test.csv")
+        spy_writter = mocker.spy(t1.cache, "write")
+        spy_reader = mocker.spy(t1.cache, "read")
+        spy_exists = mocker.spy(t1.cache, "exists")
+        t1.run()
+        assert spy_writter.call_count == 1
+        assert spy_reader.call_count == 1
+        assert spy_exists.call_count == 1
+
+        assert os.path.exists("test.csv")
+        df = read()
+        assert sorted(list(df.columns)) == ["col1", "col2"]
+
