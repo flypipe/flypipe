@@ -198,6 +198,27 @@ const addOrReplaceEdge = (graph, edge) => {
                 ? getGroup(graph, targetGroup).id
                 : targetNode.id;
             addOrReplaceEdge(graph, getEdgeDef(graph, source, target, edge));
+
+            // If exists source and target groups, needs to create edges of all internal nodes of sourceGroup to
+            // targetGroup and edges from all internal nodes from targetGroup to sourceGroup
+            if (sourceGroup != null && targetGroup != null && sourceGroup !== targetGroup){
+                const sourceGroupNode = getGroup(graph, sourceGroup);
+                const targetGroupNode = getGroup(graph, targetGroup);
+                const internalTargetNodes = nodes.filter((node) => node.data.group === targetGroup);
+                const internalSourceNodes = nodes.filter((node) => node.data.group === sourceGroup);
+
+                internalTargetNodes.forEach(( internalTargetNode ) => {
+                    internalTargetNode.data.predecessors.forEach(( predecessorNodeId ) => {
+                        if (sourceGroupNode.data.nodes.has(predecessorNodeId)){
+                            const edgeToTargetDefinition = getEdgeDef(graph, source, internalTargetNode.id, edge);
+                            addOrReplaceEdge(graph, edgeToTargetDefinition);
+
+                            const edgeFromSourceDefinition = getEdgeDef(graph, predecessorNodeId, target, edge);
+                            addOrReplaceEdge(graph, edgeFromSourceDefinition);
+                        }
+                    })
+                });
+            }
         }
         graph.setNodes(nodes);
     }
