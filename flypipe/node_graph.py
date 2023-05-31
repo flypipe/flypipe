@@ -345,7 +345,7 @@ class NodeGraph:
 
         # because the last node can be a generator, we have to get the last node node
         # after building the graph
-        existent_cache_nodes = set()
+        existent_cache_nodes = set(self.existent_cache_nodes)
         node_name = self.get_end_node_name(self.graph)
         node = self.graph.nodes[node_name]
         skipped_node_keys = set(self.skipped_node_keys)
@@ -354,10 +354,13 @@ class NodeGraph:
         if node_name in skipped_node_keys:
             run_status = RunStatus.SKIP
 
-        elif node["transformation"].cache and \
-                not node["transformation"].cache.merge and \
-                node["transformation"].cache.exists():
+        elif node["transformation"].key in existent_cache_nodes or (
+                node["transformation"].cache and
+                not node["transformation"].cache.merge and
+                node["transformation"].cache.exists()
+        ):
             run_status = RunStatus.CACHED
+            existent_cache_nodes.add(node["transformation"].key)
 
         frontier = [(node_name, run_status)]
         while len(frontier) != 0:
@@ -373,10 +376,13 @@ class NodeGraph:
                     if ancestor_name in skipped_node_keys:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
-                    elif ancestor_node.cache and \
-                            not ancestor_node.cache.merge and \
-                            ancestor_node.cache.exists():
+                    elif ancestor_name in existent_cache_nodes or (
+                            ancestor_node.cache and
+                            not ancestor_node.cache.merge and
+                            ancestor_node.cache.exists()
+                    ):
                         frontier.append((ancestor_name, RunStatus.CACHED))
+                        existent_cache_nodes.add(ancestor_name)
 
                     else:
                         frontier.append((ancestor_name, RunStatus.ACTIVE))
