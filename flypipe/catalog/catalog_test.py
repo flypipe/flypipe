@@ -286,7 +286,8 @@ class TestCatalog:
             return t2
 
         catalog = Catalog()
-        catalog.register_node(t1)
+        with pytest.raises(RuntimeError):
+            catalog.register_node(t1)
 
     def test_add_node_to_graph(self):
         catalog = Catalog()

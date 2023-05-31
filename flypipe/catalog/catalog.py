@@ -27,7 +27,10 @@ class Catalog:
 
     def register_node(self, node, successor=None, node_graph=None):
 
-        if isinstance(node, NodeFunction) or (node.cache and isinstance(node.cache, Cache)):
+        if isinstance(node, NodeFunction):
+            raise RuntimeError("Node function can not be registered")
+
+        elif node.cache and isinstance(node.cache, Cache):
             # it will expand the node functions, or check if caches exists
 
             cache_context = CacheContext(spark=self.spark)
@@ -54,7 +57,11 @@ class Catalog:
                 self.nodes[node.key].register_successor(successor)
 
             for input_node in node.input_nodes:
-                self.register_node(input_node.node, node, node_graph)
+
+                # Input node can be a NodeFunction. We have to get the node from the graph (as it has been expanded)
+                # instead of the input node.
+                input_node_graph = node_graph.get_transformation(input_node.node.key) if node_graph else input_node.node
+                self.register_node(input_node_graph, node, node_graph)
 
     def add_node_to_graph(self, node):
         """
