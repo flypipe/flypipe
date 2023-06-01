@@ -70,7 +70,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         self.group = group
 
         # TODO: enforce tags for now, later validation can be set as optional via environment variable
-        self.tags = [self.type, self.node_type.value]
+        self.tags = []
         if tags:
             self.tags.extend(tags)
 
@@ -484,14 +484,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         )
 
         catalog = Catalog(spark=spark)
-
-        # The graph created had its node_functions expanded and internal nodes are renamed with node function
-        # name. In case the last nod is a node function, we have to register the end node of the expanded graph
-        end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
-        end_node = self.node_graph.get_transformation(end_node_name)
-
-        catalog.register_node(end_node, node_graph=self.node_graph)
-        catalog.add_node_to_graph(end_node)
+        catalog.register_node(self, add_node_to_graph=True)
         return catalog.html(height)
 
     def __eq__(self, other):

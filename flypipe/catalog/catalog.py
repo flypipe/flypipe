@@ -25,10 +25,20 @@ class Catalog:
         self.initial_nodes = []
         self.spark = spark
 
-    def register_node(self, node, successor=None, node_graph=None):
+    def register_node(self, node, add_node_to_graph=False):
+
+        cache_context = CacheContext(spark=self.spark)
+        node._create_graph(cache_context=cache_context)
+        end_node_name = node.node_graph.get_end_node_name(node.node_graph.graph)
+        end_node = node.node_graph.get_transformation(end_node_name)
+        self._map_node(end_node, node_graph=node.node_graph)
+        if add_node_to_graph:
+            self.add_node_to_graph(end_node)
+
+    def _map_node(self, node, successor=None, node_graph=None):
 
         if isinstance(node, NodeFunction):
-            raise RuntimeError("Node function can not be registered")
+            raise RuntimeError(f"Node function '{node.function.__name__}' can not be registered")
 
         elif node.cache and isinstance(node.cache, Cache):
             # it will expand the node functions, or check if caches exists
@@ -37,7 +47,7 @@ class Catalog:
             node._create_graph(cache_context=cache_context)
             end_node_name = node.node_graph.get_end_node_name(node.node_graph.graph)
             end_node = node.node_graph.get_transformation(end_node_name)
-            self.register_node(end_node, successor, node.node_graph)
+            self._map_node(end_node, successor, node.node_graph)
         else:
 
             if node.node_graph is not None:
@@ -57,11 +67,10 @@ class Catalog:
                 self.nodes[node.key].register_successor(successor)
 
             for input_node in node.input_nodes:
-
                 # Input node can be a NodeFunction. We have to get the node from the graph (as it has been expanded)
                 # instead of the input node.
                 input_node_graph = node_graph.get_transformation(input_node.node.key) if node_graph else input_node.node
-                self.register_node(input_node_graph, node, node_graph)
+                self._map_node(input_node_graph, node, node_graph)
 
     def add_node_to_graph(self, node):
         """
@@ -76,7 +85,7 @@ class Catalog:
     def html(self, height=850):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         with open(
-            os.path.join(dir_path, "../js/bundle.js"), "r", encoding="utf-8"
+                os.path.join(dir_path, "../js/bundle.js"), "r", encoding="utf-8"
         ) as f:
             js_bundle = f.read()
         return get_template("catalog.html").render(
