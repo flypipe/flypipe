@@ -36,9 +36,9 @@ class Node:  # pylint: disable=too-many-instance-attributes
             self,
             function,
             type: str,  # pylint: disable=redefined-builtin
-            description: str =None,
-            group: str =None,
-            tags: List[str] =None,
+            description: str = None,
+            group: str = None,
+            tags: List[str] = None,
             dependencies: List[InputNode] = None,
             output: Schema = None,
             spark_context: bool = False,
@@ -304,16 +304,6 @@ class Node:  # pylint: disable=too-many-instance-attributes
                     result.as_type(runnable_node["transformation"].dataframe_type).get_df()
                 )
 
-                # If cached we want to reload the dataframe and break the query planning
-                result = NodeResult(
-                    spark,
-                    runnable_node["transformation"].cache.read(),
-                    schema=self._get_consolidated_output_schema(
-                        node["transformation"].output_schema,
-                        node["output_columns"],
-                    ),
-                )
-
             return node["transformation"].key, result
 
         logger.info("Starting parallel processing of node %s", node.__name__)
@@ -390,19 +380,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
                         result.as_type(runnable_node["transformation"].dataframe_type).get_df()
                     )
 
-                    # If cached we want to reload the dataframe and break the query planning
-                    result = NodeResult(
-                        spark,
-                        runnable_node["transformation"].cache.read(),
-                        schema=self._get_consolidated_output_schema(
-                            runnable_node["transformation"].output_schema,
-                            runnable_node["output_columns"],
-                        ),
-                    )
-
                 outputs[runnable_node["transformation"].key] = result
-
-
 
         return (
             outputs[runnable_node["transformation"].key]
