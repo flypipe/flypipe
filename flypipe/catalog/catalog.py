@@ -44,23 +44,46 @@ class Catalog:
         )
         end_node_name = node.node_graph.get_end_node_name(node.node_graph.graph)
         end_node = node.node_graph.get_transformation(end_node_name)
-        self._map_node(end_node, node_graph=node.node_graph)
+        self._map_node(end_node,
+                       node_graph=node.node_graph,
+                       provided_inputs=provided_inputs,
+                       pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+                       parameters=parameters,
+                       cache=cache)
         if add_node_to_graph:
             self.add_node_to_graph(end_node)
 
-    def _map_node(self, node, successor=None, node_graph=None):
+    def _map_node(self, node,
+                  successor=None,
+                  node_graph=None,
+                  provided_inputs=None,
+                  pandas_on_spark_use_pandas=False,
+                  parameters=None,
+                  cache=None,
+                  ):
 
         if isinstance(node, NodeFunction):
             raise RuntimeError(f"Node function '{node.function.__name__}' can not be registered")
 
         elif node.cache and isinstance(node.cache, Cache):
             # it will expand the node functions, or check if caches exists
+            cache_context = CacheContext(cache_operation={} if cache is None else cache, spark=self.spark)
+            node._create_graph(
+                list(provided_inputs.keys()),
+                pandas_on_spark_use_pandas,
+                parameters,
+                cache_context=cache_context
+            )
 
-            cache_context = CacheContext(spark=self.spark)
-            node._create_graph(cache_context=cache_context)
             end_node_name = node.node_graph.get_end_node_name(node.node_graph.graph)
             end_node = node.node_graph.get_transformation(end_node_name)
-            self._map_node(end_node, successor, node.node_graph)
+            self._map_node(end_node,
+                           successor,
+                           node.node_graph,
+                           provided_inputs=provided_inputs,
+                           pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+                           parameters=parameters,
+                           cache=cache)
         else:
 
             if node.node_graph is not None:
@@ -84,6 +107,13 @@ class Catalog:
                 # instead of the input node.
                 input_node_graph = node_graph.get_transformation(input_node.node.key) if node_graph else input_node.node
                 self._map_node(input_node_graph, node, node_graph)
+                self._map_node(input_node_graph,
+                               node,
+                               node_graph,
+                               provided_inputs=provided_inputs,
+                               pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+                               parameters=parameters,
+                               cache=cache)
 
     def add_node_to_graph(self, node):
         """
