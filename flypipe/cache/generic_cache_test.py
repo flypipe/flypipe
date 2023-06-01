@@ -65,7 +65,7 @@ class TestGenericCache:
         spy_exists = mocker.spy(t1.cache, "exists")
         t1.run()
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 1
+        assert spy_reader.call_count == 0
         assert spy_exists.call_count == 1
 
         spy_writter.reset_mock()
@@ -113,7 +113,7 @@ class TestGenericCache:
         spy_exists = mocker.spy(cache, "exists")
         t1.run(spark)
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 1
+        assert spy_reader.call_count == 0
         assert spy_exists.call_count == 1
 
         spy_writter.reset_mock()
@@ -252,7 +252,7 @@ class TestGenericCache:
         spy_exists = mocker.spy(cache, "exists")
         t1f.run()
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 1
+        assert spy_reader.call_count == 0
         assert spy_exists.call_count == 1
 
         spy_writter.reset_mock()
@@ -327,7 +327,7 @@ class TestGenericCache:
         assert exists()
 
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 1
+        assert spy_reader.call_count == 0
         assert spy_exists.call_count == 1
 
         # Case 4
@@ -388,7 +388,7 @@ class TestGenericCache:
         spy_exists = mocker.spy(t1.cache, "exists")
         t1.run()
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 1
+        assert spy_reader.call_count == 0
         assert spy_exists.call_count == 2
 
         spy_writter.reset_mock()
@@ -396,7 +396,7 @@ class TestGenericCache:
         spy_exists.reset_mock()
         t1.run(cache={t1: CacheOperation.MERGE})
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 1
+        assert spy_reader.call_count == 0
         assert spy_exists.call_count == 1
 
     def test_cache_requested_columns(self, cache, mocker):
@@ -424,7 +424,7 @@ class TestGenericCache:
         spy_exists = mocker.spy(t1.cache, "exists")
         t1.run()
         assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 1
+        assert spy_reader.call_count == 0
         assert spy_exists.call_count == 1
 
         assert os.path.exists("test.csv")
