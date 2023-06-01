@@ -472,19 +472,13 @@ class Node:  # pylint: disable=too-many-instance-attributes
         # pylint: disable-next=import-outside-toplevel,cyclic-import
         from flypipe.catalog import Catalog
 
-        cache_context = CacheContext(cache_operation={} if cache is None else cache, spark=spark)
-
-        inputs = inputs or {}
-        provided_inputs = {node.key: df for node, df in inputs.items()}
-        self._create_graph(
-            list(provided_inputs.keys()),
-            pandas_on_spark_use_pandas,
-            parameters,
-            cache_context=cache_context,
-        )
-
         catalog = Catalog(spark=spark)
-        catalog.register_node(self, add_node_to_graph=True)
+        catalog.register_node(self,
+                              inputs=inputs,
+                              pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+                              parameters=parameters,
+                              cache=cache,
+                              add_node_to_graph=True)
         return catalog.html(height)
 
     def __eq__(self, other):

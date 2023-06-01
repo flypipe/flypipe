@@ -25,10 +25,23 @@ class Catalog:
         self.initial_nodes = []
         self.spark = spark
 
-    def register_node(self, node, add_node_to_graph=False):
+    def register_node(self,
+                      node,
+                      inputs=None,
+                      pandas_on_spark_use_pandas=False,
+                      parameters=None,
+                      cache=None,
+                      add_node_to_graph=False):
 
-        cache_context = CacheContext(spark=self.spark)
-        node._create_graph(cache_context=cache_context)
+        inputs = inputs or {}
+        provided_inputs = {node.key: df for node, df in inputs.items()}
+        cache_context = CacheContext(cache_operation={} if cache is None else cache, spark=self.spark)
+        node._create_graph(
+            list(provided_inputs.keys()),
+            pandas_on_spark_use_pandas,
+            parameters,
+            cache_context=cache_context
+        )
         end_node_name = node.node_graph.get_end_node_name(node.node_graph.graph)
         end_node = node.node_graph.get_transformation(end_node_name)
         self._map_node(end_node, node_graph=node.node_graph)
