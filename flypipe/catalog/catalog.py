@@ -106,7 +106,6 @@ class Catalog:
                 # Input node can be a NodeFunction. We have to get the node from the graph (as it has been expanded)
                 # instead of the input node.
                 input_node_graph = node_graph.get_transformation(input_node.node.key) if node_graph else input_node.node
-                self._map_node(input_node_graph, node, node_graph)
                 self._map_node(input_node_graph,
                                node,
                                node_graph,
