@@ -65,8 +65,8 @@ class TestCatalog:
         test.
         """
         catalog = Catalog()
-        catalog._map_node(t2)
-        catalog._map_node(t3)
+        catalog.register_node(t2)
+        catalog.register_node(t3)
         assert sorted(
             [
                 (node_def["name"], node_def["successors"])
@@ -90,17 +90,17 @@ class TestCatalog:
         entries.
         """
         catalog = Catalog()
-        catalog._map_node(t2)
-        catalog._map_node(t2)
-        catalog._map_node(t1)
+        catalog.register_node(t2)
+        catalog.register_node(t2)
+        catalog.register_node(t1)
         assert sorted(
             [(node["name"], node["successors"]) for node in catalog.get_nodes()]
         ) == [("t1", ["flypipe_catalog_catalog_test_function_t2_t2"]), ("t2", [])]
 
     def test_get_nodes(self):
         catalog = Catalog()
-        catalog._map_node(t2)
-        catalog._map_node(t3)
+        catalog.register_node(t2)
+        catalog.register_node(t3)
         assert catalog.get_nodes() == [
             {
                 "description": "Description for t2",
@@ -177,8 +177,8 @@ class TestCatalog:
 
     def test_get_count_box_defs(self):
         catalog = Catalog()
-        catalog._map_node(t2)
-        catalog._map_node(t3)
+        catalog.register_node(t2)
+        catalog.register_node(t3)
         with config_context(catalog_count_box_tags="train,test"):
             result = catalog.get_count_box_defs()
         assert result == [
@@ -231,8 +231,8 @@ class TestCatalog:
 
     def test_get_tag_suggestions(self):
         catalog = Catalog()
-        catalog._map_node(t2)
-        catalog._map_node(t3)
+        catalog.register_node(t2)
+        catalog.register_node(t3)
         assert catalog.get_tag_suggestions() == [
             {"id": "misc", "name": "misc"},
             {"id": "test", "name": "test"},
@@ -241,8 +241,8 @@ class TestCatalog:
 
     def test_get_groups(self):
         catalog = Catalog()
-        catalog._map_node(t2)
-        catalog._map_node(t3)
+        catalog.register_node(t2)
+        catalog.register_node(t3)
         assert catalog.get_groups() == [
             {
                 "id": "training_thing",
