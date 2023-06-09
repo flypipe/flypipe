@@ -1,10 +1,10 @@
-from flypipe.cache import CacheOperation
+from flypipe.cache import CacheMode
 
 
 class CacheContext:
 
-    def __init__(self, cache_operation=None, spark=None, cache=None):
-        self.cache_operation = cache_operation or {}
+    def __init__(self, cache_mode=None, spark=None, cache=None):
+        self.cache_mode = cache_mode or {}
         self.spark = spark
         self.cache = cache
 
@@ -13,10 +13,10 @@ class CacheContext:
         if node.cache is None:
             return None
 
-        cache_operation = (
-            self.cache_operation[node] if node in self.cache_operation else None
+        cache_mode = (
+            self.cache_mode[node] if node in self.cache_mode else None
         )
-        cache_context = CacheContext(cache_operation, self.spark, node.cache)
+        cache_context = CacheContext(cache_mode, self.spark, node.cache)
 
         if cache_context.disabled:
             return None
@@ -25,11 +25,11 @@ class CacheContext:
 
     @property
     def disabled(self):
-        return self.cache_operation == CacheOperation.DISABLE
+        return self.cache_mode == CacheMode.DISABLE
 
     @property
     def merge(self):
-        return self.cache_operation == CacheOperation.MERGE
+        return self.cache_mode == CacheMode.MERGE
 
     def read(self):
         if self.disabled:

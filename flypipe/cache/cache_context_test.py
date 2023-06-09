@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import pytest
 
-from flypipe.cache import CacheOperation
+from flypipe.cache import CacheMode
 from flypipe.cache.cache_context import CacheContext
 from flypipe.cache.generic_cache import GenericCache
 from flypipe.node import node
@@ -64,11 +64,11 @@ class TestCacheContext:
         assert cache_context is None
 
     def test_disabled(self, node_cache):
-        cache_operation = {
-            node_cache: CacheOperation.DISABLE,
+        cache_mode = {
+            node_cache: CacheMode.DISABLE,
         }
 
-        cache_context = CacheContext(cache_operation, "spark")
+        cache_context = CacheContext(cache_mode, "spark")
         cache_context = cache_context.create(node_cache)
         assert cache_context is None
 

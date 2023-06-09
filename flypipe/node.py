@@ -240,7 +240,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         if not inputs:
             inputs = {}
 
-        cache_context = CacheContext(cache_operation={} if cache is None else cache, spark=spark)
+        cache_context = CacheContext(cache_mode={} if cache is None else cache, spark=spark)
 
         provided_inputs = {node.key: df for node, df in inputs.items()}
         self._create_graph(

@@ -5,7 +5,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from flypipe import node_function
-from flypipe.cache import CacheOperation
+from flypipe.cache import CacheMode
 from flypipe.cache.generic_cache import GenericCache
 from flypipe.node import node
 from flypipe.node_graph import RunStatus
@@ -309,7 +309,7 @@ class TestGenericCache:
         spy_exists.reset_mock()
 
         assert not exists()
-        output_df = t.run(cache={t: CacheOperation.DISABLE})
+        output_df = t.run(cache={t: CacheMode.DISABLE})
         assert_frame_equal(t_df, output_df)
         assert not exists()
         assert spy_writter.call_count == 0
@@ -350,7 +350,7 @@ class TestGenericCache:
         spy_exists.reset_mock()
 
         assert exists()
-        output_df = t.run(cache={t: CacheOperation.DISABLE})
+        output_df = t.run(cache={t: CacheMode.DISABLE})
         assert_frame_equal(t_df, output_df)
         assert exists()
 
@@ -394,7 +394,7 @@ class TestGenericCache:
         spy_writter.reset_mock()
         spy_reader.reset_mock()
         spy_exists.reset_mock()
-        t1.run(cache={t1: CacheOperation.MERGE})
+        t1.run(cache={t1: CacheMode.MERGE})
         assert spy_writter.call_count == 1
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 1

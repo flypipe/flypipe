@@ -35,7 +35,7 @@ class Catalog:
 
         inputs = inputs or {}
         provided_inputs = {node.key: df for node, df in inputs.items()}
-        cache_context = CacheContext(cache_operation={} if cache is None else cache, spark=self.spark)
+        cache_context = CacheContext(cache_mode={} if cache is None else cache, spark=self.spark)
         node._create_graph(
             list(provided_inputs.keys()),
             pandas_on_spark_use_pandas,
