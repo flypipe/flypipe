@@ -36,7 +36,7 @@ class CatalogNode:
         tags_set = set()
         for tag in self.node.tags:
             tags_set.add(tag.lower().strip())
-
+        node_run_context = self.node_graph.get_node(self.node.key)['run_context']
         return {
             "nodeKey": self.node.key,
             "nodeType": self.node.type,

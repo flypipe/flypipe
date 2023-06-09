@@ -10,6 +10,7 @@ from flypipe.node import Node
 from flypipe.node_function import NodeFunction
 from flypipe.node_run_context import NodeRunContext
 from flypipe.output_column_set import OutputColumnSet
+from flypipe.run_context import RunContext
 from flypipe.utils import DataFrameType
 
 
@@ -31,20 +32,10 @@ class NodeGraph:
     def __init__(  # pylint: disable=too-many-arguments
             self,
             transformation: Node = None,
+            run_context: RunContext = None,
             graph: nx.DiGraph = None,
-            skipped_node_keys: List[str] = None,
-            pandas_on_spark_use_pandas: bool = False,
-            parameters: dict = None,
-            cache_context: CacheContext = None,
-            existent_cache_nodes: List[str] = None,
     ):
-        self.existent_cache_nodes = existent_cache_nodes or []
-        parameters = parameters or {}
-        parameters = {node.key: params for node, params in parameters.items()}
-
-        if not skipped_node_keys:
-            skipped_node_keys = []
-        self.skipped_node_keys = skipped_node_keys
+        run_context = run_context or RunContext()
 
         if graph:
             self.graph = graph
@@ -52,14 +43,64 @@ class NodeGraph:
             self.nodes = None
             self.node_output_columns = None
             self.edges = None
-            self.graph = self._build_graph(
-                transformation,
-                pandas_on_spark_use_pandas,
-                parameters,
-                cache_context=cache_context,
+            self.graph = self._build_graph(transformation, run_context )
+            self.calculate_graph_run_status()
+
+    def _build_graph(
+            self,
+            transformation: Node,
+            run_context: RunContext,
+    ):
+
+        transformation = transformation.copy()
+        graph = nx.DiGraph()
+
+        frontier = [transformation]
+        while frontier:
+            current_transformation = frontier.pop()
+
+            # We can not add current_transformation.cache now, as current_transformation can be node function
+            # so we have to expand node functions and later add cache context to node run context
+            node_run_context = NodeRunContext(
+                parameters=run_context.parameters.get(current_transformation.key),
+                provided_input=run_context.provided_inputs.get(current_transformation.key),
+            )
+            graph = self.add_node(
+                graph,
+                current_transformation.key,
+                transformation=current_transformation,
+                run_context=node_run_context,
             )
 
-            self.existent_cache_nodes = self.calculate_graph_run_status()
+            if isinstance(current_transformation, NodeFunction):
+                dependencies = current_transformation.node_dependencies
+            else:
+                dependencies = [
+                    input_node.node for input_node in current_transformation.input_nodes
+                ]
+            for dependency in dependencies:
+                frontier.insert(0, dependency)
+
+                graph.add_edge(dependency.key, current_transformation.key)
+        graph = self._compute_requested_columns(graph)
+        graph = self._expand_node_functions(graph)
+        graph = self._compute_edge_selected_columns(graph)
+
+        # all node functions had been expanded, now we can add caches to each node node_run_context
+        graph = self._create_cache_contexts(graph, run_context)
+
+        for node_key in graph.nodes:
+            transformation = graph.nodes[node_key]["transformation"]
+            # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
+            # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state
+            # is cleared
+            if (
+                    run_context.pandas_on_spark_use_pandas
+                    and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
+            ):
+                transformation.type = "pandas"
+
+        return graph
 
     def add_node(  # pylint: disable=too-many-arguments
             self,
@@ -86,78 +127,30 @@ class NodeGraph:
     def remove_node(self, node_name):
         self.graph.remove_node(node_name)
 
-    def _build_graph(
-            self,
-            transformation: Node,
-            pandas_on_spark_use_pandas: bool,
-            parameters: dict,
-            cache_context: CacheContext,
-    ):
-        transformation = transformation.copy()
-        graph = nx.DiGraph()
-
-        frontier = [transformation]
-        while frontier:
-            current_transformation = frontier.pop()
-
-            node_run_context = NodeRunContext(
-                parameters.get(current_transformation.key)
-            )
-            graph = self.add_node(
-                graph,
-                current_transformation.key,
-                transformation=current_transformation,
-                run_context=node_run_context,
-            )
-
-            if isinstance(current_transformation, NodeFunction):
-                dependencies = current_transformation.node_dependencies
-            else:
-                dependencies = [
-                    input_node.node for input_node in current_transformation.input_nodes
-                ]
-            for dependency in dependencies:
-                frontier.insert(0, dependency)
-
-                graph.add_edge(dependency.key, current_transformation.key)
-        graph = self._compute_requested_columns(graph)
-        graph = self._expand_node_functions(graph)
-        graph = self._compute_edge_selected_columns(graph)
-        graph = self._create_cache_contexts(graph, cache_context)
+    def _create_cache_contexts(self, graph, run_context: RunContext):
 
         for node_key in graph.nodes:
-            transformation = graph.nodes[node_key]["transformation"]
-            # TODO- move this to pandas_on_spark_node once we figure out how to get context to work
-            # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state
-            # is cleared
-            if (
-                    pandas_on_spark_use_pandas
-                    and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
-            ):
-                transformation.type = "pandas"
-
-        return graph
-
-    def _create_cache_contexts(self, graph, cache_context):
-        if cache_context:
-            for node_key in graph.nodes:
-                node = graph.nodes[node_key]
-                # should we overwrite the node cache?
-                # or should we create node['transformation'].cache_context = cache_context.create(node)?
-                node["transformation"].cache = cache_context.create(
-                    node["transformation"]
-                )
+            node = graph.nodes[node_key]
+            node["run_context"].cache = CacheContext(spark=run_context.spark,
+                                                     cache_mode=run_context.cache.get(node["transformation"]),
+                                                     cache=node["transformation"].cache)
 
         return graph
 
     def load_caches(self):
-        caches = {}
+
+        provided_inputs = {}
         for node_name in self.graph.nodes:
             node = self.get_node(node_name)
-            if node["transformation"].cache and node_name in self.existent_cache_nodes:
-                caches[node_name] = node["transformation"].cache.read()
 
-        return caches
+            if node["run_context"].exists_provided_input:
+                provided_inputs[node['transformation']] = node["run_context"].provided_input
+
+            elif node["run_context"].cache.exists_cache_to_load:
+                node["run_context"].provided_input = node["run_context"].cache.read()
+                provided_inputs[node['transformation']] = node["run_context"].provided_input
+        return provided_inputs
+
 
     def _compute_edge_selected_columns(self, graph):
         for node_key in graph.nodes:
@@ -345,22 +338,16 @@ class NodeGraph:
 
         # because the last node can be a generator, we have to get the last node node
         # after building the graph
-        existent_cache_nodes = set(self.existent_cache_nodes)
         node_name = self.get_end_node_name(self.graph)
         node = self.graph.nodes[node_name]
-        skipped_node_keys = set(self.skipped_node_keys)
 
         run_status = RunStatus.ACTIVE
-        if node_name in skipped_node_keys:
+
+        if node["run_context"].exists_provided_input:
             run_status = RunStatus.SKIP
 
-        elif node["transformation"].key in existent_cache_nodes or (
-                node["transformation"].cache and
-                not node["transformation"].cache.merge and
-                node["transformation"].cache.exists()
-        ):
+        elif node["run_context"].cache.runtime_load:
             run_status = RunStatus.CACHED
-            existent_cache_nodes.add(node["transformation"].key)
 
         frontier = [(node_name, run_status)]
         while len(frontier) != 0:
@@ -371,26 +358,19 @@ class NodeGraph:
                 current_node["status"] = RunStatus.ACTIVE
 
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    ancestor_node = self.graph.nodes[ancestor_name]["transformation"]
+                    ancestor_node_run_context = self.graph.nodes[ancestor_name]["run_context"]
 
-                    if ancestor_name in skipped_node_keys:
+                    if ancestor_node_run_context.exists_provided_input:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
-                    elif ancestor_name in existent_cache_nodes or (
-                            ancestor_node.cache and
-                            not ancestor_node.cache.merge and
-                            ancestor_node.cache.exists()
-                    ):
+                    elif ancestor_node_run_context.cache.runtime_load:
                         frontier.append((ancestor_name, RunStatus.CACHED))
-                        existent_cache_nodes.add(ancestor_name)
 
                     else:
                         frontier.append((ancestor_name, RunStatus.ACTIVE))
 
             elif descendent_status == RunStatus.CACHED:
                 current_node["status"] = RunStatus.SKIP
-
-                existent_cache_nodes.add(current_node_name)
 
                 for ancestor_name in self.graph.predecessors(current_node_name):
                     if self.graph.nodes[ancestor_name]["status"] != RunStatus.ACTIVE:
@@ -403,7 +383,6 @@ class NodeGraph:
                     if self.graph.nodes[ancestor_name]["status"] != RunStatus.ACTIVE:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
-        return list(existent_cache_nodes)
 
     def get_dependency_map(self):
         dependencies = {}
@@ -470,16 +449,16 @@ class NodeGraph:
         nx.draw(graph, with_labels=True)
         plt.show()
 
-    def get_execution_graph(self):
+    def get_execution_graph(self, run_context: RunContext):
         """
         Return an execution graph for this node graph. Practically, this is a copy of the graph with inactive nodes
         filtered out.
         """
+
         execution_graph = NodeGraph(
             None,
             graph=self.graph.copy(),
-            skipped_node_keys=self.skipped_node_keys + self.existent_cache_nodes,
-            existent_cache_nodes=self.existent_cache_nodes,
+            run_context=run_context.copy(),
         )
         to_remove = []
 

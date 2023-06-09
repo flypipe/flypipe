@@ -141,7 +141,6 @@ class Date(Type):
         while python_format:
             if python_format.startswith("%"):
                 symbol = python_format[:2]
-                print(f'Extracted symbol "{symbol}"')
                 python_format = python_format[2:]
                 try:
                     pyspark_format.append(
@@ -153,7 +152,6 @@ class Date(Type):
                     ) from exc
             else:
                 formatting = python_format[0]
-                print(f'Extracted formatting "{formatting}"')
                 python_format = python_format[1:]
                 pyspark_format.append(formatting)
         return "".join(pyspark_format)

@@ -68,6 +68,7 @@ class TestNodeFunction:
         assert nodes == [a, b]
 
     def test_node_parameters(self):
+
         @node_function()
         def t1(param1=1, param2=2):
             @node(type="pandas")

@@ -9,12 +9,14 @@ from pandas.testing import assert_frame_equal
 from pyspark.sql import DataFrame
 from pyspark_test import assert_pyspark_df_equal
 
+from flypipe.cache.cache import Cache
 from flypipe.config import config_context
 from flypipe.converter.dataframe import DataFrameConverter
 from flypipe.datasource.spark import Spark
 from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.node import node, Node
 from flypipe.node_function import node_function
+from flypipe.run_context import RunContext
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String, Decimal, Integer
 from flypipe.utils import DataFrameType, dataframe_type
@@ -353,7 +355,7 @@ class TestNode:  # pylint: disable=too-many-public-methods
             assert t2.loc[0, "c3"] == "t2 set this value"
             return t2
 
-        t3.run(spark, parallel=False)
+        t3.run(parallel=False)
 
     def test_adhoc_call(self, spark):
         """
@@ -466,7 +468,7 @@ class TestNode:  # pylint: disable=too-many-public-methods
         expected_df = pd.DataFrame({"c1": [4, 5, 6, 7]})
 
         assert_frame_equal(
-            c.run(spark, inputs={b: df}, parallel=False), expected_df, check_dtype=False
+            c.run(inputs={b: df}, parallel=False), expected_df, check_dtype=False
         )
 
     def test_run_missing_column(self):
@@ -751,7 +753,8 @@ class TestNode:  # pylint: disable=too-many-public-methods
 
         # TODO- we should refactor to avoid having to call this private method to build a graph
         # pylint: disable-next=protected-access
-        t1._create_graph(pandas_on_spark_use_pandas=True)
+
+        t1._create_graph(RunContext(pandas_on_spark_use_pandas=True))
         for n in t1.node_graph.graph.nodes:
             if t1.node_graph.graph.nodes[n]["transformation"].__name__ == "t1":
                 assert (
@@ -1014,3 +1017,27 @@ class TestNode:  # pylint: disable=too-many-public-methods
         input_node = t0.alias("my_alias")
         assert input_node.key == t0.key
         assert input_node.get_alias() == "my_alias"
+
+    def test_cache_instance(self):
+
+        class MyCache():
+            pass
+
+        with pytest.raises(TypeError):
+            @node(type="pandas", cache=MyCache())
+            def t0():
+                return pd.DataFrame(data={"col1": [1]})
+
+
+        class MyCache(Cache):
+            def read(self):
+                pass
+
+            def write(self):
+                pass
+
+            def exists(self):
+                pass
+        @node(type="pandas", cache=MyCache())
+        def t0():
+            return pd.DataFrame(data={"col1": [1]})

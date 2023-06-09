@@ -1,28 +1,37 @@
+from pyspark.sql import SparkSession
+
 from flypipe.cache import CacheMode
+from flypipe.cache.cache import Cache
 
 
 class CacheContext:
 
-    def __init__(self, cache_mode=None, spark=None, cache=None):
-        self.cache_mode = cache_mode or {}
+    def __init__(self, cache_mode: CacheMode=None, spark: SparkSession=None, cache: Cache=None):
         self.spark = spark
         self.cache = cache
+        self.cache_mode = cache_mode or CacheMode.DEFAULT
+        self.cache_mode = self.cache_mode if cache else None
+        self._exists_cache_to_load = None
 
-    def create(self, node):
+    @property
+    def runtime_load(self):
+        if self.disabled:
+            return False
 
-        if node.cache is None:
-            return None
+        if not self.cache:
+            return False
 
-        cache_mode = (
-            self.cache_mode[node] if node in self.cache_mode else None
-        )
-        cache_context = CacheContext(cache_mode, self.spark, node.cache)
+        if self.merge:
+            return False
 
-        if cache_context.disabled:
-            return None
+        if self.exists_cache_to_load is not None:
+            return self.exists_cache_to_load
 
-        return cache_context
+        return self.exists()
 
+    @property
+    def default(self):
+        return self.cache_mode == CacheMode.DEFAULT
     @property
     def disabled(self):
         return self.cache_mode == CacheMode.DISABLE
@@ -37,11 +46,16 @@ class CacheContext:
         return self.cache.read(self.spark)
 
     def write(self, df):
-        if self.disabled:
-            raise RuntimeError("Cache disabled, cannot write")
-        return self.cache.write(self.spark, df)
+        if not self.disabled and self.default or self.merge:
+            return self.cache.write(self.spark, df)
+
+    @property
+    def exists_cache_to_load(self):
+        return self._exists_cache_to_load
 
     def exists(self):
         if self.disabled:
             raise RuntimeError("Cache disabled, cannot check if exists")
-        return self.cache.exists(self.spark)
+
+        self._exists_cache_to_load = self.cache.exists(self.spark)
+        return self._exists_cache_to_load

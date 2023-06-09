@@ -8,6 +8,7 @@ from flypipe.catalog.group import Group
 from flypipe.catalog.node import CatalogNode
 from flypipe.config import get_config
 from flypipe.node_function import NodeFunction
+from flypipe.run_context import RunContext
 from flypipe.template import get_template
 
 logger = logging.getLogger(__name__)
@@ -33,15 +34,14 @@ class Catalog:
                       cache=None,
                       add_node_to_graph=False):
 
-        inputs = inputs or {}
-        provided_inputs = {node.key: df for node, df in inputs.items()}
-        cache_context = CacheContext(cache_mode={} if cache is None else cache, spark=self.spark)
-        node._create_graph(
-            list(provided_inputs.keys()),
-            pandas_on_spark_use_pandas,
-            parameters,
-            cache_context=cache_context
-        )
+        run_context = RunContext(spark=self.spark,
+                                 inputs=inputs,
+                                 pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+                                 parameters=parameters,
+                                 cache=cache)
+
+        node._create_graph(run_context)
+
         end_node_name = node.node_graph.get_end_node_name(node.node_graph.graph)
         end_node = node.node_graph.get_transformation(end_node_name)
         self._map_node(end_node, node_graph=node.node_graph)
@@ -52,10 +52,6 @@ class Catalog:
 
         if isinstance(node, NodeFunction):
             raise RuntimeError(f"Node function '{node.function.__name__}' can not be registered to graph")
-
-        elif node.cache and isinstance(node.cache, Cache):
-            raise RuntimeError(f"Only nodes with cache context can be registered. Node '{node.function.__name__}' has "
-                               f"cache of type Cache")
 
         else:
 

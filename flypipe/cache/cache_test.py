@@ -6,7 +6,7 @@ from pandas.testing import assert_frame_equal
 
 from flypipe import node_function
 from flypipe.cache import CacheMode
-from flypipe.cache.generic_cache import GenericCache
+from flypipe.cache.cache import Cache
 from flypipe.node import node
 from flypipe.node_function import NodeFunction
 from flypipe.node_graph import RunStatus
@@ -31,27 +31,64 @@ def clean_up():
     if os.path.exists("test.csv"):
         os.remove("test.csv")
 
+class GenericCache(Cache):
+    def read(self, spark):
+        return pd.read_csv("test.csv")
 
-def read():
-    return pd.read_csv("test.csv")
+    def write(self, spark, df):
+        df.to_csv("test.csv", index=False)
 
-
-def write(df):
-    df.to_csv("test.csv", index=False)
-
-
-def exists():
-    return os.path.exists("test.csv")
-
+    def exists(self, spark):
+        return os.path.exists("test.csv")
 
 @pytest.fixture(scope="function")
 def cache():  # pylint: disable=duplicate-code
+    return GenericCache()
 
-    return GenericCache(read=read, write=write, exists=exists)
+
+class TestCache:
+    """Unit tests on the Cache class"""
+
+    def test_cache(self):
+        class MyCache(Cache):
+            def read(self):
+                pass
+
+            def write(self):
+                pass
+
+            def exists(self):
+                pass
+
+        MyCache()
+
+    def test_cache_inheritance(self):
+        class MyCache(Cache):
+            pass
 
 
-class TestGenericCache:
-    """Unit tests on the Node class"""
+        with pytest.raises(TypeError):
+            MyCache()
+    def test_cache_non_spark_trivial(self):
+
+        class GenericCache2(GenericCache):
+            def write(self, spark, df):
+                df = pd.DataFrame(data={"col1": [1]})
+                df.to_csv("test.csv", index=False)
+
+        cache = GenericCache2()
+
+        @node(
+            type="pandas",
+            cache=cache,
+        )
+        def t1():
+            return pd.DataFrame(data={"col1": [1], "col2": [2]})
+
+        df = t1.run()
+        assert sorted(list(df.columns)) == ["col1", "col2"]
+        df = t1.run()
+        assert sorted(list(df.columns)) == ["col1"]
 
     def test_cache_non_spark(self, cache, mocker):
         @node(
@@ -78,24 +115,26 @@ class TestGenericCache:
         assert spy_exists.call_count == 1
 
     def test_cache_spark_provided(self, spark, mocker):
-        def read(spark):
-            return (
-                spark.read.option("inferSchema", True)
-                .option("header", True)
-                .csv("test.csv")
-            )
 
-        # pylint: disable=unused-argument
-        def write(spark, df):
-            df.toPandas().to_csv("test.csv", index=False)
+        class GenericCache2(GenericCache):
+            def read(self, spark):
+                return (
+                    spark.read.option("inferSchema", True)
+                    .option("header", True)
+                    .csv("test.csv")
+                )
 
-        def exists(spark):
-            if os.path.exists("test.csv"):
-                return spark.read.option("header", True).csv("test.csv").count() > 0
+            def write(self, spark, df):
+                df.toPandas().to_csv("test.csv", index=False)
 
-            return False
+            def exists(self, spark):
+                if os.path.exists("test.csv"):
+                    return spark.read.option("header", True).csv("test.csv").count() > 0
 
-        cache = GenericCache(read=read, write=write, exists=exists, spark_context=True)
+                return False
+
+        cache = GenericCache2()
+
 
         @node(type="pyspark", cache=cache, spark_context=True)
         def t1(spark):
@@ -309,10 +348,10 @@ class TestGenericCache:
         spy_reader.reset_mock()
         spy_exists.reset_mock()
 
-        assert not exists()
+        assert not os.path.exists("test.csv")
         output_df = t.run(cache={t: CacheMode.DISABLE})
         assert_frame_equal(t_df, output_df)
-        assert not exists()
+        assert not os.path.exists("test.csv")
         assert spy_writter.call_count == 0
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 0
@@ -322,10 +361,10 @@ class TestGenericCache:
         spy_reader.reset_mock()
         spy_exists.reset_mock()
 
-        assert not exists()
+        assert not os.path.exists("test.csv")
         output_df = t.run()
         assert_frame_equal(t_df, output_df)
-        assert exists()
+        assert os.path.exists("test.csv")
 
         assert spy_writter.call_count == 1
         assert spy_reader.call_count == 0
@@ -336,10 +375,10 @@ class TestGenericCache:
         spy_reader.reset_mock()
         spy_exists.reset_mock()
 
-        assert exists()
+        assert os.path.exists("test.csv")
         output_df = t.run()
         assert_frame_equal(t_df, output_df)
-        assert exists()
+        assert os.path.exists("test.csv")
 
         assert spy_writter.call_count == 0
         assert spy_reader.call_count == 1
@@ -350,10 +389,10 @@ class TestGenericCache:
         spy_reader.reset_mock()
         spy_exists.reset_mock()
 
-        assert exists()
+        assert os.path.exists("test.csv")
         output_df = t.run(cache={t: CacheMode.DISABLE})
         assert_frame_equal(t_df, output_df)
-        assert exists()
+        assert os.path.exists("test.csv")
 
         assert spy_writter.call_count == 0
         assert spy_reader.call_count == 0
@@ -361,7 +400,7 @@ class TestGenericCache:
 
     def test_cache_merge(self, mocker):
 
-        class MyCache:
+        class MyCache(Cache):
             def read(self, spark):
                 return pd.read_csv("test.csv")
 
@@ -388,14 +427,17 @@ class TestGenericCache:
         spy_reader = mocker.spy(t1.cache, "read")
         spy_exists = mocker.spy(t1.cache, "exists")
         t1.run()
+
         assert spy_writter.call_count == 1
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 2
+
 
         spy_writter.reset_mock()
         spy_reader.reset_mock()
         spy_exists.reset_mock()
         t1.run(cache={t1: CacheMode.MERGE})
+
         assert spy_writter.call_count == 1
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 1
@@ -429,7 +471,7 @@ class TestGenericCache:
         assert spy_exists.call_count == 1
 
         assert os.path.exists("test.csv")
-        df = read()
+        df = pd.read_csv("test.csv")
         assert sorted(list(df.columns)) == ["col1", "col2"]
 
     def test_node_function_cache(self, cache):
