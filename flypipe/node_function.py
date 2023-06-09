@@ -51,7 +51,7 @@ class NodeFunction(Node):
                         f"node function parameter node_dependencies"
                     )
 
-        return list(nodes)
+        return [node.copy() for node in list(nodes)]
 
     def copy(self):
         node_function = NodeFunction(

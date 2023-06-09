@@ -8,6 +8,7 @@ from flypipe import node_function
 from flypipe.cache import CacheMode
 from flypipe.cache.generic_cache import GenericCache
 from flypipe.node import node
+from flypipe.node_function import NodeFunction
 from flypipe.node_graph import RunStatus
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import Integer
@@ -431,3 +432,46 @@ class TestGenericCache:
         df = read()
         assert sorted(list(df.columns)) == ["col1", "col2"]
 
+    def test_node_function_cache(self, cache):
+        """
+        t0 Function (t0 node) --> t1 (node) --> t2 Function (t2)
+        Assert input node t0 of t1 is still a NodeFunction after running t2
+        """
+
+        from flypipe import node, node_function
+
+        @node_function()
+        def t0():
+            @node(
+                type="pandas",
+                cache=cache
+            )
+            def t0():
+                return pd.DataFrame(data={"c1": [1]})
+
+            return t0
+
+        @node(
+            type="pandas",
+            dependencies=[t0.alias("df")],
+        )
+        def t1(df):
+            return df
+
+        @node_function(
+            node_dependencies=[t1]
+        )
+        def t2():
+            @node(
+                type="pandas",
+                dependencies=[t1.alias("df")],
+            )
+            def t2(df):
+                return df
+
+            return t2
+
+
+        t2.run()
+        assert isinstance(t1.input_nodes[0].node, NodeFunction)
+        t2.run()
