@@ -295,10 +295,9 @@ class Node:  # pylint: disable=too-many-instance-attributes
             )
 
             # If cache exists, and the transformation has run, then save its cache
-            if runnable_node["transformation"].cache:
-                runnable_node["transformation"].cache.write(
-                    result.as_type(runnable_node["transformation"].dataframe_type).get_df()
-                )
+            runnable_node["run_context"].cache.write(
+                result.as_type(runnable_node["transformation"].dataframe_type).get_df()
+            )
 
             return node["transformation"].key, result
 

@@ -383,6 +383,9 @@ class NodeGraph:
                     if self.graph.nodes[ancestor_name]["status"] != RunStatus.ACTIVE:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
+        for n in self.graph.nodes:
+            if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN, RunStatus.CACHED]:
+                raise RuntimeError(f"Run status for node {n} is {RunStatus.UNKNOWN}")
 
     def get_dependency_map(self):
         dependencies = {}
