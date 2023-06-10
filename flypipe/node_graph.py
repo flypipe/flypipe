@@ -62,7 +62,7 @@ class NodeGraph:
             # so we have to expand node functions and later add cache context to node run context
             node_run_context = NodeRunContext(
                 parameters=run_context.parameters.get(current_transformation.key),
-                provided_input=run_context.provided_inputs.get(current_transformation.key),
+                provided_input=run_context.provided_inputs.get(current_transformation),
             )
             graph = self.add_node(
                 graph,
@@ -281,6 +281,7 @@ class NodeGraph:
         end_node = expanded_graph.nodes[end_node_name]
         end_node["transformation"].key = node_function.key
         end_node["transformation"].name = node_function.function.__name__
+        end_node["node_run_context"] = node_run_context
         return nx.relabel_nodes(expanded_graph, {end_node_name: node_function.key})
 
     def _get_successor_nodes(self, graph, node_key):

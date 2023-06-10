@@ -248,8 +248,8 @@ class Node:  # pylint: disable=too-many-instance-attributes
         # re-create graph again with nodes caches
         run_context.provided_inputs = self.node_graph.load_caches()
         outputs = {
-            key: NodeResult(spark, df, schema=None)
-            for key, df in run_context.provided_inputs.items()
+            node.key: NodeResult(spark, df, schema=None)
+            for node, df in run_context.provided_inputs.items()
         }
 
         execution_graph = self.node_graph.get_execution_graph(run_context)

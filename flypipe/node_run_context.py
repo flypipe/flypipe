@@ -1,3 +1,4 @@
+from flypipe.cache import CacheMode
 from flypipe.cache.cache import Cache
 from flypipe.cache.cache_context import CacheContext
 

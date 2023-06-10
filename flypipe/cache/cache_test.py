@@ -275,6 +275,31 @@ class TestCache:
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 0
 
+    def test_cache_non_spark_provided_input_node_function(self, cache, mocker):
+        """
+        If input is provided for a node function, it does not uses caches at all.
+        """
+
+        @node_function()
+        def t1():
+            @node(
+                type="pandas",
+                cache=cache,
+            )
+            def t1():
+                return pd.DataFrame(data={"col1": [1], "col2": [2]})
+
+            return t1
+
+
+        spy_writter = mocker.spy(cache, "write")
+        spy_reader = mocker.spy(cache, "read")
+        spy_exists = mocker.spy(cache, "exists")
+        t1.run(inputs={t1: pd.DataFrame(data={"col1": [1]})})
+        assert spy_writter.call_count == 0
+        assert spy_reader.call_count == 0
+        assert spy_exists.call_count == 0
+
     def test_cache_node_function(self, cache, mocker):
         @node_function()
         def t1f():

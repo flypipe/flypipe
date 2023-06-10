@@ -46,7 +46,7 @@ class RunContext:  # pylint: disable=too-few-public-methods
 
     @property
     def provided_inputs(self):
-        return {node.key: df for node, df in self._provided_inputs.items()}
+        return self._provided_inputs
 
     @provided_inputs.setter
     def provided_inputs(self, provided_inputs: dict):
@@ -54,7 +54,7 @@ class RunContext:  # pylint: disable=too-few-public-methods
 
     @property
     def skipped_node_keys(self):
-        return list(self.provided_inputs.keys())
+        return [node.key for node in self._provided_inputs.keys()]
 
     @property
     def pandas_on_spark_use_pandas(self):
