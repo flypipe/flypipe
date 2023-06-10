@@ -46,7 +46,7 @@ class CacheContext:
         return self.cache.read(self.spark)
 
     def write(self, df):
-        if not self.disabled and self.default or self.merge:
+        if not self.disabled and (self.default or self.merge):
             return self.cache.write(self.spark, df)
 
     @property

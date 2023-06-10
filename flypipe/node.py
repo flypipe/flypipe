@@ -246,7 +246,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
                                  inputs=inputs,
                                  pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
                                  parameters=parameters,
-                                 cache=cache)
+                                 cache_modes=cache)
 
         self._create_graph(run_context)
 

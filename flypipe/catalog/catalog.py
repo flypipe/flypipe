@@ -38,7 +38,7 @@ class Catalog:
                                  inputs=inputs,
                                  pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
                                  parameters=parameters,
-                                 cache=cache)
+                                 cache_modes=cache)
 
         node._create_graph(run_context)
 

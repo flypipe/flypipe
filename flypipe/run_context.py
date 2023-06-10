@@ -17,14 +17,14 @@ class RunContext:  # pylint: disable=too-few-public-methods
                  inputs: dict = None,
                  pandas_on_spark_use_pandas: bool = False,
                  parameters: dict = None,
-                 cache: dict = None):
+                 cache_modes: dict = None):
 
         self._spark = spark
         self._parallel = get_config("default_run_mode") == RunMode.PARALLEL.value if parallel is None else parallel
         self._provided_inputs = inputs or {}
         self._pandas_on_spark_use_pandas = False if pandas_on_spark_use_pandas is None else pandas_on_spark_use_pandas
         self._parameters = parameters or {}
-        self._cache = cache or {}
+        self._cache_modes = cache_modes or {}
 
     def copy(self):
         return RunContext(
@@ -33,7 +33,7 @@ class RunContext:  # pylint: disable=too-few-public-methods
             inputs=self._provided_inputs,
             pandas_on_spark_use_pandas=self._pandas_on_spark_use_pandas,
             parameters=self._parameters,
-            cache=self._cache
+            cache_modes=self._cache_modes
         )
 
     @property
@@ -61,8 +61,8 @@ class RunContext:  # pylint: disable=too-few-public-methods
         return self._pandas_on_spark_use_pandas
 
     @property
-    def cache(self):
-        return self._cache
+    def cache_modes(self):
+        return self._cache_modes
 
     @property
     def parameters(self) -> dict:
@@ -71,7 +71,3 @@ class RunContext:  # pylint: disable=too-few-public-methods
     @parameters.setter
     def parameters(self, parameters: dict):
         self._parameters = parameters
-
-    # @property
-    # def cache_context(self):
-    #     return CacheContext(cache_mode=self._cache, spark=self._spark)

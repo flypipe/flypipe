@@ -132,7 +132,7 @@ class NodeGraph:
         for node_key in graph.nodes:
             node = graph.nodes[node_key]
             node["run_context"].cache = CacheContext(spark=run_context.spark,
-                                                     cache_mode=run_context.cache.get(node["transformation"]),
+                                                     cache_mode=run_context.cache_modes.get(node["transformation"]),
                                                      cache=node["transformation"].cache)
 
         return graph
