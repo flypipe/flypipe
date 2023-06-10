@@ -52,6 +52,8 @@ class CatalogNode:
             "sourceCode": self._get_source_code(),
             "isActive": self._get_is_active(),
             "hasCache": self.node.cache is not None,
+            "cacheIsDisabled": node_run_context.cache_context.disabled or node_run_context.exists_provided_input,
+            "hasProvidedInput": node_run_context.exists_provided_input,
             "group": self.node.group,
         }
 

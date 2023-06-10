@@ -126,6 +126,8 @@ class TestCatalog:
                 "isActive": True,
                 "group": "Training Thing",
                 "hasCache": False,
+                "cacheIsDisabled": True,
+                "hasProvidedInput": False,
             },
             {
                 "description": "Description for t1",
@@ -152,6 +154,8 @@ class TestCatalog:
                 "isActive": True,
                 "group": None,
                 "hasCache": False,
+                "cacheIsDisabled": True,
+                "hasProvidedInput": False,
             },
             {
                 "description": "",
@@ -173,6 +177,8 @@ class TestCatalog:
                 "isActive": True,
                 "group": "Training Thing",
                 "hasCache": False,
+                "cacheIsDisabled": True,
+                "hasProvidedInput": False,
             },
         ]
 
