@@ -128,25 +128,22 @@ class NodeGraph:
 
         for node_key in graph.nodes:
             node = graph.nodes[node_key]
-            node["node_run_context"].cache = CacheContext(spark=run_context.spark,
-                                                     cache_mode=run_context.cache_modes.get(node["transformation"]),
-                                                     cache=node["transformation"].cache)
+            node["node_run_context"].cache_context = CacheContext(spark=run_context.spark,
+                                                                  cache_mode=run_context.cache_modes.get(
+                                                                      node["transformation"]),
+                                                                  cache=node["transformation"].cache)
 
         return graph
 
     def load_caches(self):
-
-        provided_inputs = {}
+        caches = {}
         for node_name in self.graph.nodes:
             node = self.get_node(node_name)
 
-            if node["node_run_context"].exists_provided_input:
-                provided_inputs[node['transformation']] = node["node_run_context"].provided_input
+            if node["node_run_context"].cache_context.exists_cache_to_load:
+                caches[node['transformation']] = node["node_run_context"].cache_context.read()
 
-            elif node["node_run_context"].cache.exists_cache_to_load:
-                node["node_run_context"].provided_input = node["node_run_context"].cache.read()
-                provided_inputs[node['transformation']] = node["node_run_context"].provided_input
-        return provided_inputs
+        return caches
 
     def _compute_edge_selected_columns(self, graph):
         for node_key in graph.nodes:
@@ -342,7 +339,7 @@ class NodeGraph:
         if node["node_run_context"].exists_provided_input:
             run_status = RunStatus.SKIP
 
-        elif node["node_run_context"].cache.runtime_load:
+        elif node["node_run_context"].cache_context.runtime_load:
             run_status = RunStatus.CACHED
 
         frontier = [(node_name, run_status)]
@@ -359,7 +356,7 @@ class NodeGraph:
                     if ancestor_node_run_context.exists_provided_input:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
-                    elif ancestor_node_run_context.cache.runtime_load:
+                    elif ancestor_node_run_context.cache_context.runtime_load:
                         frontier.append((ancestor_name, RunStatus.CACHED))
 
                     else:
