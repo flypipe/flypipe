@@ -25,6 +25,10 @@ class NodeRunContext:  # pylint: disable=too-few-public-methods
     def provided_input(self):
         return self._provided_input
 
+    @provided_input.setter
+    def provided_input(self, provided_input):
+        self._provided_input = provided_input
+
     @property
     def cache_context(self):
         return self._cache_context

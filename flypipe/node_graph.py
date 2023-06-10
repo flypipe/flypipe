@@ -281,7 +281,7 @@ class NodeGraph:
         end_node = expanded_graph.nodes[end_node_name]
         end_node["transformation"].key = node_function.key
         end_node["transformation"].name = node_function.function.__name__
-        end_node["node_run_context"] = node_run_context
+        end_node["node_run_context"].provided_input = node_run_context.provided_input
         return nx.relabel_nodes(expanded_graph, {end_node_name: node_function.key})
 
     def _get_successor_nodes(self, graph, node_key):
