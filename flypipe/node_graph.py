@@ -140,7 +140,8 @@ class NodeGraph:
         for node_name in self.graph.nodes:
             node = self.get_node(node_name)
 
-            if node["node_run_context"].cache_context.exists_cache_to_load:
+            if not node["node_run_context"].exists_provided_input and \
+                    node["node_run_context"].cache_context.exists_cache_to_load:
                 caches[node['transformation']] = node["node_run_context"].cache_context.read()
 
         return caches
@@ -339,7 +340,7 @@ class NodeGraph:
         if node["node_run_context"].exists_provided_input:
             run_status = RunStatus.SKIP
 
-        elif node["node_run_context"].cache_context.runtime_load:
+        elif node["node_run_context"].cache_context.exists_cache_to_load:
             run_status = RunStatus.CACHED
 
         frontier = [(node_name, run_status)]
@@ -356,7 +357,7 @@ class NodeGraph:
                     if ancestor_node_run_context.exists_provided_input:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
-                    elif ancestor_node_run_context.cache_context.runtime_load:
+                    elif ancestor_node_run_context.cache_context.exists_cache_to_load:
                         frontier.append((ancestor_name, RunStatus.CACHED))
 
                     else:

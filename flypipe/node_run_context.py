@@ -14,7 +14,7 @@ class NodeRunContext:  # pylint: disable=too-few-public-methods
     def __init__(self, parameters=None, cache_context: CacheContext = None, provided_input=None):
         self._parameters = parameters or {}
         self._provided_input = provided_input
-        self._cache_context = CacheContext() if self.exists_provided_input else (cache_context or CacheContext())
+        self._cache_context = cache_context or CacheContext()
 
     @property
     def exists_provided_input(self):
@@ -30,10 +30,7 @@ class NodeRunContext:  # pylint: disable=too-few-public-methods
 
     @cache_context.setter
     def cache_context(self, cache_context: CacheContext):
-        if self.exists_provided_input:
-            self._cache_context = CacheContext()
-        else:
-            self._cache_context = cache_context
+        self._cache_context = cache_context
 
     @property
     def parameters(self) -> dict:
