@@ -31,11 +31,10 @@ class NodeGraph:
 
     def __init__(  # pylint: disable=too-many-arguments
             self,
-            transformation: Node = None,
-            run_context: RunContext = None,
+            transformation: Node,
+            run_context: RunContext,
             graph: nx.DiGraph = None,
     ):
-        run_context = run_context or RunContext()
 
         if graph:
             self.graph = graph
@@ -43,7 +42,7 @@ class NodeGraph:
             self.nodes = None
             self.node_output_columns = None
             self.edges = None
-            self.graph = self._build_graph(transformation, run_context )
+            self.graph = self._build_graph(transformation, run_context)
             self.calculate_graph_run_status()
 
     def _build_graph(
@@ -69,7 +68,7 @@ class NodeGraph:
                 graph,
                 current_transformation.key,
                 transformation=current_transformation,
-                run_context=node_run_context,
+                node_run_context=node_run_context,
             )
 
             if isinstance(current_transformation, NodeFunction):
@@ -109,17 +108,15 @@ class NodeGraph:
             transformation: Node,
             run_status: RunStatus = None,
             output_columns: list = None,
-            run_context: NodeRunContext = None,
+            node_run_context: NodeRunContext = None,
     ) -> DiGraph:
-        run_status = run_status or RunStatus.UNKNOWN
-        run_context = run_context or NodeRunContext()
 
         graph.add_node(
             node_name,
             transformation=transformation,
-            status=run_status,
+            status=run_status or RunStatus.UNKNOWN,
             output_columns=output_columns,
-            run_context=run_context,
+            node_run_context=node_run_context or NodeRunContext(),
         )
 
         return graph
@@ -131,7 +128,7 @@ class NodeGraph:
 
         for node_key in graph.nodes:
             node = graph.nodes[node_key]
-            node["run_context"].cache = CacheContext(spark=run_context.spark,
+            node["node_run_context"].cache = CacheContext(spark=run_context.spark,
                                                      cache_mode=run_context.cache_modes.get(node["transformation"]),
                                                      cache=node["transformation"].cache)
 
@@ -143,14 +140,13 @@ class NodeGraph:
         for node_name in self.graph.nodes:
             node = self.get_node(node_name)
 
-            if node["run_context"].exists_provided_input:
-                provided_inputs[node['transformation']] = node["run_context"].provided_input
+            if node["node_run_context"].exists_provided_input:
+                provided_inputs[node['transformation']] = node["node_run_context"].provided_input
 
-            elif node["run_context"].cache.exists_cache_to_load:
-                node["run_context"].provided_input = node["run_context"].cache.read()
-                provided_inputs[node['transformation']] = node["run_context"].provided_input
+            elif node["node_run_context"].cache.exists_cache_to_load:
+                node["node_run_context"].provided_input = node["node_run_context"].cache.read()
+                provided_inputs[node['transformation']] = node["node_run_context"].provided_input
         return provided_inputs
-
 
     def _compute_edge_selected_columns(self, graph):
         for node_key in graph.nodes:
@@ -199,7 +195,7 @@ class NodeGraph:
                     expanded_graph = self._expand_node_function(
                         node_function["transformation"],
                         node_function["output_columns"],
-                        node_function["run_context"],
+                        node_function["node_run_context"],
                     )
 
                     # The edges created from the node function node_dependencies are now irrelevant and should be
@@ -221,8 +217,8 @@ class NodeGraph:
                         ]:
                             if expanded_node_key in graph.nodes:
                                 expanded_graph.nodes[expanded_node_key][
-                                    "run_context"
-                                ] = graph.nodes[expanded_node_key]["run_context"]
+                                    "node_run_context"
+                                ] = graph.nodes[expanded_node_key]["node_run_context"]
 
                     graph = nx.compose(graph, expanded_graph)
 
@@ -256,7 +252,7 @@ class NodeGraph:
             self,
             node_function: NodeFunction,
             requested_columns: list,
-            run_context: NodeRunContext,
+            node_run_context: NodeRunContext,
     ):
         """
         Expand a node function in the graph and replace it with the nodes it returns. There are a few additional steps:
@@ -264,7 +260,7 @@ class NodeGraph:
         """
 
         nodes = node_function.expand(
-            requested_columns=requested_columns, parameters=run_context.parameters
+            requested_columns=requested_columns, parameters=node_run_context.parameters
         )
 
         expanded_graph = nx.DiGraph()
@@ -343,10 +339,10 @@ class NodeGraph:
 
         run_status = RunStatus.ACTIVE
 
-        if node["run_context"].exists_provided_input:
+        if node["node_run_context"].exists_provided_input:
             run_status = RunStatus.SKIP
 
-        elif node["run_context"].cache.runtime_load:
+        elif node["node_run_context"].cache.runtime_load:
             run_status = RunStatus.CACHED
 
         frontier = [(node_name, run_status)]
@@ -358,7 +354,7 @@ class NodeGraph:
                 current_node["status"] = RunStatus.ACTIVE
 
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    ancestor_node_run_context = self.graph.nodes[ancestor_name]["run_context"]
+                    ancestor_node_run_context = self.graph.nodes[ancestor_name]["node_run_context"]
 
                     if ancestor_node_run_context.exists_provided_input:
                         frontier.append((ancestor_name, RunStatus.SKIP))

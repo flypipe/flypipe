@@ -187,10 +187,8 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
     def _create_graph(
             self,
-            run_context: RunContext = None,
+            run_context: RunContext,
     ):
-        run_context = run_context or RunContext()
-
         # This import is here to avoid a circular import issue
         # pylint: disable-next=import-outside-toplevel,cyclic-import
         from flypipe.node_graph import NodeGraph
@@ -285,7 +283,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
                 node["transformation"].process_transformation(
                     run_context.spark,
                     node["output_columns"],
-                    node["run_context"],
+                    node["node_run_context"],
                     **dependency_values,
                 ),
                 schema=self._get_consolidated_output_schema(
@@ -295,7 +293,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
             )
 
             # If cache exists, and the transformation has run, then save its cache
-            runnable_node["run_context"].cache.write(
+            runnable_node["node_run_context"].cache.write(
                 result.as_type(runnable_node["transformation"].dataframe_type).get_df()
             )
 
@@ -360,7 +358,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
                     runnable_node["transformation"].process_transformation(
                         run_context.spark,
                         runnable_node["output_columns"],
-                        runnable_node["run_context"],
+                        runnable_node["node_run_context"],
                         **dependency_values,
                     ),
                     schema=self._get_consolidated_output_schema(
@@ -370,7 +368,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
                 )
 
                 # If cache exists, and the transformation has run, then save its cache
-                runnable_node["run_context"].cache.write(
+                runnable_node["node_run_context"].cache.write(
                     result.as_type(runnable_node["transformation"].dataframe_type).get_df()
                 )
 
@@ -400,7 +398,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         return schema
 
     def process_transformation(
-            self, spark, requested_columns: list, run_context: NodeRunContext, **inputs
+            self, spark, requested_columns: list, node_run_context: NodeRunContext, **inputs
     ):
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in
         # self.dependencies_selected_columns
@@ -411,8 +409,8 @@ class Node:  # pylint: disable=too-many-instance-attributes
         if self.requested_columns:
             parameters["requested_columns"] = requested_columns
 
-        if run_context.parameters:
-            parameters = {**parameters, **run_context.parameters}
+        if node_run_context.parameters:
+            parameters = {**parameters, **node_run_context.parameters}
 
         result = self.function(**parameters)
         if self.type == "spark_sql":

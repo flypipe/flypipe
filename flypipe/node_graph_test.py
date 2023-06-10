@@ -36,7 +36,7 @@ class TestNodeGraph:
         def t4():
             return
 
-        graph = NodeGraph(t4)
+        graph = NodeGraph(t4, run_context=RunContext())
         assert set(graph.get_edges()) == {
             (t1.key, t2.key),
             (t1.key, t3.key),
@@ -148,7 +148,7 @@ class TestNodeGraph:
         def t5():
             return
 
-        graph = NodeGraph(t5)
+        graph = NodeGraph(t5, run_context=RunContext())
         assert graph.get_nodes_depth() == {
             1: [t2.key, t1.key],
             2: [t3.key],

@@ -7,6 +7,7 @@ import pytest
 from flypipe import node, node_function
 from flypipe.catalog import Catalog
 from flypipe.config import config_context
+from flypipe.run_context import RunContext
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String, Integer
 
@@ -214,7 +215,7 @@ class TestCatalog:
         def t4(t3):
             return t3
 
-        t4._create_graph()  # pylint: disable=protected-access
+        t4._create_graph(run_context=RunContext())  # pylint: disable=protected-access
         catalog = Catalog()
 
         end_node_name = t4.node_graph.get_end_node_name(t4.node_graph.graph)
