@@ -35,7 +35,7 @@ class Catalog:
                       add_node_to_graph=False):
 
         run_context = RunContext(spark=self.spark,
-                                 inputs=inputs,
+                                 provided_inputs=inputs,
                                  pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
                                  parameters=parameters,
                                  cache_modes=cache)

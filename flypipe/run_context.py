@@ -14,14 +14,14 @@ class RunContext:  # pylint: disable=too-few-public-methods
     def __init__(self,
                  spark: SparkSession = None,
                  parallel: bool = None,
-                 inputs: dict = None,
+                 provided_inputs: dict = None,
                  pandas_on_spark_use_pandas: bool = False,
                  parameters: dict = None,
                  cache_modes: dict = None):
 
         self._spark = spark
         self._parallel = get_config("default_run_mode") == RunMode.PARALLEL.value if parallel is None else parallel
-        self._provided_inputs = inputs or {}
+        self._provided_inputs = provided_inputs or {}
         self._pandas_on_spark_use_pandas = False if pandas_on_spark_use_pandas is None else pandas_on_spark_use_pandas
         self._parameters = parameters or {}
         self._cache_modes = cache_modes or {}
@@ -30,7 +30,7 @@ class RunContext:  # pylint: disable=too-few-public-methods
         return RunContext(
             spark=self._spark,
             parallel=self._parallel,
-            inputs=self._provided_inputs,
+            provided_inputs=self._provided_inputs,
             pandas_on_spark_use_pandas=self._pandas_on_spark_use_pandas,
             parameters=self._parameters,
             cache_modes=self._cache_modes

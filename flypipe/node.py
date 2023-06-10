@@ -241,7 +241,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
         run_context = RunContext(spark=spark,
                                  parallel=parallel,
-                                 inputs=inputs,
+                                 provided_inputs=inputs,
                                  pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
                                  parameters=parameters,
                                  cache_modes=cache)

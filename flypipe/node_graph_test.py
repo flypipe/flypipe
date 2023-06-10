@@ -75,7 +75,7 @@ class TestNodeGraph:
         def t6():
             return
 
-        graph = NodeGraph(t6, RunContext(inputs={t4: pd.DataFrame()}))
+        graph = NodeGraph(t6, RunContext(provided_inputs={t4: pd.DataFrame()}))
 
         assert graph.get_node(t1.key)["status"] == RunStatus.SKIP
         assert graph.get_node(t2.key)["status"] == RunStatus.ACTIVE
@@ -112,7 +112,7 @@ class TestNodeGraph:
         def t6():
             return
 
-        graph = NodeGraph(t6, RunContext(inputs={t4: pd.DataFrame()}))
+        graph = NodeGraph(t6, RunContext(provided_inputs={t4: pd.DataFrame()}))
 
         assert graph.get_node(t1.key)["status"] == RunStatus.SKIP
         assert graph.get_node(t2.key)["status"] == RunStatus.ACTIVE
