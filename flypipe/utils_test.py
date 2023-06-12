@@ -8,6 +8,9 @@ from flypipe.exceptions import (
 )
 from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
 
+# noinspection PyUnresolvedReferences
+from flypipe.tests.conftest import spark
+
 
 class TestUtils:
     """Tests on Utils"""

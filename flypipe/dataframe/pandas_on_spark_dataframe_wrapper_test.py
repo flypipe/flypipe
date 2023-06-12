@@ -16,6 +16,8 @@ from flypipe.schema.types import (
     Boolean,
 )
 
+# noinspection PyUnresolvedReferences
+from flypipe.tests.conftest import spark
 
 class TestPandasOnSparkDataFrameWrapper:
     """Tests for PandasOnSpark"""
