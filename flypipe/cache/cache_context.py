@@ -37,15 +37,24 @@ class CacheContext:
     def read(self):
         if self.disabled:
             raise RuntimeError("Cache disabled, cannot read")
-        return self.cache.read(self.spark)
+
+        if self.spark:
+            return self.cache.read(self.spark)
+        return self.cache.read()
 
     def write(self, df):
         if not self.disabled or self.merge:
-            return self.cache.write(self.spark, df)
+
+            if self.spark:
+                return self.cache.write(self.spark, df)
+            return self.cache.write(df)
 
     def exists(self):
         if self.disabled:
             raise RuntimeError("Cache disabled, cannot check if exists")
 
-        self._exists_cache_to_load = self.cache.exists(self.spark)
+        if self.spark:
+            self._exists_cache_to_load = self.cache.exists(self.spark)
+        else:
+            self._exists_cache_to_load = self.cache.exists()
         return self._exists_cache_to_load
