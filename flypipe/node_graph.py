@@ -139,11 +139,15 @@ class NodeGraph:
         caches = {}
         for node_name in self.graph.nodes:
             node = self.get_node(node_name)
-
             if not node["node_run_context"].exists_provided_input and \
-                    node["node_run_context"].cache_context.exists_cache_to_load:
+                    node["node_run_context"].cache_context.exists_cache_to_load and \
+                    node["status"] == RunStatus.CACHED:
                 caches[node['transformation']] = node["node_run_context"].cache_context.read()
+                node["status"] = RunStatus.SKIP
 
+        for n in self.graph.nodes:
+            if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN, RunStatus.CACHED]:
+                raise RuntimeError(f'Invalid run status for node {n} ({self.graph.nodes[n]["status"]})')
         return caches
 
     def _compute_edge_selected_columns(self, graph):
@@ -355,6 +359,8 @@ class NodeGraph:
                 for ancestor_name in self.graph.predecessors(current_node_name):
                     ancestor_node_run_context = self.graph.nodes[ancestor_name]["node_run_context"]
 
+                    # TODO: no need to check ancestor node if all successors of ancestor is cached or skip (
+                    #  performance improvement)
                     if ancestor_node_run_context.exists_provided_input:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
@@ -365,7 +371,7 @@ class NodeGraph:
                         frontier.append((ancestor_name, RunStatus.ACTIVE))
 
             elif descendent_status == RunStatus.CACHED:
-                current_node["status"] = RunStatus.SKIP
+                current_node["status"] = RunStatus.CACHED
 
                 for ancestor_name in self.graph.predecessors(current_node_name):
                     if self.graph.nodes[ancestor_name]["status"] != RunStatus.ACTIVE:
@@ -379,7 +385,7 @@ class NodeGraph:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
         for n in self.graph.nodes:
-            if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN, RunStatus.CACHED]:
+            if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN]:
                 raise RuntimeError(f"Run status for node {n} is {RunStatus.UNKNOWN}")
 
     def get_dependency_map(self):

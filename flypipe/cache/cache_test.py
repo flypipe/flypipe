@@ -540,3 +540,42 @@ class TestCache:
         t2.run()
         assert isinstance(t1.input_nodes[0].node, NodeFunction)
         t2.run()
+
+    def test_cache_read_node_dependencies(self, cache, mocker):
+        """
+
+        t1 (cached) -> t2 (cached)
+
+        running t2, we expect t1 not to read cache, only t2 will read
+
+        """
+        @node(
+            type="pandas",
+            cache=cache,
+        )
+        def t1():
+            return pd.DataFrame(data={"col1": [1], "col2": [2]})
+
+        @node(
+            type="pandas",
+            cache=cache,
+            dependencies=[t1]
+        )
+        def t2(t1):
+            return t1
+
+        spy_writter = mocker.spy(cache, "write")
+        spy_reader = mocker.spy(cache, "read")
+        spy_exists = mocker.spy(cache, "exists")
+        t1.run()
+        assert spy_writter.call_count == 1
+        assert spy_reader.call_count == 0
+        assert spy_exists.call_count == 1
+
+        spy_writter.reset_mock()
+        spy_reader.reset_mock()
+        spy_exists.reset_mock()
+        t2.run()
+        assert spy_writter.call_count == 0
+        assert spy_reader.call_count == 1
+        assert spy_exists.call_count == 2
