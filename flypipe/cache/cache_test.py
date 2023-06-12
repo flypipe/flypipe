@@ -31,15 +31,17 @@ def clean_up():
     if os.path.exists("test.csv"):
         os.remove("test.csv")
 
+
 class GenericCache(Cache):
-    def read(self, spark):
+    def read(self):
         return pd.read_csv("test.csv")
 
-    def write(self, spark, df):
+    def write(self, df):
         df.to_csv("test.csv", index=False)
 
-    def exists(self, spark):
+    def exists(self):
         return os.path.exists("test.csv")
+
 
 @pytest.fixture(scope="function")
 def cache():  # pylint: disable=duplicate-code
@@ -66,13 +68,13 @@ class TestCache:
         class MyCache(Cache):
             pass
 
-
         with pytest.raises(TypeError):
             MyCache()
+
     def test_cache_non_spark_trivial(self):
 
         class GenericCache2(GenericCache):
-            def write(self, spark, df):
+            def write(self, df):
                 df = pd.DataFrame(data={"col1": [1]})
                 df.to_csv("test.csv", index=False)
 
@@ -134,7 +136,6 @@ class TestCache:
                 return False
 
         cache = GenericCache2()
-
 
         @node(type="pyspark", cache=cache, spark_context=True)
         def t1(spark):
@@ -291,7 +292,6 @@ class TestCache:
 
             return t1
 
-
         spy_writter = mocker.spy(cache, "write")
         spy_reader = mocker.spy(cache, "read")
         spy_exists = mocker.spy(cache, "exists")
@@ -426,17 +426,17 @@ class TestCache:
     def test_cache_merge(self, mocker):
 
         class MyCache(Cache):
-            def read(self, spark):
+            def read(self):
                 return pd.read_csv("test.csv")
 
-            def write(self, spark, df):
-                if self.exists(spark):
+            def write(self, df):
+                if self.exists():
                     df = pd.DataFrame(data={"col1": [1, 2], "col2": [2, 3]})
                     df.to_csv("test.csv", index=False)
                 else:
                     df.to_csv("test.csv", index=False)
 
-            def exists(self, spark):
+            def exists(self):
                 return os.path.exists("test.csv")
 
         cache = MyCache()
@@ -456,7 +456,6 @@ class TestCache:
         assert spy_writter.call_count == 1
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 2
-
 
         spy_writter.reset_mock()
         spy_reader.reset_mock()
@@ -537,7 +536,6 @@ class TestCache:
                 return df
 
             return t2
-
 
         t2.run()
         assert isinstance(t1.input_nodes[0].node, NodeFunction)
