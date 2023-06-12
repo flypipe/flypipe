@@ -59,7 +59,7 @@ class CatalogNode:
 
     def _get_is_active(self):
         if getattr(self, "node_graph"):
-            return self.node_graph.get_node(self.node.key)["status"] != RunStatus.SKIP
+            return self.node_graph.get_node(self.node.key)["status"] == RunStatus.ACTIVE
         return True
 
     def _get_file_path(self):

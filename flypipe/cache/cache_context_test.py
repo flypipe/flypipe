@@ -9,7 +9,7 @@ from flypipe.cache.cache_context import CacheContext
 from flypipe.node import node
 
 # noinspection PyUnresolvedReferences
-from flypipe.conftest import spark
+from flypipe.tests.conftest import spark
 
 @pytest.fixture(autouse=True)
 def run_around_tests():
