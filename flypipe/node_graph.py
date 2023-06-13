@@ -140,8 +140,8 @@ class NodeGraph:
         for node_name in self.graph.nodes:
             node = self.get_node(node_name)
             if not node["node_run_context"].exists_provided_input and \
-                    node["node_run_context"].cache_context.exists_cache_to_load and \
-                    node["status"] == RunStatus.CACHED:
+                    node["status"] == RunStatus.CACHED and \
+                    node["node_run_context"].cache_context.exists_cache_to_load:
                 caches[node['transformation']] = node["node_run_context"].cache_context.read()
                 node["status"] = RunStatus.SKIP
 
@@ -359,8 +359,6 @@ class NodeGraph:
                 for ancestor_name in self.graph.predecessors(current_node_name):
                     ancestor_node_run_context = self.graph.nodes[ancestor_name]["node_run_context"]
 
-                    # TODO: no need to check ancestor node if all successors of ancestor is cached or skip (
-                    #  performance improvement)
                     if ancestor_node_run_context.exists_provided_input:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
