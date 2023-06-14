@@ -48,8 +48,7 @@ class RunContext:  # pylint: disable=too-few-public-methods
     def provided_inputs(self):
         return self._provided_inputs
 
-    @provided_inputs.setter
-    def provided_inputs(self, provided_inputs: dict):
+    def update_provided_inputs(self, provided_inputs: dict):
         self._provided_inputs = {**self._provided_inputs, **provided_inputs}
 
     @property

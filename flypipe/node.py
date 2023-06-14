@@ -246,21 +246,22 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
         self._create_graph(run_context)
 
-        # re-create graph again with nodes caches
-        run_context.provided_inputs = self.node_graph.load_caches()
+        # pre-load all necessary caches
+        run_context.update_provided_inputs(self.node_graph.load_caches())
         outputs = {
             node.key: NodeResult(spark, df, schema=None)
             for node, df in run_context.provided_inputs.items()
         }
 
-        execution_graph = self.node_graph.get_execution_graph(run_context)
-
         # In case end_node has been given as input, the execution graph will be empty,
         # in that case return the provided input for the end node
-        if execution_graph.is_empty():
-            end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
+        end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
+        if end_node_name in outputs:
             end_node = self.node_graph.get_transformation(end_node_name)
             return outputs[end_node_name].as_type(end_node.dataframe_type).get_df()
+
+        execution_graph = self.node_graph.get_execution_graph(run_context)
+
 
         if run_context.parallel:
             return self._run_parallel(run_context, execution_graph, outputs)
@@ -291,8 +292,8 @@ class Node:  # pylint: disable=too-many-instance-attributes
             )
 
             # If cache exists, and the transformation has run, then save its cache
-            runnable_node["node_run_context"].cache_context.write(
-                result.as_type(runnable_node["transformation"].dataframe_type).get_df()
+            node["node_run_context"].cache_context.write(
+                result.as_type(node["transformation"].dataframe_type).get_df()
             )
 
             return node["transformation"].key, result
