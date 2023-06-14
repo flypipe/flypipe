@@ -139,6 +139,7 @@ class NodeGraph:
         caches = {}
         for node_name in self.graph.nodes:
             node = self.get_node(node_name)
+
             if not node["node_run_context"].exists_provided_input and \
                     node["status"] == RunStatus.CACHED and \
                     node["node_run_context"].cache_context.exists_cache_to_load:
@@ -372,7 +373,7 @@ class NodeGraph:
                 current_node["status"] = RunStatus.CACHED
 
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    if self.graph.nodes[ancestor_name]["status"] != RunStatus.ACTIVE:
+                    if self.graph.nodes[ancestor_name]["status"] not in [RunStatus.ACTIVE, RunStatus.CACHED]:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
             else:
