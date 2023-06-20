@@ -230,10 +230,6 @@ class Node:  # pylint: disable=too-many-instance-attributes
             parameters: dict = None,
             cache: dict = None,
     ):
-        if spark:
-            if not isinstance(spark, SparkSession):
-                raise TypeError(f"spark is not of type pyspark.sql.SparkSession")
-
         if not inputs:
             inputs = {}
 

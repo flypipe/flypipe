@@ -1,3 +1,5 @@
+from copy import copy
+
 from pyspark.sql import SparkSession
 
 from flypipe.cache import CacheMode
@@ -27,14 +29,15 @@ class RunContext:  # pylint: disable=too-few-public-methods
         self._cache_modes = cache_modes or {}
 
     def copy(self):
-        return RunContext(
-            spark=self._spark,
-            parallel=self._parallel,
-            provided_inputs=self._provided_inputs,
-            pandas_on_spark_use_pandas=self._pandas_on_spark_use_pandas,
-            parameters=self._parameters,
-            cache_modes=self._cache_modes
-        )
+        return copy(self)
+        # return RunContext(
+        #     spark=self._spark,
+        #     parallel=self._parallel,
+        #     provided_inputs=self._provided_inputs,
+        #     pandas_on_spark_use_pandas=self._pandas_on_spark_use_pandas,
+        #     parameters=self._parameters,
+        #     cache_modes=self._cache_modes
+        # )
 
     @property
     def spark(self):
