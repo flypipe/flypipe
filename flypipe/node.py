@@ -271,27 +271,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
             self, run_context: RunContext, execution_graph, outputs
     ):  # pylint: disable=too-many-locals
         def execute(node):
-            dependency_values = node["transformation"].get_node_inputs(outputs)
-
-            result = NodeResult(
-                run_context.spark,
-                node["transformation"].process_transformation(
-                    run_context.spark,
-                    node["output_columns"],
-                    node["node_run_context"],
-                    **dependency_values,
-                ),
-                schema=self._get_consolidated_output_schema(
-                    node["transformation"].output_schema,
-                    node["output_columns"],
-                ),
-            )
-
-            # If cache exists, and the transformation has run, then save its cache
-            node["node_run_context"].cache_context.write(
-                result.as_type(node["transformation"].dataframe_type).get_df()
-            )
-
+            result = self.process_transformation_with_cache(node, run_context, **outputs)
             return node["transformation"].key, result
 
         logger.info("Starting parallel processing of node %s", node.__name__)
@@ -344,29 +324,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
                 if runnable_node["transformation"].key in outputs:
                     continue
 
-                dependency_values = runnable_node["transformation"].get_node_inputs(
-                    outputs
-                )
-
-                result = NodeResult(
-                    run_context.spark,
-                    runnable_node["transformation"].process_transformation(
-                        run_context.spark,
-                        runnable_node["output_columns"],
-                        runnable_node["node_run_context"],
-                        **dependency_values,
-                    ),
-                    schema=self._get_consolidated_output_schema(
-                        runnable_node["transformation"].output_schema,
-                        runnable_node["output_columns"],
-                    ),
-                )
-
-                # If cache exists, and the transformation has run, then save its cache
-                runnable_node["node_run_context"].cache_context.write(
-                    result.as_type(runnable_node["transformation"].dataframe_type).get_df()
-                )
-
+                result = self.process_transformation_with_cache(runnable_node, run_context, **outputs)
                 outputs[runnable_node["transformation"].key] = result
 
         return (
@@ -391,6 +349,34 @@ class Node:  # pylint: disable=too-many-instance-attributes
         else:
             schema = None
         return schema
+
+    def process_transformation_with_cache(
+            self, runnable_node, run_context, **inputs
+    ):
+        dependency_values = runnable_node["transformation"].get_node_inputs(
+            inputs
+        )
+
+        result = NodeResult(
+            run_context.spark,
+            runnable_node["transformation"].process_transformation(
+                run_context.spark,
+                runnable_node["output_columns"],
+                runnable_node["node_run_context"],
+                **dependency_values,
+            ),
+            schema=self._get_consolidated_output_schema(
+                runnable_node["transformation"].output_schema,
+                runnable_node["output_columns"],
+            ),
+        )
+
+        # If cache exists, and the transformation has run, then save its cache
+        runnable_node["node_run_context"].cache_context.write(
+            result.as_type(runnable_node["transformation"].dataframe_type).get_df()
+        )
+
+        return result
 
     def process_transformation(
             self, spark, requested_columns: list, node_run_context: NodeRunContext, **inputs
