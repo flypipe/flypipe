@@ -9,7 +9,7 @@ from flypipe.cache import CacheMode
 from flypipe.cache.cache import Cache
 from flypipe.node import node
 from flypipe.node_function import NodeFunction
-from flypipe.node_graph import RunStatus
+from flypipe.run_status import RunStatus
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import Integer
 
@@ -119,7 +119,6 @@ class TestCache:
         assert spy_writter.call_count == 1
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 1
-
         spy_writter.reset_mock()
         spy_reader.reset_mock()
         spy_exists.reset_mock()
@@ -217,6 +216,8 @@ class TestCache:
             node_graph = t3.node_graph.get_node(node_name)
             if node_graph["transformation"].function.__name__ == "t3":
                 assert node_graph["status"] == RunStatus.ACTIVE
+            elif node_graph["transformation"].function.__name__ == "t2":
+                assert node_graph["status"] == RunStatus.CACHED
             else:
                 assert node_graph["status"] == RunStatus.SKIP
 
@@ -265,6 +266,8 @@ class TestCache:
             node_graph = t3.node_graph.get_node(node_name)
             if node_graph["transformation"].function.__name__ in ["t3", "t4", "t1"]:
                 assert node_graph["status"] == RunStatus.ACTIVE
+            elif node_graph["transformation"].function.__name__ == "t2":
+                assert node_graph["status"] == RunStatus.CACHED
             else:
                 assert node_graph["status"] == RunStatus.SKIP
 

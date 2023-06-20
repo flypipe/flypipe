@@ -11,16 +11,11 @@ from flypipe.node_function import NodeFunction
 from flypipe.node_run_context import NodeRunContext
 from flypipe.output_column_set import OutputColumnSet
 from flypipe.run_context import RunContext
+from flypipe.run_status import RunStatus
 from flypipe.utils import DataFrameType
 
 
-class RunStatus(Enum):
-    """Describes the run state of a node in a pipeline when that pipeline is executed"""
 
-    UNKNOWN = 0
-    ACTIVE = 1
-    SKIP = 2
-    CACHED = 3
 
 
 class NodeGraph:
@@ -134,22 +129,6 @@ class NodeGraph:
                                                                   cache=node["transformation"].cache)
 
         return graph
-
-    def load_caches(self):
-        caches = {}
-        for node_name in self.graph.nodes:
-            node = self.get_node(node_name)
-
-            if not node["node_run_context"].exists_provided_input and \
-                    node["status"] == RunStatus.CACHED and \
-                    node["node_run_context"].cache_context.exists_cache_to_load:
-                caches[node['transformation']] = node["node_run_context"].cache_context.read()
-                node["status"] = RunStatus.SKIP
-
-        for n in self.graph.nodes:
-            if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN, RunStatus.CACHED]:
-                raise RuntimeError(f'Invalid run status for node {n} ({self.graph.nodes[n]["status"]})')
-        return caches
 
     def _compute_edge_selected_columns(self, graph):
         for node_key in graph.nodes:
@@ -436,7 +415,7 @@ class NodeGraph:
             if self.graph.in_degree(node_name) == 0
         ]
         runnable_node_names = filter(
-            lambda node_name: self.graph.nodes[node_name]["status"] == RunStatus.ACTIVE,
+            lambda node_name: self.graph.nodes[node_name]["status"] in [RunStatus.ACTIVE, RunStatus.CACHED],
             candidate_node_names,
         )
         runnable_nodes = [self.get_node(node_name) for node_name in runnable_node_names]

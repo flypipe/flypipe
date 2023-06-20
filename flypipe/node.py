@@ -5,16 +5,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Mapping, List
 
 from pyspark.sql import SparkSession
-
-from flypipe.cache import CacheMode
 from flypipe.cache.cache import Cache
-from flypipe.cache.cache_context import CacheContext
-from flypipe.config import get_config, RunMode
+from flypipe.config import get_config
 from flypipe.node_input import InputNode
 from flypipe.node_result import NodeResult
 from flypipe.node_run_context import NodeRunContext
 from flypipe.node_type import NodeType
 from flypipe.run_context import RunContext
+from flypipe.run_status import RunStatus
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import Unknown
 from flypipe.utils import DataFrameType
@@ -198,10 +196,10 @@ class Node:  # pylint: disable=too-many-instance-attributes
     def alias(self, value):
         return InputNode(self).alias(value)
 
-    def get_node_inputs(self, outputs: Mapping[str, NodeResult]):
+    def get_node_inputs(self, run_context: RunContext):
         inputs = {}
         for input_node in self.input_nodes:
-            node_input_value = outputs[input_node.key].as_type(self.dataframe_type)
+            node_input_value = run_context.node_results[input_node.key].as_type(self.dataframe_type)
             if input_node.selected_columns:
                 node_input_value = node_input_value.select_columns(
                     *input_node.selected_columns
@@ -241,38 +239,27 @@ class Node:  # pylint: disable=too-many-instance-attributes
                                  cache_modes=cache)
 
         self._create_graph(run_context)
-
-        # pre-load all necessary caches
-        run_context.update_provided_inputs(self.node_graph.load_caches())
-        outputs = {
-            node.key: NodeResult(spark, df, schema=None)
-            for node, df in run_context.provided_inputs.items()
-        }
-
-        # In case end_node has been given as input, the execution graph will be empty,
-        # in that case return the provided input for the end node
-        end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
-        if end_node_name in outputs:
-            end_node = self.node_graph.get_transformation(end_node_name)
-            return outputs[end_node_name].as_type(end_node.dataframe_type).get_df()
-
         execution_graph = self.node_graph.get_execution_graph(run_context)
 
-
         if run_context.parallel:
-            return self._run_parallel(run_context, execution_graph, outputs)
-        return self._run_sequential(run_context, execution_graph, outputs)
+            self._run_parallel(run_context, execution_graph)
+        else:
+            self._run_sequential(run_context, execution_graph)
+
+        end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
+        node_transformation = self.node_graph.get_transformation(end_node_name)
+        return run_context.node_results[end_node_name].as_type(node_transformation.dataframe_type).get_df()
 
     @property
     def dataframe_type(self):
         return self.DATAFRAME_TYPE_MAP[self.type]
 
     def _run_parallel(
-            self, run_context: RunContext, execution_graph, outputs
+            self, run_context: RunContext, execution_graph
     ):  # pylint: disable=too-many-locals
         def execute(node):
-            result = self.process_transformation_with_cache(node, run_context, **outputs)
-            return node["transformation"].key, result
+            self.process_transformation_with_cache(node, run_context)
+            return node["transformation"].key
 
         logger.info("Starting parallel processing of node %s", node.__name__)
         with ThreadPoolExecutor(
@@ -283,7 +270,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
             initial_nodes_to_run = [
                 runnable_node
                 for runnable_node in execution_graph.get_runnable_transformations()
-                if runnable_node["transformation"].key not in outputs
+                if runnable_node["transformation"].key not in run_context.node_results
             ]
             for runnable_node in initial_nodes_to_run:
                 logger.info(
@@ -297,14 +284,13 @@ class Node:  # pylint: disable=too-many-instance-attributes
                 for job in as_completed(jobs):
                     # When we finish processing a node we remove it from the execution graph and check if there are any
                     # new eligible nodes to be run.
-                    processed_node_key, output = job.result()
-                    outputs[processed_node_key] = output
+                    processed_node_key = job.result()
                     to_remove.add(job)
                     execution_graph.remove_node(processed_node_key)
                     runnable_nodes = execution_graph.get_runnable_transformations()
                     for runnable_node in runnable_nodes:
                         node_key = runnable_node["transformation"].key
-                        if node_key not in visited and node_key not in outputs:
+                        if node_key not in visited and node_key not in run_context.node_results:
                             logger.info(
                                 "Schedule parallelised execution of node %s",
                                 runnable_node["transformation"].__name__,
@@ -312,26 +298,19 @@ class Node:  # pylint: disable=too-many-instance-attributes
                             jobs.add(executor.submit(execute, runnable_node))
                             visited.add(runnable_node["transformation"].key)
                 jobs = jobs - to_remove
-        return outputs[self.key].as_type(self.dataframe_type).get_df()
+        return run_context.node_results[self.key].as_type(self.dataframe_type).get_df()
 
-    def _run_sequential(self, run_context: RunContext, execution_graph, outputs):
-        runnable_node = None
+    def _run_sequential(self, run_context: RunContext, execution_graph):
         while not execution_graph.is_empty():
             runnable_nodes = execution_graph.get_runnable_transformations()
             for runnable_node in runnable_nodes:
+
                 execution_graph.remove_node(runnable_node["transformation"].key)
 
-                if runnable_node["transformation"].key in outputs:
+                if runnable_node["transformation"].key in run_context.node_results:
                     continue
 
-                result = self.process_transformation_with_cache(runnable_node, run_context, **outputs)
-                outputs[runnable_node["transformation"].key] = result
-
-        return (
-            outputs[runnable_node["transformation"].key]
-            .as_type(runnable_node["transformation"].dataframe_type)
-            .get_df()
-        )
+                self.process_transformation_with_cache(runnable_node, run_context)
 
     @classmethod
     def _get_consolidated_output_schema(cls, output_schema, output_columns):
@@ -351,32 +330,45 @@ class Node:  # pylint: disable=too-many-instance-attributes
         return schema
 
     def process_transformation_with_cache(
-            self, runnable_node, run_context, **inputs
+            self, runnable_node, run_context: RunContext
     ):
-        dependency_values = runnable_node["transformation"].get_node_inputs(
-            inputs
-        )
 
-        result = NodeResult(
-            run_context.spark,
-            runnable_node["transformation"].process_transformation(
+        result = None
+        node_transformation = runnable_node["transformation"]
+        ran_transformation = False
+
+        if runnable_node["status"] == RunStatus.CACHED and \
+                runnable_node["node_run_context"].cache_context.exists_cache_to_load:
+            result = runnable_node["node_run_context"].cache_context.read()
+        else:
+            ran_transformation = True
+            dependency_values = runnable_node["transformation"].get_node_inputs(
+                run_context
+            )
+
+            result = node_transformation.process_transformation(
                 run_context.spark,
                 runnable_node["output_columns"],
                 runnable_node["node_run_context"],
                 **dependency_values,
-            ),
+            )
+
+        run_context.update_node_results(
+            node_transformation.key,
+            result,
             schema=self._get_consolidated_output_schema(
-                runnable_node["transformation"].output_schema,
+                node_transformation.output_schema,
                 runnable_node["output_columns"],
             ),
         )
 
-        # If cache exists, and the transformation has run, then save its cache
-        runnable_node["node_run_context"].cache_context.write(
-            result.as_type(runnable_node["transformation"].dataframe_type).get_df()
-        )
-
-        return result
+        if ran_transformation:
+            # If cache exists, and the transformation has run, then save its cache
+            runnable_node["node_run_context"].cache_context.write(
+                run_context.node_results[node_transformation.key]
+                .as_type(node_transformation.dataframe_type)
+                .get_df()
+            )
 
     def process_transformation(
             self, spark, requested_columns: list, node_run_context: NodeRunContext, **inputs

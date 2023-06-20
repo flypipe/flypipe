@@ -3,7 +3,7 @@ import os
 import types
 from pathlib import Path
 
-from flypipe.node_graph import RunStatus
+from flypipe.run_status import RunStatus
 
 
 class CatalogNode:
