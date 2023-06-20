@@ -61,7 +61,7 @@ class NodeGraph:
             # We can not add current_transformation.cache now, as current_transformation can be node function
             # so we have to expand node functions and later add cache context to node run context
             node_run_context = NodeRunContext(
-                parameters=run_context.parameters.get(current_transformation.key),
+                parameters=run_context.parameters.get(current_transformation),
                 provided_input=run_context.provided_inputs.get(current_transformation),
             )
             graph = self.add_node(

@@ -1,46 +1,27 @@
-from flypipe.cache import CacheMode
-from flypipe.cache.cache import Cache
+from dataclasses import dataclass
+from typing import Union
+
+from pandas import DataFrame as PandasDataFrame
+from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
+from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
+
 from flypipe.cache.cache_context import CacheContext
 
-"""
-
-
-"""
+@dataclass
 class NodeRunContext:  # pylint: disable=too-few-public-methods
     """
     NodeRunContext is a model held by each graph node that holds node information that is tied to a particular run,
     such as parameters.
     """
 
-    def __init__(self, parameters=None, cache_context: CacheContext = None, provided_input=None):
-        self._parameters = parameters or {}
-        self._provided_input = provided_input
-        self._cache_context = cache_context or CacheContext()
+    parameters: dict = None
+    provided_input: Union[PandasDataFrame, PySparkDataFrame, PandasApiDataFrame] = None
+    cache_context: CacheContext = None
+
+    def __post_init__(self):
+        self.parameters = self.parameters or {}
+        self.cache_context = self.cache_context or CacheContext()
 
     @property
     def exists_provided_input(self):
-        return self._provided_input is not None
-
-    @property
-    def provided_input(self):
-        return self._provided_input
-
-    @provided_input.setter
-    def provided_input(self, provided_input):
-        self._provided_input = provided_input
-
-    @property
-    def cache_context(self):
-        return self._cache_context
-
-    @cache_context.setter
-    def cache_context(self, cache_context: CacheContext):
-        self._cache_context = cache_context
-
-    @property
-    def parameters(self) -> dict:
-        return self._parameters
-
-    @parameters.setter
-    def parameters(self, parameters: dict):
-        self._parameters = parameters
+        return self.provided_input is not None
