@@ -247,8 +247,8 @@ class Node:  # pylint: disable=too-many-instance-attributes
             self._run_sequential(run_context, execution_graph)
 
         end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
-        node_transformation = self.node_graph.get_transformation(end_node_name)
-        return run_context.node_results[end_node_name].as_type(node_transformation.dataframe_type).get_df()
+        end_node = self.node_graph.get_transformation(end_node_name)
+        return run_context.node_results[end_node_name].as_type(end_node.dataframe_type).get_df()
 
     @property
     def dataframe_type(self):
@@ -298,7 +298,6 @@ class Node:  # pylint: disable=too-many-instance-attributes
                             jobs.add(executor.submit(execute, runnable_node))
                             visited.add(runnable_node["transformation"].key)
                 jobs = jobs - to_remove
-        return run_context.node_results[self.key].as_type(self.dataframe_type).get_df()
 
     def _run_sequential(self, run_context: RunContext, execution_graph):
         while not execution_graph.is_empty():
