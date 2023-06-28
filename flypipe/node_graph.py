@@ -359,7 +359,7 @@ class NodeGraph:
                 current_node["status"] = RunStatus.SKIP
 
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    if self.graph.nodes[ancestor_name]["status"] != RunStatus.ACTIVE:
+                    if self.graph.nodes[ancestor_name]["status"] not in [RunStatus.ACTIVE, RunStatus.CACHED]:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
         for n in self.graph.nodes:

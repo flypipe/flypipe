@@ -677,3 +677,116 @@ class TestCache:
         assert spy_writter_t2.call_count == 0
         assert spy_reader_t2.call_count == 1
         assert spy_exists_t2.call_count == 1
+
+
+
+    def test_only_skip_nodes_cached_ancestors(self, cache, mocker):
+        """
+        t0 (cached) -> t1 (cached) -> t2 (cached)
+                \                         /
+                  \                     /
+                             t3
+
+        running t3, expect to both t1 and t2 check if exists and write cache
+        running t3 again, expect to both t1 and t2 check if exists and read cache
+
+        """
+
+        class GenericCache1(Cache):
+            def read(self):
+                return pd.read_csv("test1.csv")
+
+            def write(self, df):
+                df.to_csv("test1.csv", index=False)
+
+            def exists(self):
+                return os.path.exists("test1.csv")
+
+        class GenericCache2(Cache):
+            def read(self):
+                return pd.read_csv("test2.csv")
+
+            def write(self, df):
+                df.to_csv("test2.csv", index=False)
+
+            def exists(self):
+                return os.path.exists("test2.csv")
+
+        @node(
+            type="pandas",
+            cache=cache,
+        )
+        def t0():
+            return pd.DataFrame(data={"col1": [1], "col2": [2]})
+
+        @node(
+            type="pandas",
+            cache=GenericCache1(),
+            dependencies=[t0]
+        )
+        def t1(t0):
+            return pd.DataFrame(data={"col1": [1], "col2": [2]})
+
+        @node(
+            type="pandas",
+            cache=GenericCache2(),
+            dependencies=[t1]
+        )
+        def t2(t1):
+            return t1
+
+        @node(
+            type="pandas",
+            dependencies=[t2, t0]
+        )
+        def t3(t2, t0):
+            return t2
+
+
+        spy_writter_t0 = mocker.spy(t0.cache, "write")
+        spy_reader_t0 = mocker.spy(t0.cache, "read")
+        spy_exists_t0 = mocker.spy(t0.cache, "exists")
+
+        spy_writter_t1 = mocker.spy(t1.cache, "write")
+        spy_reader_t1 = mocker.spy(t1.cache, "read")
+        spy_exists_t1 = mocker.spy(t1.cache, "exists")
+
+        spy_writter_t2 = mocker.spy(t2.cache, "write")
+        spy_reader_t2 = mocker.spy(t2.cache, "read")
+        spy_exists_t2 = mocker.spy(t2.cache, "exists")
+        t3.run()
+        assert spy_writter_t0.call_count == 1
+        assert spy_reader_t0.call_count == 0
+        assert spy_exists_t0.call_count == 1
+
+        assert spy_writter_t1.call_count == 1
+        assert spy_reader_t1.call_count == 0
+        assert spy_exists_t1.call_count == 1
+
+        assert spy_writter_t2.call_count == 1
+        assert spy_reader_t2.call_count == 0
+        assert spy_exists_t2.call_count == 1
+
+        spy_writter_t0.reset_mock()
+        spy_reader_t0.reset_mock()
+        spy_exists_t0.reset_mock()
+        spy_writter_t1.reset_mock()
+        spy_reader_t1.reset_mock()
+        spy_exists_t1.reset_mock()
+        spy_writter_t2.reset_mock()
+        spy_reader_t2.reset_mock()
+        spy_exists_t2.reset_mock()
+
+        t3.run()
+
+        assert spy_writter_t0.call_count == 0
+        assert spy_reader_t0.call_count == 1
+        assert spy_exists_t0.call_count == 1
+
+        assert spy_writter_t1.call_count == 0
+        assert spy_reader_t1.call_count == 0
+        assert spy_exists_t1.call_count == 0
+
+        assert spy_writter_t2.call_count == 0
+        assert spy_reader_t2.call_count == 1
+        assert spy_exists_t2.call_count == 1
