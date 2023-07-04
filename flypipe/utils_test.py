@@ -6,10 +6,10 @@ from flypipe.exceptions import (
     DataframeSchemasDoNotMatchError,
     DataframeTypeNotSupportedError,
 )
-from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
 
 # noinspection PyUnresolvedReferences
 from flypipe.tests.conftest import spark
+from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
 
 
 class TestUtils:

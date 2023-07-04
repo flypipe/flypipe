@@ -50,7 +50,7 @@ class TestNodeGraph:
             return
 
         # TODO- we should not be having to call a private method to setup
-        t4._create_graph(run_context=RunContext()) # pylint: disable=protected-access
+        t4._create_graph(run_context=RunContext())  # pylint: disable=protected-access
         positions = GraphHTML(t4.node_graph).get_node_positions()
         assert positions == {
             t1.key: [1.0, 50.0],
@@ -76,7 +76,7 @@ class TestNodeGraph:
         def t1():
             return pd.DataFrame({"c1": ["Bla"], "c2": [1]})
 
-        t1._create_graph(run_context=RunContext()) # pylint: disable=protected-access
+        t1._create_graph(run_context=RunContext())  # pylint: disable=protected-access
         # pylint: disable-next=protected-access
         assert GraphHTML(t1.node_graph)._get_node_columns(t1.key) == [
             {"name": "c1", "type": "String", "description": ""},
@@ -108,7 +108,7 @@ class TestNodeGraph:
         def t4(t2, t3):  # pylint: disable=unused-argument
             return t2
 
-        t4._create_graph(run_context=RunContext()) # pylint: disable=protected-access
+        t4._create_graph(run_context=RunContext())  # pylint: disable=protected-access
         # pylint: disable-next=protected-access
         assert GraphHTML(t4.node_graph)._get_node_columns(t1.key) == [
             {"name": "c1", "type": "Unknown", "description": ""},

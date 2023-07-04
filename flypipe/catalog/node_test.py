@@ -2,16 +2,14 @@ import pandas as pd
 
 from flypipe import node
 from flypipe.catalog.node import CatalogNode
+
 # noinspection PyUnresolvedReferences
 from flypipe.tests.conftest import spark
 
 
 class TestNode:
-
     def test__is_active(self, spark):
-        @node(
-            type="pandas"
-        )
+        @node(type="pandas")
         def t0():
             return pd.DataFrame(data={"c": [1]})
 

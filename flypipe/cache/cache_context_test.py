@@ -11,6 +11,7 @@ from flypipe.node import node
 # noinspection PyUnresolvedReferences
 from flypipe.tests.conftest import spark
 
+
 @pytest.fixture(autouse=True)
 def run_around_tests():
     if os.path.exists("test.csv"):
@@ -26,22 +27,19 @@ class GenericCache(Cache):
     def read(self):
         return pd.read_csv("test.csv")
 
-
     def write(self, df):
         df.to_csv("test.csv", index=False)
 
-
     def exists(self):
         return os.path.exists("test.csv")
+
 
 class GenericCacheSpark(Cache):
     def read(self, spark):
         return pd.read_csv("test.csv")
 
-
     def write(self, spark, df):
         df.to_csv("test.csv", index=False)
-
 
     def exists(self, spark):
         return os.path.exists("test.csv")
@@ -49,9 +47,8 @@ class GenericCacheSpark(Cache):
 
 @pytest.fixture(scope="function")
 def node_cache():
-
     @node(type="pandas", cache=GenericCache())
-    def t0(): # pylint: disable=duplicate-code)
+    def t0():  # pylint: disable=duplicate-code)
         return pd.DataFrame(data={"col1": [1]})
 
     return t0

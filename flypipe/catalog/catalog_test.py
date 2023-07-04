@@ -119,8 +119,8 @@ class TestCatalog:
                 ],
                 "successors": [],
                 "tags": [
-                    {'id': 'test', 'name': 'test'},
-                    {'id': 'train', 'name': 'train'}
+                    {"id": "test", "name": "test"},
+                    {"id": "train", "name": "train"},
                 ],
                 "sourceCode": inspect.getsource(inspect.getmodule(t2.function)),
                 "isActive": True,
@@ -147,9 +147,7 @@ class TestCatalog:
                     "flypipe_catalog_catalog_test_function_t2_t2",
                     "flypipe_catalog_catalog_test_function_t3_t3",
                 ],
-                "tags": [
-                    {'id': 'train', 'name': 'train'}
-                ],
+                "tags": [{"id": "train", "name": "train"}],
                 "sourceCode": inspect.getsource(inspect.getmodule(t1.function)),
                 "isActive": True,
                 "group": None,
@@ -170,9 +168,7 @@ class TestCatalog:
                 },
                 "output": [],
                 "successors": [],
-                "tags": [
-                    {'id': 'misc', 'name': 'misc'}
-                ],
+                "tags": [{"id": "misc", "name": "misc"}],
                 "sourceCode": inspect.getsource(inspect.getmodule(t3.function)),
                 "isActive": True,
                 "group": "Training Thing",

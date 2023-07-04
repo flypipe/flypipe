@@ -1,5 +1,3 @@
-from pyspark.sql.types import StringType
-
 from flypipe.schema.util import DateFormat
 
 
@@ -23,7 +21,6 @@ class Type:
 
     def __repr__(self):
         return f"{self.name}()"
-
 
 
 class Unknown(Type):
@@ -81,7 +78,6 @@ class Decimal(Type):
 
     def __repr__(self):
         return f"{self.name}({self.precision}, {self.scale})"
-
 
 
 class Date(Type):

@@ -1019,15 +1019,14 @@ class TestNode:  # pylint: disable=too-many-public-methods
         assert input_node.get_alias() == "my_alias"
 
     def test_cache_instance(self):
-
-        class MyCache():
+        class MyCache:
             pass
 
         with pytest.raises(TypeError):
+
             @node(type="pandas", cache=MyCache())
             def t0():
                 return pd.DataFrame(data={"col1": [1]})
-
 
         class MyCache(Cache):
             def read(self):
@@ -1038,6 +1037,7 @@ class TestNode:  # pylint: disable=too-many-public-methods
 
             def exists(self):
                 pass
+
         @node(type="pandas", cache=MyCache())
         def t0():
             return pd.DataFrame(data={"col1": [1]})

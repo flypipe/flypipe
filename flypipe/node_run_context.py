@@ -2,10 +2,11 @@ from dataclasses import dataclass
 from typing import Union
 
 from pandas import DataFrame as PandasDataFrame
-from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
 from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
+from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
 
 from flypipe.cache.cache_context import CacheContext
+
 
 @dataclass
 class NodeRunContext:  # pylint: disable=too-few-public-methods

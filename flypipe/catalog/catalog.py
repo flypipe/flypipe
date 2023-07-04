@@ -2,8 +2,6 @@ import json
 import logging
 import os
 
-from flypipe.cache.cache import Cache
-from flypipe.cache.cache_context import CacheContext
 from flypipe.catalog.group import Group
 from flypipe.catalog.node import CatalogNode
 from flypipe.config import get_config
@@ -26,19 +24,23 @@ class Catalog:
         self.initial_nodes = []
         self.spark = spark
 
-    def register_node(self,
-                      node,
-                      inputs=None,
-                      pandas_on_spark_use_pandas=False,
-                      parameters=None,
-                      cache=None,
-                      add_node_to_graph=False):
+    def register_node(
+        self,
+        node,
+        inputs=None,
+        pandas_on_spark_use_pandas=False,
+        parameters=None,
+        cache=None,
+        add_node_to_graph=False,
+    ):
 
-        run_context = RunContext(spark=self.spark,
-                                 provided_inputs=inputs,
-                                 pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
-                                 parameters=parameters,
-                                 cache_modes=cache)
+        run_context = RunContext(
+            spark=self.spark,
+            provided_inputs=inputs,
+            pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+            parameters=parameters,
+            cache_modes=cache,
+        )
 
         node._create_graph(run_context)
 
@@ -51,7 +53,9 @@ class Catalog:
     def _map_node(self, node, successor=None, node_graph=None):
 
         if isinstance(node, NodeFunction):
-            raise RuntimeError(f"Node function '{node.function.__name__}' can not be registered to graph")
+            raise RuntimeError(
+                f"Node function '{node.function.__name__}' can not be registered to graph"
+            )
 
         else:
 
@@ -90,7 +94,7 @@ class Catalog:
     def html(self, height=850):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         with open(
-                os.path.join(dir_path, "../js/bundle.js"), "r", encoding="utf-8"
+            os.path.join(dir_path, "../js/bundle.js"), "r", encoding="utf-8"
         ) as f:
             js_bundle = f.read()
         return get_template("catalog.html").render(

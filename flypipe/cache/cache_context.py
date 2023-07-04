@@ -5,12 +5,18 @@ from flypipe.cache.cache import Cache
 
 
 class CacheContext:
-
-    def __init__(self, cache_mode: CacheMode = None, spark: SparkSession = None, cache: Cache = None):
+    def __init__(
+        self,
+        cache_mode: CacheMode = None,
+        spark: SparkSession = None,
+        cache: Cache = None,
+    ):
         self.spark = spark
         self.cache = cache
         self.cache_mode = CacheMode.DISABLE if self.cache is None else cache_mode
-        self._exists_cache_to_load = None  # can not be True or False as both means exist or not exist
+        self._exists_cache_to_load = (
+            None  # can not be True or False as both means exist or not exist
+        )
 
     @property
     def disabled(self):

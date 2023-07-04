@@ -36,7 +36,7 @@ class CatalogNode:
         tags_set = set()
         for tag in self.node.tags:
             tags_set.add(tag.lower().strip())
-        node_run_context = self.node_graph.get_node(self.node.key)['node_run_context']
+        node_run_context = self.node_graph.get_node(self.node.key)["node_run_context"]
         return {
             "nodeKey": self.node.key,
             "nodeType": self.node.type,
@@ -52,7 +52,8 @@ class CatalogNode:
             "sourceCode": self._get_source_code(),
             "isActive": self._get_is_active(),
             "hasCache": self.node.cache is not None,
-            "cacheIsDisabled": node_run_context.cache_context.disabled or node_run_context.exists_provided_input,
+            "cacheIsDisabled": node_run_context.cache_context.disabled
+            or node_run_context.exists_provided_input,
             "hasProvidedInput": node_run_context.exists_provided_input,
             "group": self.node.group,
         }

@@ -2,8 +2,8 @@ import json
 import os
 
 from flypipe.node_graph import NodeGraph
-from flypipe.run_status import RunStatus
 from flypipe.node_type import NodeType
+from flypipe.run_status import RunStatus
 from flypipe.schema.types import Unknown
 from flypipe.template import get_template
 from flypipe.utils import DataFrameType

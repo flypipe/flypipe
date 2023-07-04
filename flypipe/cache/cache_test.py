@@ -84,7 +84,6 @@ class TestCache:
             MyCache()
 
     def test_cache_non_spark_trivial(self):
-
         class GenericCache2(GenericCache):
             def write(self, df):
                 df = pd.DataFrame(data={"col1": [1]})
@@ -128,7 +127,6 @@ class TestCache:
         assert spy_exists.call_count == 1
 
     def test_cache_spark_provided(self, spark, mocker):
-
         class GenericCache2(GenericCache):
             def read(self, spark):
                 return (
@@ -439,7 +437,6 @@ class TestCache:
         assert spy_exists.call_count == 0
 
     def test_cache_merge(self, mocker):
-
         class MyCache(Cache):
             def read(self):
                 return pd.read_csv("test.csv")
@@ -488,7 +485,7 @@ class TestCache:
             output=Schema(
                 Column("col1", Integer()),
                 Column("col2", Integer()),
-            )
+            ),
         )
         def t1():
             return pd.DataFrame(data={"col1": [1], "col2": [2], "col3": [3]})
@@ -523,10 +520,7 @@ class TestCache:
 
         @node_function()
         def t0():
-            @node(
-                type="pandas",
-                cache=cache
-            )
+            @node(type="pandas", cache=cache)
             def t0():
                 return pd.DataFrame(data={"c1": [1]})
 
@@ -539,9 +533,7 @@ class TestCache:
         def t1(df):
             return df
 
-        @node_function(
-            node_dependencies=[t1]
-        )
+        @node_function(node_dependencies=[t1])
         def t2():
             @node(
                 type="pandas",
@@ -572,11 +564,7 @@ class TestCache:
         def t1():
             return pd.DataFrame(data={"col1": [1], "col2": [2]})
 
-        @node(
-            type="pandas",
-            cache=cache,
-            dependencies=[t1]
-        )
+        @node(type="pandas", cache=cache, dependencies=[t1])
         def t2(t1):
             return t1
 
@@ -635,18 +623,11 @@ class TestCache:
         def t1():
             return pd.DataFrame(data={"col1": [1], "col2": [2]})
 
-        @node(
-            type="pandas",
-            cache=GenericCache2(),
-            dependencies=[t1]
-        )
+        @node(type="pandas", cache=GenericCache2(), dependencies=[t1])
         def t2(t1):
             return t1
 
-        @node(
-            type="pandas",
-            dependencies=[t2, t1]
-        )
+        @node(type="pandas", dependencies=[t2, t1])
         def t3(t2, t1):
             return t2
 
@@ -677,8 +658,6 @@ class TestCache:
         assert spy_writter_t2.call_count == 0
         assert spy_reader_t2.call_count == 1
         assert spy_exists_t2.call_count == 1
-
-
 
     def test_only_skip_nodes_cached_ancestors(self, cache, mocker):
         """
@@ -719,29 +698,17 @@ class TestCache:
         def t0():
             return pd.DataFrame(data={"col1": [1], "col2": [2]})
 
-        @node(
-            type="pandas",
-            cache=GenericCache1(),
-            dependencies=[t0]
-        )
+        @node(type="pandas", cache=GenericCache1(), dependencies=[t0])
         def t1(t0):
             return pd.DataFrame(data={"col1": [1], "col2": [2]})
 
-        @node(
-            type="pandas",
-            cache=GenericCache2(),
-            dependencies=[t1]
-        )
+        @node(type="pandas", cache=GenericCache2(), dependencies=[t1])
         def t2(t1):
             return t1
 
-        @node(
-            type="pandas",
-            dependencies=[t2, t0]
-        )
+        @node(type="pandas", dependencies=[t2, t0])
         def t3(t2, t0):
             return t2
-
 
         spy_writter_t0 = mocker.spy(t0.cache, "write")
         spy_reader_t0 = mocker.spy(t0.cache, "read")

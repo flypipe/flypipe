@@ -2,13 +2,13 @@ import logging
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Mapping, List
+from typing import List
 
 from pyspark.sql import SparkSession
+
 from flypipe.cache.cache import Cache
 from flypipe.config import get_config
 from flypipe.node_input import InputNode
-from flypipe.node_result import NodeResult
 from flypipe.node_run_context import NodeRunContext
 from flypipe.node_type import NodeType
 from flypipe.run_context import RunContext
@@ -35,17 +35,17 @@ class Node:  # pylint: disable=too-many-instance-attributes
     }
 
     def __init__(  # pylint: disable=too-many-arguments
-            self,
-            function,
-            type: str,  # pylint: disable=redefined-builtin
-            description: str = None,
-            group: str = None,
-            tags: List[str] = None,
-            dependencies: List[InputNode] = None,
-            output: Schema = None,
-            spark_context: bool = False,
-            requested_columns: List[str] = False,
-            cache: Cache = None,
+        self,
+        function,
+        type: str,  # pylint: disable=redefined-builtin
+        description: str = None,
+        group: str = None,
+        tags: List[str] = None,
+        dependencies: List[InputNode] = None,
+        output: Schema = None,
+        spark_context: bool = False,
+        requested_columns: List[str] = False,
+        cache: Cache = None,
     ):
         self._key = None
         self.name = None
@@ -199,7 +199,9 @@ class Node:  # pylint: disable=too-many-instance-attributes
     def get_node_inputs(self, run_context: RunContext):
         inputs = {}
         for input_node in self.input_nodes:
-            node_input_value = run_context.node_results[input_node.key].as_type(self.dataframe_type)
+            node_input_value = run_context.node_results[input_node.key].as_type(
+                self.dataframe_type
+            )
             if input_node.selected_columns:
                 node_input_value = node_input_value.select_columns(
                     *input_node.selected_columns
@@ -220,23 +222,25 @@ class Node:  # pylint: disable=too-many-instance-attributes
         return self.function(*args)
 
     def run(  # pylint: disable=too-many-arguments
-            self,
-            spark: SparkSession = None,
-            parallel: bool = None,
-            inputs: dict = None,
-            pandas_on_spark_use_pandas: bool = False,
-            parameters: dict = None,
-            cache: dict = None,
+        self,
+        spark: SparkSession = None,
+        parallel: bool = None,
+        inputs: dict = None,
+        pandas_on_spark_use_pandas: bool = False,
+        parameters: dict = None,
+        cache: dict = None,
     ):
         if not inputs:
             inputs = {}
 
-        run_context = RunContext(spark=spark,
-                                 parallel=parallel,
-                                 provided_inputs=inputs,
-                                 pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
-                                 parameters=parameters,
-                                 cache_modes=cache)
+        run_context = RunContext(
+            spark=spark,
+            parallel=parallel,
+            provided_inputs=inputs,
+            pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+            parameters=parameters,
+            cache_modes=cache,
+        )
 
         self._create_graph(run_context)
         execution_graph = self.node_graph.get_execution_graph(run_context)
@@ -248,14 +252,18 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
         end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
         end_node = self.node_graph.get_transformation(end_node_name)
-        return run_context.node_results[end_node_name].as_type(end_node.dataframe_type).get_df()
+        return (
+            run_context.node_results[end_node_name]
+            .as_type(end_node.dataframe_type)
+            .get_df()
+        )
 
     @property
     def dataframe_type(self):
         return self.DATAFRAME_TYPE_MAP[self.type]
 
     def _run_parallel(
-            self, run_context: RunContext, execution_graph
+        self, run_context: RunContext, execution_graph
     ):  # pylint: disable=too-many-locals
         def execute(node):
             self.process_transformation_with_cache(node, run_context)
@@ -263,7 +271,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
         logger.info("Starting parallel processing of node %s", node.__name__)
         with ThreadPoolExecutor(
-                max_workers=get_config("node_run_max_workers")
+            max_workers=get_config("node_run_max_workers")
         ) as executor:
             visited = set()
             jobs = set()
@@ -290,7 +298,10 @@ class Node:  # pylint: disable=too-many-instance-attributes
                     runnable_nodes = execution_graph.get_runnable_transformations()
                     for runnable_node in runnable_nodes:
                         node_key = runnable_node["transformation"].key
-                        if node_key not in visited and node_key not in run_context.node_results:
+                        if (
+                            node_key not in visited
+                            and node_key not in run_context.node_results
+                        ):
                             logger.info(
                                 "Schedule parallelised execution of node %s",
                                 runnable_node["transformation"].__name__,
@@ -328,16 +339,16 @@ class Node:  # pylint: disable=too-many-instance-attributes
             schema = None
         return schema
 
-    def process_transformation_with_cache(
-            self, runnable_node, run_context: RunContext
-    ):
+    def process_transformation_with_cache(self, runnable_node, run_context: RunContext):
 
         result = None
         node_transformation = runnable_node["transformation"]
         ran_transformation = False
 
-        if runnable_node["status"] == RunStatus.CACHED and \
-                runnable_node["node_run_context"].cache_context.exists_cache_to_load:
+        if (
+            runnable_node["status"] == RunStatus.CACHED
+            and runnable_node["node_run_context"].cache_context.exists_cache_to_load
+        ):
             result = runnable_node["node_run_context"].cache_context.read()
         else:
             ran_transformation = True
@@ -370,7 +381,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
             )
 
     def process_transformation(
-            self, spark, requested_columns: list, node_run_context: NodeRunContext, **inputs
+        self, spark, requested_columns: list, node_run_context: NodeRunContext, **inputs
     ):
         # TODO: apply output validation + rename function to transformation, select only necessary columns specified in
         # self.dependencies_selected_columns
@@ -399,13 +410,13 @@ class Node:  # pylint: disable=too-many-instance-attributes
         self.node_graph.plot()
 
     def html(  # pylint: disable=too-many-arguments
-            self,
-            spark=None,
-            height=1000,
-            inputs=None,
-            pandas_on_spark_use_pandas=False,
-            parameters=None,
-            cache=None,
+        self,
+        spark=None,
+        height=1000,
+        inputs=None,
+        pandas_on_spark_use_pandas=False,
+        parameters=None,
+        cache=None,
     ):
         """
         Retrieves html string of the graph to be executed.
@@ -437,12 +448,14 @@ class Node:  # pylint: disable=too-many-instance-attributes
         from flypipe.catalog import Catalog
 
         catalog = Catalog(spark=spark)
-        catalog.register_node(self,
-                              inputs=inputs,
-                              pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
-                              parameters=parameters,
-                              cache=cache,
-                              add_node_to_graph=True)
+        catalog.register_node(
+            self,
+            inputs=inputs,
+            pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+            parameters=parameters,
+            cache=cache,
+            add_node_to_graph=True,
+        )
         return catalog.html(height)
 
     def __eq__(self, other):

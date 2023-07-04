@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import List
 
 import networkx as nx
@@ -15,9 +14,6 @@ from flypipe.run_status import RunStatus
 from flypipe.utils import DataFrameType
 
 
-
-
-
 class NodeGraph:
     """
     Given a transformation node, traverse the transformations the node is dependant upon and build a graph from
@@ -25,10 +21,10 @@ class NodeGraph:
     """
 
     def __init__(  # pylint: disable=too-many-arguments
-            self,
-            transformation: Node,
-            run_context: RunContext,
-            graph: nx.DiGraph = None,
+        self,
+        transformation: Node,
+        run_context: RunContext,
+        graph: nx.DiGraph = None,
     ):
 
         if graph:
@@ -41,9 +37,9 @@ class NodeGraph:
             self.calculate_graph_run_status()
 
     def _build_graph(
-            self,
-            transformation: Node,
-            run_context: RunContext,
+        self,
+        transformation: Node,
+        run_context: RunContext,
     ):
 
         transformation = transformation.copy()
@@ -89,21 +85,21 @@ class NodeGraph:
             # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state
             # is cleared
             if (
-                    run_context.pandas_on_spark_use_pandas
-                    and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
+                run_context.pandas_on_spark_use_pandas
+                and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
             ):
                 transformation.type = "pandas"
 
         return graph
 
     def add_node(  # pylint: disable=too-many-arguments
-            self,
-            graph: DiGraph,
-            node_name: str,
-            transformation: Node,
-            run_status: RunStatus = None,
-            output_columns: list = None,
-            node_run_context: NodeRunContext = None,
+        self,
+        graph: DiGraph,
+        node_name: str,
+        transformation: Node,
+        run_status: RunStatus = None,
+        output_columns: list = None,
+        node_run_context: NodeRunContext = None,
     ) -> DiGraph:
 
         graph.add_node(
@@ -123,10 +119,11 @@ class NodeGraph:
 
         for node_key in graph.nodes:
             node = graph.nodes[node_key]
-            node["node_run_context"].cache_context = CacheContext(spark=run_context.spark,
-                                                                  cache_mode=run_context.cache_modes.get(
-                                                                      node["transformation"]),
-                                                                  cache=node["transformation"].cache)
+            node["node_run_context"].cache_context = CacheContext(
+                spark=run_context.spark,
+                cache_mode=run_context.cache_modes.get(node["transformation"]),
+                cache=node["transformation"].cache,
+            )
 
         return graph
 
@@ -143,7 +140,7 @@ class NodeGraph:
         return graph
 
     def _expand_node_functions(
-            self, graph: DiGraph
+        self, graph: DiGraph
     ):  # pylint: disable=too-many-branches
         """
         Expand all node functions. Given a node graph, return the same node graph with all node functions expanded.
@@ -231,10 +228,10 @@ class NodeGraph:
         return graph
 
     def _expand_node_function(
-            self,
-            node_function: NodeFunction,
-            requested_columns: list,
-            node_run_context: NodeRunContext,
+        self,
+        node_function: NodeFunction,
+        requested_columns: list,
+        node_run_context: NodeRunContext,
     ):
         """
         Expand a node function in the graph and replace it with the nodes it returns. There are a few additional steps:
@@ -337,7 +334,9 @@ class NodeGraph:
                 current_node["status"] = RunStatus.ACTIVE
 
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    ancestor_node_run_context = self.graph.nodes[ancestor_name]["node_run_context"]
+                    ancestor_node_run_context = self.graph.nodes[ancestor_name][
+                        "node_run_context"
+                    ]
 
                     if ancestor_node_run_context.exists_provided_input:
                         frontier.append((ancestor_name, RunStatus.SKIP))
@@ -352,14 +351,20 @@ class NodeGraph:
                 current_node["status"] = RunStatus.CACHED
 
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    if self.graph.nodes[ancestor_name]["status"] not in [RunStatus.ACTIVE, RunStatus.CACHED]:
+                    if self.graph.nodes[ancestor_name]["status"] not in [
+                        RunStatus.ACTIVE,
+                        RunStatus.CACHED,
+                    ]:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
             else:
                 current_node["status"] = RunStatus.SKIP
 
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    if self.graph.nodes[ancestor_name]["status"] not in [RunStatus.ACTIVE, RunStatus.CACHED]:
+                    if self.graph.nodes[ancestor_name]["status"] not in [
+                        RunStatus.ACTIVE,
+                        RunStatus.CACHED,
+                    ]:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
         for n in self.graph.nodes:
@@ -415,7 +420,8 @@ class NodeGraph:
             if self.graph.in_degree(node_name) == 0
         ]
         runnable_node_names = filter(
-            lambda node_name: self.graph.nodes[node_name]["status"] in [RunStatus.ACTIVE, RunStatus.CACHED],
+            lambda node_name: self.graph.nodes[node_name]["status"]
+            in [RunStatus.ACTIVE, RunStatus.CACHED],
             candidate_node_names,
         )
         runnable_nodes = [self.get_node(node_name) for node_name in runnable_node_names]

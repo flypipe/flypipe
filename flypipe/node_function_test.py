@@ -68,7 +68,6 @@ class TestNodeFunction:
         assert nodes == [a, b]
 
     def test_node_parameters(self):
-
         @node_function()
         def t1(param1=1, param2=2):
             @node(type="pandas")
@@ -89,13 +88,9 @@ class TestNodeFunction:
         def b():
             return pd.DataFrame({"col1": [1]})
 
-
         @node_function(node_dependencies=[a])
         def t1():
-            @node(
-                type="pandas",
-                dependencies=[b]
-            )
+            @node(type="pandas", dependencies=[b])
             def t1(b):
                 return b
 
@@ -106,10 +101,7 @@ class TestNodeFunction:
 
         @node_function(node_dependencies=[a, b])
         def t1():
-            @node(
-                type="pandas",
-                dependencies=[b]
-            )
+            @node(type="pandas", dependencies=[b])
             def t1(b):
                 return b
 
@@ -120,10 +112,7 @@ class TestNodeFunction:
 
         @node_function(node_dependencies=[b])
         def t1():
-            @node(
-                type="pandas",
-                dependencies=[a, b]
-            )
+            @node(type="pandas", dependencies=[a, b])
             def t1(a, b):
                 return b
 
