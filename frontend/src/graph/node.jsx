@@ -26,7 +26,14 @@ import { GraphContext } from "./graph-context";
 
 const BaseNode = ({ data, isNewNode }) => {
     const graph = useReactFlow();
-    const { nodeType, label, isActive, hasCache, cacheIsDisabled, hasProvidedInput } = data;
+    const {
+        nodeType,
+        label,
+        isActive,
+        hasCache,
+        cacheIsDisabled,
+        hasProvidedInput,
+    } = data;
     const { addNotification } = useContext(NotificationContext);
     const { setCurrentGraphObject } = useContext(GraphContext);
 
@@ -123,40 +130,39 @@ const BaseNode = ({ data, isNewNode }) => {
                     </Badge>
                 )}
                 <div class="d-flex flex-row-reverse">
-                {hasProvidedInput && (
-                    <Badge
-                        pill
-                        bg="light"
-                        className={`${badgeWidth} align-self-end fs-6 position-absolute node-badge ${margin}` }
-                        title="Input provided"
-                        size="xs"
-                    >
-                        <LuFileInput className="fs-4" color="black" />
-                    </Badge>
-                )}
-                {hasCache && cacheIsDisabled && (
-                    <Badge
-                        pill
-                        bg="light"
-                        className={`${badgeWidth} align-self-end fs-6 position-absolute node-badge`}
-                        title="Cache (disabled)"
-                        size="md"
-                    >
-                        <BsDatabaseSlash className="fs-4" color="red" />
-                    </Badge>
-                )}
-                {hasCache && !cacheIsDisabled && (
-                    <Badge
-                        pill
-                        bg="light"
-                        className={`${badgeWidth} align-self-start fs-6 position-absolute node-badge`}
-                        title="Cache"
-                        size="md"
-                    >
-                        <BsDatabase className="fs-4" color="black" />
-                    </Badge>
-                )}
-
+                    {hasProvidedInput && (
+                        <Badge
+                            pill
+                            bg="light"
+                            className={`${badgeWidth} align-self-end fs-6 position-absolute node-badge ${margin}`}
+                            title="Input provided"
+                            size="xs"
+                        >
+                            <LuFileInput className="fs-4" color="black" />
+                        </Badge>
+                    )}
+                    {hasCache && cacheIsDisabled && (
+                        <Badge
+                            pill
+                            bg="light"
+                            className={`${badgeWidth} align-self-end fs-6 position-absolute node-badge`}
+                            title="Cache (disabled)"
+                            size="md"
+                        >
+                            <BsDatabaseSlash className="fs-4" color="red" />
+                        </Badge>
+                    )}
+                    {hasCache && !cacheIsDisabled && (
+                        <Badge
+                            pill
+                            bg="light"
+                            className={`${badgeWidth} align-self-start fs-6 position-absolute node-badge`}
+                            title="Cache"
+                            size="md"
+                        >
+                            <BsDatabase className="fs-4" color="black" />
+                        </Badge>
+                    )}
                 </div>
             </div>
             <Handle
