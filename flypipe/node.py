@@ -183,7 +183,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
         """Return the docstring of the wrapped transformation rather than the docstring of the decorator object"""
         return self.function.__doc__
 
-    def _create_graph(self, run_context: RunContext):
+    def create_graph(self, run_context: RunContext):
         # This import is here to avoid a circular import issue
         # pylint: disable-next=import-outside-toplevel,cyclic-import
         from flypipe.node_graph import NodeGraph
@@ -242,7 +242,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
             cache_modes=cache,
         )
 
-        self._create_graph(run_context)
+        self.create_graph(run_context)
         execution_graph = self.node_graph.get_execution_graph(run_context)
 
         if run_context.parallel:

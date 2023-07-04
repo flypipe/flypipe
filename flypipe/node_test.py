@@ -753,8 +753,7 @@ class TestNode:  # pylint: disable=too-many-public-methods
 
         # TODO- we should refactor to avoid having to call this private method to build a graph
         # pylint: disable-next=protected-access
-
-        t1._create_graph(RunContext(pandas_on_spark_use_pandas=True))
+        t1.create_graph(RunContext(pandas_on_spark_use_pandas=True))
         for n in t1.node_graph.graph.nodes:
             if t1.node_graph.graph.nodes[n]["transformation"].__name__ == "t1":
                 assert (
@@ -1019,25 +1018,30 @@ class TestNode:  # pylint: disable=too-many-public-methods
         assert input_node.get_alias() == "my_alias"
 
     def test_cache_instance(self):
-        class MyCache:
+        # pylint: disable=missing-class-docstring, too-few-public-methods
+        class MyCacheNoSuperclass:
             pass
 
         with pytest.raises(TypeError):
 
-            @node(type="pandas", cache=MyCache())
+            @node(type="pandas", cache=MyCacheNoSuperclass())
             def t0():
                 return pd.DataFrame(data={"col1": [1]})
 
         class MyCache(Cache):
+
+            # pylint: disable=arguments-differ
             def read(self):
                 pass
 
+            # pylint: disable=arguments-differ
             def write(self):
                 pass
 
+            # pylint: disable=arguments-differ
             def exists(self):
                 pass
 
         @node(type="pandas", cache=MyCache())
-        def t0():
+        def t1():
             return pd.DataFrame(data={"col1": [1]})

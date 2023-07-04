@@ -40,10 +40,10 @@ jobs:
         run: python -m pylint flypipe
       - name: Run unit tests
         run: coverage run --source=flypipe -m pytest flypipe
-      - name: Check total unit test coverage >= 80%
-        run: coverage report --fail-under=80
-      - name: Check branch unit test coverage >= 80%
+      - name: Check total unit test coverage >= 89%
+        run: coverage report --fail-under=89
+      - name: Check branch unit test coverage >= 95%
         run: |
           coverage xml
-          diff-cover coverage.xml --fail-under=80
+          diff-cover coverage.xml --fail-under=95
 

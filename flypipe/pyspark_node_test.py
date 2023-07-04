@@ -244,7 +244,7 @@ class TestPySparkNode:
         def t4(t1, t2):  # pylint: disable=unused-argument
             return t2
 
-        t4._create_graph(run_context=RunContext())  # pylint: disable=protected-access
+        t4.create_graph(run_context=RunContext())
         for node_name in t4.node_graph.graph:
             n = t4.node_graph.get_node(node_name)
             if n["transformation"].__name__ == "t4":

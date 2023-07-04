@@ -217,12 +217,13 @@ class TestCatalog:
         def t4(t3):
             return t3
 
-        t4._create_graph(run_context=RunContext())  # pylint: disable=protected-access
+        t4.create_graph(run_context=RunContext())
         catalog = Catalog()
 
         end_node_name = t4.node_graph.get_end_node_name(t4.node_graph.graph)
         end_node = t4.node_graph.get_transformation(end_node_name)
 
+        # pylint: disable=protected-access
         catalog._map_node(end_node, node_graph=t4.node_graph)
 
         assert [node["name"] for node in catalog.get_nodes()] == [
@@ -294,6 +295,7 @@ class TestCatalog:
 
         catalog = Catalog()
         with pytest.raises(RuntimeError):
+            # pylint: disable=protected-access
             catalog._map_node(t1)
 
     def test_add_node_to_graph(self):

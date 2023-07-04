@@ -24,6 +24,7 @@ class Catalog:
         self.initial_nodes = []
         self.spark = spark
 
+    # pylint: disable=too-many-arguments
     def register_node(
         self,
         node,
@@ -42,7 +43,7 @@ class Catalog:
             cache_modes=cache,
         )
 
-        node._create_graph(run_context)
+        node.create_graph(run_context)
 
         end_node_name = node.node_graph.get_end_node_name(node.node_graph.graph)
         end_node = node.node_graph.get_transformation(end_node_name)
@@ -57,29 +58,27 @@ class Catalog:
                 f"Node function '{node.function.__name__}' can not be registered to graph"
             )
 
-        else:
+        if node.node_graph is not None:
+            # The node graph gives us certain information about the nodes in the context of a single run, use this
+            # if available.
+            node_graph = node.node_graph
 
-            if node.node_graph is not None:
-                # The node graph gives us certain information about the nodes in the context of a single run, use this
-                # if available.
-                node_graph = node.node_graph
+        if node.key not in self.nodes:
+            self.nodes[node.key] = CatalogNode(node, node_graph)
 
-            if node.key not in self.nodes:
-                self.nodes[node.key] = CatalogNode(node, node_graph)
+        if node.group:
+            if node.group not in self.groups:
+                self.groups[node.group] = Group(node.group)
+            self.groups[node.group].add_node(node)
 
-            if node.group:
-                if node.group not in self.groups:
-                    self.groups[node.group] = Group(node.group)
-                self.groups[node.group].add_node(node)
+        if successor:
+            self.nodes[node.key].register_successor(successor)
 
-            if successor:
-                self.nodes[node.key].register_successor(successor)
-
-            for input_node in node.input_nodes:
-                # Input node can be a NodeFunction. We have to get the node from the graph (as it has been expanded)
-                # instead of the input node.
-                input_node_graph = node_graph.get_transformation(input_node.node.key)
-                self._map_node(input_node_graph, node, node_graph)
+        for input_node in node.input_nodes:
+            # Input node can be a NodeFunction. We have to get the node from the graph (as it has been expanded)
+            # instead of the input node.
+            input_node_graph = node_graph.get_transformation(input_node.node.key)
+            self._map_node(input_node_graph, node, node_graph)
 
     def add_node_to_graph(self, node):
         """

@@ -3,7 +3,7 @@ from pyspark.sql import SparkSession
 from flypipe.cache import CacheMode
 from flypipe.cache.cache import Cache
 
-
+# pylint: disable=missing-class-docstring
 class CacheContext:
     def __init__(
         self,
@@ -54,6 +54,8 @@ class CacheContext:
             if self.spark:
                 return self.cache.write(self.spark, df)
             return self.cache.write(df)
+
+        return None
 
     def exists(self):
         if self.disabled:

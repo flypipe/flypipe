@@ -23,24 +23,33 @@ def run_around_tests():
         os.remove("test.csv")
 
 
+# pylint: disable=missing-class-docstring
 class GenericCache(Cache):
+
+    # pylint: disable=arguments-differ
     def read(self):
         return pd.read_csv("test.csv")
 
+    # pylint: disable=arguments-differ
     def write(self, df):
         df.to_csv("test.csv", index=False)
 
+    # pylint: disable=arguments-differ
     def exists(self):
         return os.path.exists("test.csv")
 
 
 class GenericCacheSpark(Cache):
+
+    # pylint: disable=arguments-differ, unused-argument)
     def read(self, spark):
         return pd.read_csv("test.csv")
 
+    # pylint: disable=arguments-differ, unused-argument)
     def write(self, spark, df):
         df.to_csv("test.csv", index=False)
 
+    # pylint: disable=arguments-differ, unused-argument)
     def exists(self, spark):
         return os.path.exists("test.csv")
 
@@ -73,43 +82,43 @@ class TestCacheContext:
         cache_context = CacheContext(cache_mode=CacheMode.MERGE, cache=node_cache)
         assert cache_context.merge
 
-    def test_write_read_exists(self, node_cache):
+    def test_write_read_exists(self):
         cache_context = CacheContext(cache=GenericCache())
         cache_context.write(pd.DataFrame(data={"col1": [1]}))
         cache_context.read()
         cache_context.exists()
 
-    def test_write_read_spark(self, spark, node_cache):
+    def test_write_read_spark(self):
         cache_context = CacheContext(spark=spark, cache=GenericCacheSpark())
         cache_context.write(pd.DataFrame(data={"col1": [1]}))
         cache_context.read()
         cache_context.exists()
 
-    def test_write_non_spark(self, spark, node_cache):
+    def test_write_non_spark(self):
         cache_context = CacheContext(spark=spark, cache=GenericCache())
 
         with pytest.raises(TypeError):
             cache_context.write(pd.DataFrame(data={"col1": [1]}))
 
-    def test_exists(self, node_cache):
+    def test_exists(self):
         cache_context = CacheContext(cache=GenericCache())
         cache_context.exists()
 
-    def test_exists_spark(self, spark, node_cache):
+    def test_exists_spark(self):
         cache_context = CacheContext(spark=spark, cache=GenericCacheSpark())
         cache_context.exists()
 
-    def test_exists_no_cache(self, node_cache):
+    def test_exists_no_cache(self):
         cache_context = CacheContext()
         with pytest.raises(RuntimeError):
             cache_context.exists()
 
-    def test_exists_no_spark_cache(self, spark, node_cache):
+    def test_exists_no_spark_cache(self):
         cache_context = CacheContext(spark=spark, cache=GenericCache())
         with pytest.raises(TypeError):
             cache_context.exists()
 
-    def test_exists_spark_cache_no_session(self, spark, node_cache):
+    def test_exists_spark_cache_no_session(self):
         cache_context = CacheContext(cache=GenericCacheSpark())
         with pytest.raises(TypeError):
             cache_context.exists()

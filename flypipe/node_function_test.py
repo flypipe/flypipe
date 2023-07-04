@@ -100,7 +100,7 @@ class TestNodeFunction:
             t1.run()
 
         @node_function(node_dependencies=[a, b])
-        def t1():
+        def t2():
             @node(type="pandas", dependencies=[b])
             def t1(b):
                 return b
@@ -108,15 +108,15 @@ class TestNodeFunction:
             return t1
 
         with pytest.raises(ValueError):
-            t1.run()
+            t2.run()
 
         @node_function(node_dependencies=[b])
-        def t1():
+        def t3():
             @node(type="pandas", dependencies=[a, b])
-            def t1(a, b):
+            def t1(a, b):  # pylint: disable=unused-argument
                 return b
 
             return t1
 
         with pytest.raises(ValueError):
-            t1.run()
+            t3.run()
