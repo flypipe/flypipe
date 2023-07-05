@@ -35,7 +35,7 @@
         "react-bootstrap": "^2.7.2",
         "react-copy-to-clipboard": "^5.1.0",
         "react-dom": "^18.2.0",
-        "react-icons": "^4.7.1",
+        "react-icons": "^4.9.0",
         "react-select": "^5.7.0",
         "react-syntax-highlighter": "^15.5.0",
         "react-tag-autocomplete": "^6.3.0",
