@@ -70,6 +70,9 @@ class Node:  # pylint: disable=too-many-instance-attributes
             self.description = ""
 
         self.group = group
+        if self.group:
+            self.group = re.sub(r"[^\da-zA-Z]", "_", self.group)
+
 
         # TODO: enforce tags for now, later validation can be set as optional via environment variable
         self.tags = []
