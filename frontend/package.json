@@ -40,7 +40,7 @@
         "react-syntax-highlighter": "^15.5.0",
         "react-tag-autocomplete": "^6.3.0",
         "react-uuid": "^2.0.0",
-        "reactflow": "^11.5.3",
+        "reactflow": "^11.7.2",
         "textfit": "^2.4.0",
         "zustand": "^4.3.3"
     },
