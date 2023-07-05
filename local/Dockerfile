@@ -13,8 +13,6 @@ RUN wget https://archive.apache.org/dist/spark/spark-3.3.2/spark-3.3.2-bin-hadoo
 RUN tar xf spark-*
 RUN mv spark-3.3.2-bin-hadoop3-scala2.13 /opt/spark
 
-
-
 ENV SPARK_HOME "/opt/spark"
 ENV HADOOP_HOME "${SPARK_HOME}"
 ENV PATH "${PATH}:${SPARK_HOME}/bin:${SPARK_HOME}/sbin"
