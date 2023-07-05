@@ -29,7 +29,7 @@ def t1(df):
 As each node (transformation) is connected to its ancestors, we can easily view the pipeline graphically in a html page 
 (`my_graph.html()`) or execute it by invoking `my_graph.run()`
 
-![Flypipe Graph Pipeline](/docs/source/_static/images/flypipe_pipelines.svg)
+![Flypipe Graph Pipeline](/docs/source/_static/images/flypipe_pipelines.png)
 
 ## What Flypipe aims to facilitate?
 
@@ -47,3 +47,7 @@ latency. This in turn allows for on-demand feature generation/predictions.
 ## Documentation
 
 Full documentation is available at [https://flypipe.github.io/flypipe/](https://flypipe.github.io/flypipe/). 
+
+## API
+
+API code is available at [https://github.com/flypipe/flypipe](https://github.com/flypipe/flypipe).

@@ -406,9 +406,6 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
         return result
 
-    def plot(self):
-        self.node_graph.plot()
-
     def html(  # pylint: disable=too-many-arguments
         self,
         spark=None,

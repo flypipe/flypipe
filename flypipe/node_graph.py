@@ -1,7 +1,6 @@
 from typing import List
 
 import networkx as nx
-from matplotlib import pyplot as plt
 from networkx import DiGraph
 
 from flypipe.cache.cache_context import CacheContext
@@ -429,13 +428,6 @@ class NodeGraph:
 
     def is_empty(self):
         return nx.number_of_nodes(self.graph) == 0
-
-    def plot(self, graph=None):
-        graph = graph or self.graph
-
-        plt.title("Transformation Graph")
-        nx.draw(graph, with_labels=True)
-        plt.show()
 
     def get_execution_graph(self, run_context: RunContext):
         """
