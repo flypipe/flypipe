@@ -50,3 +50,7 @@ jupyter-bash:
 docs:
 	sh ./docs/build_docs_dev.sh
 .PHONY: docs
+
+build:
+	flit build --format wheel
+.PHONY: build
