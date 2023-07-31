@@ -34,5 +34,3 @@ RUN groupadd -r hive --gid=1000 && \
 
 USER hive
 EXPOSE 9083
-
-ENTRYPOINT ["sh", "-c", "/entrypoint.sh"]

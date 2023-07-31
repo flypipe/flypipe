@@ -20,6 +20,7 @@ services:
       - ./data/metastore:/data
     depends_on:
       - flypipe-mariadb
+    entrypoint: sh -c './../entrypoint.sh'
 
   flypipe-jupyter:
     build:
