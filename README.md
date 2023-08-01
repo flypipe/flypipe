@@ -54,10 +54,10 @@ latency. This in turn allows for on-demand feature generation/predictions.
   <img src="./docs/source/_static/images/python.png" alt="Python" style="height:80px;"/>
 </p>
 
-## Documentation
-
-Full documentation is available at [https://flypipe.github.io/flypipe/](https://flypipe.github.io/flypipe/). 
-
-## API
+## Source Code
 
 API code is available at [https://github.com/flypipe/flypipe](https://github.com/flypipe/flypipe).
+
+## Documentation
+
+Full documentation is available at [https://flypipe.github.io/flypipe/](https://flypipe.github.io/flypipe/).
