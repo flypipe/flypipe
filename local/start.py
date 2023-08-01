@@ -65,3 +65,17 @@ def displayHTML(html):
     ></iframe>
     """
     return IPython.display.HTML(html_to_display)
+
+
+from IPython.core.magic import register_cell_magic
+from IPython.core.display import HTML
+
+
+@register_cell_magic
+def sql(line, cell):
+    display(HTML("<style>pre { white-space: pre !important; }</style>"))
+
+    queries = cell.split(";")
+    for query in queries:
+        display(spark.sql(query).show(n=1000, truncate=False))
+    return ""
