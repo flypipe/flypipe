@@ -1,0 +1,49 @@
+version: '3.9'
+services:
+  flypipe-mariadb:
+    image: mariadb:10.11.4
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+      MYSQL_DATABASE: metastore_db
+
+  flypipe-hive-metastore:
+    build:
+      context: .
+      dockerfile: ./hive/Dockerfile
+    ports:
+      - 9083:9083
+    volumes:
+      - ./data/metastore:/data
+    depends_on:
+      - flypipe-mariadb
+    entrypoint: sh -c './../entrypoint.sh'
+
+  flypipe-jupyter:
+    build:
+      context: ../
+      dockerfile: ./local/Dockerfile
+    container_name: flypipe-jupyter
+    ports:
+      - 8888:8888
+    environment:
+      FLYPIPE_DEFAULT_RUN_MODE: sequential
+      GIT_PYTHON_REFRESH: quiet
+    volumes:
+      - ../flypipe:/flypipe
+      - ./start.py:/etc/ipython/startup/start.py
+      - ../docs/source/notebooks:/notebooks/docs
+      - ./data:/data
+      - ./wait-for-it.sh:/wait-for-it.sh
+    entrypoint: sh -c 'jupyter-lab --notebook-dir /notebooks --allow-root --no-browser --port 8888 --ip 0.0.0.0  --NotebookApp.token="" --NotebookApp.password=""'
+
+  flypipe-test:
+    build:
+      context: ../
+      dockerfile: ./local/Dockerfile
+    container_name: flypipe-test
+    environment:
+      FLYPIPE_DEFAULT_RUN_MODE: sequential

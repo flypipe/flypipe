@@ -1,13 +1,13 @@
-import os
 import json
 import logging
+import os
 
 from flypipe.catalog.group import Group
 from flypipe.catalog.node import CatalogNode
 from flypipe.config import get_config
 from flypipe.node_function import NodeFunction
+from flypipe.run_context import RunContext
 from flypipe.template import get_template
-
 
 logger = logging.getLogger(__name__)
 
@@ -18,35 +18,76 @@ class Catalog:
     interactive node builder. The nodes in the catalog need to be manually registered before the catalog is rendered.
     """
 
-    def __init__(self):
+    def __init__(self, spark=None):
         self.nodes = {}
         self.groups = {}
         self.initial_nodes = []
+        self.spark = spark
 
-    def register_node(self, node, successor=None, node_graph=None):
+    # pylint: disable=too-many-arguments
+    def register_node(
+        self,
+        node,
+        inputs=None,
+        pandas_on_spark_use_pandas=False,
+        parameters=None,
+        cache=None,
+        add_node_to_graph=False,
+    ):
+
+        run_context = RunContext(
+            spark=self.spark,
+            provided_inputs=inputs,
+            pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+            parameters=parameters,
+            cache_modes=cache,
+        )
+
+        node.create_graph(run_context)
+
+        end_node_name = node.node_graph.get_end_node_name(node.node_graph.graph)
+        end_node = node.node_graph.get_transformation(end_node_name)
+        self._map_node(end_node, node_graph=node.node_graph)
+        if add_node_to_graph:
+            self.add_node_to_graph(end_node)
+
+    def _map_node(self, node, successor=None, node_graph=None):
+
         if isinstance(node, NodeFunction):
-            raise RuntimeError("Can not register node functions")
+            raise RuntimeError(
+                f"Node function '{node.function.__name__}' can not be registered to graph"
+            )
 
         if node.node_graph is not None:
             # The node graph gives us certain information about the nodes in the context of a single run, use this
             # if available.
             node_graph = node.node_graph
+
         if node.key not in self.nodes:
             self.nodes[node.key] = CatalogNode(node, node_graph)
+
         if node.group:
             if node.group not in self.groups:
                 self.groups[node.group] = Group(node.group)
             self.groups[node.group].add_node(node)
+
         if successor:
             self.nodes[node.key].register_successor(successor)
+
         for input_node in node.input_nodes:
-            self.register_node(input_node.node, node, node_graph)
+            # Input node can be a NodeFunction. We have to get the node from the graph (as it has been expanded)
+            # instead of the input node.
+            input_node_graph = node_graph.get_transformation(input_node.node.key)
+            self._map_node(input_node_graph, node, node_graph)
 
     def add_node_to_graph(self, node):
         """
         Ordinarily the catalog graph start out as empty but we can add nodes to it here such that the graph starts with
         them present.
         """
+        if isinstance(node, NodeFunction):
+            raise RuntimeError("Can not register node functions")
+
         self.initial_nodes.append(node.key)
 
     def html(self, height=850):

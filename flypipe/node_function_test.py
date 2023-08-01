@@ -78,3 +78,45 @@ class TestNodeFunction:
             return t2
 
         t1.run(parameters={t1: {"param1": 10, "param2": 20}})
+
+    def test_node_parameters2(self):
+        @node(type="pandas")
+        def a():
+            return pd.DataFrame({"col1": [1]})
+
+        @node(type="pandas")
+        def b():
+            return pd.DataFrame({"col1": [1]})
+
+        @node_function(node_dependencies=[a])
+        def t1():
+            @node(type="pandas", dependencies=[b])
+            def t1(b):
+                return b
+
+            return t1
+
+        with pytest.raises(ValueError):
+            t1.run()
+
+        @node_function(node_dependencies=[a, b])
+        def t2():
+            @node(type="pandas", dependencies=[b])
+            def t1(b):
+                return b
+
+            return t1
+
+        with pytest.raises(ValueError):
+            t2.run()
+
+        @node_function(node_dependencies=[b])
+        def t3():
+            @node(type="pandas", dependencies=[a, b])
+            def t1(a, b):  # pylint: disable=unused-argument
+                return b
+
+            return t1
+
+        with pytest.raises(ValueError):
+            t3.run()

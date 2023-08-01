@@ -144,6 +144,7 @@ const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
 
 const getEdgeDef = (graph, source, target, linkedEdge = null) => {
     const targetNode = graph.getNode(linkedEdge ? linkedEdge.target : target);
+    const sourceNode = graph.getNode(linkedEdge ? linkedEdge.source : source);
     return {
         id: `${source}-${target}`,
         isNew: targetNode.data.isNew || false,
@@ -197,6 +198,54 @@ const addOrReplaceEdge = (graph, edge) => {
                 ? getGroup(graph, targetGroup).id
                 : targetNode.id;
             addOrReplaceEdge(graph, getEdgeDef(graph, source, target, edge));
+
+            // If exists source and target groups, needs to create edges of all internal nodes of sourceGroup to
+            // targetGroup and edges from all internal nodes from targetGroup to sourceGroup
+            if (
+                sourceGroup != null &&
+                targetGroup != null &&
+                sourceGroup !== targetGroup
+            ) {
+                const sourceGroupNode = getGroup(graph, sourceGroup);
+                const targetGroupNode = getGroup(graph, targetGroup);
+                const internalTargetNodes = nodes.filter(
+                    (node) => node.data.group === targetGroup
+                );
+                const internalSourceNodes = nodes.filter(
+                    (node) => node.data.group === sourceGroup
+                );
+
+                internalTargetNodes.forEach((internalTargetNode) => {
+                    internalTargetNode.data.predecessors.forEach(
+                        (predecessorNodeId) => {
+                            if (
+                                sourceGroupNode.data.nodes.has(
+                                    predecessorNodeId
+                                )
+                            ) {
+                                const edgeToTargetDefinition = getEdgeDef(
+                                    graph,
+                                    source,
+                                    internalTargetNode.id,
+                                    edge
+                                );
+                                addOrReplaceEdge(graph, edgeToTargetDefinition);
+
+                                const edgeFromSourceDefinition = getEdgeDef(
+                                    graph,
+                                    predecessorNodeId,
+                                    target,
+                                    edge
+                                );
+                                addOrReplaceEdge(
+                                    graph,
+                                    edgeFromSourceDefinition
+                                );
+                            }
+                        }
+                    );
+                });
+            }
         }
         graph.setNodes(nodes);
     }
@@ -270,7 +319,10 @@ const generateCodeTemplate = (graph, nodeData) => {
     const dependencyList = predecessors
         .map((nodeId) => {
             const name = graph.getNode(nodeId).data.name;
-            if (predecessorColumns[nodeId].length > 0) {
+            if (
+                predecessorColumns[nodeId] !== undefined &&
+                predecessorColumns[nodeId].length > 0
+            ) {
                 const selectedColumns = predecessorColumns[nodeId]
                     .map((column) => `'${column}'`)
                     .join(", ");
@@ -280,6 +332,7 @@ const generateCodeTemplate = (graph, nodeData) => {
             }
         })
         .join(", ");
+
     const nodeParameters = [
         `type='${nodeType}'`,
         ...(description ? [`description='${description}'`] : []),
@@ -315,6 +368,9 @@ const getNewNodeDef = ({
     successors,
     sourceCode,
     isActive,
+    hasCache,
+    cacheIsDisabled,
+    hasProvidedInput,
 }) => ({
     nodeKey,
     label: name || "Untitled",
@@ -329,6 +385,9 @@ const getNewNodeDef = ({
     successors: successors || [],
     sourceCode: sourceCode || "",
     isActive: isActive || true,
+    hasCache: hasCache || false,
+    cacheIsDisabled: cacheIsDisabled || false,
+    hasProvidedInput: hasProvidedInput || false,
 });
 
 const deleteNode = (graph, nodeId) => {

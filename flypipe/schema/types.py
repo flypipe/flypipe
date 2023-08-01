@@ -16,6 +16,12 @@ class Type:
     def valid_values(self):
         return None
 
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return f"{self.name}()"
+
 
 class Unknown(Type):
     """Special type that is used when the type of column is unknown"""
@@ -69,6 +75,9 @@ class Decimal(Type):
     def __init__(self, precision: int = 13, scale: int = 2):
         self.precision = precision
         self.scale = scale
+
+    def __repr__(self):
+        return f"{self.name}({self.precision}, {self.scale})"
 
 
 class Date(Type):
@@ -141,7 +150,6 @@ class Date(Type):
         while python_format:
             if python_format.startswith("%"):
                 symbol = python_format[:2]
-                print(f'Extracted symbol "{symbol}"')
                 python_format = python_format[2:]
                 try:
                     pyspark_format.append(
@@ -153,7 +161,6 @@ class Date(Type):
                     ) from exc
             else:
                 formatting = python_format[0]
-                print(f'Extracted formatting "{formatting}"')
                 python_format = python_format[1:]
                 pyspark_format.append(formatting)
         return "".join(pyspark_format)

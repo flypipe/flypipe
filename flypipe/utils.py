@@ -1,9 +1,11 @@
 import json
 from enum import Enum
+
 import pandas as pd
 import pyspark.pandas as ps
 import pyspark.sql.dataframe as sql
 from pandas.testing import assert_frame_equal
+
 from flypipe.exceptions import (
     DataframeDifferentDataError,
     DataframeSchemasDoNotMatchError,

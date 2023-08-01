@@ -38,20 +38,36 @@ class NodeFunction(Node):
         if isinstance(nodes, Node):
             nodes = (nodes,)
 
+        set_internal_dependencies = set()
         for node in nodes:
             if isinstance(node, NodeFunction):
                 raise ValueError(
                     "Illegal operation - node functions cannot be returned from node functions"
                 )
             for dependency in node.input_nodes:
-                if dependency not in nodes and dependency not in self.node_dependencies:
-                    raise ValueError(
-                        f"Unknown node {dependency.key} in node function {self._key} dependencies "
-                        f"{[n._key for n in self.node_dependencies]}, all external dependencies must be defined in "
-                        f"node function parameter node_dependencies"
-                    )
+                if dependency not in nodes:
+                    set_internal_dependencies.add(dependency.node)
 
-        return list(nodes)
+        set_external_dependencies = set(self.node_dependencies)
+
+        difference = set_external_dependencies.difference(set_internal_dependencies)
+        if difference:
+            difference = [d.__name__ for d in difference]
+            raise ValueError(
+                f"Some node_dependencies ({', '.join(difference)}) of the node function {self.__name__} "
+                f"are not being used by any of its internal nodes"
+            )
+
+        difference = set_internal_dependencies.difference(set_external_dependencies)
+        if difference:
+            difference = [d.__name__ for d in difference]
+            raise ValueError(
+                f"Some internal nodes dependencies ({', '.join(difference)}) are not declared as "
+                f"external dependency of the node function {self.__name__}. "
+                f"Please add these nodes to 'node_dependencies' parameter"
+            )
+
+        return [node.copy() for node in list(nodes)]
 
     def copy(self):
         node_function = NodeFunction(

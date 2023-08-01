@@ -18,6 +18,9 @@ from flypipe.schema.types import (
     String,
 )
 
+# noinspection PyUnresolvedReferences
+from flypipe.tests.conftest import spark
+
 
 class TestPandasDataFrameWrapper:
     """Tests for Pandas Data Frame"""
@@ -71,7 +74,7 @@ class TestPandasDataFrameWrapper:
         with pytest.raises(DataFrameMissingColumns):
             df_wrapper.select_columns(["col1", "col4"])
 
-    def test_get_column_flypipe_type(self, spark):
+    def test_get_column_flypipe_type(self):
         df = pd.DataFrame(
             {
                 "c1": [True],
