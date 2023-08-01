@@ -47,11 +47,12 @@ As each node (transformation) is connected to its ancestors, we can easily view 
 - Framework level optimisations and dynamic transformations help to make even complex transformation pipelines low 
 latency. This in turn allows for on-demand feature generation/predictions.
 
-## Commonly used:
+## Commonly used
 
-<img src="./docs/source/_static/images/databricks_logo.png" alt="Databricks" style="height:100px;"/>
-<img src="./docs/source/_static/images/python.png" alt="Python" style="height:80px;"/>
-
+<p float="left">
+  <img src="./docs/source/_static/images/databricks_logo.png" alt="Databricks" style="height:100px;"/>
+  <img src="./docs/source/_static/images/python.png" alt="Python" style="height:80px;"/>
+</p>
 
 ## Documentation
 
