@@ -31,7 +31,7 @@ jobs:
       - name: Setup dependencies
         uses: ./.github/actions/setup-dependencies
       - name: Run formatter on backend (black)
-        run: black flypipe --check
+        run: make black-check
       - name: Run formatter on frontend (prettier)
         run: |
           cd frontend
