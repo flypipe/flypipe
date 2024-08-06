@@ -32,7 +32,6 @@ class GenericCache(Cache):
 
 
 class GenericCacheSpark(Cache):
-
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 

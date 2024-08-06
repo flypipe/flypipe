@@ -24,7 +24,6 @@ def spark():
 
 # pylint: disable=missing-class-docstring
 class GenericCache(Cache):
-
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 
@@ -137,7 +136,10 @@ class TestCache:
             # pylint: disable=arguments-differ, unused-argument
             def exists(self, spark):
                 if os.path.exists(self.cache_csv):
-                    return spark.read.option("header", True).csv(self.cache_csv).count() > 0
+                    return (
+                        spark.read.option("header", True).csv(self.cache_csv).count()
+                        > 0
+                    )
 
                 return False
 
@@ -435,7 +437,6 @@ class TestCache:
 
     def test_cache_merge(self, mocker):
         class MyCache(Cache):
-
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
@@ -600,7 +601,6 @@ class TestCache:
         """
 
         class GenericCache1(Cache):
-
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
@@ -617,7 +617,6 @@ class TestCache:
                 return os.path.exists(self.cache_csv)
 
         class GenericCache2(Cache):
-
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
@@ -692,7 +691,6 @@ class TestCache:
         """
 
         class GenericCache1(Cache):
-
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
@@ -709,7 +707,6 @@ class TestCache:
                 return os.path.exists(self.cache_csv)
 
         class GenericCache2(Cache):
-
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
