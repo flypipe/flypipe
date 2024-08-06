@@ -20,15 +20,15 @@ ping:
 .PHONY: ping
 
 black:
-	black flypipe
+	$(RUN_PYTHON) /bin/bash -c "black flypipe"
 .PHONY: black
 
 black-check:
-	black flypipe --check
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe --check"
 .PHONY: black-check
 
 pylint:
-	python -m pylint flypipe
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "python -m pylint flypipe"
 .PHONY: pylint
 
 coverage:

@@ -39,11 +39,4 @@ jobs:
       - name: Run linter (pylint)
         run: make pylint
       - name: Run unit tests
-        run: coverage run --source=flypipe -m pytest flypipe
-      - name: Check total unit test coverage >= 85%
-        run: coverage report --fail-under=85
-      - name: Check branch unit test coverage >= 95%
-        run: |
-          coverage xml
-          diff-cover coverage.xml --fail-under=95
-
+        run: make coverage
