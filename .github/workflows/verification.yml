@@ -30,6 +30,8 @@ jobs:
           fetch-depth: 0
       - name: Setup dependencies
         uses: ./.github/actions/setup-dependencies
+      - name: Check docker Compose
+        run: docker-compose --version
       - name: Run formatter on backend (black)
         run: make black-check
       - name: Run formatter on frontend (prettier)
