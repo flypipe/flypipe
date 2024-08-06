@@ -37,7 +37,7 @@ jobs:
           cd frontend
           yarn prettier-check
       - name: Run linter (pylint)
-        run: python -m pylint flypipe
+        run: make pylint
       - name: Run unit tests
         run: coverage run --source=flypipe -m pytest flypipe
       - name: Check total unit test coverage >= 85%
