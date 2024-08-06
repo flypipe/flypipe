@@ -1,4 +1,5 @@
 import os
+from uuid import uuid4
 
 import pandas as pd
 import pytest
@@ -21,43 +22,23 @@ def spark():
     return spark
 
 
-@pytest.fixture(autouse=True)
-def clean_up():
-    if os.path.exists("test.csv"):
-        os.remove("test.csv")
-
-    if os.path.exists("test1.csv"):
-        os.remove("test1.csv")
-
-    if os.path.exists("test2.csv"):
-        os.remove("test2.csv")
-
-    yield
-
-    if os.path.exists("test.csv"):
-        os.remove("test.csv")
-
-    if os.path.exists("test1.csv"):
-        os.remove("test1.csv")
-
-    if os.path.exists("test2.csv"):
-        os.remove("test2.csv")
-
-
 # pylint: disable=missing-class-docstring
 class GenericCache(Cache):
 
+    def __init__(self):
+        self.cache_csv = f"{str(uuid4())}.csv"
+
     # pylint: disable=arguments-differ
     def read(self):
-        return pd.read_csv("test.csv")
+        return pd.read_csv(self.cache_csv)
 
     # pylint: disable=arguments-differ
     def write(self, df):
-        df.to_csv("test.csv", index=False)
+        df.to_csv(self.cache_csv, index=False)
 
     # pylint: disable=arguments-differ
     def exists(self):
-        return os.path.exists("test.csv")
+        return os.path.exists(self.cache_csv)
 
 
 @pytest.fixture(scope="function")
@@ -99,7 +80,7 @@ class TestCache:
         class GenericCache2(GenericCache):
             def write(self, df):
                 df = pd.DataFrame(data={"col1": [1]})
-                df.to_csv("test.csv", index=False)
+                df.to_csv(self.cache_csv, index=False)
 
         cache = GenericCache2()
 
@@ -146,17 +127,17 @@ class TestCache:
                 return (
                     spark.read.option("inferSchema", True)
                     .option("header", True)
-                    .csv("test.csv")
+                    .csv(self.cache_csv)
                 )
 
             # pylint: disable=arguments-differ, unused-argument
             def write(self, spark, df):
-                df.toPandas().to_csv("test.csv", index=False)
+                df.toPandas().to_csv(self.cache_csv, index=False)
 
             # pylint: disable=arguments-differ, unused-argument
             def exists(self, spark):
-                if os.path.exists("test.csv"):
-                    return spark.read.option("header", True).csv("test.csv").count() > 0
+                if os.path.exists(self.cache_csv):
+                    return spark.read.option("header", True).csv(self.cache_csv).count() > 0
 
                 return False
 
@@ -402,10 +383,10 @@ class TestCache:
         spy_reader.reset_mock()
         spy_exists.reset_mock()
 
-        assert not os.path.exists("test.csv")
+        assert not os.path.exists(cache.cache_csv)
         output_df = t.run(cache={t: CacheMode.DISABLE})
         assert_frame_equal(t_df, output_df)
-        assert not os.path.exists("test.csv")
+        assert not os.path.exists(cache.cache_csv)
         assert spy_writter.call_count == 0
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 0
@@ -415,10 +396,10 @@ class TestCache:
         spy_reader.reset_mock()
         spy_exists.reset_mock()
 
-        assert not os.path.exists("test.csv")
+        assert not os.path.exists(cache.cache_csv)
         output_df = t.run()
         assert_frame_equal(t_df, output_df)
-        assert os.path.exists("test.csv")
+        assert os.path.exists(cache.cache_csv)
 
         assert spy_writter.call_count == 1
         assert spy_reader.call_count == 0
@@ -429,10 +410,10 @@ class TestCache:
         spy_reader.reset_mock()
         spy_exists.reset_mock()
 
-        assert os.path.exists("test.csv")
+        assert os.path.exists(cache.cache_csv)
         output_df = t.run()
         assert_frame_equal(t_df, output_df)
-        assert os.path.exists("test.csv")
+        assert os.path.exists(cache.cache_csv)
 
         assert spy_writter.call_count == 0
         assert spy_reader.call_count == 1
@@ -443,10 +424,10 @@ class TestCache:
         spy_reader.reset_mock()
         spy_exists.reset_mock()
 
-        assert os.path.exists("test.csv")
+        assert os.path.exists(cache.cache_csv)
         output_df = t.run(cache={t: CacheMode.DISABLE})
         assert_frame_equal(t_df, output_df)
-        assert os.path.exists("test.csv")
+        assert os.path.exists(cache.cache_csv)
 
         assert spy_writter.call_count == 0
         assert spy_reader.call_count == 0
@@ -455,21 +436,24 @@ class TestCache:
     def test_cache_merge(self, mocker):
         class MyCache(Cache):
 
+            def __init__(self):
+                self.cache_csv = f"{str(uuid4())}.csv"
+
             # pylint: disable=arguments-differ
             def read(self):
-                return pd.read_csv("test.csv")
+                return pd.read_csv(self.cache_csv)
 
             # pylint: disable=arguments-differ
             def write(self, df):
                 if self.exists():
                     df = pd.DataFrame(data={"col1": [1, 2], "col2": [2, 3]})
-                    df.to_csv("test.csv", index=False)
+                    df.to_csv(self.cache_csv, index=False)
                 else:
-                    df.to_csv("test.csv", index=False)
+                    df.to_csv(self.cache_csv, index=False)
 
             # pylint: disable=arguments-differ
             def exists(self):
-                return os.path.exists("test.csv")
+                return os.path.exists(self.cache_csv)
 
         cache = MyCache()
 
@@ -517,7 +501,7 @@ class TestCache:
         def t2(t1):
             return t1
 
-        assert not os.path.exists("test.csv")
+        assert not os.path.exists(cache.cache_csv)
         spy_writter = mocker.spy(t1.cache, "write")
         spy_reader = mocker.spy(t1.cache, "read")
         spy_exists = mocker.spy(t1.cache, "exists")
@@ -526,8 +510,8 @@ class TestCache:
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 1
 
-        assert os.path.exists("test.csv")
-        df = pd.read_csv("test.csv")
+        assert os.path.exists(cache.cache_csv)
+        df = pd.read_csv(cache.cache_csv)
         assert sorted(list(df.columns)) == ["col1", "col2"]
 
     def test_node_function_cache(self, cache):
@@ -617,31 +601,37 @@ class TestCache:
 
         class GenericCache1(Cache):
 
+            def __init__(self):
+                self.cache_csv = f"{str(uuid4())}.csv"
+
             # pylint: disable=arguments-differ
             def read(self):
-                return pd.read_csv("test1.csv")
+                return pd.read_csv(self.cache_csv)
 
             # pylint: disable=arguments-differ
             def write(self, df):
-                df.to_csv("test1.csv", index=False)
+                df.to_csv(self.cache_csv, index=False)
 
             # pylint: disable=arguments-differ
             def exists(self):
-                return os.path.exists("test1.csv")
+                return os.path.exists(self.cache_csv)
 
         class GenericCache2(Cache):
 
+            def __init__(self):
+                self.cache_csv = f"{str(uuid4())}.csv"
+
             # pylint: disable=arguments-differ
             def read(self):
-                return pd.read_csv("test2.csv")
+                return pd.read_csv(self.cache_csv)
 
             # pylint: disable=arguments-differ
             def write(self, df):
-                df.to_csv("test2.csv", index=False)
+                df.to_csv(self.cache_csv, index=False)
 
             # pylint: disable=arguments-differ
             def exists(self):
-                return os.path.exists("test2.csv")
+                return os.path.exists(self.cache_csv)
 
         @node(
             type="pandas",
@@ -703,31 +693,37 @@ class TestCache:
 
         class GenericCache1(Cache):
 
+            def __init__(self):
+                self.cache_csv = f"{str(uuid4())}.csv"
+
             # pylint: disable=arguments-differ
             def read(self):
-                return pd.read_csv("test1.csv")
+                return pd.read_csv(self.cache_csv)
 
             # pylint: disable=arguments-differ
             def write(self, df):
-                df.to_csv("test1.csv", index=False)
+                df.to_csv(self.cache_csv, index=False)
 
             # pylint: disable=arguments-differ
             def exists(self):
-                return os.path.exists("test1.csv")
+                return os.path.exists(self.cache_csv)
 
         class GenericCache2(Cache):
 
+            def __init__(self):
+                self.cache_csv = f"{str(uuid4())}.csv"
+
             # pylint: disable=arguments-differ
             def read(self):
-                return pd.read_csv("test2.csv")
+                return pd.read_csv(self.cache_csv)
 
             # pylint: disable=arguments-differ
             def write(self, df):
-                df.to_csv("test2.csv", index=False)
+                df.to_csv(self.cache_csv, index=False)
 
             # pylint: disable=arguments-differ
             def exists(self):
-                return os.path.exists("test2.csv")
+                return os.path.exists(self.cache_csv)
 
         @node(
             type="pandas",

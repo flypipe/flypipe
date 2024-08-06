@@ -1,8 +1,7 @@
 SHELL                       :=/bin/bash
 
 LOCAL_DIR=./local
-workers=1
-file=flypipe
+PYTEST_THREADS ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
 min_coverage=85
 min_branch_coverage=95
 
@@ -33,9 +32,12 @@ pylint:
 .PHONY: pylint
 
 coverage:
-	coverage run --source=flypipe -m pytest flypipe
-	coverage report --fail-under=$(min_coverage)
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "pytest -n $(PYTEST_THREADS) -k '_test.py' --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
 .PHONY: coverage
+
+test:
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "pytest -n $(PYTEST_THREADS) -k '_test.py' -vv $(f)"
+.PHONY: test
 
 branch-coverage:
 	coverage xml

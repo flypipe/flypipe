@@ -1,4 +1,5 @@
 import os
+from uuid import uuid4
 
 import pandas as pd
 import pytest
@@ -12,46 +13,40 @@ from flypipe.node import node
 from flypipe.tests.conftest import spark
 
 
-@pytest.fixture(autouse=True)
-def run_around_tests():
-    if os.path.exists("test.csv"):
-        os.remove("test.csv")
-
-    yield
-
-    if os.path.exists("test.csv"):
-        os.remove("test.csv")
-
-
 # pylint: disable=missing-class-docstring
 class GenericCache(Cache):
+    def __init__(self):
+        self.cache_csv = f"{str(uuid4())}.csv"
 
     # pylint: disable=arguments-differ
     def read(self):
-        return pd.read_csv("test.csv")
+        return pd.read_csv(self.cache_csv)
 
     # pylint: disable=arguments-differ
     def write(self, df):
-        df.to_csv("test.csv", index=False)
+        df.to_csv(self.cache_csv, index=False)
 
     # pylint: disable=arguments-differ
     def exists(self):
-        return os.path.exists("test.csv")
+        return os.path.exists(self.cache_csv)
 
 
 class GenericCacheSpark(Cache):
 
+    def __init__(self):
+        self.cache_csv = f"{str(uuid4())}.csv"
+
     # pylint: disable=arguments-differ, unused-argument)
     def read(self, spark):
-        return pd.read_csv("test.csv")
+        return pd.read_csv(self.cache_csv)
 
     # pylint: disable=arguments-differ, unused-argument)
     def write(self, spark, df):
-        df.to_csv("test.csv", index=False)
+        df.to_csv(self.cache_csv, index=False)
 
     # pylint: disable=arguments-differ, unused-argument)
     def exists(self, spark):
-        return os.path.exists("test.csv")
+        return os.path.exists(self.cache_csv)
 
 
 @pytest.fixture(scope="function")
