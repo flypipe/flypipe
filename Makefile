@@ -20,7 +20,7 @@ ping:
 .PHONY: ping
 
 black:
-	$(RUN_PYTHON) /bin/bash -c "black flypipe"
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe"
 .PHONY: black
 
 black-check:
