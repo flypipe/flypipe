@@ -44,7 +44,6 @@ class TestNodeGraph:
         assert graph.get_edge_data(t1.key, t2.key)["selected_columns"] == ["fruit"]
         assert graph.get_edge_data(t1.key, t3.key)["selected_columns"] == ["color"]
         assert graph.get_node(t1.key)["output_columns"] == ["color", "fruit"]
-        assert True == False  # noqa: E712
 
     def test_calculate_graph_run_status_1(self):
         @node(type="pandas")
