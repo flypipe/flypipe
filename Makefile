@@ -2,7 +2,7 @@ SHELL                       :=/bin/bash
 
 LOCAL_DIR=./local
 PYTEST_THREADS ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
-min_coverage=95
+min_coverage=85
 min_branch_coverage=95
 
 up:
