@@ -1024,7 +1024,6 @@ class TestNode:
                 return pd.DataFrame(data={"col1": [1]})
 
         class MyCache(Cache):
-
             def read(self):
                 pass
 

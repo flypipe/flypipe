@@ -106,9 +106,7 @@ class Date(Type):
         for python_symbol, pyspark_symbol in PYTHON_PYSPARK_DATETIME_SYMBOL_MAP.items()
     }
 
-    def __init__(
-        self, format="yyyy-MM-dd", format_mode=DateFormat.PYSPARK
-    ):
+    def __init__(self, format="yyyy-MM-dd", format_mode=DateFormat.PYSPARK):
         """
         Parameters
         ----------
@@ -192,9 +190,7 @@ class Date(Type):
 class DateTime(Date):
     """Flypipe datetime type"""
 
-    def __init__(
-        self, format="yyyy-MM-dd H:m:s", format_mode=DateFormat.PYSPARK
-    ):
+    def __init__(self, format="yyyy-MM-dd H:m:s", format_mode=DateFormat.PYSPARK):
         """
         Parameters
         ----------

@@ -9,9 +9,7 @@ class NodeFunction(Node):
 
     NODE_TYPE = NodeType.NODE_FUNCTION
 
-    def __init__(
-        self, function, node_dependencies=None, requested_columns=False
-    ):
+    def __init__(self, function, node_dependencies=None, requested_columns=False):
         self._key = None
         self.function = function
         self.node_dependencies = node_dependencies or []

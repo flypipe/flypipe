@@ -46,9 +46,7 @@ class DataFrameMissingColumns(Exception):
     been requested.
     """
 
-    def __init__(
-        self, source_columns, selected_columns
-    ):
+    def __init__(self, source_columns, selected_columns):
 
         # Columns found or difference case sensitive
         all_cols = []

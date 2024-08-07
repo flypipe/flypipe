@@ -261,9 +261,7 @@ class Node:
     def dataframe_type(self):
         return self.DATAFRAME_TYPE_MAP[self.type]
 
-    def _run_parallel(
-        self, run_context: RunContext, execution_graph
-    ):
+    def _run_parallel(self, run_context: RunContext, execution_graph):
         def execute(node):
             self.process_transformation_with_cache(node, run_context)
             return node["transformation"].key

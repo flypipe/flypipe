@@ -7,9 +7,7 @@ class Column:
     Model for a column in the output of a flypipe transformation.
     """
 
-    def __init__(
-        self, name: str, type: Type, description: str = ""
-    ):
+    def __init__(self, name: str, type: Type, description: str = ""):
         self.name = name
         self.type = type
         if not description and get_config("require_schema_description"):

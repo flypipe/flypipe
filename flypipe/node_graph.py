@@ -138,9 +138,7 @@ class NodeGraph:
 
         return graph
 
-    def _expand_node_functions(
-        self, graph: DiGraph
-    ):
+    def _expand_node_functions(self, graph: DiGraph):
         """
         Expand all node functions. Given a node graph, return the same node graph with all node functions expanded.
         """

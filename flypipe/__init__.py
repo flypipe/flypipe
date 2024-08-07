@@ -4,7 +4,7 @@ Flypipe
 import os
 
 with open(
-        os.path.join(os.path.dirname(__file__), "version.txt"), "r", encoding="utf-8"
+    os.path.join(os.path.dirname(__file__), "version.txt"), "r", encoding="utf-8"
 ) as f:
     __version__ = f.read()
 # TODO: we shouldn't need this try except, there's some weird thing that happens when we run flit build where it runs

@@ -94,8 +94,6 @@ class DataFrameWrapper(ABC):
     def _cast_column(self, column: str, flypipe_type: Type, df_type):
         raise NotImplementedError
 
-    def _cast_column_unknown(
-        self, column: str, flypipe_type: Type
-    ):
+    def _cast_column_unknown(self, column: str, flypipe_type: Type):
         """If we don't know the type let's do nothing"""
         return

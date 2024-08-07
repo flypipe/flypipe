@@ -46,7 +46,6 @@ class TestCache:
 
     def test_cache(self):
         class MyCache(Cache):
-
             def read(self):
                 pass
 
@@ -59,7 +58,6 @@ class TestCache:
         MyCache()
 
     def test_cache_inheritance(self):
-
         class MyCache(Cache):
             pass
 
@@ -111,7 +109,6 @@ class TestCache:
 
     def test_cache_spark_provided(self, spark, mocker):
         class GenericCache2(GenericCache):
-
             def read(self, spark):
                 return (
                     spark.read.option("inferSchema", True)
