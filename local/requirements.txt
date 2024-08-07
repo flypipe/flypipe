@@ -14,23 +14,23 @@ twine==5.1.1
 toml==0.10.2
 
 #Documentation
-sphinx-rtd-theme==1.1.1
-Sphinx==5.3.0
+Sphinx==6.2.1
+sphinx-rtd-theme==2.0.0
 Sphinx-Substitution-Extensions==2022.2.16
-myst-parser==0.18.1
-linkify-it-py==2.0.0
-ipython==8.10.0
+myst-parser==3.0.1
+linkify-it-py==2.0.3
+ipython==8.18.1
 sphinx-multiversion==0.2.4
 sphinxcontrib.images==0.9.4
 sphinxcontrib.napoleon==0.7
-nbsphinx==0.8.10
-sphinx-favicon==0.2
-gitpython==3.1.30
+nbsphinx==0.9.4
+sphinx-favicon==1.0.1
+gitpython==3.1.43
 
 #Development
-jupyterlab==3.4.5
+jupyterlab==4.2.4
 pythonping==1.1.4
-ipytest==0.13.0
+ipytest==0.14.2
 delta-spark==2.1.1
 mlflow==2.0.1
 matplotlib==3.6.2
