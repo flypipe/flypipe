@@ -27,9 +27,9 @@ black-check:
 	docker compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe --check"
 .PHONY: black-check
 
-pylint:
-	docker compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "python -m pylint flypipe"
-.PHONY: pylint
+lint:
+	docker compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "python -m ruff check flypipe"
+.PHONY: lint
 
 coverage:
 	docker compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "pytest -n $(PYTEST_THREADS) -k '_test.py' --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"

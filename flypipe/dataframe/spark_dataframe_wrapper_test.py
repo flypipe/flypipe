@@ -37,7 +37,6 @@ from flypipe.schema.types import (
 
 @pytest.fixture
 def spark():
-    # pylint: disable-next=import-outside-toplevel
     from flypipe.tests.spark import spark
 
     return spark

@@ -30,7 +30,7 @@ class Unknown(Type):
 class Boolean(Type):
     """Flypipe boolean type"""
 
-    VALID_VALUES = {True, False, 1, 0}  # pylint: disable=duplicate-value
+    VALID_VALUES = {True, False, 1, 0}
 
     @property
     def valid_values(self):
@@ -108,7 +108,7 @@ class Date(Type):
 
     def __init__(
         self, format="yyyy-MM-dd", format_mode=DateFormat.PYSPARK
-    ):  # pylint: disable=redefined-builtin
+    ):
         """
         Parameters
         ----------
@@ -194,7 +194,7 @@ class DateTime(Date):
 
     def __init__(
         self, format="yyyy-MM-dd H:m:s", format_mode=DateFormat.PYSPARK
-    ):  # pylint: disable=redefined-builtin
+    ):
         """
         Parameters
         ----------

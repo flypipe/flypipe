@@ -98,7 +98,7 @@ class PandasDataFrameWrapper(DataFrameWrapper):
 
     def _cast_column_integer(
         self, column, flypipe_type
-    ):  # pylint: disable=unused-argument
+    ):
         integer_type = pd.Int64Dtype()
         # Automatic casts to the pandas integer extension type from float error out, we have to manually tweak it,
         # solution adapted from

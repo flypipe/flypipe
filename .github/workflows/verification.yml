@@ -36,7 +36,7 @@ jobs:
         run: |
           cd frontend
           yarn prettier-check
-      - name: Run linter (pylint)
-        run: make pylint
+      - name: Run linter (ruff)
+        run: make lint
       - name: Run unit tests
         run: make coverage

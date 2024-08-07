@@ -257,7 +257,6 @@ class GraphHTML:
                         target_node["transformation"].key
                     ],
                     "active": (
-                        # pylint: disable-next=consider-using-in
                         source_node["status"] != RunStatus.SKIP
                         and target_node["status"] != RunStatus.SKIP
                     ),

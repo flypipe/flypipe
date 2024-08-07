@@ -19,7 +19,7 @@ class NodeGraph:
     this.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         transformation: Node,
         run_context: RunContext,
@@ -91,7 +91,7 @@ class NodeGraph:
 
         return graph
 
-    def add_node(  # pylint: disable=too-many-arguments
+    def add_node(
         self,
         graph: DiGraph,
         node_name: str,
@@ -140,7 +140,7 @@ class NodeGraph:
 
     def _expand_node_functions(
         self, graph: DiGraph
-    ):  # pylint: disable=too-many-branches
+    ):
         """
         Expand all node functions. Given a node graph, return the same node graph with all node functions expanded.
         """
@@ -149,8 +149,7 @@ class NodeGraph:
             for node_key in graph
             if isinstance(graph.nodes[node_key]["transformation"], NodeFunction)
         ]
-        # TODO- pylint flagged the below as having too many nested blocks, we should refactor it to be cleaner
-        while node_functions:  # pylint: disable=too-many-nested-blocks
+        while node_functions:
             found_node_function = False
             # FIXME: messy to call this twice
             node_functions = [
@@ -308,7 +307,6 @@ class NodeGraph:
                 return name
         return None
 
-    # pylint: disable=too-many-branches
     def calculate_graph_run_status(self):
 
         # because the last node can be a generator, we have to get the last node node
@@ -398,7 +396,7 @@ class NodeGraph:
             depth = len(
                 max(
                     list(nx.all_simple_paths(self.graph, node, end_node)),
-                    key=lambda x: len(x),  # pylint: disable=unnecessary-lambda
+                    key=lambda x: len(x),
                     default=[end_node],
                 )
             )

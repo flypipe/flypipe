@@ -17,50 +17,42 @@ from flypipe.schema.types import Integer
 
 @pytest.fixture(scope="function")
 def spark():
-    from flypipe.tests.spark import spark  # pylint: disable=import-outside-toplevel
+    from flypipe.tests.spark import spark
 
     return spark
 
 
-# pylint: disable=missing-class-docstring
 class GenericCache(Cache):
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 
-    # pylint: disable=arguments-differ
     def read(self):
         return pd.read_csv(self.cache_csv)
 
-    # pylint: disable=arguments-differ
     def write(self, df):
         df.to_csv(self.cache_csv, index=False)
 
-    # pylint: disable=arguments-differ
     def exists(self):
         return os.path.exists(self.cache_csv)
 
 
 @pytest.fixture(scope="function")
-def cache():  # pylint: disable=duplicate-code
+def cache():
     return GenericCache()
 
 
-# pylint: disable=missing-class-docstring
 class TestCache:
     """Unit tests on the Cache class"""
 
     def test_cache(self):
         class MyCache(Cache):
 
-            # pylint: disable=arguments-differ
             def read(self):
                 pass
 
-            # pylint: disable=arguments-differ
             def write(self):
                 pass
 
-            # pylint: disable=arguments-differ
             def exists(self):
                 pass
 
@@ -68,7 +60,6 @@ class TestCache:
 
     def test_cache_inheritance(self):
 
-        # pylint: disable=abstract-class-instantiated
         class MyCache(Cache):
             pass
 
@@ -121,7 +112,6 @@ class TestCache:
     def test_cache_spark_provided(self, spark, mocker):
         class GenericCache2(GenericCache):
 
-            # pylint: disable=arguments-differ, unused-argument
             def read(self, spark):
                 return (
                     spark.read.option("inferSchema", True)
@@ -129,11 +119,9 @@ class TestCache:
                     .csv(self.cache_csv)
                 )
 
-            # pylint: disable=arguments-differ, unused-argument
             def write(self, spark, df):
                 df.toPandas().to_csv(self.cache_csv, index=False)
 
-            # pylint: disable=arguments-differ, unused-argument
             def exists(self, spark):
                 if os.path.exists(self.cache_csv):
                     return (
@@ -194,7 +182,7 @@ class TestCache:
             return pd.DataFrame(data={"t1": [1]})
 
         @node(type="pandas", cache=cache, dependencies=[t0, t1])
-        def t2(t0, t1):  # pylint: disable=unused-argument
+        def t2(t0, t1):
             return t0
 
         @node(
@@ -243,14 +231,14 @@ class TestCache:
             return t1
 
         @node(type="pandas", cache=cache, dependencies=[t0, t1])
-        def t2(t0, t1):  # pylint: disable=unused-argument
+        def t2(t0, t1):
             return t0
 
         @node(
             type="pandas",
             dependencies=[t2, t4],
         )
-        def t3(t2, t4):  # pylint: disable=unused-argument
+        def t3(t2, t4):
             return t2
 
         # to write cache
@@ -341,7 +329,6 @@ class TestCache:
         assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
 
-    # pylint: disable=too-many-statements
     def test_cases(self, cache, mocker):
         """
 
@@ -440,11 +427,9 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            # pylint: disable=arguments-differ
             def read(self):
                 return pd.read_csv(self.cache_csv)
 
-            # pylint: disable=arguments-differ
             def write(self, df):
                 if self.exists():
                     df = pd.DataFrame(data={"col1": [1, 2], "col2": [2, 3]})
@@ -452,7 +437,6 @@ class TestCache:
                 else:
                     df.to_csv(self.cache_csv, index=False)
 
-            # pylint: disable=arguments-differ
             def exists(self):
                 return os.path.exists(self.cache_csv)
 
@@ -588,7 +572,6 @@ class TestCache:
         assert spy_exists.call_count == 1
 
     def test_only_skip_nodes_all_acestors_not_active_nor_cached(self, mocker):
-        # pylint: disable=anomalous-backslash-in-string
         """
         t1 (cached) -> t2 (cached)
                 \       /
@@ -604,15 +587,12 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            # pylint: disable=arguments-differ
             def read(self):
                 return pd.read_csv(self.cache_csv)
 
-            # pylint: disable=arguments-differ
             def write(self, df):
                 df.to_csv(self.cache_csv, index=False)
 
-            # pylint: disable=arguments-differ
             def exists(self):
                 return os.path.exists(self.cache_csv)
 
@@ -620,15 +600,12 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            # pylint: disable=arguments-differ
             def read(self):
                 return pd.read_csv(self.cache_csv)
 
-            # pylint: disable=arguments-differ
             def write(self, df):
                 df.to_csv(self.cache_csv, index=False)
 
-            # pylint: disable=arguments-differ
             def exists(self):
                 return os.path.exists(self.cache_csv)
 
@@ -643,7 +620,6 @@ class TestCache:
         def t2(t1):
             return t1
 
-        # pylint: disable=unused-argument
         @node(type="pandas", dependencies=[t2, t1])
         def t3(t2, t1):
             return t2
@@ -676,9 +652,7 @@ class TestCache:
         assert spy_reader_t2.call_count == 1
         assert spy_exists_t2.call_count == 1
 
-    # pylint: disable=too-many-locals
     def test_only_skip_nodes_cached_ancestors(self, cache, mocker):
-        # pylint: disable=anomalous-backslash-in-string
         """
         t0 (cached) -> t1 (cached) -> t2 (cached)
                 \                         /
@@ -694,15 +668,12 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            # pylint: disable=arguments-differ
             def read(self):
                 return pd.read_csv(self.cache_csv)
 
-            # pylint: disable=arguments-differ
             def write(self, df):
                 df.to_csv(self.cache_csv, index=False)
 
-            # pylint: disable=arguments-differ
             def exists(self):
                 return os.path.exists(self.cache_csv)
 
@@ -710,15 +681,12 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            # pylint: disable=arguments-differ
             def read(self):
                 return pd.read_csv(self.cache_csv)
 
-            # pylint: disable=arguments-differ
             def write(self, df):
                 df.to_csv(self.cache_csv, index=False)
 
-            # pylint: disable=arguments-differ
             def exists(self):
                 return os.path.exists(self.cache_csv)
 
@@ -729,7 +697,6 @@ class TestCache:
         def t0():
             return pd.DataFrame(data={"col1": [1], "col2": [2]})
 
-        # pylint: disable=(unused-argument)
         @node(type="pandas", cache=GenericCache1(), dependencies=[t0])
         def t1(t0):
             return pd.DataFrame(data={"col1": [1], "col2": [2]})
@@ -738,7 +705,6 @@ class TestCache:
         def t2(t1):
             return t1
 
-        # pylint: disable=(unused-argument)
         @node(type="pandas", dependencies=[t2, t0])
         def t3(t2, t0):
             return t2

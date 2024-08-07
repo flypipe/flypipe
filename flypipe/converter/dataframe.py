@@ -1,7 +1,8 @@
+# ruff: noqa: E731
 from flypipe.utils import DataFrameType, dataframe_type
 
 
-class DataFrameConverter:  # pylint: disable=too-few-public-methods
+class DataFrameConverter:
     """Converts a dataframe between pandas, pandas on spark and pyspark
 
     Attributes
@@ -27,7 +28,6 @@ class DataFrameConverter:  # pylint: disable=too-few-public-methods
         lambda function
             the function to do the conversion
         """
-        # pylint: disable=unnecessary-lambda-assignment,unnecessary-lambda
         pandas_to_spark = lambda df: self.spark.createDataFrame(df)
         pandas_to_pandas_on_spark = lambda df: self.spark.createDataFrame(
             df
@@ -38,7 +38,6 @@ class DataFrameConverter:  # pylint: disable=too-few-public-methods
 
         spark_to_pandas = lambda df: df.toPandas()
         spark_to_pandas_on_spark = lambda df: df.pandas_api()
-        # pylint: enable=unnecessary-lambda-assignment
 
         return {
             DataFrameType.PANDAS: {

@@ -1,4 +1,4 @@
-from unittest import mock  # pylint: disable=too-many-lines
+from unittest import mock
 
 import pandas as pd
 import pyspark
@@ -24,7 +24,7 @@ from flypipe.utils import DataFrameType, dataframe_type
 
 @pytest.fixture(scope="function")
 def spark():
-    from flypipe.tests.spark import spark  # pylint: disable=import-outside-toplevel
+    from flypipe.tests.spark import spark
 
     spark.createDataFrame(
         schema=("c0", "c1"),
@@ -39,7 +39,7 @@ def spark():
     return spark
 
 
-class TestNode:  # pylint: disable=too-many-public-methods
+class TestNode:
     """Unit tests on the Node class"""
 
     def test_invalid_type(self):
@@ -196,29 +196,29 @@ class TestNode:  # pylint: disable=too-many-public-methods
         Ensure that different nodes with the same function name have different keys
         """
 
-        class A:  # pylint: disable=missing-class-docstring,invalid-name,too-few-public-methods
+        class A:
             @classmethod
             @node(type="pandas", output=Schema([Column("fruit", String(), "")]))
             def test(cls):
                 return pd.DataFrame({"fruit": ["banana"]})
 
-        class B:  # pylint: disable=missing-class-docstring,invalid-name,too-few-public-methods
-            class C:  # pylint: disable=missing-class-docstring,invalid-name,too-few-public-methods
+        class B:
+            class C:
                 @classmethod
                 @node(
                     type="pandas",
-                    dependencies=[A.test.select("fruit")],  # pylint: disable=no-member
+                    dependencies=[A.test.select("fruit")],
                     output=Schema([Column("fruit", String(), "")]),
                 )
                 def test(cls, test):
                     return test["fruit"]
 
         assert (
-            A.test.key  # pylint: disable=no-member
+            A.test.key
             == "flypipe_node_test_function_test_TestNode_test_key__locals__A_test"
         )
         assert (
-            B.C.test.key  # pylint: disable=no-member
+            B.C.test.key
             == "flypipe_node_test_function_test_TestNode_test_key__locals__B_C_test"
         )
 
@@ -246,12 +246,10 @@ class TestNode:  # pylint: disable=too-many-public-methods
         """
         Ensure that node graph is processed with node keys and alias is used for arguments
         """
-        # pylint: disable-next=import-outside-toplevel
         from flypipe.tests.transformations.group_1.t1 import (
             t1,
         )
 
-        # pylint: disable-next=import-outside-toplevel
         from flypipe.tests.transformations.group_2.t1 import (
             t1 as t1_group2,
         )
@@ -752,7 +750,6 @@ class TestNode:  # pylint: disable=too-many-public-methods
         assert t1.dataframe_type == DataFrameType.PANDAS_ON_SPARK
 
         # TODO- we should refactor to avoid having to call this private method to build a graph
-        # pylint: disable-next=protected-access
         t1.create_graph(RunContext(pandas_on_spark_use_pandas=True))
         for n in t1.node_graph.graph.nodes:
             if t1.node_graph.graph.nodes[n]["transformation"].__name__ == "t1":
@@ -834,7 +831,7 @@ class TestNode:  # pylint: disable=too-many-public-methods
             return a
 
         @node(type="pandas", dependencies=[a.select("c2"), b])
-        def c(a, b):  # pylint: disable=unused-argument
+        def c(a, b):
             return a
 
         c.run(parallel=False)
@@ -849,7 +846,7 @@ class TestNode:  # pylint: disable=too-many-public-methods
 
     def test_node_parameters_missing(self):
         @node(type="pandas")
-        def t1(param1):  # pylint: disable=unused-argument
+        def t1(param1):
             return pd.DataFrame()
 
         with pytest.raises(TypeError):
@@ -987,7 +984,6 @@ class TestNode:  # pylint: disable=too-many-public-methods
 
         input_node = t0.select("col3", "col2")
 
-        # pylint: disable=protected-access
         assert input_node._selected_columns == [
             "col2",
             "col3",
@@ -1018,7 +1014,6 @@ class TestNode:  # pylint: disable=too-many-public-methods
         assert input_node.get_alias() == "my_alias"
 
     def test_cache_instance(self):
-        # pylint: disable=missing-class-docstring, too-few-public-methods
         class MyCacheNoSuperclass:
             pass
 
@@ -1030,15 +1025,12 @@ class TestNode:  # pylint: disable=too-many-public-methods
 
         class MyCache(Cache):
 
-            # pylint: disable=arguments-differ
             def read(self):
                 pass
 
-            # pylint: disable=arguments-differ
             def write(self):
                 pass
 
-            # pylint: disable=arguments-differ
             def exists(self):
                 pass
 

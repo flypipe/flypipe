@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 
-# pylint: disable=too-few-public-methods
 class Cache(ABC):
     """
     Superclass for Caches

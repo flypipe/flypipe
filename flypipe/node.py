@@ -20,7 +20,7 @@ from flypipe.utils import DataFrameType
 logger = logging.getLogger(__name__)
 
 
-class Node:  # pylint: disable=too-many-instance-attributes
+class Node:
     """
     Central model for Flypipe. Should be used indirectly through the `node` decorator rather than directly referencing
     it.
@@ -34,10 +34,10 @@ class Node:  # pylint: disable=too-many-instance-attributes
         "spark_sql": DataFrameType.PYSPARK,
     }
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         function,
-        type: str,  # pylint: disable=redefined-builtin
+        type: str,
         description: str = None,
         group: str = None,
         tags: List[str] = None,
@@ -185,7 +185,6 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
     def create_graph(self, run_context: RunContext):
         # This import is here to avoid a circular import issue
-        # pylint: disable-next=import-outside-toplevel,cyclic-import
         from flypipe.node_graph import NodeGraph
 
         self.node_graph = NodeGraph(self, run_context=run_context)
@@ -221,7 +220,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
     def __call__(self, *args):
         return self.function(*args)
 
-    def run(  # pylint: disable=too-many-arguments
+    def run(
         self,
         spark: SparkSession = None,
         parallel: bool = None,
@@ -264,7 +263,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
     def _run_parallel(
         self, run_context: RunContext, execution_graph
-    ):  # pylint: disable=too-many-locals
+    ):
         def execute(node):
             self.process_transformation_with_cache(node, run_context)
             return node["transformation"].key
@@ -406,7 +405,7 @@ class Node:  # pylint: disable=too-many-instance-attributes
 
         return result
 
-    def html(  # pylint: disable=too-many-arguments
+    def html(
         self,
         spark=None,
         height=1000,
@@ -441,7 +440,6 @@ class Node:  # pylint: disable=too-many-instance-attributes
         """
 
         # This import needs to be here to avoid a circular import issue (graph_html -> node_graph -> imports node)
-        # pylint: disable-next=import-outside-toplevel,cyclic-import
         from flypipe.catalog import Catalog
 
         catalog = Catalog(spark=spark)
@@ -477,12 +475,12 @@ class Node:  # pylint: disable=too-many-instance-attributes
         )
         node.name = self.name
         # Accessing protected members in a deep copy method is necessary
-        node._key = self._key  # pylint: disable=protected-access
+        node._key = self._key
         node.node_type = self.node_type
         return node
 
 
-def node(type, *args, **kwargs):  # pylint: disable=redefined-builtin
+def node(type, *args, **kwargs):
     """
     Nodes are the fundamental building block of Flypipe. Simply apply the node function as a decorator to a
     transformation function in order to declare the transformation as a Flypipe node.

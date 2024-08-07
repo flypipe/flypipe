@@ -13,20 +13,16 @@ from flypipe.node import node
 from flypipe.tests.conftest import spark
 
 
-# pylint: disable=missing-class-docstring
 class GenericCache(Cache):
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 
-    # pylint: disable=arguments-differ
     def read(self):
         return pd.read_csv(self.cache_csv)
 
-    # pylint: disable=arguments-differ
     def write(self, df):
         df.to_csv(self.cache_csv, index=False)
 
-    # pylint: disable=arguments-differ
     def exists(self):
         return os.path.exists(self.cache_csv)
 
@@ -35,15 +31,12 @@ class GenericCacheSpark(Cache):
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 
-    # pylint: disable=arguments-differ, unused-argument)
     def read(self, spark):
         return pd.read_csv(self.cache_csv)
 
-    # pylint: disable=arguments-differ, unused-argument)
     def write(self, spark, df):
         df.to_csv(self.cache_csv, index=False)
 
-    # pylint: disable=arguments-differ, unused-argument)
     def exists(self, spark):
         return os.path.exists(self.cache_csv)
 
@@ -51,7 +44,7 @@ class GenericCacheSpark(Cache):
 @pytest.fixture(scope="function")
 def node_cache():
     @node(type="pandas", cache=GenericCache())
-    def t0():  # pylint: disable=duplicate-code)
+    def t0():
         return pd.DataFrame(data={"col1": [1]})
 
     return t0

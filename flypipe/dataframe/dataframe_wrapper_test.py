@@ -41,12 +41,12 @@ class TestDataFrameWrapper:
         [
             (pd.DataFrame({"column": [1]}), PandasDataFrameWrapper),
             (
-                spark.createDataFrame(schema=["column"], data=[[1]]),
-                SparkDataFrameWrapper,
+                    spark.createDataFrame(schema=["column"], data=[[1]]),
+                    SparkDataFrameWrapper,
             ),
             (
-                spark.createDataFrame(schema=["column"], data=[[1]]).pandas_api(),
-                PandasOnSparkDataFrameWrapper,
+                    spark.createDataFrame(schema=["column"], data=[[1]]).pandas_api(),
+                    PandasOnSparkDataFrameWrapper,
             ),
         ],
     )
@@ -68,8 +68,7 @@ class TestDataFrameWrapper:
         """
         # TODO- doesn't look like we're testing anything here?
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
-        # pylint: disable-next=unused-variable
-        df_wrapper2 = df_wrapper.select_columns("col1")
+        df_wrapper2 = df_wrapper.select_columns("col1")  # noqa: F841
 
     def test_cast_column_basic(self, mocker):
         """
@@ -102,6 +101,6 @@ class TestDataFrameWrapper:
         with pytest.raises(TypeError) as ex:
             wrapper.cast_column("c1", String())
         assert (
-            str(ex.value)
-            == "Unable to cast to flypipe type String- no dataframe type registered"
+                str(ex.value)
+                == "Unable to cast to flypipe type String- no dataframe type registered"
         )

@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 import pandas as pd
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
@@ -17,7 +16,7 @@ from flypipe.schema.types import Decimal, Integer, String
 
 @pytest.fixture(scope="function")
 def spark():
-    from flypipe.tests.spark import spark  # pylint: disable=import-outside-toplevel
+    from flypipe.tests.spark import spark
 
     (
         spark.createDataFrame(
@@ -183,7 +182,7 @@ class TestPySparkNode:
         )
         def my_col(
             test_pyspark_node_dummy_table__anything_c,
-        ):  # pylint: disable=invalid-name
+        ):
             df = test_pyspark_node_dummy_table__anything_c
             df = df.rename(columns={"my_col__x": "my_col"})
             return df
@@ -241,7 +240,7 @@ class TestPySparkNode:
             dependencies=[t2.select("c1", "c2"), t1.select("c1")],
             output=Schema([Column("c2", String())]),
         )
-        def t4(t1, t2):  # pylint: disable=unused-argument
+        def t4(t1, t2):
             return t2
 
         t4.create_graph(run_context=RunContext())
@@ -304,6 +303,3 @@ class TestPySparkNode:
             return spark.createDataFrame(t2)
 
         t3.run(spark, parallel=False)
-
-
-# pylint: enable=duplicate-code

@@ -48,7 +48,7 @@ class DataFrameMissingColumns(Exception):
 
     def __init__(
         self, source_columns, selected_columns
-    ):  # pylint: disable=too-many-locals
+    ):
 
         # Columns found or difference case sensitive
         all_cols = []

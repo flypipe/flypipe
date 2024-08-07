@@ -7,7 +7,7 @@ from flypipe.utils import assert_dataframes_equals, DataFrameType
 
 @pytest.fixture(scope="function")
 def spark():
-    from flypipe.tests.spark import spark  # pylint: disable=import-outside-toplevel
+    from flypipe.tests.spark import spark
 
     return spark
 

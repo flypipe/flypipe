@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 import datetime
 
 import numpy as np
@@ -43,7 +42,6 @@ class TestPandasDataFrameWrapper:
         assert_frame_equal(df_wrapper.select_columns("col1", "col2").df, expected_df)
 
     def test_select_column_2(self):
-        # pylint: disable=duplicate-code
         df = pd.DataFrame(
             {
                 "col1": [True, False],
@@ -57,7 +55,6 @@ class TestPandasDataFrameWrapper:
                 "col2": ["Hello", "World"],
             }
         )
-        # pylint: enable=duplicate-code
         df_wrapper = DataFrameWrapper.get_instance(None, df)
         assert_frame_equal(df_wrapper.select_columns(["col1", "col2"]).df, expected_df)
 
@@ -228,6 +225,3 @@ class TestPandasDataFrameWrapper:
                 dtype=np.dtype("O"),
             ),
         )
-
-
-# pylint: enable=duplicate-code

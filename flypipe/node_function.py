@@ -11,7 +11,7 @@ class NodeFunction(Node):
 
     def __init__(
         self, function, node_dependencies=None, requested_columns=False
-    ):  # pylint: disable=super-init-not-called
+    ):
         self._key = None
         self.function = function
         self.node_dependencies = node_dependencies or []
@@ -29,7 +29,6 @@ class NodeFunction(Node):
 
     def expand(self, requested_columns: list, parameters: dict = None):
         # TODO- we should not be invoking _key in this function
-        # pylint: disable=protected-access
         kwargs = parameters or {}
         if self.requested_columns:
             kwargs["requested_columns"] = requested_columns
@@ -76,7 +75,7 @@ class NodeFunction(Node):
             self.requested_columns,
         )
 
-        node_function._key = self._key  # pylint: disable=protected-access
+        node_function._key = self._key
         return node_function
 
 

@@ -24,7 +24,6 @@ class Catalog:
         self.initial_nodes = []
         self.spark = spark
 
-    # pylint: disable=too-many-arguments
     def register_node(
         self,
         node,
