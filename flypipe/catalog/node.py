@@ -32,7 +32,7 @@ class CatalogNode:
         """
         self.successors.add(successor_node.key)
 
-    def get_def(self):
+    def get_def(self, show_code):
         tags_set = set()
         for tag in self.node.tags:
             tags_set.add(tag.lower().strip())
@@ -49,7 +49,9 @@ class CatalogNode:
             "predecessors": self.predecessors,
             "predecessorColumns": self.predecessor_columns,
             "successors": sorted(list(self.successors)),
-            "sourceCode": self._get_source_code(),
+            "sourceCode": "** The source code has been intentionally ommited **\nSet show_code=True to load the source code"
+            if not show_code
+            else self._get_source_code(),
             "isActive": self._get_is_active(),
             "hasCache": self.node.cache is not None,
             "cacheIsDisabled": node_run_context.cache_context.disabled

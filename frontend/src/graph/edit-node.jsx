@@ -18,6 +18,7 @@ export const EditNode = ({
     onClose: handleClose,
     onSave: handleSave,
 }) => {
+
     const isReadOnly = !node.data.isNew;
     const validate = (values) => {
         const errors = {};

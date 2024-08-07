@@ -411,6 +411,7 @@ class Node:
         pandas_on_spark_use_pandas=False,
         parameters=None,
         cache=None,
+        show_code=True,
     ):
         """
         Retrieves html string of the graph to be executed.
@@ -429,6 +430,9 @@ class Node:
             If True, convert and runs `pandas_on_spark` as `pandas`
         parameters : dict, default None
             dictionary dict(Node,dict(str,obj)) of parameters to be given to the nodes when executing them.
+        show_code : boolean, default True
+            True: show code when clicking on a node, otherwise, do not show
+
 
         Returns
         -------
@@ -449,7 +453,7 @@ class Node:
             cache=cache,
             add_node_to_graph=True,
         )
-        return catalog.html(height)
+        return catalog.html(height, show_code)
 
     def __eq__(self, other):
         return self.key == other.key

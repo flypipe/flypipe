@@ -89,7 +89,7 @@ class Catalog:
 
         self.initial_nodes.append(node.key)
 
-    def html(self, height=850):
+    def html(self, height=850, show_code=True):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         with open(
             os.path.join(dir_path, "../js/bundle.js"), "r", encoding="utf-8"
@@ -97,15 +97,15 @@ class Catalog:
             js_bundle = f.read()
         return get_template("catalog.html").render(
             js_bundle=js_bundle,
-            nodes=json.dumps(self.get_nodes()),
+            nodes=json.dumps(self.get_nodes(show_code)),
             groups=json.dumps(self.get_groups()),
             initialNodes=self.initial_nodes,
             tagSuggestions=json.dumps(self.get_tag_suggestions()),
             height=height,
         )
 
-    def get_nodes(self):
-        return [node.get_def() for node in self.nodes.values()]
+    def get_nodes(self, show_code):
+        return [node.get_def(show_code) for node in self.nodes.values()]
 
     def get_groups(self):
         return [group.get_def() for group in self.groups.values()]
