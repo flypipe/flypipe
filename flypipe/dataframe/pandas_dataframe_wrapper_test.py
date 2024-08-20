@@ -5,8 +5,10 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
+from flypipe import node
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from flypipe.exceptions import DataFrameMissingColumns
+from flypipe.schema import Column, Schema
 from flypipe.schema.types import (
     Boolean,
     Decimal,
@@ -225,3 +227,13 @@ class TestPandasDataFrameWrapper:
                 dtype=np.dtype("O"),
             ),
         )
+
+    def test_empty_dataframe(self, spark):
+        @node(
+            type="pandas",
+            output=Schema([Column("c1", Boolean())]),
+        )
+        def t1():
+            return pd.DataFrame(columns=["c1"])
+
+        t1.run(spark, parallel=False)
