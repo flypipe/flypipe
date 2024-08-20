@@ -7,8 +7,6 @@ from flypipe.exceptions import (
     DataframeTypeNotSupportedError,
 )
 
-# noinspection PyUnresolvedReferences
-from flypipe.tests.conftest import spark
 from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
 
 

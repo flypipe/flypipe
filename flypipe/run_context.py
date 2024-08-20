@@ -13,7 +13,7 @@ from flypipe.schema import Schema
 
 
 @dataclass
-class RunContext:  # pylint: disable=too-few-public-methods
+class RunContext:
     """
     RunContext is a model held by each run that holds run information that is tied to a particular run,
     such as parameters, cache mode and inputs.

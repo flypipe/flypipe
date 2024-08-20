@@ -56,7 +56,7 @@ class TestNodeFunction:
             return c
 
         @node(type="pandas", dependencies=[b, c.select("c2")])
-        def a(b, c):  # pylint: disable=unused-argument
+        def a(b, c):
             return b
 
         @node_function(node_dependencies=[c])
@@ -113,7 +113,7 @@ class TestNodeFunction:
         @node_function(node_dependencies=[b])
         def t3():
             @node(type="pandas", dependencies=[a, b])
-            def t1(a, b):  # pylint: disable=unused-argument
+            def t1(a, b):
                 return b
 
             return t1
