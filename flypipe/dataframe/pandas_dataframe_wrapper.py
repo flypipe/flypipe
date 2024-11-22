@@ -74,21 +74,24 @@ class PandasDataFrameWrapper(DataFrameWrapper):
 
     def _get_rows_for_cast(self, column, flypipe_type):
         rows = self.df[column].notnull()
-
         if flypipe_type.valid_values:
             # Get the first index of any invalid, non-null row value for the column
             invalid_values = ~self.df[column].loc[rows].isin(flypipe_type.valid_values)
-            first_invalid_value = self.df[column].iloc[invalid_values.argmax()]
-            # This is a bit hacky, but if all values are valid then argmax returns the first index, so we need to
-            # double check that the first invalid value is actually invalid.
+
             if (
-                first_invalid_value
-                and first_invalid_value not in flypipe_type.valid_values
-            ):
-                raise ValueError(
-                    f"Invalid type {flypipe_type.name} for column {column}, found incompatible row value "
-                    f'"{first_invalid_value}"'
-                )
+                not invalid_values.empty
+            ):  # empty series will cause argmax to fail; if empty there is nothing to check
+                first_invalid_value = self.df[column].iloc[invalid_values.argmax()]
+                # This is a bit hacky, but if all values are valid then argmax returns the first index, so we need to
+                # double check that the first invalid value is actually invalid.
+                if (
+                    first_invalid_value
+                    and first_invalid_value not in flypipe_type.valid_values
+                ):
+                    raise ValueError(
+                        f"Invalid type {flypipe_type.name} for column {column}, found incompatible row value "
+                        f'"{first_invalid_value}"'
+                    )
         return rows
 
     def _cast_column(self, column, flypipe_type, df_type):
@@ -96,9 +99,7 @@ class PandasDataFrameWrapper(DataFrameWrapper):
 
         self.df.loc[rows, column] = self.df.loc[rows, column].astype(df_type)
 
-    def _cast_column_integer(
-        self, column, flypipe_type
-    ):  # pylint: disable=unused-argument
+    def _cast_column_integer(self, column, flypipe_type):
         integer_type = pd.Int64Dtype()
         # Automatic casts to the pandas integer extension type from float error out, we have to manually tweak it,
         # solution adapted from

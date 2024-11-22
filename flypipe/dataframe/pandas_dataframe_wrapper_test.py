@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 import datetime
 
 import numpy as np
@@ -6,8 +5,10 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
+from flypipe import node
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from flypipe.exceptions import DataFrameMissingColumns
+from flypipe.schema import Column, Schema
 from flypipe.schema.types import (
     Boolean,
     Decimal,
@@ -43,7 +44,6 @@ class TestPandasDataFrameWrapper:
         assert_frame_equal(df_wrapper.select_columns("col1", "col2").df, expected_df)
 
     def test_select_column_2(self):
-        # pylint: disable=duplicate-code
         df = pd.DataFrame(
             {
                 "col1": [True, False],
@@ -57,7 +57,6 @@ class TestPandasDataFrameWrapper:
                 "col2": ["Hello", "World"],
             }
         )
-        # pylint: enable=duplicate-code
         df_wrapper = DataFrameWrapper.get_instance(None, df)
         assert_frame_equal(df_wrapper.select_columns(["col1", "col2"]).df, expected_df)
 
@@ -229,5 +228,12 @@ class TestPandasDataFrameWrapper:
             ),
         )
 
+    def test_empty_dataframe(self, spark):
+        @node(
+            type="pandas",
+            output=Schema([Column("c1", Boolean())]),
+        )
+        def t1():
+            return pd.DataFrame(columns=["c1"])
 
-# pylint: enable=duplicate-code
+        t1.run(spark, parallel=False)

@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 import pandas as pd
 import pyspark.pandas as ps
 import pytest
@@ -14,10 +13,6 @@ from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.schema.types import (
     Boolean,
 )
-
-# noinspection PyUnresolvedReferences
-# pylint: disable=unused-import
-from flypipe.tests.conftest import spark
 
 
 class TestPandasOnSparkDataFrameWrapper:

@@ -33,6 +33,7 @@ services:
       FLYPIPE_DEFAULT_RUN_MODE: sequential
       GIT_PYTHON_REFRESH: quiet
     volumes:
+      - ../.pylintrc:/.pylintrc
       - ../flypipe:/flypipe
       - ./start.py:/etc/ipython/startup/start.py
       - ../docs/source/notebooks:/notebooks/docs

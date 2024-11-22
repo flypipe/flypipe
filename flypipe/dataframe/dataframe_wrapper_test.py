@@ -68,8 +68,7 @@ class TestDataFrameWrapper:
         """
         # TODO- doesn't look like we're testing anything here?
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
-        # pylint: disable-next=unused-variable
-        df_wrapper2 = df_wrapper.select_columns("col1")
+        df_wrapper2 = df_wrapper.select_columns("col1")  # noqa: F841
 
     def test_cast_column_basic(self, mocker):
         """
