@@ -134,6 +134,8 @@ const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
             }
         }
         for (const predecessor of current.predecessors) {
+            // In a graph of A->[B, C]->D, B and C will cause to add A to the frontier twice
+            // in this case, do not add if A has already been added
             if (!frontier.includes(predecessor)) {
                 frontier.push(predecessor);
             }
