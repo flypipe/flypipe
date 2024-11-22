@@ -6,7 +6,7 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "**" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 30
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -31,19 +31,12 @@ jobs:
       - name: Setup dependencies
         uses: ./.github/actions/setup-dependencies
       - name: Run formatter on backend (black)
-        run: black flypipe --check
+        run: make black-check
       - name: Run formatter on frontend (prettier)
         run: |
           cd frontend
           yarn prettier-check
-      - name: Run linter (pylint)
-        run: python -m pylint flypipe
+      - name: Run linter (ruff)
+        run: make lint
       - name: Run unit tests
-        run: coverage run --source=flypipe -m pytest flypipe
-      - name: Check total unit test coverage >= 85%
-        run: coverage report --fail-under=85
-      - name: Check branch unit test coverage >= 95%
-        run: |
-          coverage xml
-          diff-cover coverage.xml --fail-under=95
-
+        run: make coverage

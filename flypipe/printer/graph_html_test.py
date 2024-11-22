@@ -76,7 +76,6 @@ class TestNodeGraph:
             return pd.DataFrame({"c1": ["Bla"], "c2": [1]})
 
         t1.create_graph(run_context=RunContext())
-        # pylint: disable-next=protected-access
         assert GraphHTML(t1.node_graph)._get_node_columns(t1.key) == [
             {"name": "c1", "type": "String", "description": ""},
             {"name": "c2", "type": "Integer", "description": ""},
@@ -104,11 +103,10 @@ class TestNodeGraph:
             return t1
 
         @node(type="pandas", dependencies=[t2, t3])
-        def t4(t2, t3):  # pylint: disable=unused-argument
+        def t4(t2, t3):
             return t2
 
         t4.create_graph(run_context=RunContext())
-        # pylint: disable-next=protected-access
         assert GraphHTML(t4.node_graph)._get_node_columns(t1.key) == [
             {"name": "c1", "type": "Unknown", "description": ""},
             {"name": "c3", "type": "Unknown", "description": ""},

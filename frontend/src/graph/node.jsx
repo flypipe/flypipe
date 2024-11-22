@@ -129,7 +129,7 @@ const BaseNode = ({ data, isNewNode }) => {
                         <GrNew className="fs-4" />
                     </Badge>
                 )}
-                <div class="d-flex flex-row-reverse">
+                <div className="d-flex flex-row-reverse">
                     {hasProvidedInput && (
                         <Badge
                             pill

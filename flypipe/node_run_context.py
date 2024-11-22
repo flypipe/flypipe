@@ -9,7 +9,7 @@ from flypipe.cache.cache_context import CacheContext
 
 
 @dataclass
-class NodeRunContext:  # pylint: disable=too-few-public-methods
+class NodeRunContext:
     """
     NodeRunContext is a model held by each graph node that holds node information that is tied to a particular run,
     such as parameters.
