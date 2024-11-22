@@ -128,15 +128,15 @@ const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
         for (const successorKey of current.successors) {
             if (addedKeys.includes(successorKey)) {
                 const edgeKey = current.nodeKey + "-" + successorKey;
-                if (!mapOfEdges.has(edgeKey)){
-                  mapOfEdges.set(edgeKey, [current.nodeKey, successorKey]);
+                if (!mapOfEdges.has(edgeKey)) {
+                    mapOfEdges.set(edgeKey, [current.nodeKey, successorKey]);
                 }
             }
         }
         for (const predecessor of current.predecessors) {
-          if (!frontier.includes(predecessor)) {
-            frontier.push(predecessor);
-          }
+            if (!frontier.includes(predecessor)) {
+                frontier.push(predecessor);
+            }
         }
     }
     const edges = Array.from(mapOfEdges.values());
