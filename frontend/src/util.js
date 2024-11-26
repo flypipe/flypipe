@@ -114,8 +114,8 @@ const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
     const nodeDef = nodeDefs.find((nodeDef) => nodeDef.nodeKey === nodeKey);
     const frontier = [...nodeDef.predecessors];
     const selectedNodeDefs = [nodeDef];
-    const edges = [];
     const addedKeys = [nodeDef.nodeKey];
+    const mapOfEdges = new Map();
     while (frontier.length > 0) {
         const currentKey = frontier.pop();
         const current = nodeDefs.find(
@@ -127,13 +127,21 @@ const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
         }
         for (const successorKey of current.successors) {
             if (addedKeys.includes(successorKey)) {
-                edges.push([current.nodeKey, successorKey]);
+                const edgeKey = current.nodeKey + "-" + successorKey;
+                if (!mapOfEdges.has(edgeKey)) {
+                    mapOfEdges.set(edgeKey, [current.nodeKey, successorKey]);
+                }
             }
         }
         for (const predecessor of current.predecessors) {
-            frontier.push(predecessor);
+            // In a graph of A->[B, C]->D, B and C will cause to add A to the frontier twice
+            // in this case, do not add if A has already been added
+            if (!frontier.includes(predecessor)) {
+                frontier.push(predecessor);
+            }
         }
     }
+    const edges = Array.from(mapOfEdges.values());
     return [
         selectedNodeDefs.map((nodeDef) =>
             convertNodeDefToGraphNode(graph, nodeDef, false)
@@ -153,8 +161,8 @@ const getEdgeDef = (graph, source, target, linkedEdge = null) => {
         ...(linkedEdge && { linkedEdge: linkedEdge.id }),
         markerEnd: {
             type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
+            width: 15,
+            height: 15,
         },
         ...(targetNode.data.isActive || {
             style: {

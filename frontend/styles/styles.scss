@@ -180,7 +180,10 @@ html {
     right: -10px !important;
 }
 
-.react-flow__edge-path,
+.react-flow__edge-path {
+    stroke-width: 0.19em !important;
+}
+
 .react-flow__connection-path {
     stroke-width: 0.09em !important;
 }
