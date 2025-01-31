@@ -9,7 +9,7 @@ name: 'prepare-for-deployment'
 
 on:
   push:
-    branches: [ "main", "149-failed-build-wheel-workflow" ]
+    branches: [ "main" ]
 
   # Allow for manual invocation
   workflow_dispatch:
