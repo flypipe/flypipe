@@ -6,8 +6,12 @@ min_coverage=85
 min_branch_coverage=95
 USE_SPARK_CONNECT=0
 
-up:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml up --build
+build-image:
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml build
+.PHONY: build-image
+
+up: build-image
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml up
 .PHONY: up
 
 down:
@@ -33,7 +37,6 @@ lint:
 .PHONY: lint
 
 coverage:
-	#docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "pytest --rootdir flypipe -n $(PYTEST_THREADS) -k '_test.py' --ignore-glob '*_spark_connect_test.py' --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
 	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) -k '_test.py' --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
 .PHONY: coverage
 
@@ -46,14 +49,17 @@ branch-coverage:
 	diff-cover coverage.xml --fail-under=$(min_branch_coverage)
 .PHONY: branch-coverage
 
-jupyter-bash:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml build
+jupyter-bash: build-image
 	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" -it flypipe-jupyter bash
 .PHONY: jupyter-bash
 
 docs:
-	sh ./docs/build_docs_dev.sh
+	sh docs/build_docs.sh
 .PHONY: docs
+
+docs-dev: build-image
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "sh ./docs/build_docs_dev.sh"
+.PHONY: docs-dev
 
 build:
 	flit build --format wheel
