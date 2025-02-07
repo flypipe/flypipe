@@ -20,8 +20,8 @@ down:
 .PHONY: down
 
 ping:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter ./wait-for-it.sh -h flypipe-mariadb -p 3306
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter ./wait-for-it.sh -h flypipe-hive-metastore -p 9083
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter sh -c "chmod +x ./wait-for-it.sh && ./wait-for-it.sh -h flypipe-mariadb -p 3306"
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter sh -c "chmod +x ./wait-for-it.sh && ./wait-for-it.sh -h flypipe-hive-metastore -p 9083"
 .PHONY: ping
 
 black:
