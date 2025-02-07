@@ -15,16 +15,11 @@ from flypipe.schema import Schema, Column
 from flypipe.schema.types import Integer
 
 
-@pytest.fixture(scope="function")
-def spark():
-    from flypipe.tests.spark import spark
-
-    return spark
-
 
 class GenericCache(Cache):
     def __init__(self):
-        self.cache_csv = f"{str(uuid4())}.csv"
+        self.cache_name = str(uuid4()).replace("-", "_")
+        self.cache_csv = f"{self.cache_name}.csv"
 
     def read(self):
         return pd.read_csv(self.cache_csv)
@@ -110,23 +105,18 @@ class TestCache:
     def test_cache_spark_provided(self, spark, mocker):
         class GenericCache2(GenericCache):
             def read(self, spark):
-                return (
-                    spark.read.option("inferSchema", True)
-                    .option("header", True)
-                    .csv(self.cache_csv)
-                )
+                return spark.read.table(self.cache_name)
 
             def write(self, spark, df):
-                df.toPandas().to_csv(self.cache_csv, index=False)
+                df.createOrReplaceTempView(self.cache_name)
 
             def exists(self, spark):
-                if os.path.exists(self.cache_csv):
-                    return (
-                        spark.read.option("header", True).csv(self.cache_csv).count()
-                        > 0
-                    )
+                try:
+                    spark.read.table(self.cache_name)
+                    return spark.table(self.cache_name).count() > 0
+                except:
+                    return False
 
-                return False
 
         cache = GenericCache2()
 

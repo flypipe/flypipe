@@ -18,14 +18,15 @@ from flypipe.schema.types import (
 class TestPandasOnSparkDataFrameWrapper:
     """Tests for PandasOnSpark"""
 
-    def test_select_column_1(self):
-        df = ps.DataFrame(
+    def test_select_column_1(self, spark):
+        df = spark.createDataFrame(pd.DataFrame(
             {
                 "col1": [True, False],
                 "col2": ["Hello", "World"],
                 "col3": ["Banana", "Apple"],
             }
-        )
+        )).pandas_api()
+
         expected_df = pd.DataFrame(
             {
                 "col1": [True, False],
@@ -37,14 +38,15 @@ class TestPandasOnSparkDataFrameWrapper:
             df_wrapper.select_columns("col1", "col2").df.to_pandas(), expected_df
         )
 
-    def test_select_column_2(self):
-        df = ps.DataFrame(
+    def test_select_column_2(self, spark):
+        df = spark.createDataFrame(pd.DataFrame(
             {
                 "col1": [True, False],
                 "col2": ["Hello", "World"],
                 "col3": ["Banana", "Apple"],
             }
-        )
+        )).pandas_api()
+
         expected_df = pd.DataFrame(
             {
                 "col1": [True, False],
@@ -56,14 +58,15 @@ class TestPandasOnSparkDataFrameWrapper:
             df_wrapper.select_columns(["col1", "col2"]).df.to_pandas(), expected_df
         )
 
-    def test_select_column_missing_column(self):
-        df = ps.DataFrame(
+    def test_select_column_missing_column(self, spark):
+        df = spark.createDataFrame(pd.DataFrame(
             {
                 "col1": [True, False],
                 "col2": ["Hello", "World"],
                 "col3": ["Banana", "Apple"],
             }
-        )
+        )).pandas_api()
+
         df_wrapper = DataFrameWrapper.get_instance(None, df)
 
         with pytest.raises(DataFrameMissingColumns):

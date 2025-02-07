@@ -9,13 +9,6 @@ from flypipe.utils import assert_dataframes_equals, DataFrameType
 
 
 @pytest.fixture(scope="function")
-def spark():
-    from flypipe.tests.spark import spark
-
-    return spark
-
-
-@pytest.fixture(scope="function")
 def pandas_df():
     return pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"]})
 
