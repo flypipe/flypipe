@@ -21,9 +21,10 @@ ENV PYSPARK_PYTHON "/usr/local/bin/python3"
 ENV PYSPARK_DRIVER_PYTHON "${PYSPARK_PYTHON}"
 ENV USE_SPARK_CONNECT "0"
 
+
 ## Set up Pandoc
-RUN wget https://github.com/jgm/pandoc/releases/download/3.6.2/pandoc-3.6.2-1-arm64.deb
-RUN dpkg -i pandoc-3.6.2-1-arm64.deb
+RUN wget https://github.com/jgm/pandoc/releases/download/3.6.2/pandoc-3.6.2-1-`dpkg --print-architecture`.deb
+RUN dpkg -i pandoc-3.6.2-1-`dpkg --print-architecture`.deb
 ## Check installation
 RUN pandoc -v
 
