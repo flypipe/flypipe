@@ -1,13 +1,12 @@
 import sys
-
 import pytest
 
-from flypipe.tests.spark import spark as spark_session
+pytest.register_assert_rewrite("src.assert_pyspark_df_equal")
 
 # Skip writing pyc files on a readonly filesystem.
 sys.dont_write_bytecode = True
 
-
-@pytest.fixture(scope="class", autouse=False)
-def spark():
-    return spark_session
+@pytest.fixture(scope="function", autouse=False)
+def spark(request):
+    from flypipe.tests.spark import build_spark
+    return build_spark()
