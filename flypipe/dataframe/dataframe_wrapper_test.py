@@ -10,6 +10,7 @@ from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import (
 from flypipe.dataframe.spark_dataframe_wrapper import SparkDataFrameWrapper
 from flypipe.schema.types import Boolean, Decimal, String, Unknown
 
+
 class DummyDataFrameWrapper(DataFrameWrapper):
     """Dummy subclass of abstract class DataFrameWrapper so we can use it in tests"""
 
@@ -116,4 +117,3 @@ class TestDataFrameWrapper:
             str(ex.value)
             == "Unable to cast to flypipe type String- no dataframe type registered"
         )
-

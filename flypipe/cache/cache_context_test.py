@@ -10,7 +10,6 @@ from flypipe.cache.cache_context import CacheContext
 from flypipe.node import node
 
 
-
 class GenericCache(Cache):
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"

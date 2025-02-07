@@ -5,9 +5,10 @@ from pyspark.sql import SparkSession
 # Avoid WARNING:root:'PYARROW_IGNORE_TIMEZONE' environment variable was not set
 os.environ["PYARROW_IGNORE_TIMEZONE"] = "1"
 
+
 def build_spark():
     if os.environ.get("USE_SPARK_CONNECT") == "1":
-        print(f"Building spark session (spark_connect)")
+        print("Building spark session (spark_connect)")
 
         return (
             SparkSession.builder.appName(str(uuid4()))
@@ -17,7 +18,7 @@ def build_spark():
             .getOrCreate()
         )
 
-    print(f"Building spark session")
+    print("Building spark session")
 
     spark = (
         SparkSession.builder.appName(str(uuid4()))

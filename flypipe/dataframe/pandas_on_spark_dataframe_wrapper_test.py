@@ -1,5 +1,4 @@
 import pandas as pd
-import pyspark.pandas as ps
 import pytest
 from pandas.testing import assert_frame_equal
 from pyspark.sql.types import (
@@ -19,13 +18,15 @@ class TestPandasOnSparkDataFrameWrapper:
     """Tests for PandasOnSpark"""
 
     def test_select_column_1(self, spark):
-        df = spark.createDataFrame(pd.DataFrame(
-            {
-                "col1": [True, False],
-                "col2": ["Hello", "World"],
-                "col3": ["Banana", "Apple"],
-            }
-        )).pandas_api()
+        df = spark.createDataFrame(
+            pd.DataFrame(
+                {
+                    "col1": [True, False],
+                    "col2": ["Hello", "World"],
+                    "col3": ["Banana", "Apple"],
+                }
+            )
+        ).pandas_api()
 
         expected_df = pd.DataFrame(
             {
@@ -39,13 +40,15 @@ class TestPandasOnSparkDataFrameWrapper:
         )
 
     def test_select_column_2(self, spark):
-        df = spark.createDataFrame(pd.DataFrame(
-            {
-                "col1": [True, False],
-                "col2": ["Hello", "World"],
-                "col3": ["Banana", "Apple"],
-            }
-        )).pandas_api()
+        df = spark.createDataFrame(
+            pd.DataFrame(
+                {
+                    "col1": [True, False],
+                    "col2": ["Hello", "World"],
+                    "col3": ["Banana", "Apple"],
+                }
+            )
+        ).pandas_api()
 
         expected_df = pd.DataFrame(
             {
@@ -59,13 +62,15 @@ class TestPandasOnSparkDataFrameWrapper:
         )
 
     def test_select_column_missing_column(self, spark):
-        df = spark.createDataFrame(pd.DataFrame(
-            {
-                "col1": [True, False],
-                "col2": ["Hello", "World"],
-                "col3": ["Banana", "Apple"],
-            }
-        )).pandas_api()
+        df = spark.createDataFrame(
+            pd.DataFrame(
+                {
+                    "col1": [True, False],
+                    "col2": ["Hello", "World"],
+                    "col3": ["Banana", "Apple"],
+                }
+            )
+        ).pandas_api()
 
         df_wrapper = DataFrameWrapper.get_instance(None, df)
 

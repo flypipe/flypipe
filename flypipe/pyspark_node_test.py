@@ -60,7 +60,9 @@ class TestPySparkNode:
         spark_dummy_table.function.__name__ = func_name
 
         df = spark_view.createDataFrame(schema=("c1", "c2", "c3"), data=[(1, 2, 3)])
-        output_df = t1.run(spark_view, inputs={Spark("dummy_table"): df}, parallel=False)
+        output_df = t1.run(
+            spark_view, inputs={Spark("dummy_table"): df}, parallel=False
+        )
         spy.assert_not_called()
         assert_pyspark_df_equal(
             output_df,
@@ -251,7 +253,9 @@ class TestPySparkNode:
 
         df = t4.run(spark_view, parallel=False)
         assert_pyspark_df_equal(
-            df, spark_view.createDataFrame(schema=("c2",), data=[("2",)]), check_dtype=False
+            df,
+            spark_view.createDataFrame(schema=("c2",), data=[("2",)]),
+            check_dtype=False,
         )
 
     def test_dataframes_are_isolated_from_nodes(self, spark_view):
@@ -260,7 +264,9 @@ class TestPySparkNode:
             output=Schema([Column("c1", String()), Column("c2", String())]),
         )
         def t1():
-            return spark_view.createDataFrame(pd.DataFrame(data={"c1": ["1"], "c2": ["2"]}))
+            return spark_view.createDataFrame(
+                pd.DataFrame(data={"c1": ["1"], "c2": ["2"]})
+            )
 
         @node(
             type="pyspark",

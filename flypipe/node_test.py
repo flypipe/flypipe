@@ -792,7 +792,9 @@ class TestNode:
             print("======>", dataframe_type(t1))
             assert dataframe_type(t1) == DataFrameType.PYSPARK
             assert t1.columns == ["c1"]
-            assert isinstance(spark, pyspark.sql.session.SparkSession) or isinstance(spark, pyspark.sql.connect.session.SparkSession)
+            assert isinstance(spark, pyspark.sql.session.SparkSession) or isinstance(
+                spark, pyspark.sql.connect.session.SparkSession
+            )
             return t1
 
         @node(
@@ -810,7 +812,9 @@ class TestNode:
             assert dataframe_type(t2) == DataFrameType.PYSPARK
             assert t2.columns == ["c1"]
 
-            assert isinstance(spark, pyspark.sql.session.SparkSession) or isinstance(spark, pyspark.sql.connect.session.SparkSession)
+            assert isinstance(spark, pyspark.sql.session.SparkSession) or isinstance(
+                spark, pyspark.sql.connect.session.SparkSession
+            )
 
             return t1
 
@@ -870,11 +874,17 @@ class TestNode:
         def t2(t1):
             return f"select number+1 from {t1}"
 
-        dataframe_to_mock = SqlConnectDataFrame if os.environ.get("USE_SPARK_CONNECT") == "1" else DataFrame
+        dataframe_to_mock = (
+            SqlConnectDataFrame
+            if os.environ.get("USE_SPARK_CONNECT") == "1"
+            else DataFrame
+        )
         with mock.patch.object(
             dataframe_to_mock, "createOrReplaceTempView"
         ) as createOrReplaceTempView_mock, mock.patch.object(
-            spark_view, "sql", return_value=spark_view.createDataFrame(schema=("number",), data=[(2,)])
+            spark_view,
+            "sql",
+            return_value=spark_view.createDataFrame(schema=("number",), data=[(2,)]),
         ) as sql_mock:
             t2.run(spark=spark_view)
 
@@ -895,11 +905,17 @@ class TestNode:
         def t2(t1):
             return f"select * from {t1}"
 
-        dataframe_to_mock = SqlConnectDataFrame if os.environ.get("USE_SPARK_CONNECT") == "1" else DataFrame
+        dataframe_to_mock = (
+            SqlConnectDataFrame
+            if os.environ.get("USE_SPARK_CONNECT") == "1"
+            else DataFrame
+        )
         with mock.patch.object(
             dataframe_to_mock, "createOrReplaceTempView"
         ) as createOrReplaceTempView_mock, mock.patch.object(
-            spark_view, "sql", return_value=spark_view.createDataFrame(data=[{"number": 2}])
+            spark_view,
+            "sql",
+            return_value=spark_view.createDataFrame(data=[{"number": 2}]),
         ) as sql_mock:
             t2.run(spark=spark_view)
         assert sql_mock.call_args[0][0] == "select * from t2__t1"

@@ -15,7 +15,6 @@ from flypipe.schema import Schema, Column
 from flypipe.schema.types import Integer
 
 
-
 class GenericCache(Cache):
     def __init__(self):
         self.cache_name = str(uuid4()).replace("-", "_")
@@ -114,9 +113,8 @@ class TestCache:
                 try:
                     spark.read.table(self.cache_name)
                     return spark.table(self.cache_name).count() > 0
-                except:
+                except Exception:
                     return False
-
 
         cache = GenericCache2()
 

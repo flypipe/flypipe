@@ -2,6 +2,7 @@ from typing import Any, Union, List
 
 import pyspark
 
+
 def _check_isinstance_pyspark(df: Any, clss):
 
     for cls in clss:
@@ -10,12 +11,13 @@ def _check_isinstance_pyspark(df: Any, clss):
 
     return False
 
+
 def _check_isinstance(left: Any, right: Any, cls: List[Any]):
     if not _check_isinstance_pyspark(left, cls):
         raise TypeError(f"Left expected type {cls}, found {type(left)} instead")
 
-    if not _check_isinstance_pyspark(left, cls):
-        raise TypeError(f"Right expected type {cls}, found {type(rigght)} instead")
+    if not _check_isinstance_pyspark(right, cls):
+        raise TypeError(f"Right expected type {cls}, found {type(right)} instead")
 
 
 def _check_columns(
@@ -45,7 +47,8 @@ def _check_schema(
 
 
 def _check_df_content(
-    left_df: Union[pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame], right_df: Union[pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
+    left_df: Union[pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
+    right_df: Union[pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
 ):
     left_df_list = left_df.collect()
     right_df_list = right_df.collect()
@@ -94,7 +97,11 @@ def assert_pyspark_df_equal(
     """
 
     # Check if
-    _check_isinstance(left_df, right_df, [pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame])
+    _check_isinstance(
+        left_df,
+        right_df,
+        [pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
+    )
 
     # Check Column Names
     if check_column_names:
