@@ -38,5 +38,7 @@ jobs:
           yarn prettier-check
       - name: Run linter (ruff)
         run: make lint
-      - name: Run unit tests
-        run: make coverage
+      - name: Run unit tests using Spark Session
+        run: make coverage USE_SPARK_CONNECT=0
+      - name: Run unit tests using Spark Connect Session
+        run: make coverage USE_SPARK_CONNECT=1
