@@ -31,8 +31,10 @@ gitpython==3.1.43
 jupyterlab==4.2.4
 pythonping==1.1.4
 ipytest==0.14.2
-delta-spark==2.1.1
-mlflow==2.0.1
+delta-spark==3.3.0
+mlflow
 matplotlib==3.6.2
 seaborn==0.12.1
 scipy==1.7.3
+grpcio==1.70.0
+grpcio-status==1.70.0
