@@ -15,9 +15,9 @@ Access JupyterLab http://127.0.0.1:8888/lab
 
 `make down`
 
-### Rebuilding documents
+### Rebuilding documents (Locally)
 
-`make docs`
+`make docs-dev`
 
 ### Other useful commands
 
