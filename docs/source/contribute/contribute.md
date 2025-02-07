@@ -33,7 +33,8 @@ Access JupyterLab http://127.0.0.1:8888/lab
 
 Runs unit tests and coverage
 
-`make coverage`
+`make coverage USE_SPARK_CONNECT=0` runs test coverage using spark session
+`make coverage USE_SPARK_CONNECT=1` runs test coverage using spark connect session
 
 **black**
 
