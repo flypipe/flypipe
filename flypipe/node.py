@@ -406,7 +406,7 @@ class Node:
     def html(
         self,
         spark=None,
-        height=1000,
+        height=800,
         inputs=None,
         pandas_on_spark_use_pandas=False,
         parameters=None,
