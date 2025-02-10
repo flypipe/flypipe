@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import pandas as pd
@@ -7,7 +8,8 @@ import pyspark.sql.functions as F
 import pytest
 from pandas.testing import assert_frame_equal
 from pyspark.sql import DataFrame
-from pyspark_test import assert_pyspark_df_equal
+from pyspark.sql.connect.dataframe import DataFrame as SqlConnectDataFrame
+from flypipe.tests.pyspark_test import assert_pyspark_df_equal
 
 from flypipe.cache.cache import Cache
 from flypipe.config import config_context
@@ -23,8 +25,7 @@ from flypipe.utils import DataFrameType, dataframe_type
 
 
 @pytest.fixture(scope="function")
-def spark():
-    from flypipe.tests.spark import spark
+def spark_view(spark):
 
     spark.createDataFrame(
         schema=("c0", "c1"),
@@ -113,7 +114,7 @@ class TestNode:
         assert_frame_equal(t5.run(parallel=False), df[["color", "fruit"]])
         assert_frame_equal(t6.run(parallel=False), df[["color", "fruit"]])
 
-    def test_conversion_after_output_column_filter(self, spark, mocker):
+    def test_conversion_after_output_column_filter(self, spark_view, mocker):
         """
         a) When processing the output of a node we only select columns which are requested by child nodes.
         b) When processing a child node we convert all incoming input dataframes from parent nodes to the same type as
@@ -129,7 +130,7 @@ class TestNode:
             return dummy_table1
 
         spy = mocker.spy(DataFrameConverter, "convert")
-        t1.run(spark, parallel=False)
+        t1.run(spark_view, parallel=False)
         assert spy.call_args.args[1].columns == ["c1"]
 
     def test_alias_run(self):
@@ -160,7 +161,7 @@ class TestNode:
         ],
     )
     def test_input_dataframes_type(
-        self, spark, mocker, extra_run_config, expected_df_type
+        self, spark_view, mocker, extra_run_config, expected_df_type
     ):
         stub = mocker.stub()
 
@@ -172,7 +173,7 @@ class TestNode:
 
         @node(type="pyspark")
         def t2():
-            return spark.createDataFrame(
+            return spark_view.createDataFrame(
                 schema=("name", "fruit"), data=[("Chris", "Banana")]
             )
 
@@ -187,7 +188,7 @@ class TestNode:
             stub(t1, t2)
             return t1.merge(t2)
 
-        t3.run(spark, parallel=False, **extra_run_config)
+        t3.run(spark_view, parallel=False, **extra_run_config)
         assert dataframe_type(stub.call_args[0][0]) == expected_df_type
         assert dataframe_type(stub.call_args[0][1]) == expected_df_type
 
@@ -282,7 +283,7 @@ class TestNode:
         assert df.loc[0, "c1_group1_t1"] == "t0 group_1_t1"
         assert df.loc[0, "c1_group2_t1"] == "t0 group_2_t1"
 
-    def test_run_dataframe_conversion(self, spark):
+    def test_run_dataframe_conversion(self, spark_view):
         """
         If a node is dependant upon a node of a different dataframe type, then we expect the output of the parent node
         to be converted when it's provided to the child node.
@@ -290,7 +291,7 @@ class TestNode:
 
         @node(type="pandas_on_spark", output=Schema([Column("c1", Decimal(10, 2))]))
         def t1():
-            return spark.createDataFrame(
+            return spark_view.createDataFrame(
                 pd.DataFrame(data={"c1": [1], "c2": [2], "c3": [3]})
             ).pandas_api()
 
@@ -298,8 +299,8 @@ class TestNode:
         def t2(t1):
             return t1
 
-        t1_output = t1.run(spark, parallel=False)
-        t2_output = t2.run(spark, parallel=False)
+        t1_output = t1.run(spark_view, parallel=False)
+        t2_output = t2.run(spark_view, parallel=False)
         assert isinstance(t1_output, ps.frame.DataFrame)
         assert isinstance(t2_output, pd.DataFrame)
 
@@ -355,7 +356,7 @@ class TestNode:
 
         t3.run(parallel=False)
 
-    def test_adhoc_call(self, spark):
+    def test_adhoc_call(self, spark_view):
         """
         If we call a node directly with a function call we should skip calling the input dependencies and instead use
         the passed in arguments
@@ -382,8 +383,8 @@ class TestNode:
         def t2(t1):
             return t1.withColumn("c1", t1.c1 + 1)
 
-        df = spark.createDataFrame(schema=("c1",), data=[(1,)])
-        expected_df = spark.createDataFrame(schema=("c1",), data=[(2,)])
+        df = spark_view.createDataFrame(schema=("c1",), data=[(1,)])
+        expected_df = spark_view.createDataFrame(schema=("c1",), data=[(2,)])
 
         assert_pyspark_df_equal(t2(df), expected_df)
 
@@ -680,7 +681,7 @@ class TestNode:
 
         t3.run(parallel=False)
 
-    def test_run_isolated_dependencies_pandas_on_spark(self, spark):
+    def test_run_isolated_dependencies_pandas_on_spark(self, spark_view):
         """
         When we pass a dataframe dependency from an ancestor node to a child node the dataframe should be completely
         isolated. That is, any changes to the input dataframe should not modify the output of the parent node.
@@ -688,7 +689,7 @@ class TestNode:
 
         @node(type="pandas_on_spark")
         def t1():
-            return spark.createDataFrame(data=[{"c1": 1}]).pandas_api()
+            return spark_view.createDataFrame(data=[{"c1": 1}]).pandas_api()
 
         @node(type="pandas_on_spark", dependencies=[t1])
         def t2(t1):
@@ -705,7 +706,7 @@ class TestNode:
 
         t3.run(parallel=False)
 
-    def test_run_isolated_dependencies_spark(self, spark):
+    def test_run_isolated_dependencies_spark(self, spark_view):
         """
         When we pass a dataframe dependency from an ancestor node to a child node the dataframe should be completely
         isolated. That is, any changes to the input dataframe should not modify the output of the parent node.
@@ -715,7 +716,7 @@ class TestNode:
             type="pyspark",
         )
         def t1():
-            return spark.createDataFrame(data=[{"c1": 1}])
+            return spark_view.createDataFrame(data=[{"c1": 1}])
 
         @node(type="pyspark", dependencies=[t1])
         def t2(t1):
@@ -732,7 +733,7 @@ class TestNode:
 
         t3.run(parallel=False)
 
-    def test_pandas_on_spark_use_pandas(self, spark):
+    def test_pandas_on_spark_use_pandas(self, spark_view):
         """
         When running a graph with pandas_on_spark_use_pandas=True, all pandas_on_spark nodes types should be of type
         pandas. If running straight after, but with pandas_on_spark_use_pandas=False, all pandas_on_spark nodes types
@@ -743,10 +744,10 @@ class TestNode:
         def t1(dummy_table1):
             return dummy_table1
 
-        t1.run(spark, pandas_on_spark_use_pandas=True)
+        t1.run(spark_view, pandas_on_spark_use_pandas=True)
         assert t1.dataframe_type == DataFrameType.PANDAS_ON_SPARK
 
-        t1.run(spark, pandas_on_spark_use_pandas=False)
+        t1.run(spark_view, pandas_on_spark_use_pandas=False)
         assert t1.dataframe_type == DataFrameType.PANDAS_ON_SPARK
 
         # TODO- we should refactor to avoid having to call this private method to build a graph
@@ -758,7 +759,7 @@ class TestNode:
                     == DataFrameType.PANDAS
                 )
 
-    def test_function_argument_signature(self, spark):
+    def test_function_argument_signature(self, spark_view):
         """
         Independent of the order of the argument that the user types for a function,
         it should be given accordingly to what has been specified in the function
@@ -778,7 +779,7 @@ class TestNode:
 
         @node(type="pyspark")
         def t1():
-            return spark.createDataFrame(data=[{"c1": 1, "c2": 2}])
+            return spark_view.createDataFrame(data=[{"c1": 1, "c2": 2}])
 
         @node(
             type="pyspark",
@@ -788,9 +789,12 @@ class TestNode:
         )
         def t2(t1, requested_columns, spark):
             assert requested_columns == ["c1"]
+            print("======>", dataframe_type(t1))
             assert dataframe_type(t1) == DataFrameType.PYSPARK
             assert t1.columns == ["c1"]
-            assert isinstance(spark, pyspark.sql.session.SparkSession)
+            assert isinstance(spark, pyspark.sql.session.SparkSession) or isinstance(
+                spark, pyspark.sql.connect.session.SparkSession
+            )
             return t1
 
         @node(
@@ -808,11 +812,13 @@ class TestNode:
             assert dataframe_type(t2) == DataFrameType.PYSPARK
             assert t2.columns == ["c1"]
 
-            assert isinstance(spark, pyspark.sql.session.SparkSession)
+            assert isinstance(spark, pyspark.sql.session.SparkSession) or isinstance(
+                spark, pyspark.sql.connect.session.SparkSession
+            )
 
             return t1
 
-        t3.run(spark, parallel=False)
+        t3.run(spark_view, parallel=False)
 
     def test_run_one_dependency_multiple_instances(self):
         """
@@ -852,11 +858,11 @@ class TestNode:
         with pytest.raises(TypeError):
             t1.run()
 
-    def test_spark_sql_conversion(self, spark):
+    def test_spark_sql_conversion(self, spark_view):
         """
-        If we use a spark sql code then:
+        If we use a spark_view sql code then:
         - any dependencies should be saved into a unique table.
-        - the dataframes passed into the spark sql function should be replaced with the names of the tables they were
+        - the dataframes passed into the spark_view sql function should be replaced with the names of the tables they were
         saved into.
         """
 
@@ -868,18 +874,26 @@ class TestNode:
         def t2(t1):
             return f"select number+1 from {t1}"
 
+        dataframe_to_mock = (
+            SqlConnectDataFrame
+            if os.environ.get("USE_SPARK_CONNECT") == "1"
+            else DataFrame
+        )
         with mock.patch.object(
-            DataFrame, "createOrReplaceTempView"
+            dataframe_to_mock, "createOrReplaceTempView"
         ) as createOrReplaceTempView_mock, mock.patch.object(
-            spark, "sql", return_value=spark.createDataFrame(data=[{"number": 2}])
+            spark_view,
+            "sql",
+            return_value=spark_view.createDataFrame(schema=("number",), data=[(2,)]),
         ) as sql_mock:
-            t2.run(spark=spark)
+            t2.run(spark=spark_view)
+
         assert sql_mock.call_args[0][0] == "select number+1 from t2__t1"
         assert createOrReplaceTempView_mock.call_args[0][0] == "t2__t1"
 
-    def test_spark_sql_select_column(self, spark):
+    def test_spark_sql_select_column(self, spark_view):
         """
-        Basic test for spark sql where the dependency has a select column in it.
+        Basic test for spark_view sql where the dependency has a select column in it.
         There was a bug (DATA-3936) where this use case stacktraces.
         """
 
@@ -891,12 +905,19 @@ class TestNode:
         def t2(t1):
             return f"select * from {t1}"
 
+        dataframe_to_mock = (
+            SqlConnectDataFrame
+            if os.environ.get("USE_SPARK_CONNECT") == "1"
+            else DataFrame
+        )
         with mock.patch.object(
-            DataFrame, "createOrReplaceTempView"
+            dataframe_to_mock, "createOrReplaceTempView"
         ) as createOrReplaceTempView_mock, mock.patch.object(
-            spark, "sql", return_value=spark.createDataFrame(data=[{"number": 2}])
+            spark_view,
+            "sql",
+            return_value=spark_view.createDataFrame(data=[{"number": 2}]),
         ) as sql_mock:
-            t2.run(spark=spark)
+            t2.run(spark=spark_view)
         assert sql_mock.call_args[0][0] == "select * from t2__t1"
         assert createOrReplaceTempView_mock.call_args[0][0] == "t2__t1"
 

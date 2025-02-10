@@ -43,7 +43,7 @@ jobs:
           # Check installation
           pandoc -v
       - name: Build Sphinx Documentation
-        run: sh docs/build_docs.sh
+        run: make docs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

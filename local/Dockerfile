@@ -1,6 +1,6 @@
 FROM python:3.9-slim
 
-RUN apt-get update && apt-get install -y apt-utils default-jdk curl wget graphviz -y
+RUN apt-get update && apt-get install -y apt-utils build-essential default-jdk curl wget graphviz man-db
 RUN pip install --upgrade pip
 COPY ./requirements.txt .
 COPY ./local/requirements.txt requirements_dev.txt
@@ -9,15 +9,24 @@ RUN pip install -r requirements.txt
 RUN pip install -r requirements_dev.txt
 
 WORKDIR .
-RUN wget https://archive.apache.org/dist/spark/spark-3.3.2/spark-3.3.2-bin-hadoop3-scala2.13.tgz
-RUN tar xf spark-*
-RUN mv spark-3.3.2-bin-hadoop3-scala2.13 /opt/spark
+RUN wget https://archive.apache.org/dist/spark/spark-3.5.4/spark-3.5.4-bin-hadoop3.tgz
+RUN tar xf spark-* && \
+    mv spark-3.5.4-bin-hadoop3 /opt/spark && \
+    rm spark-*.tgz
 
 ENV SPARK_HOME "/opt/spark"
 ENV HADOOP_HOME "${SPARK_HOME}"
 ENV PATH "${PATH}:${SPARK_HOME}/bin:${SPARK_HOME}/sbin"
 ENV PYSPARK_PYTHON "/usr/local/bin/python3"
 ENV PYSPARK_DRIVER_PYTHON "${PYSPARK_PYTHON}"
+ENV USE_SPARK_CONNECT "0"
+
+
+## Set up Pandoc
+RUN wget https://github.com/jgm/pandoc/releases/download/3.6.2/pandoc-3.6.2-1-`dpkg --print-architecture`.deb
+RUN dpkg -i pandoc-3.6.2-1-`dpkg --print-architecture`.deb
+## Check installation
+RUN pandoc -v
 
 COPY /flypipe /flypipe
 ENV PYTHONPATH "${PYTHONPATH}:/local:/flypipe:/:"
