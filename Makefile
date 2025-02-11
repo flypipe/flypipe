@@ -4,7 +4,7 @@ LOCAL_DIR=./local
 PYTEST_THREADS ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
 min_coverage=85
 min_branch_coverage=95
-USE_SPARK_CONNECT=0
+SPARK_CONNECTION=SPARK
 
 build-image:
 	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml build
@@ -37,11 +37,11 @@ lint:
 .PHONY: lint
 
 coverage:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) -k '_test.py' --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export SPARK_CONNECTION=$(SPARK_CONNECTION) && pytest --rootdir flypipe -n $(PYTEST_THREADS) -k '_test.py' --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
 .PHONY: coverage
 
 test:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest -n $(PYTEST_THREADS) -k '_test.py' -vv $(f) --rootdir flypipe"
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export SPARK_CONNECTION=$(SPARK_CONNECTION) && pytest -n $(PYTEST_THREADS) -k '_test.py' -vv $(f) --rootdir flypipe"
 .PHONY: test
 
 branch-coverage:

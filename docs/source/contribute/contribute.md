@@ -33,8 +33,9 @@ Access JupyterLab http://127.0.0.1:8888/lab
 
 Runs unit tests and coverage
 
-`make coverage USE_SPARK_CONNECT=0` runs test coverage using spark session
-`make coverage USE_SPARK_CONNECT=1` runs test coverage using spark connect session
+`make coverage SPARK_CONNECTION=SPARK` runs test coverage using spark session
+`make coverage SPARK_CONNECTION=SPARK_CONNECT` runs test coverage using spark connect session
+`make coverage SPARK_CONNECTION=SPARK_SQLFRAME` runs test coverage using SqlFrame session
 
 **black**
 
