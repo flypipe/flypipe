@@ -4,11 +4,6 @@ from uuid import uuid4
 # Avoid WARNING:root:'PYARROW_IGNORE_TIMEZONE' environment variable was not set
 os.environ["PYARROW_IGNORE_TIMEZONE"] = "1"
 
-# from sqlframe.base.column import Column
-#
-# col = Column()
-# from sqlframe.duckdb.dataframe import DuckDBDataFrame
-# DuckDBDataFrame().columns
 
 def build_spark():
     spark = None
