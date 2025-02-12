@@ -876,7 +876,7 @@ class TestNode:
 
         dataframe_to_mock = (
             SqlConnectDataFrame
-            if os.environ.get("USE_SPARK_CONNECT") == "1"
+            if os.environ.get("SPARK_CONNECTION") == "SPARK_CONNECT"
             else DataFrame
         )
         with mock.patch.object(
@@ -907,7 +907,7 @@ class TestNode:
 
         dataframe_to_mock = (
             SqlConnectDataFrame
-            if os.environ.get("USE_SPARK_CONNECT") == "1"
+            if os.environ.get("SPARK_CONNECTION") == "SPARK_CONNECT"
             else DataFrame
         )
         with mock.patch.object(
