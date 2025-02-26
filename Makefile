@@ -2,7 +2,7 @@ SHELL                       :=/bin/bash
 
 LOCAL_DIR=./local
 PYTEST_THREADS ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
-min_coverage=85
+MIN_COVERAGE=85
 min_branch_coverage=95
 SPARK_CONNECTION=SPARK
 
@@ -37,7 +37,7 @@ lint:
 .PHONY: lint
 
 coverage:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export SPARK_CONNECTION=$(SPARK_CONNECTION) && pytest --rootdir flypipe -n $(PYTEST_THREADS) -k '_test.py' --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export SPARK_CONNECTION=$(SPARK_CONNECTION) && pytest --rootdir flypipe -n $(PYTEST_THREADS) -k '_test.py' --cov=flypipe --no-cov-on-fail --cov-fail-under=$(MIN_COVERAGE) flypipe"
 .PHONY: coverage
 
 test:

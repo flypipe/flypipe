@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -52,13 +54,15 @@ class TestDataFrameWrapper:
         ],
     )
     def test_get_instance(self, data, type, expected_class, spark):
-        if type == "pandas":
-            df = data
-        else:
-            df = spark.createDataFrame(**data)
-            if type == "pandas_api":
-                df = df.pandas_api()
-        assert isinstance(DataFrameWrapper.get_instance(spark, df), expected_class)
+
+        if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME" or type != "pandas_api":
+            if type == "pandas":
+                df = data
+            else:
+                df = spark.createDataFrame(**data)
+                if type == "pandas_api":
+                    df = df.pandas_api()
+            assert isinstance(DataFrameWrapper.get_instance(spark, df), expected_class)
 
     @pytest.mark.parametrize(
         "data,type",
@@ -73,15 +77,16 @@ class TestDataFrameWrapper:
         Ensure that DataFrameWrapper.select_columns does the selection operation out-of-place and returns a new
         dataframe wrapper, therefore the original dataframe wrapper should be untouched.
         """
-        # TODO- doesn't look like we're testing anything here?
-        if type == "pandas":
-            df = data
-        else:
-            df = spark.createDataFrame(**data)
-            if type == "pandas_api":
-                df = df.pandas_api()
-        df_wrapper = DataFrameWrapper.get_instance(spark, df)
-        df_wrapper2 = df_wrapper.select_columns("col1")  # noqa: F841
+        if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME" or type != "pandas_api":
+            # TODO- doesn't look like we're testing anything here?
+            if type == "pandas":
+                df = data
+            else:
+                df = spark.createDataFrame(**data)
+                if type == "pandas_api":
+                    df = df.pandas_api()
+            df_wrapper = DataFrameWrapper.get_instance(spark, df)
+            df_wrapper2 = df_wrapper.select_columns("col1")  # noqa: F841
 
     def test_cast_column_basic(self, mocker):
         """

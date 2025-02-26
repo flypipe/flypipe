@@ -3,6 +3,11 @@ Flypipe
 """
 import os
 
+if os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME":
+    from sqlframe import activate
+    activate("duckdb")
+
+
 with open(
     os.path.join(os.path.dirname(__file__), "version.txt"), "r", encoding="utf-8"
 ) as f:

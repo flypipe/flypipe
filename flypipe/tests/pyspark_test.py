@@ -1,8 +1,15 @@
 from typing import Any, Union, List
+import os
 
 import pyspark
 
-
+if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME":
+    from pyspark.sql import DataFrame
+    from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
+else:
+    from pyspark.sql import DataFrame
+    from pyspark.sql import DataFrame as DataFrameConnect
+    
 def _check_isinstance_pyspark(df: Any, clss):
 
     for cls in clss:
@@ -22,8 +29,8 @@ def _check_isinstance(left: Any, right: Any, cls: List[Any]):
 
 def _check_columns(
     check_columns_in_order: bool,
-    left_df: Union[pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
-    right_df: Union[pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
+    left_df: Union[DataFrame, DataFrameConnect],
+    right_df: Union[DataFrame, DataFrameConnect],
 ):
     if check_columns_in_order:
         assert left_df.columns == right_df.columns, "df columns name mismatch"
@@ -35,20 +42,20 @@ def _check_columns(
 
 def _check_schema(
     check_columns_in_order: bool,
-    left_df: Union[pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
-    right_df: Union[pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
+    left_df: Union[DataFrame, DataFrameConnect],
+    right_df: Union[DataFrame, DataFrameConnect],
 ):
     if check_columns_in_order:
         assert left_df.dtypes == right_df.dtypes, "df schema type mismatch"
     else:
-        assert sorted(left_df.dtypes, key=lambda x: x[0]) == sorted(
-            right_df.dtypes, key=lambda x: x[0]
+        assert sorted([(col.name, col.dataType.simpleString()) for col in left_df.schema], key=lambda x: x[0]) == sorted(
+            [(col.name, col.dataType.simpleString()) for col in right_df.schema], key=lambda x: x[0]
         ), "df schema type mismatch"
 
 
 def _check_df_content(
-    left_df: Union[pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
-    right_df: Union[pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
+    left_df: Union[DataFrame, DataFrameConnect],
+    right_df: Union[DataFrame, DataFrameConnect],
 ):
     left_df_list = left_df.collect()
     right_df_list = right_df.collect()
@@ -77,8 +84,8 @@ def _check_row_count(left_df, right_df):
 
 
 def assert_pyspark_df_equal(
-    left_df: Union[pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
-    right_df: Union[pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
+    left_df: Union[DataFrame, DataFrameConnect],
+    right_df: Union[DataFrame, DataFrameConnect],
     check_dtype: bool = True,
     check_column_names: bool = False,
     check_columns_in_order: bool = False,
@@ -100,7 +107,7 @@ def assert_pyspark_df_equal(
     _check_isinstance(
         left_df,
         right_df,
-        [pyspark.sql.DataFrame, pyspark.sql.connect.dataframe.DataFrame],
+        [DataFrame, DataFrameConnect],
     )
 
     # Check Column Names

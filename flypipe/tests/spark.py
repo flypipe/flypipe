@@ -1,6 +1,8 @@
 import os
 from uuid import uuid4
 
+
+
 # Avoid WARNING:root:'PYARROW_IGNORE_TIMEZONE' environment variable was not set
 os.environ["PYARROW_IGNORE_TIMEZONE"] = "1"
 
@@ -37,8 +39,8 @@ def build_spark():
 
         spark.sparkContext.setLogLevel("ERROR")
     elif os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME":
-        from sqlframe import activate
-        activate("duckdb")
+        # from sqlframe import activate
+        # activate("duckdb")
 
         from pyspark.sql import SparkSession
         spark = SparkSession.builder.getOrCreate()

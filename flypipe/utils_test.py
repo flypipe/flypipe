@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import pytest
 
@@ -53,8 +55,9 @@ class TestUtils:
         df = spark.createDataFrame(df)
         assert dataframe_type(df) == DataFrameType.PYSPARK
 
-        df = df.pandas_api()
-        assert dataframe_type(df) == DataFrameType.PANDAS_ON_SPARK
+        if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME":
+            df = df.pandas_api()
+            assert dataframe_type(df) == DataFrameType.PANDAS_ON_SPARK
 
         with pytest.raises(DataframeTypeNotSupportedError):
             dataframe_type(1)

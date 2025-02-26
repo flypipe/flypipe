@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from coverage.annotate import os
 from pandas.testing import assert_frame_equal
 from pyspark.sql.types import (
     StructField,
@@ -13,7 +14,8 @@ from flypipe.schema.types import (
     Boolean,
 )
 
-
+@pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+                        reason="Pandas on Spark not supported by SqlFrame")
 class TestPandasOnSparkDataFrameWrapper:
     """Tests for PandasOnSpark"""
 

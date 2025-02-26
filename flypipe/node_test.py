@@ -3,12 +3,20 @@ from unittest import mock
 
 import pandas as pd
 import pyspark
-import pyspark.pandas as ps
+
+if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME":
+    import pyspark.pandas as ps
+
 import pyspark.sql.functions as F
 import pytest
 from pandas.testing import assert_frame_equal
 from pyspark.sql import DataFrame
-from pyspark.sql.connect.dataframe import DataFrame as SqlConnectDataFrame
+
+if os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME":
+    from pyspark.sql import DataFrame as SqlConnectDataFrame
+else:
+    from pyspark.sql.connect.dataframe import DataFrame as SqlConnectDataFrame
+
 from flypipe.tests.pyspark_test import assert_pyspark_df_equal
 
 from flypipe.cache.cache import Cache
@@ -152,6 +160,8 @@ class TestNode:
         # won't align with what it's expecting.
         t2.run(parallel=False)
 
+    @pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+                       reason="Pandas on Spark not supported by SqlFrame")
     @pytest.mark.parametrize(
         "extra_run_config,expected_df_type",
         [
@@ -283,6 +293,8 @@ class TestNode:
         assert df.loc[0, "c1_group1_t1"] == "t0 group_1_t1"
         assert df.loc[0, "c1_group2_t1"] == "t0 group_2_t1"
 
+    @pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+                        reason="Pandas on Spark not supported by SqlFrame")
     def test_run_dataframe_conversion(self, spark_view):
         """
         If a node is dependant upon a node of a different dataframe type, then we expect the output of the parent node
@@ -681,6 +693,8 @@ class TestNode:
 
         t3.run(parallel=False)
 
+    @pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+                        reason="Pandas on Spark not supported by SqlFrame")
     def test_run_isolated_dependencies_pandas_on_spark(self, spark_view):
         """
         When we pass a dataframe dependency from an ancestor node to a child node the dataframe should be completely
@@ -733,6 +747,8 @@ class TestNode:
 
         t3.run(parallel=False)
 
+    @pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+                        reason="Pandas on Spark not supported by SqlFrame")
     def test_pandas_on_spark_use_pandas(self, spark_view):
         """
         When running a graph with pandas_on_spark_use_pandas=True, all pandas_on_spark nodes types should be of type

@@ -48,4 +48,4 @@ jobs:
       - name: Run unit tests using Spark Connect Session
         run: make coverage SPARK_CONNECTION=SPARK_CONNECT
       - name: Run unit tests using SQLFrame Spark
-        run: make coverage SPARK_CONNECTION=SPARK_SQLFRAME
+        run: make coverage SPARK_CONNECTION=SPARK_SQLFRAME MIN_COVERAGE=84

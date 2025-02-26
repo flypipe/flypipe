@@ -3,9 +3,12 @@ from dataclasses import dataclass, field
 from typing import Mapping, Union
 
 from pandas import DataFrame as PandasDataFrame
-from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
 from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
+try:
+    from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
+except Exception as e:
+    from pandas import DataFrame as PandasApiDataFrame
 
 from flypipe.config import get_config, RunMode
 from flypipe.node_result import NodeResult
