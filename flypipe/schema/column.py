@@ -19,3 +19,6 @@ class Column:
 
     def __repr__(self):
         return f'Column("{self.name}", {str(self.type)}, "{self.description}")'
+
+    def copy(self):
+        return Column(self.name, self.type, self.description)
