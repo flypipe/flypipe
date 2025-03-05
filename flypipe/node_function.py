@@ -1,5 +1,6 @@
 from flypipe.node import Node
 from flypipe.node_type import NodeType
+from flypipe.schema import Schema
 
 
 class NodeFunction(Node):
@@ -9,12 +10,29 @@ class NodeFunction(Node):
 
     NODE_TYPE = NodeType.NODE_FUNCTION
 
-    def __init__(self, function, node_dependencies=None, requested_columns=False):
+    def __init__(self, function, node_dependencies=None, requested_columns=False, output: Schema = None):
         self._key = None
         self.function = function
         self.node_dependencies = node_dependencies or []
         self._validate_node_dependencies()
         self.requested_columns = requested_columns
+
+        """
+        This allows other nodes to import output schema for a node function, for example
+        
+        @node(
+            ...
+            output=Schema(
+                node_function_dummy.output.get("col1")
+            )
+        )
+        """
+        self.output_schema = output
+
+        # For each column if the schema, declare that this node is the parent for all of them
+        # this for loop leaves columns aware of its owner to guide relationships definition
+        if self.output_schema is not None:
+            self.output_schema.set_parents(self)
 
     def _validate_node_dependencies(self):
         if self.node_dependencies:
@@ -69,8 +87,9 @@ class NodeFunction(Node):
     def copy(self):
         node_function = NodeFunction(
             self.function,
-            [dependency.copy() for dependency in self.node_dependencies],
-            self.requested_columns,
+            node_dependencies=[dependency.copy() for dependency in self.node_dependencies],
+            requested_columns=self.requested_columns,
+            output=self.output_schema,
         )
 
         node_function._key = self._key
@@ -91,7 +110,9 @@ def node_function(*args, **kwargs):
         List of external nodes that the node function is dependent on.
         Any node retrieved by the node function (called internal node) can only be dependent on any internal node or
         any node inside `node_dependencies`.
-        True, returns spark context as argument to the funtion (default is False)
+        True, returns spark context as argument to the function (default is False)
+    output : Schema, optional
+        Defines the output schema of the node (default is None)
 
     Returns
     -------
