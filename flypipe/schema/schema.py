@@ -25,8 +25,7 @@ class Schema:
         for col in self.columns:
             setattr(self, col.name, col)
 
-
-    def set_parents(self, parent: 'Node'):
+    def set_parents(self, parent: "Node"):
         for col in self.columns:
             col.set_parent(parent)
 

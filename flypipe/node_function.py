@@ -10,7 +10,13 @@ class NodeFunction(Node):
 
     NODE_TYPE = NodeType.NODE_FUNCTION
 
-    def __init__(self, function, node_dependencies=None, requested_columns=False, output: Schema = None):
+    def __init__(
+        self,
+        function,
+        node_dependencies=None,
+        requested_columns=False,
+        output: Schema = None,
+    ):
         self._key = None
         self.function = function
         self.node_dependencies = node_dependencies or []
@@ -87,7 +93,9 @@ class NodeFunction(Node):
     def copy(self):
         node_function = NodeFunction(
             self.function,
-            node_dependencies=[dependency.copy() for dependency in self.node_dependencies],
+            node_dependencies=[
+                dependency.copy() for dependency in self.node_dependencies
+            ],
             requested_columns=self.requested_columns,
             output=self.output_schema,
         )

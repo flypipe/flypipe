@@ -9,14 +9,16 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from flypipe.node import Node
 
+
 class RelationshipType(Enum):
-    MANY_TO_MANY="N:N"
-    ONE_TO_ONE="1:1"
-    ONE_TO_MANY="1:N"
-    MANY_TO_ONE="N:1"
+    MANY_TO_MANY = "N:N"
+    ONE_TO_ONE = "1:1"
+    ONE_TO_MANY = "1:N"
+    MANY_TO_ONE = "N:1"
 
     def __repr__(self):
         return self.name
+
 
 @dataclass
 class Relationship:
@@ -26,12 +28,20 @@ class Relationship:
     def __repr__(self):
         return f"{self.relationship_type.value}: {self.description}"
 
+
 class Column:
     """
     Model for a column in the output of a flypipe transformation.
     """
 
-    def __init__(self, name: str, type: Type, description: str = "", parent: "Node" = None, **kwargs):
+    def __init__(
+        self,
+        name: str,
+        type: Type,
+        description: str = "",
+        parent: "Node" = None,
+        **kwargs,
+    ):
         self.name = name
         self.type = type
         if not description and get_config("require_schema_description"):
@@ -59,15 +69,17 @@ class Column:
     def __repr__(self):
 
         if self.parent is not None:
-            return f'Node:{self.parent.key}.{self.name} FKS={self.fks})'
+            return f"Node:{self.parent.key}.{self.name} FKS={self.fks})"
         else:
-            return f'Node:ORPHAN_COLUMN.{self.name} FKS={self.fks})'
+            return f"Node:ORPHAN_COLUMN.{self.name} FKS={self.fks})"
 
     def set_parent(self, parent: "Node"):
         self.parent = parent
 
     def copy(self):
-        return Column(self.name, self.type, self.description, parent=self.parent, **self.kwargs)
+        return Column(
+            self.name, self.type, self.description, parent=self.parent, **self.kwargs
+        )
 
     def __hash__(self):
         # Needs a hash do differentiate between col2 of node1 and col2 of node 3
@@ -88,5 +100,3 @@ class Column:
     def one_to_one(self, other: "Column", description: str = ""):
         self.fks[other] = Relationship(RelationshipType.ONE_TO_ONE, description)
         return self
-
-
