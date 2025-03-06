@@ -29,7 +29,7 @@ class Schema:
         for col in self.columns:
             col._set_parent(parent)
 
-    def get(self, column):
+    def get(self, column: str):
         for col in self.columns:
             if col.name == column:
                 return col
@@ -49,4 +49,8 @@ class Schema:
         return Schema([column.copy() for column in self.columns])
 
     def __eq__(self, other):
-        return self.columns == other.columns
+        is_equal = len(self.columns) == len(other.columns)
+        for col in self.columns:
+            other_column = other.get(col.name)
+            is_equal = is_equal and other_column == col
+        return is_equal

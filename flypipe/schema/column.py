@@ -112,10 +112,15 @@ class Column:
 
     def __hash__(self):
         # Needs a hash do differentiate between col2 of node1 and col2 of node 3
-        return hash(self.parent.key + self.name)
+        return hash((self.parent.key if self.parent is not None else "") + self.name)
 
     def __eq__(self, other):
-        return hash(self) == hash(other)
+        is_equal = hash(self) == hash(other)
+        is_equal = is_equal and self.kwargs == other.kwargs
+        is_equal = is_equal and self.foreign_keys == other.foreign_keys
+        is_equal = is_equal and type(self.type) is type(other.type)
+        is_equal = is_equal and self.description == other.description
+        return is_equal
 
     def many_to_one(self, other: "Column", description: str = ""):
         """
