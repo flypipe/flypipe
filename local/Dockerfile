@@ -27,5 +27,15 @@ RUN dpkg -i pandoc-3.6.2-1-`dpkg --print-architecture`.deb
 ## Check installation
 RUN pandoc -v
 
+### Set up NodeJS
+RUN curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh
+RUN bash nodesource_setup.sh
+RUN apt-get install -y nodejs
+RUN node -v
+
+## Install dbml-renderer
+RUN npm install -g @softwaretechnik/dbml-renderer
+RUN npm install -g dbdocs
+
 COPY /flypipe /flypipe
 ENV PYTHONPATH "${PYTHONPATH}:/local:/flypipe:/:"

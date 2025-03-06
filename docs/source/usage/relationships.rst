@@ -1,13 +1,21 @@
 Relationships
 =============
 
-You can document relationships between nodes outputs. These relationships differs from the nodes dependencies as they
-document how the output of the nodes relate to each other.
+You can document relationships between node outputs. These relationships differ from node dependencies, as they describe
+how the outputs of different nodes are related to each other.
 
-Nodes dependencies are a list of dependencies needed to generate the output of a node, when the output of the node can
-end up being materialised into a table.
+Documenting these relationships helps your team better understand how nodes interact, making it easier to work with
+materialized tables. Additionally, these relationships facilitate the generation of `Entity-Relationship Diagrams (ERDs) <../notebooks/miscellaneous/build-erd.ipynb>`_.
 
-In order to help document the relationships of nodes or tables, you can declare the relationships as follow:
+**Advantages of Having ERD Diagrams Available for the Team**
+
+* **Improved Data Understanding**: ERDs provide a clear visual representation of how data flows between different nodes, making it easier for team members to grasp the structure of the data.
+* **Faster Onboarding**: New team members can quickly understand the relationships between different tables and nodes, reducing the learning curve.
+* **Better Collaboration**: A shared ERD diagram enables data engineers, analysts, and stakeholders to discuss and align on data relationships efficiently.
+* **Reduced Errors**: Understanding relationships between nodes helps prevent inconsistencies and ensures that transformations and aggregations align with business logic.
+* **Optimized Query Performance**: By visualizing relationships, teams can identify redundant joins or inefficient queries and optimize database performance accordingly.
+
+To document the relationships between nodes or tables, you can declare them as follows:
 
 .. code-block:: python
     @node(
@@ -26,11 +34,15 @@ In order to help document the relationships of nodes or tables, you can declare 
 The possible relationships are ``.one_to_one(...)``, ``.one_to_many(...)``, ``.many_to_one(...)`` and
 ``.many_to_many(...)``
 
-Go to the `Build DBML <../notebooks/miscellaneous/build-dbml.ipynb>`_ for more information.
+.. important::
+   **Relationships are solely for documentation purposes**; they do not enforce any constraints at runtime.
+   Therefore, not documenting relationships has no impact on execution.
 
 .. raw:: html
 
     <hr>
+
+Here is a more detailed implementation of these relationships and its usage:
 
 .. autoclass:: flypipe.schema.column.Column
    :members:
