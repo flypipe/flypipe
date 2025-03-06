@@ -43,7 +43,10 @@ class Schema:
             return "Schema: no columns"
 
         cols = [str(col) for col in self.columns]
-        return "Schema([\n\t" + ",\n\t".join(cols) + "\n])"
+        return "Schema([" + ", ".join(cols) + "])"
 
     def copy(self):
         return Schema([column.copy() for column in self.columns])
+
+    def __eq__(self, other):
+        return self.columns == other.columns

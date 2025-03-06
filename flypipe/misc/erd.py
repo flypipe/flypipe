@@ -8,18 +8,21 @@ from flypipe.node import Node
 
 
 def invoke(commands: str):
-    result = subprocess.run(commands.split(" "), capture_output=True, text=True)  # Replace with your command
+    result = subprocess.run(
+        commands.split(" "), capture_output=True, text=True
+    )  # Replace with your command
 
     if result.returncode != 0:
         print("Command failed!")
         print(result.stderr)  # Error message
 
 
-def build_erd_svg(nodes: Union[List[Node], Node],
-        output_path,
-        only_nodes_with_tags: Union[List[str], str]=None,
-        only_nodes_with_cache: bool = False,
-    ):
+def build_erd_svg(
+    nodes: Union[List[Node], Node],
+    output_path,
+    only_nodes_with_tags: Union[List[str], str] = None,
+    only_nodes_with_cache: bool = False,
+):
     """
     Reads flypipe nodes and builds a SVG image with the ERD diagram
 
@@ -44,14 +47,21 @@ def build_erd_svg(nodes: Union[List[Node], Node],
                     return <NAME TO BE USED FOR THE DBML TABLE NAME>
     """
 
-
     dbml_file_path = f"./{str(uuid4())}.dbml"
-    build_dbml(nodes, only_nodes_with_tags=only_nodes_with_tags, only_nodes_with_cache=only_nodes_with_cache, file_path_name=dbml_file_path)
+    build_dbml(
+        nodes,
+        only_nodes_with_tags=only_nodes_with_tags,
+        only_nodes_with_cache=only_nodes_with_cache,
+        file_path_name=dbml_file_path,
+    )
 
     try:
         invoke(f"dbml-renderer -i {dbml_file_path} -o {output_path}")
-    except FileNotFoundError as f:
-        raise FileNotFoundError(f"dbml-renderer not installed! Please install it and try again (https://github.com/softwaretechnik-berlin/dbml-renderer).")
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            "dbml-renderer not installed! Please install it and try again "
+            "(https://github.com/softwaretechnik-berlin/dbml-renderer)."
+        )
     except Exception as e:
         raise e
     finally:

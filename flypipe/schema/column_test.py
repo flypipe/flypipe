@@ -3,6 +3,7 @@ import pytest
 from flypipe import node
 from flypipe.config import config_context
 from flypipe.schema import Schema, Column
+from flypipe.schema.column import RelationshipType
 from flypipe.schema.types import String
 
 
@@ -29,3 +30,160 @@ class TestColumn:
         assert str(ex.value) == (
             "Descriptions on schema columns configured as mandatory but no description provided for column c2"
         )
+
+    def test_relationship_one_to_one(self):
+        print()
+
+        @node(
+            type="pandas",
+            output=Schema(
+                [
+                    Column("t1c1", String(), "test"),
+                    Column("t1c2", String()),
+                ]
+            ),
+        )
+        def t1():
+            return
+
+        @node(
+            type="pandas",
+            output=Schema(
+                [
+                    Column("t2c1", String(), "test").one_to_one(
+                        t1.output.t1c1, "my desc"
+                    ),
+                ]
+            ),
+        )
+        def t2():
+            return
+
+        foreign_keys = t2.output.t2c1.foreign_keys
+        assert foreign_keys[t1.output.t1c1].type == RelationshipType.ONE_TO_ONE
+        assert foreign_keys[t1.output.t1c1].description == "my desc"
+
+    def test_relationship_many_to_one(self):
+        print()
+
+        @node(
+            type="pandas",
+            output=Schema(
+                [
+                    Column("t1c1", String(), "test"),
+                    Column("t1c2", String()),
+                ]
+            ),
+        )
+        def t1():
+            return
+
+        @node(
+            type="pandas",
+            output=Schema(
+                [
+                    Column("t2c1", String(), "test").many_to_one(
+                        t1.output.t1c1, "my desc"
+                    ),
+                ]
+            ),
+        )
+        def t2():
+            return
+
+        foreign_keys = t2.output.t2c1.foreign_keys
+        assert foreign_keys[t1.output.t1c1].type == RelationshipType.MANY_TO_ONE
+        assert foreign_keys[t1.output.t1c1].description == "my desc"
+
+    def test_relationship_one_to_many(self):
+        @node(
+            type="pandas",
+            output=Schema(
+                [
+                    Column("t1c1", String(), "test"),
+                    Column("t1c2", String()),
+                ]
+            ),
+        )
+        def t1():
+            return
+
+        @node(
+            type="pandas",
+            output=Schema(
+                [
+                    Column("t2c1", String(), "test").one_to_many(
+                        t1.output.t1c1, "my desc"
+                    ),
+                ]
+            ),
+        )
+        def t2():
+            return
+
+        foreign_keys = t2.output.t2c1.foreign_keys
+        assert foreign_keys[t1.output.t1c1].type == RelationshipType.ONE_TO_MANY
+        assert foreign_keys[t1.output.t1c1].description == "my desc"
+
+    def test_relationship_many_to_many(self):
+        @node(
+            type="pandas",
+            output=Schema(
+                [
+                    Column("t1c1", String(), "test"),
+                    Column("t1c2", String()),
+                ]
+            ),
+        )
+        def t1():
+            return
+
+        @node(
+            type="pandas",
+            output=Schema(
+                [
+                    Column("t2c1", String(), "test").many_to_many(
+                        t1.output.t1c1, "my desc"
+                    ),
+                ]
+            ),
+        )
+        def t2():
+            return
+
+        foreign_keys = t2.output.t2c1.foreign_keys
+        assert foreign_keys[t1.output.t1c1].type == RelationshipType.MANY_TO_MANY
+        assert foreign_keys[t1.output.t1c1].description == "my desc"
+
+    def test_declared_more_than_one_relationship_same_column_raises_exception(self):
+        @node(
+            type="pandas",
+            output=Schema(
+                [
+                    Column("t1c1", String(), "test"),
+                    Column("t1c2", String()),
+                ]
+            ),
+        )
+        def t1():
+            return
+
+        with pytest.raises(ValueError):
+
+            @node(
+                type="pandas",
+                output=Schema(
+                    [
+                        Column("t2c1", String(), "test")
+                        .one_to_many(t1.output.t1c1, "my desc")
+                        .many_to_many(t1.output.t1c1, "my desc"),
+                    ]
+                ),
+            )
+            def t2():
+                return
+
+    def test_add_extra_arguments_exists_in_column(self):
+
+        col = Column("t1c1", String(), "test", PK=True)
+        assert hasattr(col, "PK") and col.PK
