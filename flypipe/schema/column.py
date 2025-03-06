@@ -22,24 +22,36 @@ class RelationshipType(Enum):
 
 @dataclass
 class Relationship:
-    relationship_type: RelationshipType
+    type: RelationshipType
     description: str = None
 
     def __repr__(self):
-        return f"{self.relationship_type.value}: {self.description}"
+        return f"{self.type}: {self.description}"
 
 
 class Column:
     """
-    Model for a column in the output of a flypipe transformation.
+    Defines a column in the output of a flypipe node.
+
+    Parameters
+    ----------
+
+    name : str
+        Name of the column
+    type : flypipe.schema.types.Type
+        Data type of the column
+    description : str, optional
+        A description of the column
+    kwargs : dict, optional
+        Extra keyword arguments you want to document the column
     """
+
 
     def __init__(
         self,
         name: str,
         type: Type,
         description: str = "",
-        parent: "Node" = None,
         **kwargs,
     ):
         self.name = name
@@ -54,11 +66,11 @@ class Column:
         # Each column knows who is the node that it is associated with, it is used to map the Relationship between
         # node1.output.col1 and node2.output.col2. In this way, col1 knows that belongs to node1
         # and col2 to node2
-        self.parent = parent
+        self.parent = None
 
         # this is a dict that holds the foreign keys between this column and other nodes columns,
         # the key is other Column, and the value holds Relationship
-        self.fks = {}
+        self.foreign_keys = {}
 
         # The user can define other named arguments need for their one documentation, like primary keys.
         self.kwargs = kwargs
@@ -67,36 +79,135 @@ class Column:
                 setattr(self, key, value)
 
     def __repr__(self):
+        foreign_key = []
+        for dest, relationship in self.foreign_keys.items():
+            foreign_key.append(f"{self.parent.function.__name__}.{self.name} {relationship.type.value} {dest.parent.function.__name__}.{dest.name}")
 
-        if self.parent is not None:
-            return f"Node:{self.parent.key}.{self.name} FKS={self.fks})"
+        if foreign_key:
+            foreign_key = "\n\t\t".join(foreign_key)
+            foreign_key = f'\n\tForeign Keys:\n\t\t{foreign_key}'
         else:
-            return f"Node:ORPHAN_COLUMN.{self.name} FKS={self.fks})"
+            foreign_key = ""
 
-    def set_parent(self, parent: "Node"):
+        s = f'''
+        Column: {self.name}
+        Parent: {self.parent.function.__name__}
+        Data Type: {str(self.type)}
+        Description: {self.description}{foreign_key}
+        '''
+
+
+
+        return s
+
+    def _set_parent(self, parent: "Node"):
         self.parent = parent
 
+    def _set_foreign_keys(self, foreign_keys: dict):
+        self.foreign_keys = foreign_keys
+
     def copy(self):
-        return Column(
-            self.name, self.type, self.description, parent=self.parent, **self.kwargs
-        )
+        col = Column(self.name, self.type, self.description, **self.kwargs)
+        col._set_parent(self.parent)
+        col._set_foreign_keys(self.foreign_keys)
+        return col
 
     def __hash__(self):
         # Needs a hash do differentiate between col2 of node1 and col2 of node 3
         return hash(self.parent.key + self.name)
 
     def many_to_one(self, other: "Column", description: str = ""):
-        self.fks[other] = Relationship(RelationshipType.MANY_TO_ONE, description)
+        """
+        Adds a N:1 relationship between this column and other node output column
+
+        Usage:
+
+        .. highlight:: python
+        .. code-block:: python
+
+            @node(
+                ...
+                output=Schema(
+                    ...
+                    Column("col_name", String(), "description)
+                    .many_to_one(another_node.output.col, "relationship description")
+                    ...
+                )
+            )
+            def my_node(...):
+                ...
+        """
+        self.foreign_keys[other.copy()] = Relationship(RelationshipType.MANY_TO_ONE, description)
         return self
 
     def one_to_many(self, other: "Column", description: str = ""):
-        self.fks[other] = Relationship(RelationshipType.ONE_TO_MANY, description)
+        """
+        Adds a 1:N relationship between this column and other node output column
+
+        Usage:
+
+        .. highlight:: python
+        .. code-block:: python
+
+            @node(
+                ...
+                output=Schema(
+                    ...
+                    Column("col_name", String(), "description)
+                    .one_to_many(another_node.output.col, "relationship description")
+                    ...
+                )
+            )
+            def my_node(...):
+                ...
+        """
+        self.foreign_keys[other.copy()] = Relationship(RelationshipType.ONE_TO_MANY, description)
         return self
 
     def many_to_many(self, other: "Column", description: str = ""):
-        self.fks[other] = Relationship(RelationshipType.MANY_TO_MANY, description)
+        """
+        Adds a N:N relationship between this column and other node output column
+
+        Usage:
+
+        .. highlight:: python
+        .. code-block:: python
+
+            @node(
+                ...
+                output=Schema(
+                    ...
+                    Column("col_name", String(), "description)
+                    .many_to_many(another_node.output.col, "relationship description")
+                    ...
+                )
+            )
+            def my_node(...):
+                ...
+        """
+        self.foreign_keys[other.copy()] = Relationship(RelationshipType.MANY_TO_MANY, description)
         return self
 
     def one_to_one(self, other: "Column", description: str = ""):
-        self.fks[other] = Relationship(RelationshipType.ONE_TO_ONE, description)
+        """
+        Adds a 1:1 relationship between this column and other node output column
+
+        Usage:
+
+        .. highlight:: python
+        .. code-block:: python
+
+            @node(
+                ...
+                output=Schema(
+                    ...
+                    Column("col_name", String(), "description)
+                    .one_to_one(another_node.output.col, "relationship description")
+                    ...
+                )
+            )
+            def my_node(...):
+                ...
+        """
+        self.foreign_keys[other.copy()] = Relationship(RelationshipType.ONE_TO_ONE, description)
         return self

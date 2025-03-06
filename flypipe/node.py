@@ -537,19 +537,13 @@ def node(type, *args, **kwargs):
         @node(
             type="pandas",
             description="Only outputs a pandas dataframe",
-            dependencies = [
-                t0.select("fruit").alias("df")
-            ],
             output=Schema(
                 t0.output.get("fruit"),
                 Column("flavour", String(), "fruit flavour")
             )
         )
         def t1(df):
-            categories = {'mango': 'sweet', 'lemon': 'citric'}
-            df['flavour'] = df['fruit']
-            df = df.replace({'flavour': categories})
-            return df
+            return pd.DataFrame({"fruit": ["mango"], "flavour": ["sweet"]})
 
 
     .. highlight:: python

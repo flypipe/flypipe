@@ -27,7 +27,7 @@ class Schema:
 
     def set_parents(self, parent: "Node"):
         for col in self.columns:
-            col.set_parent(parent)
+            col._set_parent(parent)
 
     def get(self, column):
         for col in self.columns:
