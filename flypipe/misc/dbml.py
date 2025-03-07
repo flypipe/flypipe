@@ -5,6 +5,11 @@ from flypipe.run_context import RunContext
 from flypipe.schema.column import RelationshipType
 
 
+def replace_dots_except_last(s: str) -> str:
+    parts = s.rsplit(".", 1)  # Split into two parts, keeping the last '.'
+    return parts[0].replace(".", "_") + ("." + parts[1] if len(parts) > 1 else "")
+
+
 class Table:
     def __init__(self, node: Node):
         self.node = node
@@ -29,7 +34,7 @@ class Table:
                     relationship_type.name = "<>"
                 elif relationship.type.name == RelationshipType.ONE_TO_ONE.name:
                     relationship_type = "-"
-                fk = f"ref: {relationship_type} {fk_column.parent.function.__name__}.{fk_column.name}"
+                fk = f"ref: {relationship_type} {self.get_table_name(fk_column.parent)}.{fk_column.name}"
 
             column_definition = [d for d in [note, pk, fk] if d is not None]
             if column_definition:
@@ -42,19 +47,25 @@ class Table:
 
     @property
     def table_description(self):
-        return (
-            ""
-            if not self.node.description
-            else f"\n\tNote: '''{self.node.description}'''"
+        table_description = [
+            f"Managed by flypipe node `{self.node.function.__name__}`",
+        ]
+
+        if self.node.description:
+            table_description.append(self.node.description)
+
+        table_description = "\n\n".join(table_description)
+        table_description = f"\n\n\tNote: '''{table_description}'''"
+        return table_description
+
+    def get_table_name(self, node):
+        return replace_dots_except_last(
+            node.function.__name__ if node.cache is None else node.cache.name
         )
 
     @property
     def table_name(self):
-        return (
-            self.node.function.__name__
-            if self.node.cache is None
-            else self.node.cache.name
-        )
+        return self.get_table_name(self.node)
 
     def to_dbml(self):
         return f"""Table {self.table_name} {{

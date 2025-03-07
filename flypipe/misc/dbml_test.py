@@ -2,7 +2,7 @@ import os
 
 from flypipe import node
 from flypipe.cache import Cache
-from flypipe.misc.dbml import build_dbml
+from flypipe.misc.dbml import build_dbml, replace_dots_except_last
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String
 
@@ -52,6 +52,7 @@ class TestDBML:
         expected_dbml = """
             Table A {
                 a1 String()
+                Note: '''Managed by flypipe node `A`'''
             }
         """
 
@@ -91,14 +92,17 @@ class TestDBML:
         expected_dbml = """
         Table A {
             node_a_col1 String() [note: '''description node_a_col1''']
+            Note: '''Managed by flypipe node `A`'''
         }
         
         Table B {
             node_b_col1 String() [note: '''description node_b_col1''', ref: - A.node_a_col1]
+            Note: '''Managed by flypipe node `B`'''
         }
         
         Table C {
             node_c_col1 String() [note: '''description node_c_col1''', ref: - B.node_b_col1]
+            Note: '''Managed by flypipe node `C`'''
         }
         """
 
@@ -145,18 +149,22 @@ class TestDBML:
         expected_dbml = """
         Table A {
             node_a_col1 String() [note: '''description node_a_col1''']
+            Note: '''Managed by flypipe node `A`'''
         }
         
         Table B {
             node_b_col1 String() [note: '''description node_b_col1''', ref: - A.node_a_col1]
+            Note: '''Managed by flypipe node `B`'''
         }
         
         Table C {
             node_c_col1 String() [note: '''description node_c_col1''']
+            Note: '''Managed by flypipe node `C`'''
         }
         
         Table D {
             node_d_col1 String() [note: '''description node_d_col1''', ref: - C.node_c_col1]
+            Note: '''Managed by flypipe node `D`'''
         }
         """
 
@@ -201,14 +209,17 @@ class TestDBML:
         expected_dbml = """
         Table B {
             node_b_col1 String() [note: '''description node_b_col1''', ref: - D.node_d_col1]
+            Note: '''Managed by flypipe node `B`'''
         }
         
         Table C {
             node_c_col1 String() [note: '''description node_c_col1''']
+            Note: '''Managed by flypipe node `C`'''
         }
         
         Table D {
             node_d_col1 String() [note: '''description node_d_col1''']
+            Note: '''Managed by flypipe node `D`'''
         }
         """
 
@@ -253,10 +264,12 @@ class TestDBML:
         expected_dbml = """
         Table B {
             node_b_col1 String() [note: '''description node_b_col1''', ref: - D.node_d_col1]
+            Note: '''Managed by flypipe node `B`'''
         }
         
         Table D {
             node_d_col1 String() [note: '''description node_d_col1''']
+            Note: '''Managed by flypipe node `D`'''
         }
         """
 
@@ -299,11 +312,13 @@ class TestDBML:
         dbml = build_dbml([B], only_nodes_with_cache=True)
         expected_dbml = """
         Table B {
-            node_b_col1 String() [note: '''description node_b_col1''', ref: - D.node_d_col1]
+            node_b_col1 String() [note: '''description node_b_col1''', ref: - mycache.node_d_col1]
+            Note: '''Managed by flypipe node `B`'''
         }
         
         Table mycache {
             node_d_col1 String() [note: '''description node_d_col1''']
+            Note: '''Managed by flypipe node `D`'''
         }
         """
 
@@ -358,11 +373,13 @@ class TestDBML:
         )
         expected_dbml = """
         Table B {
-            node_b_col1 String() [note: '''description node_b_col1''', ref: - E.node_e_col1]
+            node_b_col1 String() [note: '''description node_b_col1''', ref: - E_mycache.node_e_col1]
+            Note: '''Managed by flypipe node `B`'''
         }
         
         Table E_mycache {
             node_e_col1 String() [note: '''description node_e_col1''']
+            Note: '''Managed by flypipe node `E`'''
         }
         """
 
@@ -395,13 +412,96 @@ class TestDBML:
         expected_dbml = """
         Table A {
             node_a_col1 String() [note: '''description node_a_col1''']
+            Note: '''Managed by flypipe node `A`'''
         }
         
         Table B {
             node_b_col1 String() [note: '''description node_b_col1''', ref: - A.node_a_col1]
+            Note: '''Managed by flypipe node `B`'''
         }
         """
 
         assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
 
         os.remove("test.dbml")
+
+    def test_only_parent_with_cache(self):
+        @node(
+            type="pandas",
+            cache=MyCache("mycache"),
+            output=Schema(Column("node_c_col1", String(), "description node_c_col1")),
+        )
+        def C():
+            pass
+
+        @node(
+            type="pandas",
+            output=Schema(
+                Column("node_b_col1", String(), "description node_b_col1").one_to_one(
+                    C.output.node_c_col1
+                )
+            ),
+        )
+        def B(**dfs):
+            pass
+
+        dbml = build_dbml([B])
+        expected_dbml = """
+        Table B {
+            node_b_col1 String() [note: '''description node_b_col1''', ref: - mycache.node_c_col1]
+            Note: '''Managed by flypipe node `B`'''
+        }
+        
+        Table mycache {
+            node_c_col1 String() [note: '''description node_c_col1''']
+            Note: '''Managed by flypipe node `C`'''
+        }
+        """
+        assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
+
+    def test_replace_dots_except_last(self):
+        assert replace_dots_except_last("a.b") == "a.b"
+        assert replace_dots_except_last("a.b.c") == "a_b.c"
+        assert replace_dots_except_last("a.b.c.d") == "a_b_c.d"
+        assert replace_dots_except_last("c.a.b.c.d") == "c_a_b_c.d"
+
+    def test_cache_with_dots(self):
+        @node(
+            type="pandas",
+            description="this is node C",
+            cache=MyCache("a.b.c"),
+            output=Schema(Column("node_c_col1", String(), "description node_c_col1")),
+        )
+        def C():
+            pass
+
+        @node(
+            type="pandas",
+            description="this is node B",
+            output=Schema(
+                Column("node_b_col1", String(), "description node_b_col1").one_to_one(
+                    C.output.node_c_col1, "has"
+                )
+            ),
+        )
+        def B(**dfs):
+            pass
+
+        dbml = build_dbml([B])
+        expected_dbml = """
+        Table B {
+        node_b_col1 String() [note: '''description node_b_col1''', ref: - a_b.c.node_c_col1]
+        Note: '''Managed by flypipe node `B`
+    
+        this is node B'''
+        }
+        
+        Table a_b.c {
+            node_c_col1 String() [note: '''description node_c_col1''']
+            Note: '''Managed by flypipe node `C`
+        
+        this is node C'''
+        }
+        """
+
+        assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
