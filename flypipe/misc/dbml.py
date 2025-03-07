@@ -11,8 +11,15 @@ def replace_dots_except_last(s: str) -> str:
 
 
 class Table:
-    def __init__(self, node: Node):
+    def __init__(
+        self,
+        node: Node,
+        only_nodes_with_tags: Union[List[str], str] = None,
+        only_nodes_with_cache: bool = False,
+    ):
         self.node = node
+        self.only_nodes_with_tags = only_nodes_with_tags
+        self.only_nodes_with_cache = only_nodes_with_cache
 
     @property
     def columns(self):
@@ -21,22 +28,13 @@ class Table:
         for col in self.node.output.columns:
             column = f"\t{col.name} {str(col.type).replace(' ','')}"
             note = None if not col.description else f"note: '''{col.description}'''"
-            pk = None if not hasattr(col, "PK") else ("PK" if col.PK else None)
+            pk = None
+            if hasattr(col, "PK"):
+                pk = "PK" if col.PK else None
+            elif hasattr(col, "pk"):
+                pk = "pk" if col.pk else None
 
-            fk = None
-            for fk_column, relationship in col.foreign_keys.items():
-                relationship_type = ""
-                if relationship.type.name == RelationshipType.MANY_TO_ONE.name:
-                    relationship_type = ">"
-                elif relationship.type.name == RelationshipType.ONE_TO_MANY.name:
-                    relationship_type = "<"
-                elif relationship.type.name == RelationshipType.MANY_TO_MANY.name:
-                    relationship_type.name = "<>"
-                elif relationship.type.name == RelationshipType.ONE_TO_ONE.name:
-                    relationship_type = "-"
-                fk = f"ref: {relationship_type} {self.get_table_name(fk_column.parent)}.{fk_column.name}"
-
-            column_definition = [d for d in [note, pk, fk] if d is not None]
+            column_definition = [d for d in [note, pk] if d is not None]
             if column_definition:
                 column_definition = f" [{', '.join(column_definition)}]"
             else:
@@ -44,6 +42,55 @@ class Table:
             columns.append(column + column_definition)
 
         return "\n".join(columns)
+
+    @property
+    def references(self):
+        references = []
+
+        for col in self.node.output.columns:
+
+            source = f"{self.table_name}.{col.name}"
+
+            for fk_column, relationship in col.foreign_keys.items():
+
+                if is_tag_in_considered(
+                    fk_column.parent.tags, self.only_nodes_with_tags
+                ) and (
+                    not self.only_nodes_with_cache
+                    or (
+                        self.only_nodes_with_cache
+                        and fk_column.parent.cache is not None
+                    )
+                ):
+
+                    relationship_type = ""
+                    destiny = (
+                        f"{self.get_table_name(fk_column.parent)}.{fk_column.name}"
+                    )
+
+                    if relationship.type.name == RelationshipType.MANY_TO_ONE.name:
+                        relationship_type = ">"
+                        destiny = f"{self.table_name}.{col.name}"
+                        source = (
+                            f"{self.get_table_name(fk_column.parent)}.{fk_column.name}"
+                        )
+                    elif relationship.type.name == RelationshipType.ONE_TO_MANY.name:
+                        relationship_type = "<"
+                    elif relationship.type.name == RelationshipType.MANY_TO_MANY.name:
+                        relationship_type = "<>"
+                    elif relationship.type.name == RelationshipType.ONE_TO_ONE.name:
+                        relationship_type = "-"
+
+                    relationship_name = (
+                        ""
+                        if relationship.description is None
+                        else " " + relationship.description.replace(" ", "_")
+                    )
+                    references.append(
+                        f"Ref{relationship_name}: {source} {relationship_type} {destiny}"
+                    )
+
+        return "" if not references else "\n\n" + "\n".join(references)
 
     @property
     def table_description(self):
@@ -70,7 +117,7 @@ class Table:
     def to_dbml(self):
         return f"""Table {self.table_name} {{
 {self.columns}{self.table_description}
-}}"""
+}}{self.references}"""
 
 
 def get_node_graph(node, spark=None):
@@ -163,7 +210,7 @@ def build_dbml(
 
         nodes_seen.append(node_)
 
-        table = Table(node_)
+        table = Table(node_, only_nodes_with_tags, only_nodes_with_cache)
         dbml[table.table_name] = table.to_dbml()
 
         for column in node_.output.columns:

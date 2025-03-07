@@ -81,7 +81,7 @@ class TestDBML:
             type="pandas",
             output=Schema(
                 Column("node_c_col1", String(), "description node_c_col1").one_to_one(
-                    B.output.node_b_col1
+                    B.output.node_b_col1, "has"
                 )
             ),
         )
@@ -92,18 +92,25 @@ class TestDBML:
         expected_dbml = """
         Table A {
             node_a_col1 String() [note: '''description node_a_col1''']
+        
             Note: '''Managed by flypipe node `A`'''
         }
         
         Table B {
-            node_b_col1 String() [note: '''description node_b_col1''', ref: - A.node_a_col1]
+            node_b_col1 String() [note: '''description node_b_col1''']
+        
             Note: '''Managed by flypipe node `B`'''
         }
         
+        Ref : B.node_b_col1 - A.node_a_col1
+        
         Table C {
-            node_c_col1 String() [note: '''description node_c_col1''', ref: - B.node_b_col1]
+            node_c_col1 String() [note: '''description node_c_col1''']
+        
             Note: '''Managed by flypipe node `C`'''
         }
+        
+        Ref has: C.node_c_col1 - B.node_b_col1
         """
 
         assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
@@ -149,23 +156,31 @@ class TestDBML:
         expected_dbml = """
         Table A {
             node_a_col1 String() [note: '''description node_a_col1''']
+        
             Note: '''Managed by flypipe node `A`'''
         }
         
         Table B {
-            node_b_col1 String() [note: '''description node_b_col1''', ref: - A.node_a_col1]
+            node_b_col1 String() [note: '''description node_b_col1''']
+        
             Note: '''Managed by flypipe node `B`'''
         }
         
+        Ref : B.node_b_col1 - A.node_a_col1
+        
         Table C {
             node_c_col1 String() [note: '''description node_c_col1''']
+        
             Note: '''Managed by flypipe node `C`'''
         }
         
         Table D {
-            node_d_col1 String() [note: '''description node_d_col1''', ref: - C.node_c_col1]
+            node_d_col1 String() [note: '''description node_d_col1''']
+        
             Note: '''Managed by flypipe node `D`'''
         }
+        
+        Ref : D.node_d_col1 - C.node_c_col1
         """
 
         assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
@@ -208,17 +223,23 @@ class TestDBML:
         dbml = build_dbml([B])
         expected_dbml = """
         Table B {
-            node_b_col1 String() [note: '''description node_b_col1''', ref: - D.node_d_col1]
+            node_b_col1 String() [note: '''description node_b_col1''']
+        
             Note: '''Managed by flypipe node `B`'''
         }
         
+        Ref : B.node_b_col1 - C.node_c_col1
+        Ref : B.node_b_col1 - D.node_d_col1
+        
         Table C {
             node_c_col1 String() [note: '''description node_c_col1''']
+        
             Note: '''Managed by flypipe node `C`'''
         }
         
         Table D {
             node_d_col1 String() [note: '''description node_d_col1''']
+        
             Note: '''Managed by flypipe node `D`'''
         }
         """
@@ -263,12 +284,16 @@ class TestDBML:
         dbml = build_dbml([B], only_nodes_with_tags=["dbml"])
         expected_dbml = """
         Table B {
-            node_b_col1 String() [note: '''description node_b_col1''', ref: - D.node_d_col1]
+            node_b_col1 String() [note: '''description node_b_col1''']
+        
             Note: '''Managed by flypipe node `B`'''
         }
         
+        Ref : B.node_b_col1 - D.node_d_col1
+        
         Table D {
             node_d_col1 String() [note: '''description node_d_col1''']
+        
             Note: '''Managed by flypipe node `D`'''
         }
         """
@@ -312,12 +337,16 @@ class TestDBML:
         dbml = build_dbml([B], only_nodes_with_cache=True)
         expected_dbml = """
         Table B {
-            node_b_col1 String() [note: '''description node_b_col1''', ref: - mycache.node_d_col1]
+            node_b_col1 String() [note: '''description node_b_col1''']
+        
             Note: '''Managed by flypipe node `B`'''
         }
         
+        Ref : B.node_b_col1 - mycache.node_d_col1
+        
         Table mycache {
             node_d_col1 String() [note: '''description node_d_col1''']
+        
             Note: '''Managed by flypipe node `D`'''
         }
         """
@@ -373,12 +402,16 @@ class TestDBML:
         )
         expected_dbml = """
         Table B {
-            node_b_col1 String() [note: '''description node_b_col1''', ref: - E_mycache.node_e_col1]
+            node_b_col1 String() [note: '''description node_b_col1''']
+        
             Note: '''Managed by flypipe node `B`'''
         }
         
+        Ref : B.node_b_col1 - E_mycache.node_e_col1
+        
         Table E_mycache {
             node_e_col1 String() [note: '''description node_e_col1''']
+        
             Note: '''Managed by flypipe node `E`'''
         }
         """
@@ -412,13 +445,17 @@ class TestDBML:
         expected_dbml = """
         Table A {
             node_a_col1 String() [note: '''description node_a_col1''']
+        
             Note: '''Managed by flypipe node `A`'''
         }
         
         Table B {
-            node_b_col1 String() [note: '''description node_b_col1''', ref: - A.node_a_col1]
+            node_b_col1 String() [note: '''description node_b_col1''']
+        
             Note: '''Managed by flypipe node `B`'''
         }
+        
+        Ref : B.node_b_col1 - A.node_a_col1
         """
 
         assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
@@ -448,15 +485,20 @@ class TestDBML:
         dbml = build_dbml([B])
         expected_dbml = """
         Table B {
-            node_b_col1 String() [note: '''description node_b_col1''', ref: - mycache.node_c_col1]
+            node_b_col1 String() [note: '''description node_b_col1''']
+        
             Note: '''Managed by flypipe node `B`'''
         }
         
+        Ref : B.node_b_col1 - mycache.node_c_col1
+        
         Table mycache {
             node_c_col1 String() [note: '''description node_c_col1''']
+        
             Note: '''Managed by flypipe node `C`'''
         }
         """
+
         assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
 
     def test_replace_dots_except_last(self):
@@ -490,14 +532,18 @@ class TestDBML:
         dbml = build_dbml([B])
         expected_dbml = """
         Table B {
-        node_b_col1 String() [note: '''description node_b_col1''', ref: - a_b.c.node_c_col1]
-        Note: '''Managed by flypipe node `B`
-    
+            node_b_col1 String() [note: '''description node_b_col1''']
+        
+            Note: '''Managed by flypipe node `B`
+        
         this is node B'''
         }
         
+        Ref has: B.node_b_col1 - a_b.c.node_c_col1
+        
         Table a_b.c {
             node_c_col1 String() [note: '''description node_c_col1''']
+        
             Note: '''Managed by flypipe node `C`
         
         this is node C'''
@@ -540,10 +586,12 @@ class TestDBML:
         }
         
         Table B {
-            node_b_col1 String() [note: '''description node_b_col1''', ref: - A.node_a_col1]
+            node_b_col1 String() [note: '''description node_b_col1''']
         
             Note: '''Managed by flypipe node `B`'''
         }
+        
+        Ref : B.node_b_col1 - A.node_a_col1
         """
 
         assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
