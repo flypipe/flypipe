@@ -4,7 +4,7 @@ from flypipe import node
 from flypipe.cache import Cache
 from flypipe.misc.dbml import build_dbml, replace_dots_except_last
 from flypipe.schema import Schema, Column
-from flypipe.schema.types import String
+from flypipe.schema.types import String, Decimal
 
 
 class MyCache(Cache):
@@ -505,3 +505,47 @@ class TestDBML:
         """
 
         assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
+
+    def test_save_file_decimal(self):
+        @node(
+            type="pandas",
+            output=Schema(
+                Column("node_a_col1", Decimal(15, 2), "description node_a_col1")
+            ),
+        )
+        def A():
+            pass
+
+        @node(
+            type="pandas",
+            output=Schema(
+                Column("node_b_col1", String(), "description node_b_col1").one_to_one(
+                    A.output.node_a_col1
+                )
+            ),
+        )
+        def B(**dfs):
+            pass
+
+        response = build_dbml([B], file_path_name="test.dbml")
+        assert response is None
+        with open("test.dbml", "r") as f:
+            dbml = "".join(f.readlines())
+
+        expected_dbml = """
+        Table A {
+            node_a_col1 Decimal(15,2) [note: '''description node_a_col1''']
+        
+            Note: '''Managed by flypipe node `A`'''
+        }
+        
+        Table B {
+            node_b_col1 String() [note: '''description node_b_col1''', ref: - A.node_a_col1]
+        
+            Note: '''Managed by flypipe node `B`'''
+        }
+        """
+
+        assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
+
+        os.remove("test.dbml")

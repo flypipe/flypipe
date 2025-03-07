@@ -19,7 +19,7 @@ class Table:
         columns = []
 
         for col in self.node.output.columns:
-            column = f"\t{col.name} {col.type}"
+            column = f"\t{col.name} {str(col.type).replace(' ','')}"
             note = None if not col.description else f"note: '''{col.description}'''"
             pk = None if not hasattr(col, "PK") else ("PK" if col.PK else None)
 
