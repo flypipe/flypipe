@@ -106,9 +106,13 @@ class Table:
         return table_description
 
     def get_table_name(self, node):
-        return replace_dots_except_last(
-            node.function.__name__ if node.cache is None else node.cache.name
-        ).replace(" ", "_").lower()
+        return (
+            replace_dots_except_last(
+                node.function.__name__ if node.cache is None else node.cache.name
+            )
+            .replace(" ", "_")
+            .lower()
+        )
 
     @property
     def table_color(self):

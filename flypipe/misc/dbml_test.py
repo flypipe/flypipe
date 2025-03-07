@@ -665,7 +665,6 @@ class TestDBML:
         assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
 
     def test_lower_case_non_space_table_cache_name(self):
-
         @node(
             type="pandas",
             description="this is node C",
@@ -674,7 +673,6 @@ class TestDBML:
         )
         def C():
             pass
-
 
         dbml = build_dbml([C])
 
