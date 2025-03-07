@@ -108,14 +108,21 @@ class Table:
     def get_table_name(self, node):
         return replace_dots_except_last(
             node.function.__name__ if node.cache is None else node.cache.name
-        )
+        ).replace(" ", "_").lower()
+
+    @property
+    def table_color(self):
+        table_color = ""
+        if self.node.cache and hasattr(self.node.cache, "color"):
+            table_color = f" [headercolor: {self.node.cache.color}]"
+        return table_color
 
     @property
     def table_name(self):
         return self.get_table_name(self.node)
 
     def to_dbml(self):
-        return f"""Table {self.table_name} {{
+        return f"""Table {self.table_name}{self.table_color} {{
 {self.columns}{self.table_description}
 }}{self.references}"""
 
