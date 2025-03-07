@@ -33,9 +33,10 @@ class Table:
 
             column_definition = [d for d in [note, pk, fk] if d is not None]
             if column_definition:
-                column_definition = f"[{', '.join(column_definition)}]"
-
-            columns.append(column + " " + column_definition)
+                column_definition = f" [{', '.join(column_definition)}]"
+            else:
+                column_definition = ""
+            columns.append(column + column_definition)
 
         return "\n".join(columns)
 

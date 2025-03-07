@@ -42,6 +42,21 @@ class TestDBML:
         dbml = build_dbml(A)
         assert dbml is None
 
+    def test_node_with_output(self):
+        @node(type="pandas", output=Schema(Column("a1", String(), "")))
+        def A():
+            pass
+
+        dbml = build_dbml(A)
+
+        expected_dbml = """
+            Table A {
+                a1 String()
+            }
+        """
+
+        assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
+
     def test_nodes_upstream_are_mapped(self):
         @node(
             type="pandas",
