@@ -91,9 +91,9 @@ class Column:
 
         s = f"""
     Column: {self.name}
-    Parent: {self.parent.function.__name__}
+    Parent: {'None' if self.parent is None else self.parent.function.__name__}
     Data Type: {str(self.type)}
-    Description: {self.description}{foreign_key}
+    Description: '{self.description}{foreign_key}'
         """
 
         return s

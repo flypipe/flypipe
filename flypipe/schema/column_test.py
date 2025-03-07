@@ -187,3 +187,10 @@ class TestColumn:
 
         col = Column("t1c1", String(), "test", PK=True)
         assert hasattr(col, "PK") and col.PK
+
+    def test_print_column_without_parent(self):
+        col = Column("t1c1", String())
+        assert (
+            str(col).replace("\n", "").replace(" ", "")
+            == """Column:t1c1Parent:NoneDataType:String()Description:''"""
+        )
