@@ -642,6 +642,14 @@ class TestDBML:
 
         dbml = build_dbml([B])
         expected_dbml = """
+        Table a_b.c [headercolor: #FFFFF] {
+            node_c_col1 String() [note: '''description node_c_col1''']
+        
+            Note: '''Managed by flypipe node `C`
+        
+        this is node C'''
+        }
+        
         Table b {
             node_b_col1 String() [note: '''description node_b_col1''']
         
@@ -651,15 +659,6 @@ class TestDBML:
         }
         
         Ref has: b.node_b_col1 - a_b.c.node_c_col1
-        
-        Table a_b.c [headercolor: #FFFFF] {
-            node_c_col1 String() [note: '''description node_c_col1''']
-        
-            Note: '''Managed by flypipe node `C`
-        
-        this is node C'''
-        }
-
         """
 
         assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
