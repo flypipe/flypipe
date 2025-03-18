@@ -42,8 +42,8 @@ class Column:
         Data type of the column
     description : str, optional
         A description of the column
-    kwargs : dict, optional
-        Extra keyword arguments you want to document the column
+    pk : bool, optional, default: False
+        marks the column as primary key or not
     """
 
     def __init__(
@@ -51,7 +51,7 @@ class Column:
         name: str,
         type: Type,
         description: str = "",
-        **kwargs,
+        pk: bool = False,
     ):
         self.name = name
         self.type = type
@@ -71,11 +71,7 @@ class Column:
         # the key is other Column, and the value holds Relationship
         self.foreign_keys = {}
 
-        # The user can define other named arguments need for their one documentation, like primary keys.
-        self.kwargs = kwargs
-        if self.kwargs is not None:
-            for key, value in self.kwargs.items():
-                setattr(self, key, value)
+        self.pk = pk
 
     def __repr__(self):
         foreign_key = []
@@ -105,22 +101,40 @@ class Column:
         self.foreign_keys = foreign_keys
 
     def copy(self):
-        col = Column(self.name, self.type, self.description, **self.kwargs)
+        col = Column(self.name, self.type, description=self.description, pk=self.pk)
         col._set_parent(self.parent)
         col._set_foreign_keys(self.foreign_keys)
         return col
 
+    @property
+    def key(self):
+        return (self.parent.key if self.parent is not None else "") + self.name
+
     def __hash__(self):
         # Needs a hash do differentiate between col2 of node1 and col2 of node 3
-        return hash((self.parent.key if self.parent is not None else "") + self.name)
+        return hash(self.key)
 
     def __eq__(self, other):
         is_equal = hash(self) == hash(other)
-        is_equal = is_equal and self.kwargs == other.kwargs
+        is_equal = is_equal and self.parent == other.parent
         is_equal = is_equal and self.foreign_keys == other.foreign_keys
         is_equal = is_equal and type(self.type) is type(other.type)
         is_equal = is_equal and self.description == other.description
+        is_equal = is_equal and self.pk == other.pk
         return is_equal
+
+    def _add_relationship(
+        self,
+        other: "Column",
+        relationship_type: RelationshipType,
+        description: str = "",
+    ):
+        if self.get_foreign_key(other) is not None:
+            raise ValueError(
+                f"Multiple relationships have been set for the same column {self.name}"
+            )
+        self.foreign_keys[other] = Relationship(relationship_type, description)
+        return self
 
     def many_to_one(self, other: "Column", description: str = ""):
         """
@@ -143,10 +157,7 @@ class Column:
             def my_node(...):
                 ...
         """
-        self.foreign_keys[other.copy()] = Relationship(
-            RelationshipType.MANY_TO_ONE, description
-        )
-        return self
+        return self._add_relationship(other, RelationshipType.MANY_TO_ONE, description)
 
     def one_to_many(self, other: "Column", description: str = ""):
         """
@@ -169,10 +180,8 @@ class Column:
             def my_node(...):
                 ...
         """
-        self.foreign_keys[other.copy()] = Relationship(
-            RelationshipType.ONE_TO_MANY, description
-        )
-        return self
+
+        return self._add_relationship(other, RelationshipType.ONE_TO_MANY, description)
 
     def many_to_many(self, other: "Column", description: str = ""):
         """
@@ -195,15 +204,8 @@ class Column:
             def my_node(...):
                 ...
         """
-        if self.get_foreign_key(other) is not None:
-            raise ValueError(
-                f"Multiple relationships have been set for the same column {self.name}"
-            )
 
-        self.foreign_keys[other.copy()] = Relationship(
-            RelationshipType.MANY_TO_MANY, description
-        )
-        return self
+        return self._add_relationship(other, RelationshipType.MANY_TO_MANY, description)
 
     def one_to_one(self, other: "Column", description: str = ""):
         """
@@ -226,10 +228,7 @@ class Column:
             def my_node(...):
                 ...
         """
-        self.foreign_keys[other.copy()] = Relationship(
-            RelationshipType.ONE_TO_ONE, description
-        )
-        return self
+        return self._add_relationship(other, RelationshipType.ONE_TO_ONE, description)
 
     def get_foreign_key(self, other: "Column"):
         for col, fk in self.foreign_keys.items():

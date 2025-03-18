@@ -21,13 +21,13 @@ class TestSchema:
         assert schema1 == schema2
 
     def test_schema_are_equal_same_attribute(self):
-        schema1 = Schema(Column("col1", String(), "desc", PK=True))
-        schema2 = Schema(Column("col1", String(), "desc", PK=True))
+        schema1 = Schema(Column("col1", String(), "desc", pk=True))
+        schema2 = Schema(Column("col1", String(), "desc", pk=True))
 
         assert schema1 == schema2
 
     def test_schema_are_not_equal_different_attribute(self):
-        schema1 = Schema(Column("col1", String(), "desc", PK=True))
+        schema1 = Schema(Column("col1", String(), "desc", pk=True))
         schema2 = Schema(Column("col1", String(), "desc"))
 
         assert schema1 != schema2

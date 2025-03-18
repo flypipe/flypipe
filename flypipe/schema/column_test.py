@@ -185,8 +185,8 @@ class TestColumn:
 
     def test_add_extra_arguments_exists_in_column(self):
 
-        col = Column("t1c1", String(), "test", PK=True)
-        assert hasattr(col, "PK") and col.PK
+        col = Column("t1c1", String(), "test", pk=True)
+        assert hasattr(col, "pk") and col.pk
 
     def test_print_column_without_parent(self):
         col = Column("t1c1", String())
