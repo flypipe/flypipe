@@ -14,8 +14,11 @@ from flypipe.schema.types import (
     Boolean,
 )
 
-@pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
-                        reason="Pandas on Spark not supported by SqlFrame")
+
+@pytest.mark.skipif(
+    os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+    reason="Pandas on Spark not supported by SqlFrame",
+)
 class TestPandasOnSparkDataFrameWrapper:
     """Tests for PandasOnSpark"""
 

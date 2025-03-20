@@ -98,7 +98,12 @@ class TestSparkDataFrameWrapper:
             schema=StructType(
                 [
                     StructField("c1", BooleanType()),
-                    StructField("c2", BooleanType() if os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME" else ByteType()),
+                    StructField(
+                        "c2",
+                        BooleanType()
+                        if os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME"
+                        else ByteType(),
+                    ),
                     StructField("c3", BinaryType()),
                     StructField("c4", IntegerType()),
                     StructField("c5", ShortType()),
@@ -116,7 +121,10 @@ class TestSparkDataFrameWrapper:
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
 
         assert isinstance(df_wrapper.get_column_flypipe_type("c1"), Boolean)
-        assert isinstance(df_wrapper.get_column_flypipe_type("c2"), Boolean if os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME" else Byte)
+        assert isinstance(
+            df_wrapper.get_column_flypipe_type("c2"),
+            Boolean if os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME" else Byte,
+        )
         assert isinstance(df_wrapper.get_column_flypipe_type("c3"), Binary)
         assert isinstance(df_wrapper.get_column_flypipe_type("c4"), Integer)
         assert isinstance(df_wrapper.get_column_flypipe_type("c5"), Short)
@@ -147,7 +155,10 @@ class TestSparkDataFrameWrapper:
         )
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
         df_wrapper.cast_column("col1", Decimal(5, 2))
-        dtypes = [(col.name, col.dataType.simpleString().replace(" ","")) for col in df_wrapper.df.schema]
+        dtypes = [
+            (col.name, col.dataType.simpleString().replace(" ", ""))
+            for col in df_wrapper.df.schema
+        ]
         assert dtypes[0] == ("col1", "decimal(5,2)")
         # TODO: should probably not resort to a pandas conversion + df check but I can't seem to create a pyspark df
         #  with DecimalType and the below literals.

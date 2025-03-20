@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+
 if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME":
     import pyspark.pandas as ps
 import pyspark.sql.functions as F
@@ -117,8 +118,10 @@ class TestPySparkNode:
         df = t2.run(spark_view, parallel=False)
         assert isinstance(df, pd.DataFrame)
 
-    @pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
-                        reason="Pandas on Spark not supported by SqlFrame")
+    @pytest.mark.skipif(
+        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        reason="Pandas on Spark not supported by SqlFrame",
+    )
     def test_conversion_to_pandas_on_spark(self, spark_view):
         @node(
             type="pyspark",
@@ -139,8 +142,10 @@ class TestPySparkNode:
         df = t2.run(spark_view, parallel=False)
         assert isinstance(df, ps.DataFrame)
 
-    @pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
-                        reason="Pandas on Spark not supported by SqlFrame")
+    @pytest.mark.skipif(
+        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        reason="Pandas on Spark not supported by SqlFrame",
+    )
     def test_datasource_case_sensitive_columns(self, spark_view):
         """
         Test columns case sensitive
@@ -217,8 +222,10 @@ class TestPySparkNode:
             f"\n\n\n{tabulate(expected_error_df, headers='keys', tablefmt='mixed_outline')}\n"
         )
 
-    @pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
-                        reason="Pandas on Spark not supported by SqlFrame")
+    @pytest.mark.skipif(
+        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        reason="Pandas on Spark not supported by SqlFrame",
+    )
     def test_duplicated_output_columns(self, spark_view):
         @node(
             type="pandas_on_spark",

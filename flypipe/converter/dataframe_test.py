@@ -24,8 +24,13 @@ def pyspark_df(spark, pandas_df):
 def pandas_on_spark_df(pyspark_df):
     return pyspark_df.pandas_api()
 
-pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
-                        reason="Pandas on Spark not supported by SqlFrame")
+
+pytest.mark.skipif(
+    os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+    reason="Pandas on Spark not supported by SqlFrame",
+)
+
+
 class TestDataFrameConverter:
     """Tests on DataFrameConverts"""
 
@@ -33,8 +38,10 @@ class TestDataFrameConverter:
         df = DataFrameConverter().convert(pandas_df, DataFrameType.PANDAS)
         assert_dataframes_equals(df, pandas_df)
 
-    @pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
-                        reason="Pandas on Spark not supported by SqlFrame")
+    @pytest.mark.skipif(
+        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        reason="Pandas on Spark not supported by SqlFrame",
+    )
     def test_convert_pandas_to_pandas_on_spark(
         self, spark, pandas_df, pandas_on_spark_df
     ):
@@ -48,16 +55,20 @@ class TestDataFrameConverter:
         df = DataFrameConverter(spark).convert(pandas_df, DataFrameType.PYSPARK)
         assert_dataframes_equals(df, pyspark_df)
 
-    @pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
-                        reason="Pandas on Spark not supported by SqlFrame")
+    @pytest.mark.skipif(
+        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        reason="Pandas on Spark not supported by SqlFrame",
+    )
     def test_convert_pandas_on_spark_to_pandas(
         self, spark, pandas_on_spark_df, pandas_df
     ):
         df = DataFrameConverter(spark).convert(pandas_on_spark_df, DataFrameType.PANDAS)
         assert_dataframes_equals(df, pandas_df)
 
-    @pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
-                        reason="Pandas on Spark not supported by SqlFrame")
+    @pytest.mark.skipif(
+        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        reason="Pandas on Spark not supported by SqlFrame",
+    )
     def test_convert_pandas_on_spark_to_pyspark(
         self, spark, pandas_on_spark_df, pyspark_df
     ):
@@ -70,8 +81,10 @@ class TestDataFrameConverter:
         df = DataFrameConverter(spark).convert(pyspark_df, DataFrameType.PANDAS)
         assert_dataframes_equals(df, pandas_df)
 
-    @pytest.mark.skipif(os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
-                        reason="Pandas on Spark not supported by SqlFrame")
+    @pytest.mark.skipif(
+        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        reason="Pandas on Spark not supported by SqlFrame",
+    )
     def test_convert_pyspark_to_pandas_on_spark(
         self, spark, pyspark_df, pandas_on_spark_df
     ):
@@ -86,7 +99,11 @@ class TestDataFrameConverter:
     )
     def test_empty_dataframe_to_spark(self, spark, caplog, node_type):
 
-        if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME" or node_type != "pandas_on_spark":
+        if (
+            os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME"
+            or node_type != "pandas_on_spark"
+        ):
+
             @node(
                 type="pandas",
                 output=Schema([Column("c1", Boolean())]),

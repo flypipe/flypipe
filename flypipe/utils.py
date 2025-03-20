@@ -5,14 +5,15 @@ import pandas as pd
 
 try:
     import pyspark.pandas as ps
-except Exception as e:
+except Exception as e:  # noqa: F841
     import pandas as ps
 
 
 import pyspark.sql.dataframe as sql
+
 try:
     import pyspark.sql.connect.dataframe as sql_connect
-except Exception as e:
+except Exception as e:  # noqa: F841
     import pyspark.sql.dataframe as sql_connect
 
 
@@ -44,8 +45,18 @@ def assert_schemas_are_equals(df1, df2) -> None:
 
     elif dataframe_type(df1) in [DataFrameType.PYSPARK, DataFrameType.PANDAS_ON_SPARK]:
 
-        schema_df1 = json.dumps(sorted([(col.name, col.dataType.simpleString()) for col in df1.schema], key=lambda t: t[0]))
-        schema_df2 = json.dumps(sorted([(col.name, col.dataType.simpleString()) for col in df2.schema], key=lambda t: t[0]))
+        schema_df1 = json.dumps(
+            sorted(
+                [(col.name, col.dataType.simpleString()) for col in df1.schema],
+                key=lambda t: t[0],
+            )
+        )
+        schema_df2 = json.dumps(
+            sorted(
+                [(col.name, col.dataType.simpleString()) for col in df2.schema],
+                key=lambda t: t[0],
+            )
+        )
         if schema_df1 != schema_df2:
             raise DataframeSchemasDoNotMatchError(
                 f"Schema of df1 {schema_df1} != schema df2 {schema_df2}"

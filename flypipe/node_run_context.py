@@ -6,7 +6,7 @@ from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
 
 try:
     from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
-except Exception as e:
+except Exception as e:  # noqa: F841
     from pandas import DataFrame as PandasApiDataFrame
 
 from flypipe.cache.cache_context import CacheContext

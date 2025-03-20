@@ -2,7 +2,6 @@ import os
 from uuid import uuid4
 
 
-
 # Avoid WARNING:root:'PYARROW_IGNORE_TIMEZONE' environment variable was not set
 os.environ["PYARROW_IGNORE_TIMEZONE"] = "1"
 
@@ -12,6 +11,7 @@ def build_spark():
 
     if os.environ.get("SPARK_CONNECTION") == "SPARK_CONNECT":
         from pyspark.sql import SparkSession
+
         print("Building spark session (spark_connect)")
 
         return (
@@ -23,6 +23,7 @@ def build_spark():
         )
     elif os.environ.get("SPARK_CONNECTION") == "SPARK":
         from pyspark.sql import SparkSession
+
         print("Building spark session")
 
         spark = (
@@ -43,8 +44,11 @@ def build_spark():
         # activate("duckdb")
 
         from pyspark.sql import SparkSession
+
         spark = SparkSession.builder.getOrCreate()
     else:
-        raise ValueError(f'Invalid SPARK_CONNECTION: {os.environ.get("SPARK_CONNECTION")}')
+        raise ValueError(
+            f'Invalid SPARK_CONNECTION: {os.environ.get("SPARK_CONNECTION")}'
+        )
 
     return spark

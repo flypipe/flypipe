@@ -55,7 +55,10 @@ class TestDataFrameWrapper:
     )
     def test_get_instance(self, data, type, expected_class, spark):
 
-        if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME" or type != "pandas_api":
+        if (
+            os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME"
+            or type != "pandas_api"
+        ):
             if type == "pandas":
                 df = data
             else:
@@ -77,7 +80,10 @@ class TestDataFrameWrapper:
         Ensure that DataFrameWrapper.select_columns does the selection operation out-of-place and returns a new
         dataframe wrapper, therefore the original dataframe wrapper should be untouched.
         """
-        if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME" or type != "pandas_api":
+        if (
+            os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME"
+            or type != "pandas_api"
+        ):
             # TODO- doesn't look like we're testing anything here?
             if type == "pandas":
                 df = data

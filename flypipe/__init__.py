@@ -5,6 +5,7 @@ import os
 
 if os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME":
     from sqlframe import activate
+
     activate("duckdb")
 
 

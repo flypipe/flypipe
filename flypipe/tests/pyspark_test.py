@@ -1,15 +1,14 @@
 from typing import Any, Union, List
 import os
 
-import pyspark
-
 if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME":
     from pyspark.sql import DataFrame
     from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
 else:
     from pyspark.sql import DataFrame
     from pyspark.sql import DataFrame as DataFrameConnect
-    
+
+
 def _check_isinstance_pyspark(df: Any, clss):
 
     for cls in clss:
@@ -48,8 +47,12 @@ def _check_schema(
     if check_columns_in_order:
         assert left_df.dtypes == right_df.dtypes, "df schema type mismatch"
     else:
-        assert sorted([(col.name, col.dataType.simpleString()) for col in left_df.schema], key=lambda x: x[0]) == sorted(
-            [(col.name, col.dataType.simpleString()) for col in right_df.schema], key=lambda x: x[0]
+        assert sorted(
+            [(col.name, col.dataType.simpleString()) for col in left_df.schema],
+            key=lambda x: x[0],
+        ) == sorted(
+            [(col.name, col.dataType.simpleString()) for col in right_df.schema],
+            key=lambda x: x[0],
         ), "df schema type mismatch"
 
 

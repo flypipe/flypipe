@@ -5,9 +5,10 @@ from typing import Mapping, Union
 from pandas import DataFrame as PandasDataFrame
 from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
+
 try:
     from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
-except Exception as e:
+except Exception as e:  # noqa: F841
     from pandas import DataFrame as PandasApiDataFrame
 
 from flypipe.config import get_config, RunMode
