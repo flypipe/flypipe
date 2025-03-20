@@ -80,9 +80,6 @@ class Node:
 
         self._provided_inputs = {}
 
-        # TODO: enforce tags for now, later validation can be set as optional via environment variable
-        self.output_schema = output
-
         self.spark_context = spark_context
         self.requested_columns = requested_columns
         self.node_graph = None
@@ -90,6 +87,12 @@ class Node:
         if cache is not None and not isinstance(cache, Cache):
             raise TypeError("cache is not of type flypipe.cache.Cache")
         self.cache = cache
+
+        self.output_schema = output
+        # For each column if the schema, declare that this node is the parent for all of them
+        # this for loop leaves columns aware of its owner to guide relationships definition
+        if self.output_schema is not None:
+            self.output_schema.set_parents(self)
 
     @property
     def output(self):
@@ -406,7 +409,7 @@ class Node:
     def html(
         self,
         spark=None,
-        height=1000,
+        height=800,
         inputs=None,
         pandas_on_spark_use_pandas=False,
         parameters=None,
@@ -497,9 +500,9 @@ def node(type, *args, **kwargs):
     dependencies : List[Node], optional
         List of other dependent nodes
     output : Schema, optional
-        Defines the ouput schema of the node (default is None)
+        Defines the output schema of the node (default is None)
     spark_context : bool, optional
-        True, returns spark context as argument to the funtion (default is False)
+        True, returns spark context as argument to the function (default is False)
 
 
     .. highlight:: python
@@ -534,19 +537,13 @@ def node(type, *args, **kwargs):
         @node(
             type="pandas",
             description="Only outputs a pandas dataframe",
-            dependencies = [
-                t0.select("fruit").alias("df")
-            ],
             output=Schema(
                 t0.output.get("fruit"),
                 Column("flavour", String(), "fruit flavour")
             )
         )
         def t1(df):
-            categories = {'mango': 'sweet', 'lemon': 'citric'}
-            df['flavour'] = df['fruit']
-            df = df.replace({'flavour': categories})
-            return df
+            return pd.DataFrame({"fruit": ["mango"], "flavour": ["sweet"]})
 
 
     .. highlight:: python

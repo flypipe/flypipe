@@ -2,7 +2,7 @@ import pandas as pd
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
 import pytest
-from pyspark_test import assert_pyspark_df_equal
+from flypipe.tests.pyspark_test import assert_pyspark_df_equal
 from tabulate import tabulate
 
 from flypipe.datasource.spark import Spark
@@ -15,8 +15,7 @@ from flypipe.schema.types import Decimal, Integer, String
 
 
 @pytest.fixture(scope="function")
-def spark():
-    from flypipe.tests.spark import spark
+def spark_view(spark):
 
     (
         spark.createDataFrame(
@@ -37,7 +36,7 @@ class TestPySparkNode:
             def dummy():
                 pass
 
-    def test_skip_datasource(self, spark, mocker):
+    def test_skip_datasource(self, spark_view, mocker):
         """
         When we provide a dependency input to a node, not only does that node not need to be run but we also expect any
         dependencies of the provided node not to be run.
@@ -60,12 +59,14 @@ class TestPySparkNode:
         # Filthy hack to stop the spy removing the __name__ attribute from the function
         spark_dummy_table.function.__name__ = func_name
 
-        df = spark.createDataFrame(schema=("c1", "c2", "c3"), data=[(1, 2, 3)])
-        output_df = t1.run(spark, inputs={Spark("dummy_table"): df}, parallel=False)
+        df = spark_view.createDataFrame(schema=("c1", "c2", "c3"), data=[(1, 2, 3)])
+        output_df = t1.run(
+            spark_view, inputs={Spark("dummy_table"): df}, parallel=False
+        )
         spy.assert_not_called()
         assert_pyspark_df_equal(
             output_df,
-            spark.createDataFrame(
+            spark_view.createDataFrame(
                 schema=(
                     "c1",
                     "c2",
@@ -80,8 +81,8 @@ class TestPySparkNode:
             check_dtype=False,
         )
 
-    def test_datasource_basic(self, spark):
-        stored_df = spark.createDataFrame(schema=("c1",), data=[(1,)])
+    def test_datasource_basic(self, spark_view):
+        stored_df = spark_view.createDataFrame(schema=("c1",), data=[(1,)])
 
         @node(
             type="pyspark",
@@ -91,10 +92,10 @@ class TestPySparkNode:
         def t1(dummy_table):
             return dummy_table
 
-        df = t1.run(spark, parallel=False)
+        df = t1.run(spark_view, parallel=False)
         assert_pyspark_df_equal(df, stored_df, check_dtype=False)
 
-    def test_conversion_to_pandas(self, spark):
+    def test_conversion_to_pandas(self, spark_view):
         @node(
             type="pyspark",
             dependencies=[Spark("dummy_table").select("c1")],
@@ -111,10 +112,10 @@ class TestPySparkNode:
         def t2(t1):
             return t1
 
-        df = t2.run(spark, parallel=False)
+        df = t2.run(spark_view, parallel=False)
         assert isinstance(df, pd.DataFrame)
 
-    def test_conversion_to_pandas_on_spark(self, spark):
+    def test_conversion_to_pandas_on_spark(self, spark_view):
         @node(
             type="pyspark",
             dependencies=[Spark("dummy_table").select("c1")],
@@ -131,10 +132,10 @@ class TestPySparkNode:
         def t2(t1):
             return t1
 
-        df = t2.run(spark, parallel=False)
+        df = t2.run(spark_view, parallel=False)
         assert isinstance(df, ps.DataFrame)
 
-    def test_datasource_case_sensitive_columns(self, spark):
+    def test_datasource_case_sensitive_columns(self, spark_view):
         """
         Test columns case sensitive
 
@@ -145,14 +146,14 @@ class TestPySparkNode:
         print(df['my_col']) #<-- fails
 
         Pyspark Dataframe
-        df = spark.createDataFrame(schema=('My_Col__x',), data=[(1,)])
+        df = spark_view.createDataFrame(schema=('My_Col__x',), data=[(1,)])
         df.select('My_Col__x') #<-- passes
         df.select('my_col__x') #<-- fails
 
 
         """
 
-        my_data = spark.createDataFrame(
+        my_data = spark_view.createDataFrame(
             schema=(
                 "My_Col__x",
                 "My_Col__y",
@@ -188,7 +189,7 @@ class TestPySparkNode:
             return df
 
         with pytest.raises(DataFrameMissingColumns) as exc_info:
-            my_col.run(spark, parallel=False)
+            my_col.run(spark_view, parallel=False)
 
         expected_error_df = pd.DataFrame(
             data={
@@ -210,7 +211,7 @@ class TestPySparkNode:
             f"\n\n\n{tabulate(expected_error_df, headers='keys', tablefmt='mixed_outline')}\n"
         )
 
-    def test_duplicated_output_columns(self, spark):
+    def test_duplicated_output_columns(self, spark_view):
         @node(
             type="pandas_on_spark",
             dependencies=[Spark("dummy_table").select("c1", "c2")],
@@ -250,18 +251,22 @@ class TestPySparkNode:
                 continue
             assert len(n["output_columns"]) == len(set(n["output_columns"]))
 
-        df = t4.run(spark, parallel=False)
+        df = t4.run(spark_view, parallel=False)
         assert_pyspark_df_equal(
-            df, spark.createDataFrame(schema=("c2",), data=[("2",)]), check_dtype=False
+            df,
+            spark_view.createDataFrame(schema=("c2",), data=[("2",)]),
+            check_dtype=False,
         )
 
-    def test_dataframes_are_isolated_from_nodes(self, spark):
+    def test_dataframes_are_isolated_from_nodes(self, spark_view):
         @node(
             type="pyspark",
             output=Schema([Column("c1", String()), Column("c2", String())]),
         )
         def t1():
-            return spark.createDataFrame(pd.DataFrame(data={"c1": ["1"], "c2": ["2"]}))
+            return spark_view.createDataFrame(
+                pd.DataFrame(data={"c1": ["1"], "c2": ["2"]})
+            )
 
         @node(
             type="pyspark",
@@ -300,6 +305,6 @@ class TestPySparkNode:
             assert t2.loc[0, "c1"] == "t2 set this value"
             assert t2.loc[0, "c2"] == "2"
             assert t2.loc[0, "c3"] == "t2 set this value"
-            return spark.createDataFrame(t2)
+            return spark_view.createDataFrame(t2)
 
-        t3.run(spark, parallel=False)
+        t3.run(spark_view, parallel=False)

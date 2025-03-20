@@ -28,6 +28,11 @@ jobs:
         with:
           # Fetch all tags/branches to run diff-cover properly
           fetch-depth: 0
+      - name: Setup docker compose
+        run: |
+          curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+          docker-compose version
       - name: Setup dependencies
         uses: ./.github/actions/setup-dependencies
       - name: Run formatter on backend (black)
@@ -38,5 +43,7 @@ jobs:
           yarn prettier-check
       - name: Run linter (ruff)
         run: make lint
-      - name: Run unit tests
-        run: make coverage
+      - name: Run unit tests using Spark Session
+        run: make coverage USE_SPARK_CONNECT=0
+      - name: Run unit tests using Spark Connect Session
+        run: make coverage USE_SPARK_CONNECT=1

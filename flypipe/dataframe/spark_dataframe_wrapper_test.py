@@ -15,7 +15,7 @@ from pyspark.sql.types import (
     TimestampType,
     DateType,
 )
-from pyspark_test import assert_pyspark_df_equal
+from flypipe.tests.pyspark_test import assert_pyspark_df_equal
 
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from flypipe.exceptions import DataFrameMissingColumns
@@ -33,13 +33,6 @@ from flypipe.schema.types import (
     DateTime,
     Date,
 )
-
-
-@pytest.fixture
-def spark():
-    from flypipe.tests.spark import spark
-
-    return spark
 
 
 class TestSparkDataFrameWrapper:
@@ -61,7 +54,6 @@ class TestSparkDataFrameWrapper:
             ],
         )
         df_wrapper = DataFrameWrapper.get_instance(None, df)
-
         assert_pyspark_df_equal(
             df_wrapper.select_columns("col1", "col2").df, expected_df
         )

@@ -9,9 +9,6 @@ from flypipe.cache.cache import Cache
 from flypipe.cache.cache_context import CacheContext
 from flypipe.node import node
 
-# noinspection PyUnresolvedReferences
-from flypipe.tests.conftest import spark
-
 
 class GenericCache(Cache):
     def __init__(self):
@@ -75,13 +72,13 @@ class TestCacheContext:
         cache_context.read()
         cache_context.exists()
 
-    def test_write_read_spark(self):
+    def test_write_read_spark(self, spark):
         cache_context = CacheContext(spark=spark, cache=GenericCacheSpark())
         cache_context.write(pd.DataFrame(data={"col1": [1]}))
         cache_context.read()
         cache_context.exists()
 
-    def test_write_non_spark(self):
+    def test_write_non_spark(self, spark):
         cache_context = CacheContext(spark=spark, cache=GenericCache())
 
         with pytest.raises(TypeError):
@@ -91,7 +88,7 @@ class TestCacheContext:
         cache_context = CacheContext(cache=GenericCache())
         cache_context.exists()
 
-    def test_exists_spark(self):
+    def test_exists_spark(self, spark):
         cache_context = CacheContext(spark=spark, cache=GenericCacheSpark())
         cache_context.exists()
 
@@ -100,7 +97,7 @@ class TestCacheContext:
         with pytest.raises(RuntimeError):
             cache_context.exists()
 
-    def test_exists_no_spark_cache(self):
+    def test_exists_no_spark_cache(self, spark):
         cache_context = CacheContext(spark=spark, cache=GenericCache())
         with pytest.raises(TypeError):
             cache_context.exists()

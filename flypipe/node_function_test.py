@@ -3,6 +3,9 @@ import pytest
 
 from flypipe.node import node
 from flypipe.node_function import node_function
+from flypipe.run_context import RunContext
+from flypipe.schema import Schema, Column
+from flypipe.schema.types import String
 
 
 class TestNodeFunction:
@@ -120,3 +123,96 @@ class TestNodeFunction:
 
         with pytest.raises(ValueError):
             t3.run()
+
+    def test_node_function_output(self):
+        col1 = Column("col1", String(), "test")
+
+        @node_function(output=Schema(col1))
+        def t1(param1=1, param2=2):
+            @node(type="pandas")
+            def t2():
+                assert param1 == 10 and param2 == 20
+                return pd.DataFrame()
+
+            return t2
+
+        assert t1.output.col1 == col1
+
+    def test_node_function_output_is_not_same_as_node_output_if_declared_raise_valuerror(
+        self,
+    ):
+
+        col1 = Column("col1", String(), "test")
+        col2 = Column("col2", String(), "test")
+
+        @node(type="pandas", output=Schema(col2))
+        def t2():
+            pass
+
+        @node_function(output=Schema(col1))
+        def t1():
+            return t2
+
+        run_context = RunContext()
+
+        with pytest.raises(ValueError):
+            t1.create_graph(run_context)
+
+    def test_node_function_output_is_the_same_then_passes(self):
+        col1 = Column("col1", String(), "test")
+
+        @node(type="pandas", output=Schema(col1))
+        def t2():
+            pass
+
+        @node_function(output=Schema(col1))
+        def t1():
+            return t2
+
+        run_context = RunContext()
+        t1.create_graph(run_context)
+        execution_graph = t1.node_graph.get_execution_graph(run_context)
+        end_node_name = execution_graph.get_end_node_name(execution_graph.graph)
+        end_node = execution_graph.get_node(end_node_name)["transformation"]
+        assert t1.output == end_node.output
+
+    def test_node_function_output_is_set_but_return_node_has_no_output_use_node_function_output_to_returned_node(
+        self,
+    ):
+        col1 = Column("col1", String(), "test")
+
+        @node_function(output=Schema(col1))
+        def t1():
+            @node(type="pandas")
+            def t2():
+                pass
+
+            return t2
+
+        run_context = RunContext()
+        t1.create_graph(run_context)
+        execution_graph = t1.node_graph.get_execution_graph(run_context)
+        end_node_name = execution_graph.get_end_node_name(execution_graph.graph)
+
+        end_node = execution_graph.get_node(end_node_name)["transformation"]
+        assert t1.output == end_node.output
+
+    def test_node_function_output_is_none_but_return_node_has_output(self):
+        col1 = Column("col1", String(), "test")
+
+        @node_function()
+        def t1():
+            @node(type="pandas", output=Schema(col1))
+            def t2():
+                pass
+
+            return t2
+
+        run_context = RunContext()
+        t1.create_graph(run_context)
+        execution_graph = t1.node_graph.get_execution_graph(run_context)
+        end_node_name = execution_graph.get_end_node_name(execution_graph.graph)
+
+        end_node = execution_graph.get_node(end_node_name)["transformation"]
+        assert t1.output is None
+        assert end_node.output is not None
