@@ -510,7 +510,7 @@ def node(type, *args, **kwargs):
 
         # Syntax
         @node(
-            type="pyspark" or "pandas_on_spark" or "pandas",
+            type="pyspark", "pandas_on_spark" or "pandas",
             description="this is a description of what this node does",
             tags=["a", "list", "of", "tags"],
             dependencies=[other_node_1, other_node_2, ...],
