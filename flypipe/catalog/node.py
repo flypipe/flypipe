@@ -1,9 +1,9 @@
 import inspect
-import types
 import os
-
+import types
 from pathlib import Path
-from flypipe.node_graph import RunStatus
+
+from flypipe.run_status import RunStatus
 
 
 class CatalogNode:
@@ -16,6 +16,7 @@ class CatalogNode:
         self.node_graph = node_graph
         self.predecessors = []
         self.predecessor_columns = {}
+
         for input_node in node.input_nodes:
             self.predecessors.append(input_node.node.key)
             self.predecessor_columns[input_node.node.key] = (
@@ -32,12 +33,16 @@ class CatalogNode:
         self.successors.add(successor_node.key)
 
     def get_def(self):
+        tags_set = set()
+        for tag in self.node.tags:
+            tags_set.add(tag.lower().strip())
+        node_run_context = self.node_graph.get_node(self.node.key)["node_run_context"]
         return {
             "nodeKey": self.node.key,
             "nodeType": self.node.type,
             "name": self.node.__name__,
             "description": self.node.description,
-            "tags": [{"id": tag, "name": tag} for tag in self.node.tags],
+            "tags": [{"id": tag, "name": tag} for tag in sorted(list(tags_set))],
             "filePath": self._get_file_path(),
             "importCmd": self._get_import_cmd(),
             "output": self._get_schema(),
@@ -46,12 +51,16 @@ class CatalogNode:
             "successors": sorted(list(self.successors)),
             "sourceCode": self._get_source_code(),
             "isActive": self._get_is_active(),
+            "hasCache": self.node.cache is not None,
+            "cacheIsDisabled": node_run_context.cache_context.disabled
+            or node_run_context.exists_provided_input,
+            "hasProvidedInput": node_run_context.exists_provided_input,
             "group": self.node.group,
         }
 
     def _get_is_active(self):
         if getattr(self, "node_graph"):
-            return self.node_graph.get_node(self.node.key)["status"] != RunStatus.SKIP
+            return self.node_graph.get_node(self.node.key)["status"] == RunStatus.ACTIVE
         return True
 
     def _get_file_path(self):

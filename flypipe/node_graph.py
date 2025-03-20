@@ -1,21 +1,16 @@
-from enum import Enum
-from typing import List, Union
-from matplotlib import pyplot as plt
+from typing import List
+
 import networkx as nx
 from networkx import DiGraph
+
+from flypipe.cache.cache_context import CacheContext
 from flypipe.node import Node
 from flypipe.node_function import NodeFunction
 from flypipe.node_run_context import NodeRunContext
 from flypipe.output_column_set import OutputColumnSet
+from flypipe.run_context import RunContext
+from flypipe.run_status import RunStatus
 from flypipe.utils import DataFrameType
-
-
-class RunStatus(Enum):
-    """Describes the run state of a node in a pipeline when that pipeline is executed"""
-
-    UNKNOWN = 0
-    ACTIVE = 1
-    SKIP = 2
 
 
 class NodeGraph:
@@ -24,16 +19,12 @@ class NodeGraph:
     this.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
-        transformation: Union[Node, None],
-        graph=None,
-        skipped_node_keys=None,
-        pandas_on_spark_use_pandas=False,
-        parameters=None,
+        transformation: Node,
+        run_context: RunContext,
+        graph: nx.DiGraph = None,
     ):
-        parameters = parameters or {}
-        parameters = {node.key: params for node, params in parameters.items()}
 
         if graph:
             self.graph = graph
@@ -41,43 +32,15 @@ class NodeGraph:
             self.nodes = None
             self.node_output_columns = None
             self.edges = None
-            self.graph = self._build_graph(
-                transformation, pandas_on_spark_use_pandas, parameters
-            )
-
-        if not skipped_node_keys:
-            skipped_node_keys = []
-        self.skipped_node_keys = skipped_node_keys
-        self.calculate_graph_run_status()
-
-    def add_node(  # pylint: disable=too-many-arguments
-        self,
-        graph: DiGraph,
-        node_name: str,
-        transformation: Node,
-        run_status: RunStatus = None,
-        output_columns: list = None,
-        run_context: NodeRunContext = None,
-    ) -> DiGraph:
-        run_status = run_status or RunStatus.UNKNOWN
-        run_context = run_context or NodeRunContext()
-
-        graph.add_node(
-            node_name,
-            transformation=transformation,
-            status=run_status,
-            output_columns=output_columns,
-            run_context=run_context,
-        )
-
-        return graph
-
-    def remove_node(self, node_name):
-        self.graph.remove_node(node_name)
+            self.graph = self._build_graph(transformation, run_context)
+            self.calculate_graph_run_status()
 
     def _build_graph(
-        self, transformation: Node, pandas_on_spark_use_pandas: bool, parameters: dict
+        self,
+        transformation: Node,
+        run_context: RunContext,
     ):
+
         transformation = transformation.copy()
         graph = nx.DiGraph()
 
@@ -85,14 +48,17 @@ class NodeGraph:
         while frontier:
             current_transformation = frontier.pop()
 
+            # We can not add current_transformation.cache now, as current_transformation can be node function
+            # so we have to expand node functions and later add cache context to node run context
             node_run_context = NodeRunContext(
-                parameters.get(current_transformation.key)
+                parameters=run_context.parameters.get(current_transformation),
+                provided_input=run_context.provided_inputs.get(current_transformation),
             )
             graph = self.add_node(
                 graph,
                 current_transformation.key,
                 transformation=current_transformation,
-                run_context=node_run_context,
+                node_run_context=node_run_context,
             )
 
             if isinstance(current_transformation, NodeFunction):
@@ -107,8 +73,10 @@ class NodeGraph:
                 graph.add_edge(dependency.key, current_transformation.key)
         graph = self._compute_requested_columns(graph)
         graph = self._expand_node_functions(graph)
-
         graph = self._compute_edge_selected_columns(graph)
+
+        # all node functions had been expanded, now we can add caches to each node node_run_context
+        graph = self._create_cache_contexts(graph, run_context)
 
         for node_key in graph.nodes:
             transformation = graph.nodes[node_key]["transformation"]
@@ -116,10 +84,45 @@ class NodeGraph:
             # TODO- create a copy of the node, as in databricks it keeps the objects with type changed until the state
             # is cleared
             if (
-                pandas_on_spark_use_pandas
+                run_context.pandas_on_spark_use_pandas
                 and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
             ):
                 transformation.type = "pandas"
+
+        return graph
+
+    def add_node(
+        self,
+        graph: DiGraph,
+        node_name: str,
+        transformation: Node,
+        run_status: RunStatus = None,
+        output_columns: list = None,
+        node_run_context: NodeRunContext = None,
+    ) -> DiGraph:
+
+        graph.add_node(
+            node_name,
+            transformation=transformation,
+            status=run_status or RunStatus.UNKNOWN,
+            output_columns=output_columns,
+            node_run_context=node_run_context or NodeRunContext(),
+        )
+
+        return graph
+
+    def remove_node(self, node_name):
+        self.graph.remove_node(node_name)
+
+    def _create_cache_contexts(self, graph, run_context: RunContext):
+
+        for node_key in graph.nodes:
+            node = graph.nodes[node_key]
+            node["node_run_context"].cache_context = CacheContext(
+                spark=run_context.spark,
+                cache_mode=run_context.cache_modes.get(node["transformation"]),
+                cache=node["transformation"].cache,
+            )
 
         return graph
 
@@ -135,9 +138,7 @@ class NodeGraph:
 
         return graph
 
-    def _expand_node_functions(
-        self, graph: DiGraph
-    ):  # pylint: disable=too-many-branches
+    def _expand_node_functions(self, graph: DiGraph):
         """
         Expand all node functions. Given a node graph, return the same node graph with all node functions expanded.
         """
@@ -146,8 +147,7 @@ class NodeGraph:
             for node_key in graph
             if isinstance(graph.nodes[node_key]["transformation"], NodeFunction)
         ]
-        # TODO- pylint flagged the below as having too many nested blocks, we should refactor it to be cleaner
-        while node_functions:  # pylint: disable=too-many-nested-blocks
+        while node_functions:
             found_node_function = False
             # FIXME: messy to call this twice
             node_functions = [
@@ -170,7 +170,7 @@ class NodeGraph:
                     expanded_graph = self._expand_node_function(
                         node_function["transformation"],
                         node_function["output_columns"],
-                        node_function["run_context"],
+                        node_function["node_run_context"],
                     )
 
                     # The edges created from the node function node_dependencies are now irrelevant and should be
@@ -192,8 +192,8 @@ class NodeGraph:
                         ]:
                             if expanded_node_key in graph.nodes:
                                 expanded_graph.nodes[expanded_node_key][
-                                    "run_context"
-                                ] = graph.nodes[expanded_node_key]["run_context"]
+                                    "node_run_context"
+                                ] = graph.nodes[expanded_node_key]["node_run_context"]
 
                     graph = nx.compose(graph, expanded_graph)
 
@@ -227,7 +227,7 @@ class NodeGraph:
         self,
         node_function: NodeFunction,
         requested_columns: list,
-        run_context: NodeRunContext,
+        node_run_context: NodeRunContext,
     ):
         """
         Expand a node function in the graph and replace it with the nodes it returns. There are a few additional steps:
@@ -235,7 +235,7 @@ class NodeGraph:
         """
 
         nodes = node_function.expand(
-            requested_columns=requested_columns, parameters=run_context.parameters
+            requested_columns=requested_columns, parameters=node_run_context.parameters
         )
 
         expanded_graph = nx.DiGraph()
@@ -254,14 +254,31 @@ class NodeGraph:
 
                 expanded_graph.add_edge(dependency.key, node.key)
 
-        end_node_name = [
-            node_name
-            for node_name in expanded_graph
-            if expanded_graph.out_degree(node_name) == 0
-        ][0]
+        end_node_name = self.get_end_node_name(expanded_graph)
         end_node = expanded_graph.nodes[end_node_name]
+
         end_node["transformation"].key = node_function.key
         end_node["transformation"].name = node_function.function.__name__
+        end_node["node_run_context"].provided_input = node_run_context.provided_input
+
+        # In case the node function had declared an output, but the returned not has not declared, use the node function output
+        if end_node["transformation"].output is None:
+            end_node["transformation"].output_schema = node_function.output_schema
+
+        if end_node["transformation"].output is not None:
+            # Because the end node has been renamed, we need to reset parent of the columns of the output
+            for col in end_node["transformation"].output.columns:
+                col._set_parent(end_node["transformation"])
+
+        if (
+            node_function.output is not None
+            and node_function.output != end_node["transformation"].output
+        ):
+            raise ValueError(
+                f"The output of the node function `{node_function.function.__name__}` is different from "
+                f"the output of the returned end node `{end_node['transformation'].function.__name__}`"
+            )
+
         return nx.relabel_nodes(expanded_graph, {end_node_name: node_function.key})
 
     def _get_successor_nodes(self, graph, node_key):
@@ -302,39 +319,72 @@ class NodeGraph:
     def get_transformation(self, name: str) -> Node:
         return self.get_node(name)["transformation"]
 
-    def get_end_node_name(self):
-        for name in self.graph:
-            if self.graph.out_degree[name] == 0:
+    def get_end_node_name(self, graph):
+        for name in graph.nodes:
+            if graph.out_degree[name] == 0:
                 return name
         return None
 
     def calculate_graph_run_status(self):
+
         # because the last node can be a generator, we have to get the last node node
         # after building the graph
-        node_name = self.get_end_node_name()
-        skipped_node_keys = set(self.skipped_node_keys)
+        node_name = self.get_end_node_name(self.graph)
+        node = self.graph.nodes[node_name]
 
-        frontier = [
-            (
-                node_name,
-                RunStatus.SKIP if node_name in skipped_node_keys else RunStatus.ACTIVE,
-            )
-        ]
+        run_status = RunStatus.ACTIVE
+
+        if node["node_run_context"].exists_provided_input:
+            run_status = RunStatus.SKIP
+
+        elif node["node_run_context"].cache_context.exists_cache_to_load:
+            run_status = RunStatus.CACHED
+
+        frontier = [(node_name, run_status)]
         while len(frontier) != 0:
             current_node_name, descendent_status = frontier.pop()
             current_node = self.graph.nodes[current_node_name]
+
             if descendent_status == RunStatus.ACTIVE:
                 current_node["status"] = RunStatus.ACTIVE
+
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    if ancestor_name in skipped_node_keys:
+                    ancestor_node_run_context = self.graph.nodes[ancestor_name][
+                        "node_run_context"
+                    ]
+
+                    if ancestor_node_run_context.exists_provided_input:
                         frontier.append((ancestor_name, RunStatus.SKIP))
+
+                    elif ancestor_node_run_context.cache_context.exists_cache_to_load:
+                        frontier.append((ancestor_name, RunStatus.CACHED))
+
                     else:
                         frontier.append((ancestor_name, RunStatus.ACTIVE))
+
+            elif descendent_status == RunStatus.CACHED:
+                current_node["status"] = RunStatus.CACHED
+
+                for ancestor_name in self.graph.predecessors(current_node_name):
+                    if self.graph.nodes[ancestor_name]["status"] not in [
+                        RunStatus.ACTIVE,
+                        RunStatus.CACHED,
+                    ]:
+                        frontier.append((ancestor_name, RunStatus.SKIP))
+
             else:
                 current_node["status"] = RunStatus.SKIP
+
                 for ancestor_name in self.graph.predecessors(current_node_name):
-                    if self.graph.nodes[ancestor_name]["status"] != RunStatus.ACTIVE:
+                    if self.graph.nodes[ancestor_name]["status"] not in [
+                        RunStatus.ACTIVE,
+                        RunStatus.CACHED,
+                    ]:
                         frontier.append((ancestor_name, RunStatus.SKIP))
+
+        for n in self.graph.nodes:
+            if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN]:
+                raise RuntimeError(f"Run status for node {n} is {RunStatus.UNKNOWN}")
 
     def get_dependency_map(self):
         dependencies = {}
@@ -364,7 +414,7 @@ class NodeGraph:
             depth = len(
                 max(
                     list(nx.all_simple_paths(self.graph, node, end_node)),
-                    key=lambda x: len(x),  # pylint: disable=unnecessary-lambda
+                    key=lambda x: len(x),
                     default=[end_node],
                 )
             )
@@ -385,7 +435,8 @@ class NodeGraph:
             if self.graph.in_degree(node_name) == 0
         ]
         runnable_node_names = filter(
-            lambda node_name: self.graph.nodes[node_name]["status"] == RunStatus.ACTIVE,
+            lambda node_name: self.graph.nodes[node_name]["status"]
+            in [RunStatus.ACTIVE, RunStatus.CACHED],
             candidate_node_names,
         )
         runnable_nodes = [self.get_node(node_name) for node_name in runnable_node_names]
@@ -394,22 +445,19 @@ class NodeGraph:
     def is_empty(self):
         return nx.number_of_nodes(self.graph) == 0
 
-    def plot(self, graph=None):
-        graph = graph or self.graph
-
-        plt.title("Transformation Graph")
-        nx.draw(graph, with_labels=True)
-        plt.show()
-
-    def get_execution_graph(self):
+    def get_execution_graph(self, run_context: RunContext):
         """
         Return an execution graph for this node graph. Practically, this is a copy of the graph with inactive nodes
         filtered out.
         """
+
         execution_graph = NodeGraph(
-            None, graph=self.graph.copy(), skipped_node_keys=self.skipped_node_keys
+            None,
+            graph=self.graph.copy(),
+            run_context=run_context.copy(),
         )
         to_remove = []
+
         for node_name in execution_graph.graph.nodes:
             if execution_graph.get_node(node_name)["status"] == RunStatus.SKIP:
                 to_remove.append(node_name)

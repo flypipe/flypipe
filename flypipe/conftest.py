@@ -1,9 +1,14 @@
+import sys
 import pytest
 
+pytest.register_assert_rewrite("src.assert_pyspark_df_equal")
 
-@pytest.fixture(scope="function")
-def spark():
-    # Put the import locally otherwise it will shadow this identically named function
-    from flypipe.tests.spark import spark  # pylint: disable=import-outside-toplevel
+# Skip writing pyc files on a readonly filesystem.
+sys.dont_write_bytecode = True
 
-    return spark
+
+@pytest.fixture(scope="function", autouse=False)
+def spark(request):
+    from flypipe.tests.spark import build_spark
+
+    return build_spark()

@@ -49,9 +49,7 @@ class InputNode:
 
     def copy(self):
         # It's necessary to access protected fields to do a deep copy
-        # pylint: disable=protected-access
         input_node_copy = InputNode(self.node.copy())
         input_node_copy._selected_columns = self._selected_columns
         input_node_copy._alias = self._alias
-        # pylint: enable=protected-access
         return input_node_copy

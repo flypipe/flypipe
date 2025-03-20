@@ -6,4 +6,3 @@ Data Design Patterns
 
    Serial <../notebooks/ddp/serial>
    Parallel <../notebooks/ddp/parallel>
-   Aggregator <./aggregator>

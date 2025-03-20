@@ -16,6 +16,12 @@ class Type:
     def valid_values(self):
         return None
 
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return f"{self.name}()"
+
 
 class Unknown(Type):
     """Special type that is used when the type of column is unknown"""
@@ -24,7 +30,7 @@ class Unknown(Type):
 class Boolean(Type):
     """Flypipe boolean type"""
 
-    VALID_VALUES = {True, False, 1, 0}  # pylint: disable=duplicate-value
+    VALID_VALUES = {True, False, 1, 0}
 
     @property
     def valid_values(self):
@@ -70,6 +76,9 @@ class Decimal(Type):
         self.precision = precision
         self.scale = scale
 
+    def __repr__(self):
+        return f"{self.name}({self.precision}, {self.scale})"
+
 
 class Date(Type):
     """Flypipe date type"""
@@ -97,9 +106,7 @@ class Date(Type):
         for python_symbol, pyspark_symbol in PYTHON_PYSPARK_DATETIME_SYMBOL_MAP.items()
     }
 
-    def __init__(
-        self, format="yyyy-MM-dd", format_mode=DateFormat.PYSPARK
-    ):  # pylint: disable=redefined-builtin
+    def __init__(self, format="yyyy-MM-dd", format_mode=DateFormat.PYSPARK):
         """
         Parameters
         ----------
@@ -141,7 +148,6 @@ class Date(Type):
         while python_format:
             if python_format.startswith("%"):
                 symbol = python_format[:2]
-                print(f'Extracted symbol "{symbol}"')
                 python_format = python_format[2:]
                 try:
                     pyspark_format.append(
@@ -153,7 +159,6 @@ class Date(Type):
                     ) from exc
             else:
                 formatting = python_format[0]
-                print(f'Extracted formatting "{formatting}"')
                 python_format = python_format[1:]
                 pyspark_format.append(formatting)
         return "".join(pyspark_format)
@@ -185,9 +190,7 @@ class Date(Type):
 class DateTime(Date):
     """Flypipe datetime type"""
 
-    def __init__(
-        self, format="yyyy-MM-dd H:m:s", format_mode=DateFormat.PYSPARK
-    ):  # pylint: disable=redefined-builtin
+    def __init__(self, format="yyyy-MM-dd H:m:s", format_mode=DateFormat.PYSPARK):
         """
         Parameters
         ----------

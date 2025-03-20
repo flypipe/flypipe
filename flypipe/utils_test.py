@@ -6,13 +6,13 @@ from flypipe.exceptions import (
     DataframeSchemasDoNotMatchError,
     DataframeTypeNotSupportedError,
 )
+
 from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
 
 
 class TestUtils:
     """Tests on Utils"""
 
-    @pytest.mark.skip("Test succeeds locally but fails on GitHub")
     def test_assert_dataframes_equals(self, spark):
         df1 = spark.createDataFrame(
             pd.DataFrame(data={"col1": [1, 2], "col2": ["1a", "2a"]})
