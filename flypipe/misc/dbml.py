@@ -29,10 +29,8 @@ class Table:
             column = f"\t{col.name} {str(col.type).replace(' ','')}"
             note = None if not col.description else f"note: '''{col.description}'''"
             pk = None
-            if hasattr(col, "PK"):
-                pk = "PK" if col.PK else None
-            elif hasattr(col, "pk"):
-                pk = "pk" if col.pk else None
+            if hasattr(col, "pk"):
+                pk = "PK" if col.pk else None
 
             column_definition = [d for d in [note, pk] if d is not None]
             if column_definition:
