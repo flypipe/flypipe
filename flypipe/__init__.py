@@ -3,7 +3,7 @@ Flypipe
 """
 import os
 
-if os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME":
+if os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME":
     from sqlframe import activate
 
     activate("duckdb")

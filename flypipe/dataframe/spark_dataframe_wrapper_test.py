@@ -101,7 +101,7 @@ class TestSparkDataFrameWrapper:
                     StructField(
                         "c2",
                         BooleanType()
-                        if os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME"
+                        if os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME"
                         else ByteType(),
                     ),
                     StructField("c3", BinaryType()),
@@ -123,7 +123,7 @@ class TestSparkDataFrameWrapper:
         assert isinstance(df_wrapper.get_column_flypipe_type("c1"), Boolean)
         assert isinstance(
             df_wrapper.get_column_flypipe_type("c2"),
-            Boolean if os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME" else Byte,
+            Boolean if os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME" else Byte,
         )
         assert isinstance(df_wrapper.get_column_flypipe_type("c3"), Binary)
         assert isinstance(df_wrapper.get_column_flypipe_type("c4"), Integer)

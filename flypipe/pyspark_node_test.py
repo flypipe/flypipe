@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME":
+if os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") != "SPARK_SQLFRAME":
     import pyspark.pandas as ps
 import pyspark.sql.functions as F
 import pytest
@@ -119,7 +119,7 @@ class TestPySparkNode:
         assert isinstance(df, pd.DataFrame)
 
     @pytest.mark.skipif(
-        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME",
         reason="Pandas on Spark not supported by SqlFrame",
     )
     def test_conversion_to_pandas_on_spark(self, spark_view):
@@ -143,7 +143,7 @@ class TestPySparkNode:
         assert isinstance(df, ps.DataFrame)
 
     @pytest.mark.skipif(
-        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME",
         reason="Pandas on Spark not supported by SqlFrame",
     )
     def test_datasource_case_sensitive_columns(self, spark_view):
@@ -223,7 +223,7 @@ class TestPySparkNode:
         )
 
     @pytest.mark.skipif(
-        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME",
         reason="Pandas on Spark not supported by SqlFrame",
     )
     def test_duplicated_output_columns(self, spark_view):

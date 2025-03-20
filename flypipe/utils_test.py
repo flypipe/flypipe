@@ -55,7 +55,7 @@ class TestUtils:
         df = spark.createDataFrame(df)
         assert dataframe_type(df) == DataFrameType.PYSPARK
 
-        if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME":
+        if os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") != "SPARK_SQLFRAME":
             df = df.pandas_api()
             assert dataframe_type(df) == DataFrameType.PANDAS_ON_SPARK
 

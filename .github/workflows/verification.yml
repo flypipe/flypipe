@@ -44,8 +44,8 @@ jobs:
       - name: Run linter (ruff)
         run: make lint
       - name: Run unit tests using Spark Session
-        run: make coverage SPARK_CONNECTION=SPARK
+        run: make coverage FLYPIPE_TEST_SPARK_CONNECTION=SPARK
       - name: Run unit tests using Spark Connect Session
-        run: make coverage SPARK_CONNECTION=SPARK_CONNECT
+        run: make coverage FLYPIPE_TEST_SPARK_CONNECTION=SPARK_CONNECT
       - name: Run unit tests using SQLFrame Spark
-        run: make coverage SPARK_CONNECTION=SPARK_SQLFRAME MIN_COVERAGE=84
+        run: make coverage FLYPIPE_TEST_SPARK_CONNECTION=SPARK_SQLFRAME MIN_COVERAGE=84

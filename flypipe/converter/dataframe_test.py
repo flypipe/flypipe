@@ -26,7 +26,7 @@ def pandas_on_spark_df(pyspark_df):
 
 
 pytest.mark.skipif(
-    os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+    os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME",
     reason="Pandas on Spark not supported by SqlFrame",
 )
 
@@ -39,7 +39,7 @@ class TestDataFrameConverter:
         assert_dataframes_equals(df, pandas_df)
 
     @pytest.mark.skipif(
-        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME",
         reason="Pandas on Spark not supported by SqlFrame",
     )
     def test_convert_pandas_to_pandas_on_spark(
@@ -56,7 +56,7 @@ class TestDataFrameConverter:
         assert_dataframes_equals(df, pyspark_df)
 
     @pytest.mark.skipif(
-        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME",
         reason="Pandas on Spark not supported by SqlFrame",
     )
     def test_convert_pandas_on_spark_to_pandas(
@@ -66,7 +66,7 @@ class TestDataFrameConverter:
         assert_dataframes_equals(df, pandas_df)
 
     @pytest.mark.skipif(
-        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME",
         reason="Pandas on Spark not supported by SqlFrame",
     )
     def test_convert_pandas_on_spark_to_pyspark(
@@ -82,7 +82,7 @@ class TestDataFrameConverter:
         assert_dataframes_equals(df, pandas_df)
 
     @pytest.mark.skipif(
-        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME",
         reason="Pandas on Spark not supported by SqlFrame",
     )
     def test_convert_pyspark_to_pandas_on_spark(
@@ -100,7 +100,7 @@ class TestDataFrameConverter:
     def test_empty_dataframe_to_spark(self, spark, caplog, node_type):
 
         if (
-            os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME"
+            os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") != "SPARK_SQLFRAME"
             or node_type != "pandas_on_spark"
         ):
 

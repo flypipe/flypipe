@@ -1,7 +1,7 @@
 from typing import Any, Union, List
 import os
 
-if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME":
+if os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") != "SPARK_SQLFRAME":
     from pyspark.sql import DataFrame
     from pyspark.sql.connect.dataframe import DataFrame as DataFrameConnect
 else:

@@ -4,7 +4,7 @@ from unittest import mock
 import pandas as pd
 import pyspark
 
-if os.environ.get("SPARK_CONNECTION") != "SPARK_SQLFRAME":
+if os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") != "SPARK_SQLFRAME":
     import pyspark.pandas as ps
 
 import pyspark.sql.functions as F
@@ -12,7 +12,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 from pyspark.sql import DataFrame
 
-if os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME":
+if os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME":
     from pyspark.sql import DataFrame as SqlConnectDataFrame
 else:
     from pyspark.sql.connect.dataframe import DataFrame as SqlConnectDataFrame
@@ -161,7 +161,7 @@ class TestNode:
         t2.run(parallel=False)
 
     @pytest.mark.skipif(
-        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME",
         reason="Pandas on Spark not supported by SqlFrame",
     )
     @pytest.mark.parametrize(
@@ -296,7 +296,7 @@ class TestNode:
         assert df.loc[0, "c1_group2_t1"] == "t0 group_2_t1"
 
     @pytest.mark.skipif(
-        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME",
         reason="Pandas on Spark not supported by SqlFrame",
     )
     def test_run_dataframe_conversion(self, spark_view):
@@ -698,7 +698,7 @@ class TestNode:
         t3.run(parallel=False)
 
     @pytest.mark.skipif(
-        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME",
         reason="Pandas on Spark not supported by SqlFrame",
     )
     def test_run_isolated_dependencies_pandas_on_spark(self, spark_view):
@@ -754,7 +754,7 @@ class TestNode:
         t3.run(parallel=False)
 
     @pytest.mark.skipif(
-        os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME",
+        os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME",
         reason="Pandas on Spark not supported by SqlFrame",
     )
     def test_pandas_on_spark_use_pandas(self, spark_view):
@@ -899,7 +899,7 @@ class TestNode:
 
         dataframe_to_mock = (
             SqlConnectDataFrame
-            if os.environ.get("SPARK_CONNECTION") == "SPARK_CONNECT"
+            if os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_CONNECT"
             else DataFrame
         )
         with mock.patch.object(
@@ -930,7 +930,7 @@ class TestNode:
 
         dataframe_to_mock = (
             SqlConnectDataFrame
-            if os.environ.get("SPARK_CONNECTION") == "SPARK_CONNECT"
+            if os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_CONNECT"
             else DataFrame
         )
         with mock.patch.object(

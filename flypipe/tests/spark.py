@@ -1,7 +1,6 @@
 import os
 from uuid import uuid4
 
-
 # Avoid WARNING:root:'PYARROW_IGNORE_TIMEZONE' environment variable was not set
 os.environ["PYARROW_IGNORE_TIMEZONE"] = "1"
 
@@ -9,7 +8,7 @@ os.environ["PYARROW_IGNORE_TIMEZONE"] = "1"
 def build_spark():
     spark = None
 
-    if os.environ.get("SPARK_CONNECTION") == "SPARK_CONNECT":
+    if os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_CONNECT":
         from pyspark.sql import SparkSession
 
         print("Building spark session (spark_connect)")
@@ -21,7 +20,7 @@ def build_spark():
             .config("spark.sql.execution.arrow.pyspark.enabled", "true")
             .getOrCreate()
         )
-    elif os.environ.get("SPARK_CONNECTION") == "SPARK":
+    elif os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK":
         from pyspark.sql import SparkSession
 
         print("Building spark session")
@@ -39,16 +38,14 @@ def build_spark():
         )
 
         spark.sparkContext.setLogLevel("ERROR")
-    elif os.environ.get("SPARK_CONNECTION") == "SPARK_SQLFRAME":
-        # from sqlframe import activate
-        # activate("duckdb")
+    elif os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION") == "SPARK_SQLFRAME":
 
         from pyspark.sql import SparkSession
 
         spark = SparkSession.builder.getOrCreate()
     else:
         raise ValueError(
-            f'Invalid SPARK_CONNECTION: {os.environ.get("SPARK_CONNECTION")}'
+            f'Invalid FLYPIPE_TEST_SPARK_CONNECTION: {os.environ.get("FLYPIPE_TEST_SPARK_CONNECTION")}'
         )
 
     return spark

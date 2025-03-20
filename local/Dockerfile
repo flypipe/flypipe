@@ -14,7 +14,7 @@ ENV HADOOP_HOME "${SPARK_HOME}"
 ENV PATH "${PATH}:${SPARK_HOME}/bin:${SPARK_HOME}/sbin"
 ENV PYSPARK_PYTHON "/usr/local/bin/python3"
 ENV PYSPARK_DRIVER_PYTHON "${PYSPARK_PYTHON}"
-ENV SPARK_CONNECTION "SPARK"
+ENV FLYPIPE_TEST_SPARK_CONNECTION "SPARK"
 
 COPY ./requirements.txt .
 COPY ./local/requirements.txt requirements_dev.txt
