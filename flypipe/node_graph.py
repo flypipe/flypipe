@@ -256,9 +256,29 @@ class NodeGraph:
 
         end_node_name = self.get_end_node_name(expanded_graph)
         end_node = expanded_graph.nodes[end_node_name]
+
         end_node["transformation"].key = node_function.key
         end_node["transformation"].name = node_function.function.__name__
         end_node["node_run_context"].provided_input = node_run_context.provided_input
+
+        # In case the node function had declared an output, but the returned not has not declared, use the node function output
+        if end_node["transformation"].output is None:
+            end_node["transformation"].output_schema = node_function.output_schema
+
+        if end_node["transformation"].output is not None:
+            # Because the end node has been renamed, we need to reset parent of the columns of the output
+            for col in end_node["transformation"].output.columns:
+                col._set_parent(end_node["transformation"])
+
+        if (
+            node_function.output is not None
+            and node_function.output != end_node["transformation"].output
+        ):
+            raise ValueError(
+                f"The output of the node function `{node_function.function.__name__}` is different from "
+                f"the output of the returned end node `{end_node['transformation'].function.__name__}`"
+            )
+
         return nx.relabel_nodes(expanded_graph, {end_node_name: node_function.key})
 
     def _get_successor_nodes(self, graph, node_key):

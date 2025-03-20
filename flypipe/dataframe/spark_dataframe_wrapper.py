@@ -119,5 +119,5 @@ class SparkDataFrameWrapper(DataFrameWrapper):
 
     def _cast_column_datetime(self, column, flypipe_type):
         self.df = self.df.withColumn(
-            column, F.to_date(F.col(column), flypipe_type.pyspark_format)
+            column, F.to_timestamp(F.col(column), flypipe_type.pyspark_format)
         )

@@ -805,7 +805,6 @@ class TestNode:
         )
         def t2(t1, requested_columns, spark):
             assert requested_columns == ["c1"]
-            print("======>", dataframe_type(t1))
             assert dataframe_type(t1) == DataFrameType.PYSPARK
             assert t1.columns == ["c1"]
             assert isinstance(spark, pyspark.sql.session.SparkSession) or isinstance(
