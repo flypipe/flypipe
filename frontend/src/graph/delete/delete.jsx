@@ -31,7 +31,7 @@ const Delete = ({ buttonText, title, description, handleConfirmDelete }) => {
                     onSubmit={onSubmit}
                 />
             )}
-            <Button variant="outline-danger" onClick={handleClick}>
+            <Button variant="danger" onClick={handleClick}>
                 {buttonText}
             </Button>
         </>

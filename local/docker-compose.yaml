@@ -1,0 +1,90 @@
+services:
+  spark-master:
+    image: bitnami/spark:3.5.4
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_MASTER_WEBUI_PORT=8080
+      - SPARK_MASTER_PORT=7077
+      - SPARK_SUBMIT_OPTIONS=--packages io.delta:delta-spark_2.12:3.3.0
+      - SPARK_MASTER_HOST=spark-master
+    ports:
+      - 8080:8080
+      - 7077:7077
+    networks:
+      - flypipe-ntw
+
+  spark-connect:
+    image: bitnami/spark:3.5.4
+    container_name: spark-connect
+    environment:
+      - SPARK_MODE=driver
+      - SPARK_MASTER=spark://spark-master:7077
+    ports:
+      - 15002:15002
+    depends_on:
+      - spark-master
+    networks:
+      - flypipe-ntw
+    command: [ "/bin/bash", "-c", "/opt/bitnami/spark/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.4" ]
+
+  flypipe-mariadb:
+    image: mariadb:10.11.4
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+      MYSQL_DATABASE: metastore_db
+    networks:
+      - flypipe-ntw
+
+  flypipe-hive-metastore:
+    build:
+      context: .
+      dockerfile: ./hive/Dockerfile
+    ports:
+      - 9083:9083
+    depends_on:
+      - flypipe-mariadb
+    networks:
+      - flypipe-ntw
+    entrypoint: sh -c './../entrypoint.sh'
+
+  flypipe-jupyter:
+    build:
+      context: ../
+      dockerfile: ./local/Dockerfile
+    container_name: flypipe-jupyter
+    ports:
+      - 8888:8888
+    environment:
+      FLYPIPE_DEFAULT_RUN_MODE: sequential
+      GIT_PYTHON_REFRESH: quiet
+    volumes:
+      - ../.pylintrc:/.pylintrc
+      - ../flypipe:/flypipe
+      - ../scripts:/scripts
+      - ../docs:/docs
+      - ./start.py:/etc/ipython/startup/start.py
+      - ../docs/source/notebooks:/notebooks/docs
+      - ./wait-for-it.sh:/wait-for-it.sh
+    depends_on:
+      - spark-connect
+    networks:
+      - flypipe-ntw
+    entrypoint: sh -c 'jupyter-lab --notebook-dir /notebooks --allow-root --no-browser --port 8888 --ip 0.0.0.0  --NotebookApp.token="" --NotebookApp.password=""'
+
+  flypipe-test:
+    build:
+      context: ../
+      dockerfile: ./local/Dockerfile
+    container_name: flypipe-test
+    environment:
+      FLYPIPE_DEFAULT_RUN_MODE: sequential
+    networks:
+      - flypipe-ntw
+
+networks:
+  flypipe-ntw:

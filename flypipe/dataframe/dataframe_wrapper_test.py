@@ -9,7 +9,6 @@ from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import (
 )
 from flypipe.dataframe.spark_dataframe_wrapper import SparkDataFrameWrapper
 from flypipe.schema.types import Boolean, Decimal, String, Unknown
-from flypipe.tests.spark import spark
 
 
 class DummyDataFrameWrapper(DataFrameWrapper):
@@ -37,39 +36,52 @@ class TestDataFrameWrapper:
     """Tests for DataFrameWrapper"""
 
     @pytest.mark.parametrize(
-        "df,expected_class",
+        "data,type,expected_class",
         [
-            (pd.DataFrame({"column": [1]}), PandasDataFrameWrapper),
+            (pd.DataFrame({"column": [1]}), "pandas", PandasDataFrameWrapper),
             (
-                spark.createDataFrame(schema=["column"], data=[[1]]),
+                {"schema": ["column"], "data": [[1]]},
+                "spark",
                 SparkDataFrameWrapper,
             ),
             (
-                spark.createDataFrame(schema=["column"], data=[[1]]).pandas_api(),
+                {"schema": ["column"], "data": [[1]]},
+                "pandas_api",
                 PandasOnSparkDataFrameWrapper,
             ),
         ],
     )
-    def test_get_instance(self, df, expected_class):
+    def test_get_instance(self, data, type, expected_class, spark):
+        if type == "pandas":
+            df = data
+        else:
+            df = spark.createDataFrame(**data)
+            if type == "pandas_api":
+                df = df.pandas_api()
         assert isinstance(DataFrameWrapper.get_instance(spark, df), expected_class)
 
     @pytest.mark.parametrize(
-        "df",
+        "data,type",
         [
-            pd.DataFrame({"col1": [1], "col2": [2]}),
-            spark.createDataFrame(schema=("col1", "col2"), data=[[1, 2]]),
-            spark.createDataFrame(schema=("col1", "col2"), data=[[1, 2]]).pandas_api(),
+            (pd.DataFrame({"col1": [1], "col2": [2]}), "pandas"),
+            ({"schema": ["col1", "col2"], "data": [[1, 2]]}, "spark"),
+            ({"schema": ["col1", "col2"], "data": [[1, 2]]}, "pandas_api"),
         ],
     )
-    def test_select_columns_out_of_place(self, df):
+    def test_select_columns_out_of_place(self, spark, data, type):
         """
         Ensure that DataFrameWrapper.select_columns does the selection operation out-of-place and returns a new
         dataframe wrapper, therefore the original dataframe wrapper should be untouched.
         """
         # TODO- doesn't look like we're testing anything here?
+        if type == "pandas":
+            df = data
+        else:
+            df = spark.createDataFrame(**data)
+            if type == "pandas_api":
+                df = df.pandas_api()
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
-        # pylint: disable-next=unused-variable
-        df_wrapper2 = df_wrapper.select_columns("col1")
+        df_wrapper2 = df_wrapper.select_columns("col1")  # noqa: F841
 
     def test_cast_column_basic(self, mocker):
         """

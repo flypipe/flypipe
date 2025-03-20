@@ -45,7 +45,7 @@ extensions = [
     "sphinx_substitution_extensions",
     "nbsphinx",
     "IPython.sphinxext.ipython_console_highlighting",
-    "sphinx-favicon",
+    "sphinx_favicon",
 ]
 
 myst_enable_extensions = [

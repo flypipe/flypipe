@@ -18,12 +18,22 @@ import {
 import classNames from "classnames";
 import textFit from "textfit";
 import { GrNew } from "react-icons/gr";
+import { BsDatabase, BsDatabaseSlash } from "react-icons/bs";
+import { LuFileInput } from "react-icons/lu";
+
 import { NotificationContext } from "../notifications/context";
 import { GraphContext } from "./graph-context";
 
 const BaseNode = ({ data, isNewNode }) => {
     const graph = useReactFlow();
-    const { nodeType, label } = data;
+    const {
+        nodeType,
+        label,
+        isActive,
+        hasCache,
+        cacheIsDisabled,
+        hasProvidedInput,
+    } = data;
     const { addNotification } = useContext(NotificationContext);
     const { setCurrentGraphObject } = useContext(GraphContext);
 
@@ -54,6 +64,7 @@ const BaseNode = ({ data, isNewNode }) => {
             "px-4",
             "py-2",
             "rounded",
+            isActive ? "" : "node-dashed",
             nodeClass
         )
     );
@@ -80,6 +91,8 @@ const BaseNode = ({ data, isNewNode }) => {
         },
         [graph]
     );
+
+    const margin = hasProvidedInput && hasCache ? "me-5" : "";
 
     return (
         <>
@@ -116,6 +129,41 @@ const BaseNode = ({ data, isNewNode }) => {
                         <GrNew className="fs-4" />
                     </Badge>
                 )}
+                <div className="d-flex flex-row-reverse">
+                    {hasProvidedInput && (
+                        <Badge
+                            pill
+                            bg="light"
+                            className={`${badgeWidth} align-self-end fs-6 position-absolute node-badge ${margin}`}
+                            title="Input provided"
+                            size="xs"
+                        >
+                            <LuFileInput className="fs-4" color="black" />
+                        </Badge>
+                    )}
+                    {hasCache && cacheIsDisabled && (
+                        <Badge
+                            pill
+                            bg="light"
+                            className={`${badgeWidth} align-self-end fs-6 position-absolute node-badge`}
+                            title="Cache (disabled)"
+                            size="md"
+                        >
+                            <BsDatabaseSlash className="fs-4" color="red" />
+                        </Badge>
+                    )}
+                    {hasCache && !cacheIsDisabled && (
+                        <Badge
+                            pill
+                            bg="light"
+                            className={`${badgeWidth} align-self-start fs-6 position-absolute node-badge`}
+                            title="Cache"
+                            size="md"
+                        >
+                            <BsDatabase className="fs-4" color="black" />
+                        </Badge>
+                    )}
+                </div>
             </div>
             <Handle
                 type="source"

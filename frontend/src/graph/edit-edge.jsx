@@ -14,7 +14,6 @@ import { deleteEdge } from "../util";
 import { DeleteEdge } from "./delete/delete";
 
 export const EditEdge = ({ edge, onClose }) => {
-    console.log(edge);
     const isReadOnly = !edge.isNew;
     const [data, setData] = useState({
         columns: [],
@@ -57,7 +56,12 @@ export const EditEdge = ({ edge, onClose }) => {
             availableColumns = Array.from(
                 new Set(
                     successorNodeIds
-                        .filter((nodeId) => availableNodeIds.has(nodeId))
+                        .filter(
+                            (nodeId) =>
+                                availableNodeIds.has(nodeId) &&
+                                graph.getNode(nodeId).data.predecessorColumns
+                                    .length > 0
+                        )
                         .map(
                             (successorNodeId) =>
                                 graph.getNode(successorNodeId).data

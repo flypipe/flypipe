@@ -1,6 +1,8 @@
 import os
 from contextlib import contextmanager
+
 import pytest
+
 from flypipe.config import get_config, config_context, RunMode
 
 

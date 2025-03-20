@@ -57,7 +57,8 @@ html {
 }
 
 .list-group-flypipe {
-    height: calc(100vh - 100px);
+    // can not use height: calc(100vh - 100px); it breaks in mac users
+    height: 100%;
 }
 
 .search {
@@ -180,7 +181,10 @@ html {
     right: -10px !important;
 }
 
-.react-flow__edge-path,
+.react-flow__edge-path {
+    stroke-width: 0.19em !important;
+}
+
 .react-flow__connection-path {
     stroke-width: 0.09em !important;
 }
@@ -188,4 +192,8 @@ html {
 .badge.group-expand-collapse {
     cursor: pointer;
     border: 0.1em solid grey !important;
+}
+
+.node-dashed {
+    border-style: dashed !important;
 }
