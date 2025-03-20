@@ -59,9 +59,9 @@ class TestColumn:
         def t2():
             return
 
-        foreign_keys = t2.output.t2c1.foreign_keys
-        assert foreign_keys[t1.output.t1c1].type == RelationshipType.ONE_TO_ONE
-        assert foreign_keys[t1.output.t1c1].description == "my desc"
+        relationships = t2.output.t2c1.relationships
+        assert relationships[t1.output.t1c1].type == RelationshipType.ONE_TO_ONE
+        assert relationships[t1.output.t1c1].description == "my desc"
 
     def test_relationship_many_to_one(self):
         print()
@@ -91,9 +91,9 @@ class TestColumn:
         def t2():
             return
 
-        foreign_keys = t2.output.t2c1.foreign_keys
-        assert foreign_keys[t1.output.t1c1].type == RelationshipType.MANY_TO_ONE
-        assert foreign_keys[t1.output.t1c1].description == "my desc"
+        relationships = t2.output.t2c1.relationships
+        assert relationships[t1.output.t1c1].type == RelationshipType.MANY_TO_ONE
+        assert relationships[t1.output.t1c1].description == "my desc"
 
     def test_relationship_one_to_many(self):
         @node(
@@ -121,9 +121,9 @@ class TestColumn:
         def t2():
             return
 
-        foreign_keys = t2.output.t2c1.foreign_keys
-        assert foreign_keys[t1.output.t1c1].type == RelationshipType.ONE_TO_MANY
-        assert foreign_keys[t1.output.t1c1].description == "my desc"
+        relationships = t2.output.t2c1.relationships
+        assert relationships[t1.output.t1c1].type == RelationshipType.ONE_TO_MANY
+        assert relationships[t1.output.t1c1].description == "my desc"
 
     def test_relationship_many_to_many(self):
         @node(
@@ -151,9 +151,9 @@ class TestColumn:
         def t2():
             return
 
-        foreign_keys = t2.output.t2c1.foreign_keys
-        assert foreign_keys[t1.output.t1c1].type == RelationshipType.MANY_TO_MANY
-        assert foreign_keys[t1.output.t1c1].description == "my desc"
+        relationships = t2.output.t2c1.relationships
+        assert relationships[t1.output.t1c1].type == RelationshipType.MANY_TO_MANY
+        assert relationships[t1.output.t1c1].description == "my desc"
 
     def test_declared_more_than_one_relationship_same_column_raises_exception(self):
         @node(

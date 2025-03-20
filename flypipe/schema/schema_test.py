@@ -32,7 +32,7 @@ class TestSchema:
 
         assert schema1 != schema2
 
-    def test_schema_are_equal_same_foreign_keys(self):
+    def test_schema_are_equal_same_relationships(self):
         @node(type="pandas", output=Schema(Column("col1", String(), "desc")))
         def f():
             pass
@@ -41,7 +41,7 @@ class TestSchema:
         schema2 = Schema(Column("col1", String(), "desc").many_to_one(f.output.col1))
         assert schema1 == schema2
 
-    def test_schema_are_different_with_different_foreign_keys(self):
+    def test_schema_are_different_with_different_relationships(self):
         @node(type="pandas", output=Schema(Column("col1", String(), "desc")))
         def f():
             pass

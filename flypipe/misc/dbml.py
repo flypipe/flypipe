@@ -49,7 +49,7 @@ class Table:
 
             source = f"{self.table_name}.{col.name}"
 
-            for fk_column, relationship in col.foreign_keys.items():
+            for fk_column, relationship in col.relationships.items():
 
                 if is_tag_in_considered(
                     fk_column.parent.tags, self.only_nodes_with_tags
@@ -223,7 +223,7 @@ def build_dbml(
         dbml[table.table_name] = table.to_dbml()
 
         for column in node_.output.columns:
-            for fk_node, fk in column.foreign_keys.items():
+            for fk_node, fk in column.relationships.items():
                 if is_tag_in_considered(fk_node.parent.tags, only_nodes_with_tags) and (
                     not only_nodes_with_cache
                     or (only_nodes_with_cache and fk_node.parent.cache is not None)
