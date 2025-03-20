@@ -1,0 +1,3 @@
+# Set default behavior to automatically normalize line endings to LF to make sure that it is consistent between
+# Windows and other OS.
+* text=auto eol=lf

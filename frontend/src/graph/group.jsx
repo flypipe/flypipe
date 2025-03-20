@@ -25,7 +25,7 @@ const GroupNode = ({ id, data }) => {
     );
     return (
         <div
-            className="w-100 h-100"
+            className="w-100 h-100 bg-light"
             style={{
                 border: "0.1em solid grey",
             }}

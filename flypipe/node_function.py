@@ -1,5 +1,6 @@
 from flypipe.node import Node
 from flypipe.node_type import NodeType
+from flypipe.schema import Schema
 
 
 class NodeFunction(Node):
@@ -10,13 +11,34 @@ class NodeFunction(Node):
     NODE_TYPE = NodeType.NODE_FUNCTION
 
     def __init__(
-        self, function, node_dependencies=None, requested_columns=False
-    ):  # pylint: disable=super-init-not-called
+        self,
+        function,
+        node_dependencies=None,
+        requested_columns=False,
+        output: Schema = None,
+    ):
         self._key = None
         self.function = function
         self.node_dependencies = node_dependencies or []
         self._validate_node_dependencies()
         self.requested_columns = requested_columns
+
+        """
+        This allows other nodes to import output schema for a node function, for example
+        
+        @node(
+            ...
+            output=Schema(
+                node_function_dummy.output.get("col1")
+            )
+        )
+        """
+        self.output_schema = output
+
+        # For each column if the schema, declare that this node is the parent for all of them
+        # this for loop leaves columns aware of its owner to guide relationships definition
+        if self.output_schema is not None:
+            self.output_schema.set_parents(self)
 
     def _validate_node_dependencies(self):
         if self.node_dependencies:
@@ -29,7 +51,6 @@ class NodeFunction(Node):
 
     def expand(self, requested_columns: list, parameters: dict = None):
         # TODO- we should not be invoking _key in this function
-        # pylint: disable=protected-access
         kwargs = parameters or {}
         if self.requested_columns:
             kwargs["requested_columns"] = requested_columns
@@ -38,29 +59,48 @@ class NodeFunction(Node):
         if isinstance(nodes, Node):
             nodes = (nodes,)
 
+        set_internal_dependencies = set()
         for node in nodes:
             if isinstance(node, NodeFunction):
                 raise ValueError(
                     "Illegal operation - node functions cannot be returned from node functions"
                 )
             for dependency in node.input_nodes:
-                if dependency not in nodes and dependency not in self.node_dependencies:
-                    raise ValueError(
-                        f"Unknown node {dependency.key} in node function {self._key} dependencies "
-                        f"{[n._key for n in self.node_dependencies]}, all external dependencies must be defined in "
-                        f"node function parameter node_dependencies"
-                    )
+                if dependency not in nodes:
+                    set_internal_dependencies.add(dependency.node)
 
-        return list(nodes)
+        set_external_dependencies = set(self.node_dependencies)
+
+        difference = set_external_dependencies.difference(set_internal_dependencies)
+        if difference:
+            difference = [d.__name__ for d in difference]
+            raise ValueError(
+                f"Some node_dependencies ({', '.join(difference)}) of the node function {self.__name__} "
+                f"are not being used by any of its internal nodes"
+            )
+
+        difference = set_internal_dependencies.difference(set_external_dependencies)
+        if difference:
+            difference = [d.__name__ for d in difference]
+            raise ValueError(
+                f"Some internal nodes dependencies ({', '.join(difference)}) are not declared as "
+                f"external dependency of the node function {self.__name__}. "
+                f"Please add these nodes to 'node_dependencies' parameter"
+            )
+
+        return [node.copy() for node in list(nodes)]
 
     def copy(self):
         node_function = NodeFunction(
             self.function,
-            [dependency.copy() for dependency in self.node_dependencies],
-            self.requested_columns,
+            node_dependencies=[
+                dependency.copy() for dependency in self.node_dependencies
+            ],
+            requested_columns=self.requested_columns,
+            output=self.output_schema,
         )
 
-        node_function._key = self._key  # pylint: disable=protected-access
+        node_function._key = self._key
         return node_function
 
 
@@ -78,7 +118,9 @@ def node_function(*args, **kwargs):
         List of external nodes that the node function is dependent on.
         Any node retrieved by the node function (called internal node) can only be dependent on any internal node or
         any node inside `node_dependencies`.
-        True, returns spark context as argument to the funtion (default is False)
+        True, returns spark context as argument to the function (default is False)
+    output : Schema, optional
+        Defines the output schema of the node (default is None)
 
     Returns
     -------

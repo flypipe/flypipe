@@ -10,7 +10,7 @@ with open(
 # TODO: we shouldn't need this try except, there's some weird thing that happens when we run flit build where it runs
 #  this module to get the version for the wheel file and cannot find the package flypipe. Skip for now.
 try:
-    from flypipe.node import node
-    from flypipe.node_function import node_function
-except:  # pylint: disable=bare-except
+    from flypipe.node import node  # noqa: F401
+    from flypipe.node_function import node_function  # noqa: F401
+except:  # noqa: E722
     pass

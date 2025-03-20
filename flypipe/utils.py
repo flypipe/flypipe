@@ -1,9 +1,12 @@
 import json
 from enum import Enum
+
 import pandas as pd
 import pyspark.pandas as ps
 import pyspark.sql.dataframe as sql
+import pyspark.sql.connect.dataframe as sql_connect
 from pandas.testing import assert_frame_equal
+
 from flypipe.exceptions import (
     DataframeDifferentDataError,
     DataframeSchemasDoNotMatchError,
@@ -60,7 +63,7 @@ def dataframe_type(df) -> DataFrameType:
         return DataFrameType.PANDAS
     if isinstance(df, ps.DataFrame):
         return DataFrameType.PANDAS_ON_SPARK
-    if isinstance(df, sql.DataFrame):
+    if isinstance(df, sql.DataFrame) or isinstance(df, sql_connect.DataFrame):
         return DataFrameType.PYSPARK
     raise DataframeTypeNotSupportedError(type(df))
 

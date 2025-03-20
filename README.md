@@ -29,10 +29,13 @@ def t1(df):
 As each node (transformation) is connected to its ancestors, we can easily view the pipeline graphically in a html page 
 (`my_graph.html()`) or execute it by invoking `my_graph.run()`
 
-![Flypipe Graph Pipeline](/docs/source/_static/images/flypipe_pipelines.svg)
+![Flypipe Graph Pipeline](/docs/source/_static/images/flypipe_pipelines.png)
 
 ## What Flypipe aims to facilitate?
 
+- Free open-source tool for data transformations
+- Facilitate streaming pipeline development (improved use of caches)  
+- Increase pipeline stability (better use of unittests)
 - End-to-end transformation lineage
 - Create development standards for Data Engineers, Machine Learning Engineers and Data Scientists
 - Improve re-usability of transformations in different pipelines & contexts via composable nodes
@@ -44,6 +47,17 @@ As each node (transformation) is connected to its ancestors, we can easily view 
 - Framework level optimisations and dynamic transformations help to make even complex transformation pipelines low 
 latency. This in turn allows for on-demand feature generation/predictions.
 
+## Commonly used
+
+<p float="left">
+  <img src="./docs/source/_static/images/databricks_logo.png" alt="Databricks" style="height:100px;"/>
+  <img src="./docs/source/_static/images/python.png" alt="Python" style="height:80px;"/>
+</p>
+
+## Source Code
+
+API code is available at [https://github.com/flypipe/flypipe](https://github.com/flypipe/flypipe).
+
 ## Documentation
 
-Full documentation is available at [https://flypipe.github.io/flypipe/](https://flypipe.github.io/flypipe/). 
+Full documentation is available at [https://flypipe.github.io/flypipe/](https://flypipe.github.io/flypipe/).

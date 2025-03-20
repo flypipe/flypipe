@@ -41,7 +41,7 @@ jobs:
           python scripts/calculate_version.py
           echo "VERSION_NUMBER=$(cat flypipe/version.txt)" >> $GITHUB_ENV
       - name: Upload version file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: version.txt
           path: ./flypipe/version.txt
@@ -50,7 +50,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload changelog file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: changelog.txt
           path: ./changelog.txt
@@ -62,7 +62,7 @@ jobs:
       - name: Build wheel
         run: flit build
       - name: Upload wheel
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl
           path: ./dist/flypipe-${{ env.VERSION_NUMBER }}-py3-none-any.whl

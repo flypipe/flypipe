@@ -114,8 +114,8 @@ const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
     const nodeDef = nodeDefs.find((nodeDef) => nodeDef.nodeKey === nodeKey);
     const frontier = [...nodeDef.predecessors];
     const selectedNodeDefs = [nodeDef];
-    const edges = [];
     const addedKeys = [nodeDef.nodeKey];
+    const mapOfEdges = new Map();
     while (frontier.length > 0) {
         const currentKey = frontier.pop();
         const current = nodeDefs.find(
@@ -127,13 +127,21 @@ const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
         }
         for (const successorKey of current.successors) {
             if (addedKeys.includes(successorKey)) {
-                edges.push([current.nodeKey, successorKey]);
+                const edgeKey = current.nodeKey + "-" + successorKey;
+                if (!mapOfEdges.has(edgeKey)) {
+                    mapOfEdges.set(edgeKey, [current.nodeKey, successorKey]);
+                }
             }
         }
         for (const predecessor of current.predecessors) {
-            frontier.push(predecessor);
+            // In a graph of A->[B, C]->D, B and C will cause to add A to the frontier twice
+            // in this case, do not add if A has already been added
+            if (!frontier.includes(predecessor)) {
+                frontier.push(predecessor);
+            }
         }
     }
+    const edges = Array.from(mapOfEdges.values());
     return [
         selectedNodeDefs.map((nodeDef) =>
             convertNodeDefToGraphNode(graph, nodeDef, false)
@@ -144,6 +152,7 @@ const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
 
 const getEdgeDef = (graph, source, target, linkedEdge = null) => {
     const targetNode = graph.getNode(linkedEdge ? linkedEdge.target : target);
+    const sourceNode = graph.getNode(linkedEdge ? linkedEdge.source : source);
     return {
         id: `${source}-${target}`,
         isNew: targetNode.data.isNew || false,
@@ -152,8 +161,8 @@ const getEdgeDef = (graph, source, target, linkedEdge = null) => {
         ...(linkedEdge && { linkedEdge: linkedEdge.id }),
         markerEnd: {
             type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
+            width: 15,
+            height: 15,
         },
         ...(targetNode.data.isActive || {
             style: {
@@ -197,6 +206,54 @@ const addOrReplaceEdge = (graph, edge) => {
                 ? getGroup(graph, targetGroup).id
                 : targetNode.id;
             addOrReplaceEdge(graph, getEdgeDef(graph, source, target, edge));
+
+            // If exists source and target groups, needs to create edges of all internal nodes of sourceGroup to
+            // targetGroup and edges from all internal nodes from targetGroup to sourceGroup
+            if (
+                sourceGroup != null &&
+                targetGroup != null &&
+                sourceGroup !== targetGroup
+            ) {
+                const sourceGroupNode = getGroup(graph, sourceGroup);
+                const targetGroupNode = getGroup(graph, targetGroup);
+                const internalTargetNodes = nodes.filter(
+                    (node) => node.data.group === targetGroup
+                );
+                const internalSourceNodes = nodes.filter(
+                    (node) => node.data.group === sourceGroup
+                );
+
+                internalTargetNodes.forEach((internalTargetNode) => {
+                    internalTargetNode.data.predecessors.forEach(
+                        (predecessorNodeId) => {
+                            if (
+                                sourceGroupNode.data.nodes.has(
+                                    predecessorNodeId
+                                )
+                            ) {
+                                const edgeToTargetDefinition = getEdgeDef(
+                                    graph,
+                                    source,
+                                    internalTargetNode.id,
+                                    edge
+                                );
+                                addOrReplaceEdge(graph, edgeToTargetDefinition);
+
+                                const edgeFromSourceDefinition = getEdgeDef(
+                                    graph,
+                                    predecessorNodeId,
+                                    target,
+                                    edge
+                                );
+                                addOrReplaceEdge(
+                                    graph,
+                                    edgeFromSourceDefinition
+                                );
+                            }
+                        }
+                    );
+                });
+            }
         }
         graph.setNodes(nodes);
     }
@@ -270,7 +327,10 @@ const generateCodeTemplate = (graph, nodeData) => {
     const dependencyList = predecessors
         .map((nodeId) => {
             const name = graph.getNode(nodeId).data.name;
-            if (predecessorColumns[nodeId].length > 0) {
+            if (
+                predecessorColumns[nodeId] !== undefined &&
+                predecessorColumns[nodeId].length > 0
+            ) {
                 const selectedColumns = predecessorColumns[nodeId]
                     .map((column) => `'${column}'`)
                     .join(", ");
@@ -280,6 +340,7 @@ const generateCodeTemplate = (graph, nodeData) => {
             }
         })
         .join(", ");
+
     const nodeParameters = [
         `type='${nodeType}'`,
         ...(description ? [`description='${description}'`] : []),
@@ -315,6 +376,9 @@ const getNewNodeDef = ({
     successors,
     sourceCode,
     isActive,
+    hasCache,
+    cacheIsDisabled,
+    hasProvidedInput,
 }) => ({
     nodeKey,
     label: name || "Untitled",
@@ -329,6 +393,9 @@ const getNewNodeDef = ({
     successors: successors || [],
     sourceCode: sourceCode || "",
     isActive: isActive || true,
+    hasCache: hasCache || false,
+    cacheIsDisabled: cacheIsDisabled || false,
+    hasProvidedInput: hasProvidedInput || false,
 });
 
 const deleteNode = (graph, nodeId) => {

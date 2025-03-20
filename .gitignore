@@ -149,3 +149,4 @@ spark-warehouse/
 mlruns/
 artifacts/
 tmp/
+/local/data/

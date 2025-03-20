@@ -5,7 +5,7 @@ ENV = None
 
 
 def _get_env():
-    global ENV  # pylint: disable=global-statement
+    global ENV
     if not ENV:
         ENV = Environment(
             loader=PackageLoader("flypipe"), autoescape=select_autoescape()

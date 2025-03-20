@@ -2,6 +2,7 @@ import pandas as pd
 
 from flypipe import node
 from flypipe.printer.graph_html import GraphHTML
+from flypipe.run_context import RunContext
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String, Integer
 
@@ -22,8 +23,7 @@ class TestNodeGraph:
         def t3():
             return
 
-        # TODO- we should not be having to call a private method to setup
-        t3._create_graph()  # pylint: disable=protected-access
+        t3.create_graph(run_context=RunContext())
         positions = GraphHTML(t3.node_graph).get_node_positions()
         assert positions == {
             t1.key: [1.0, 50.0],
@@ -49,7 +49,7 @@ class TestNodeGraph:
             return
 
         # TODO- we should not be having to call a private method to setup
-        t4._create_graph()  # pylint: disable=protected-access
+        t4.create_graph(run_context=RunContext())
         positions = GraphHTML(t4.node_graph).get_node_positions()
         assert positions == {
             t1.key: [1.0, 50.0],
@@ -75,8 +75,7 @@ class TestNodeGraph:
         def t1():
             return pd.DataFrame({"c1": ["Bla"], "c2": [1]})
 
-        t1._create_graph()  # pylint: disable=protected-access
-        # pylint: disable-next=protected-access
+        t1.create_graph(run_context=RunContext())
         assert GraphHTML(t1.node_graph)._get_node_columns(t1.key) == [
             {"name": "c1", "type": "String", "description": ""},
             {"name": "c2", "type": "Integer", "description": ""},
@@ -104,11 +103,10 @@ class TestNodeGraph:
             return t1
 
         @node(type="pandas", dependencies=[t2, t3])
-        def t4(t2, t3):  # pylint: disable=unused-argument
+        def t4(t2, t3):
             return t2
 
-        t4._create_graph()  # pylint: disable=protected-access
-        # pylint: disable-next=protected-access
+        t4.create_graph(run_context=RunContext())
         assert GraphHTML(t4.node_graph)._get_node_columns(t1.key) == [
             {"name": "c1", "type": "Unknown", "description": ""},
             {"name": "c3", "type": "Unknown", "description": ""},

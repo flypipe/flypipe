@@ -1,11 +1,13 @@
 import inspect
 from pathlib import Path
+
 import pandas as pd
 import pytest
 
-from flypipe.catalog import Catalog
 from flypipe import node, node_function
+from flypipe.catalog import Catalog
 from flypipe.config import config_context
+from flypipe.run_context import RunContext
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String, Integer
 
@@ -117,14 +119,15 @@ class TestCatalog:
                 ],
                 "successors": [],
                 "tags": [
-                    {"id": "pandas", "name": "pandas"},
-                    {"id": "Transformation", "name": "Transformation"},
-                    {"id": "train", "name": "train"},
                     {"id": "test", "name": "test"},
+                    {"id": "train", "name": "train"},
                 ],
                 "sourceCode": inspect.getsource(inspect.getmodule(t2.function)),
                 "isActive": True,
                 "group": "Training Thing",
+                "hasCache": False,
+                "cacheIsDisabled": True,
+                "hasProvidedInput": False,
             },
             {
                 "description": "Description for t1",
@@ -144,14 +147,13 @@ class TestCatalog:
                     "flypipe_catalog_catalog_test_function_t2_t2",
                     "flypipe_catalog_catalog_test_function_t3_t3",
                 ],
-                "tags": [
-                    {"id": "pandas", "name": "pandas"},
-                    {"id": "Transformation", "name": "Transformation"},
-                    {"id": "train", "name": "train"},
-                ],
+                "tags": [{"id": "train", "name": "train"}],
                 "sourceCode": inspect.getsource(inspect.getmodule(t1.function)),
                 "isActive": True,
                 "group": None,
+                "hasCache": False,
+                "cacheIsDisabled": True,
+                "hasProvidedInput": False,
             },
             {
                 "description": "",
@@ -166,14 +168,13 @@ class TestCatalog:
                 },
                 "output": [],
                 "successors": [],
-                "tags": [
-                    {"id": "pandas", "name": "pandas"},
-                    {"id": "Transformation", "name": "Transformation"},
-                    {"id": "misc", "name": "misc"},
-                ],
+                "tags": [{"id": "misc", "name": "misc"}],
                 "sourceCode": inspect.getsource(inspect.getmodule(t3.function)),
                 "isActive": True,
                 "group": "Training Thing",
+                "hasCache": False,
+                "cacheIsDisabled": True,
+                "hasProvidedInput": False,
             },
         ]
 
@@ -189,7 +190,7 @@ class TestCatalog:
             {"count": 1, "label": "test"},
         ]
 
-    def test_register_node_function(self):
+    def test_map_node_function(self):
         """
         The Catalog should be able to handle node functions by expanding them.
         """
@@ -216,13 +217,13 @@ class TestCatalog:
         def t4(t3):
             return t3
 
-        t4._create_graph()  # pylint: disable=protected-access
+        t4.create_graph(run_context=RunContext())
         catalog = Catalog()
 
-        end_node_name = t4.node_graph.get_end_node_name()
+        end_node_name = t4.node_graph.get_end_node_name(t4.node_graph.graph)
         end_node = t4.node_graph.get_transformation(end_node_name)
 
-        catalog.register_node(end_node, node_graph=t4.node_graph)
+        catalog._map_node(end_node, node_graph=t4.node_graph)
 
         assert [node["name"] for node in catalog.get_nodes()] == [
             "t4",
@@ -236,9 +237,7 @@ class TestCatalog:
         catalog.register_node(t2)
         catalog.register_node(t3)
         assert catalog.get_tag_suggestions() == [
-            {"id": "Transformation", "name": "Transformation"},
             {"id": "misc", "name": "misc"},
-            {"id": "pandas", "name": "pandas"},
             {"id": "test", "name": "test"},
             {"id": "train", "name": "train"},
         ]
@@ -258,17 +257,44 @@ class TestCatalog:
             }
         ]
 
-    def test_catalog_node_function_fails(self):
+    def test_add_node_function_fails(self):
         @node_function()
         def t1():
             @node(type="pandas")
             def t2():
                 return pd.DataFrame(data={"co1": 1})
 
+            return t2
+
         catalog = Catalog()
 
         with pytest.raises(RuntimeError):
-            catalog.register_node(t1)
+            catalog.add_node_to_graph(t1)
+
+    def test_register_node_function_pass(self):
+        @node_function()
+        def t1():
+            @node(type="pandas")
+            def t2():
+                return pd.DataFrame(data={"co1": 1})
+
+            return t2
+
+        catalog = Catalog()
+        catalog.register_node(t1)
+
+    def test_map_node_function_fails(self):
+        @node_function()
+        def t1():
+            @node(type="pandas")
+            def t2():
+                return pd.DataFrame(data={"co1": 1})
+
+            return t2
+
+        catalog = Catalog()
+        with pytest.raises(RuntimeError):
+            catalog._map_node(t1)
 
     def test_add_node_to_graph(self):
         catalog = Catalog()

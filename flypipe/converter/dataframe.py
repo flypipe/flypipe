@@ -1,7 +1,11 @@
+# ruff: noqa: E731
+from pyspark.sql.types import StructType, StructField, StringType
+
 from flypipe.utils import DataFrameType, dataframe_type
+from logging import warning
 
 
-class DataFrameConverter:  # pylint: disable=too-few-public-methods
+class DataFrameConverter:
     """Converts a dataframe between pandas, pandas on spark and pyspark
 
     Attributes
@@ -11,6 +15,20 @@ class DataFrameConverter:  # pylint: disable=too-few-public-methods
 
     def __init__(self, spark=None):
         self.spark = spark
+
+    def _convert_pandas_to_spark(self, df):
+        if df.shape[0] > 0:
+            return self.spark.createDataFrame(df)
+        else:
+            warning(
+                "pyspark.errors.exceptions.base.PySparkValueError: [CANNOT_INFER_EMPTY_SCHEMA] Can not infer "
+                "schema from empty Pandas Dataframe to Pyspark Dataframe => Creating empty dataset with "
+                "StringType() for all columns"
+            )
+            schema = StructType(
+                [StructField(column, StringType(), True) for column in df.columns]
+            )
+            return self.spark.createDataFrame([], schema=schema)
 
     def _strategy(self, from_type: DataFrameType, to_type: DataFrameType):
         """Defines the strategy to convert and the function to be applied in this conversion
@@ -27,9 +45,8 @@ class DataFrameConverter:  # pylint: disable=too-few-public-methods
         lambda function
             the function to do the conversion
         """
-        # pylint: disable=unnecessary-lambda-assignment,unnecessary-lambda
-        pandas_to_spark = lambda df: self.spark.createDataFrame(df)
-        pandas_to_pandas_on_spark = lambda df: self.spark.createDataFrame(
+        pandas_to_spark = lambda df: self._convert_pandas_to_spark(df)
+        pandas_to_pandas_on_spark = lambda df: self._convert_pandas_to_spark(
             df
         ).pandas_api()
 
@@ -38,7 +55,6 @@ class DataFrameConverter:  # pylint: disable=too-few-public-methods
 
         spark_to_pandas = lambda df: df.toPandas()
         spark_to_pandas_on_spark = lambda df: df.pandas_api()
-        # pylint: enable=unnecessary-lambda-assignment
 
         return {
             DataFrameType.PANDAS: {
