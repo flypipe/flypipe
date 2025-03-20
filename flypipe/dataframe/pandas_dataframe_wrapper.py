@@ -114,13 +114,19 @@ class PandasDataFrameWrapper(DataFrameWrapper):
         )
 
     def _cast_column_date(self, column, flypipe_type):
-        return self._cast_column_date_or_timestamp(column, flypipe_type)
+        return self._cast_column_date_or_timestamp(column, flypipe_type, as_date=True)
 
     def _cast_column_datetime(self, column, flypipe_type):
         return self._cast_column_date_or_timestamp(column, flypipe_type)
 
-    def _cast_column_date_or_timestamp(self, column, flypipe_type):
+    def _cast_column_date_or_timestamp(self, column, flypipe_type, as_date=False):
         rows = self._get_rows_for_cast(column, flypipe_type)
-        self.df.loc[rows, column] = pd.to_datetime(
+        df = pd.to_datetime(
             self.df.loc[rows, column], format=flypipe_type.python_format, exact=False
-        ).astype(dtype("datetime64[ns]"))
+        )
+
+        if as_date:
+            # In case it is a date conversion we need to normalize it to remove hours, minute, seconds, etc.
+            df = df.dt.normalize()
+
+        self.df.loc[rows, column] = df.astype(dtype("datetime64[ns]"))
