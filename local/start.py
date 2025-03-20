@@ -31,7 +31,7 @@ def build_spark():
         )
         .config(
             "spark.jars.packages",
-            "io.delta:delta-core_2.13:2.1.1,org.postgresql:postgresql:42.6.0",
+            "io.delta:delta-spark_2.12:3.3.0,org.postgresql:postgresql:42.6.0",
         )
     )
 
