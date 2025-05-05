@@ -179,49 +179,49 @@ export const EditNode = ({
                                     style={{ height: "120px" }}
                                 />
                             </Form.Group>
-                            </fieldset>
+                        </fieldset>
 
-                            <Form.Group className="mb-3">
-                                <Form.Label className="fw-semibold">
-                                    Predecessors
-                                </Form.Label>
-                                {formState.values.predecessors.length > 0 ? (
-                                    <NodeList
-                                        nodeIds={formState.values.predecessors}
+                        <Form.Group className="mb-3">
+                            <Form.Label className="fw-semibold">
+                                Predecessors
+                            </Form.Label>
+                            {formState.values.predecessors.length > 0 ? (
+                                <NodeList
+                                    nodeIds={formState.values.predecessors}
+                                />
+                            ) : (
+                                <p>No predecessors</p>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className="fw-semibold">
+                                Successors
+                            </Form.Label>
+                            {formState.values.successors.length > 0 ? (
+                                <NodeList
+                                    nodeIds={formState.values.successors}
+                                />
+                            ) : (
+                                <p>No successors</p>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className="fw-semibold">
+                                Output Schema
+                            </Form.Label>
+                            {formState.values.output &&
+                                formState.values.output.length > 0 && (
+                                    <NodeOutput
+                                        output={formState.values.output}
                                     />
-                                ) : (
-                                    <p>No predecessors</p>
                                 )}
-                            </Form.Group>
-
-                            <Form.Group className="mb-3">
-                                <Form.Label className="fw-semibold">
-                                    Successors
-                                </Form.Label>
-                                {formState.values.successors.length > 0 ? (
-                                    <NodeList
-                                        nodeIds={formState.values.successors}
-                                    />
-                                ) : (
-                                    <p>No successors</p>
-                                )}
-                            </Form.Group>
-
-                            <Form.Group className="mb-3">
-                                <Form.Label className="fw-semibold">
-                                    Output Schema
-                                </Form.Label>
-                                {formState.values.output &&
-                                    formState.values.output.length > 0 && (
-                                        <NodeOutput
-                                            output={formState.values.output}
-                                        />
-                                    )}
-                                {(!formState.values.output ||
-                                    formState.values.output.length == 0) && (
-                                    <p>No output declared</p>
-                                )}
-                            </Form.Group>
+                            {(!formState.values.output ||
+                                formState.values.output.length == 0) && (
+                                <p>No output declared</p>
+                            )}
+                        </Form.Group>
 
                         <Row>
                             <Col>
