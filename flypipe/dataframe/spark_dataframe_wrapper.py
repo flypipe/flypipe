@@ -75,7 +75,7 @@ class SparkDataFrameWrapper(DataFrameWrapper):
 
     def _select_columns(self, columns):
 
-        df_cols = [col for col, _ in self.df.dtypes]
+        df_cols = self.df.columns
 
         if not set(columns).issubset(set(df_cols)):
             raise DataFrameMissingColumns(df_cols, columns)
@@ -88,6 +88,8 @@ class SparkDataFrameWrapper(DataFrameWrapper):
     def _get_column_flypipe_type(self, df, target_column):
         try:
             dtype = df.schema[target_column].dataType
+        except TypeError:
+            dtype = [col for col in df.schema if col.name == target_column][0].dataType
         except KeyError as exc:
             raise ValueError(
                 f'Column "{target_column}" not found in df, available columns are {df.columns}'

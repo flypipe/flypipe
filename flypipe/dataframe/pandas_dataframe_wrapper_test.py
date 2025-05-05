@@ -162,7 +162,7 @@ class TestPandasDataFrameWrapper:
         df_wrapper.cast_column("c1", Integer())
         assert_frame_equal(
             df_wrapper.df,
-            pd.DataFrame({"c1": [1, pd.NA, pd.NA, pd.NA, pd.NA]}),
+            pd.DataFrame({"c1": [1] + 4 * [np.nan]}),
             check_dtype=False,
         )
         assert df_wrapper.df.dtypes["c1"] == pd.Int64Dtype()
@@ -220,7 +220,7 @@ class TestPandasDataFrameWrapper:
         assert_frame_equal(
             df_wrapper.df,
             pd.DataFrame(
-                {"col1": [pd.Timestamp(2022, 10, 31, 20, 30, 35), np.nan]},
+                {"col1": [pd.Timestamp(2022, 10, 31, 0, 0, 0), np.nan]},
                 dtype=np.dtype("O"),
             ),
         )

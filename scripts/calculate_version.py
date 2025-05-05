@@ -88,5 +88,5 @@ else:
     new_version[2] += 1
 
 new_version_string = ".".join([str(num) for num in new_version])
-with open('flypipe/version.txt', 'w') as f:
+with open('../flypipe/version.txt', 'w') as f:
     f.write(new_version_string)

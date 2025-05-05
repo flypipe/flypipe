@@ -494,7 +494,7 @@ def node(type, *args, **kwargs):
     description : str, optional
         Description of the node (default is None)
     group : str, optional
-        Group the node falls under, nodes in the same group are clustered together in the Catalog UI.
+        Nodes in the same group are clustered together in the Catalog UI.
     tags : List[str], optional
         List of tags for the node (default is None)
     dependencies : List[Node], optional
