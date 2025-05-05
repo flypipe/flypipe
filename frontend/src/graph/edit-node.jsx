@@ -179,6 +179,7 @@ export const EditNode = ({
                                     style={{ height: "120px" }}
                                 />
                             </Form.Group>
+                            </fieldset>
 
                             <Form.Group className="mb-3">
                                 <Form.Label className="fw-semibold">
@@ -221,7 +222,6 @@ export const EditNode = ({
                                     <p>No output declared</p>
                                 )}
                             </Form.Group>
-                        </fieldset>
 
                         <Row>
                             <Col>
