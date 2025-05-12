@@ -1,6 +1,8 @@
 import React from "react";
 import { Badge, Accordion } from "react-bootstrap";
-import Form from "react-bootstrap/Form";
+import DOMPurify from "dompurify";
+
+import { formatTextToHtml } from "../util";
 
 export const NodeOutput = ({ output }) => {
     const outputs = [];
@@ -16,7 +18,13 @@ export const NodeOutput = ({ output }) => {
                         </div>
                     </div>
                 </Accordion.Header>
-                <Accordion.Body>{out.description}</Accordion.Body>
+                <Accordion.Body
+                    dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(
+                            formatTextToHtml(out.description)
+                        ),
+                    }}
+                />
             </Accordion.Item>
         );
     });
