@@ -1,3 +1,6 @@
+from flypipe.cache.watermark import Watermark
+
+
 class InputNode:
     """
     An input node is just a wrapper around a regular node with some extra functionalities on top to allow for usage as
@@ -11,6 +14,7 @@ class InputNode:
         self.node = node
         self._selected_columns = None
         self._alias = None
+        self._watermark = None
 
     @property
     def __name__(self):
@@ -19,6 +23,10 @@ class InputNode:
     @property
     def key(self):
         return self.node.key
+
+    def watermark(self, watermark: Watermark):
+        self._watermark = watermark
+        return self
 
     def select(self, *columns):
         # TODO- if self.output_schema is defined then we should ensure each of the columns is in it.
@@ -52,4 +60,5 @@ class InputNode:
         input_node_copy = InputNode(self.node.copy())
         input_node_copy._selected_columns = self._selected_columns
         input_node_copy._alias = self._alias
+        input_node_copy._watermark = self._watermark
         return input_node_copy

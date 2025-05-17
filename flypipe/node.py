@@ -2,11 +2,12 @@ import logging
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List
+from typing import List, Union, Callable
 
 from pyspark.sql import SparkSession
 
 from flypipe.cache.cache import Cache
+from flypipe.cache.watermark import Watermark, WatermarkMode
 from flypipe.config import get_config
 from flypipe.node_input import InputNode
 from flypipe.node_run_context import NodeRunContext
@@ -192,6 +193,9 @@ class Node:
 
         self.node_graph = NodeGraph(self, run_context=run_context)
 
+    def watermark(self, func: Callable, column: Union[str, Column] = None):
+        return InputNode(self).watermark(Watermark(func, column))
+
     def select(self, *columns):
         return InputNode(self).select(*columns)
 
@@ -204,6 +208,16 @@ class Node:
             node_input_value = run_context.node_results[input_node.key].as_type(
                 self.dataframe_type
             )
+
+            # Apply watermark if the input_node (set in dependencies) has watermark set
+            # and the node who has this dependency is not in the watermark_modes or it is and it is not DISABLE
+            if input_node._watermark and (
+                    self not in run_context.watermark_modes
+                    or run_context.watermark_modes[self].value != WatermarkMode.DISABLE.value
+            ):
+                print(input_node.node.key, input_node.node, run_context.watermark_modes)
+                node_input_value = node_input_value.apply(input_node._watermark.apply)
+
             if input_node.selected_columns:
                 node_input_value = node_input_value.select_columns(
                     *input_node.selected_columns
@@ -231,6 +245,7 @@ class Node:
         pandas_on_spark_use_pandas: bool = False,
         parameters: dict = None,
         cache: dict = None,
+        watermark: dict = None,
     ):
         if not inputs:
             inputs = {}
@@ -242,6 +257,7 @@ class Node:
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
             parameters=parameters,
             cache_modes=cache,
+            watermark_modes=watermark,
         )
 
         self.create_graph(run_context)

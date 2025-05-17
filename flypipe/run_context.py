@@ -25,6 +25,7 @@ class RunContext:
     pandas_on_spark_use_pandas: bool = False
     parameters: dict = None
     cache_modes: dict = None
+    watermark_modes: dict = None
     node_results: Mapping[str, NodeResult] = field(init=False, default=None)
 
     def __post_init__(self):
@@ -41,6 +42,7 @@ class RunContext:
         )
         self.parameters = self.parameters or {}
         self.cache_modes = self.cache_modes or {}
+        self.watermark_modes = self.watermark_modes or {}
         self.node_results = {
             node.key: NodeResult(self.spark, df, schema=None)
             for node, df in self.provided_inputs.items()
