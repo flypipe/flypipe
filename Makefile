@@ -77,7 +77,8 @@ pr-check:
 .PHONY: pr-check
 
 githooks:
-	git config core.hooksPath .github/hooks
+	chmod +x .github/hooks/prepare-commit-msg
+	git config --local core.hooksPath .github/hooks
 	echo "Custom Git hooks enabled (core.hooksPath set to .githooks)"
 .PHONY: githooks
 
