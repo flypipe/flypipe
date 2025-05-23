@@ -1,15 +1,16 @@
 import logging
 import re
 import sys
+from argparse import ArgumentError
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Union, Callable
 
 from pyspark.sql import SparkSession
 
 from flypipe.cache.cache import Cache
-from flypipe.cache.watermark import Watermark, WatermarkMode
+from flypipe.dependency.preprocess_mode import PreProcessMode
 from flypipe.config import get_config
-from flypipe.node_input import InputNode
+from flypipe.dependency.node_input import InputNode
 from flypipe.node_run_context import NodeRunContext
 from flypipe.node_type import NodeType
 from flypipe.run_context import RunContext
@@ -193,8 +194,14 @@ class Node:
 
         self.node_graph = NodeGraph(self, run_context=run_context)
 
-    def watermark(self, func: Callable, column: Union[str, Column] = None):
-        return InputNode(self).watermark(Watermark(func, column))
+    def preprocess(self, *arg: Union[PreProcessMode, Callable]) -> InputNode:
+
+        if not arg:
+            raise ArgumentError(None, "Preprocess function must not be empty")
+
+        if isinstance(arg[0], PreProcessMode):
+            return InputNode(self).set_preprocess_mode(arg[0])
+        return InputNode(self).preprocess(*arg)
 
     def select(self, *columns):
         return InputNode(self).select(*columns)
@@ -209,19 +216,28 @@ class Node:
                 self.dataframe_type
             )
 
-            # Apply watermark if the input_node (set in dependencies) has watermark set
-            # and the node who has this dependency is not in the watermark_modes or it is and it is not DISABLE
-            if input_node._watermark and (
-                    self not in run_context.watermark_modes
-                    or run_context.watermark_modes[self].value != WatermarkMode.DISABLE.value
-            ):
-                print(input_node.node.key, input_node.node, run_context.watermark_modes)
-                node_input_value = node_input_value.apply(input_node._watermark.apply)
+            # Preprocess the Input Node
+            run_process_mode = run_context.get_run_preprocess_mode()
+            if run_process_mode.value == PreProcessMode.ACTIVE.value:
 
+                input_node_preprocess_mode_run_context = run_context.get_dependency_preprocess_mode(
+                    self, input_node
+                )
+                if input_node_preprocess_mode_run_context.value == PreProcessMode.ACTIVE.value:
+
+                    if input_node.preprocess_mode.value == PreProcessMode.ACTIVE.value:
+
+                        if input_node.has_preprocess():
+                            for func in input_node.node_input_preprocess:
+                                node_input_value = node_input_value.apply(func)
+
+            # Select only necessary columns
             if input_node.selected_columns:
                 node_input_value = node_input_value.select_columns(
                     *input_node.selected_columns
                 )
+
+            # Set dataframe aliases
             alias = input_node.get_alias()
             inputs[alias] = node_input_value.get_df()
             if self.type == "spark_sql":
@@ -245,7 +261,7 @@ class Node:
         pandas_on_spark_use_pandas: bool = False,
         parameters: dict = None,
         cache: dict = None,
-        watermark: dict = None,
+        preprocess: Union[dict, PreProcessMode] = None,
     ):
         if not inputs:
             inputs = {}
@@ -257,7 +273,7 @@ class Node:
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
             parameters=parameters,
             cache_modes=cache,
-            watermark_modes=watermark,
+            dependencies_preprocess_modes=preprocess,
         )
 
         self.create_graph(run_context)

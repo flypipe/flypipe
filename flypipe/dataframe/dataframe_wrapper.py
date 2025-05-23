@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Callable
 
-from flypipe.cache.watermark import Watermark
 from flypipe.schema.types import Type
 from flypipe.utils import dataframe_type, DataFrameType
 
