@@ -88,6 +88,11 @@ class NodeGraph:
                 and transformation.dataframe_type == DataFrameType.PANDAS_ON_SPARK
             ):
                 transformation.type = "pandas"
+            elif (
+                run_context.pyspark_use_sparkleframe
+                and transformation.dataframe_type == DataFrameType.PYSPARK
+            ):
+                transformation.type = DataFrameType.SPARKLEFRAME.value
 
         return graph
 

@@ -29,6 +29,7 @@ class Catalog:
         node,
         inputs=None,
         pandas_on_spark_use_pandas=False,
+        pyspark_use_sparkleframe=False,
         parameters=None,
         cache=None,
         add_node_to_graph=False,
@@ -38,6 +39,7 @@ class Catalog:
             spark=self.spark,
             provided_inputs=inputs,
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+            pyspark_use_sparkleframe=pyspark_use_sparkleframe,
             parameters=parameters,
             cache_modes=cache,
         )

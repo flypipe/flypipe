@@ -34,6 +34,7 @@ class Node:
         "pandas": DataFrameType.PANDAS,
         "pandas_on_spark": DataFrameType.PANDAS_ON_SPARK,
         "spark_sql": DataFrameType.PYSPARK,
+        "sparkleframe": DataFrameType.SPARKLEFRAME,
     }
 
     def __init__(
@@ -220,10 +221,13 @@ class Node:
             run_process_mode = run_context.get_run_preprocess_mode()
             if run_process_mode.value == PreProcessMode.ACTIVE.value:
 
-                input_node_preprocess_mode_run_context = run_context.get_dependency_preprocess_mode(
-                    self, input_node
+                input_node_preprocess_mode_run_context = (
+                    run_context.get_dependency_preprocess_mode(self, input_node)
                 )
-                if input_node_preprocess_mode_run_context.value == PreProcessMode.ACTIVE.value:
+                if (
+                    input_node_preprocess_mode_run_context.value
+                    == PreProcessMode.ACTIVE.value
+                ):
 
                     if input_node.preprocess_mode.value == PreProcessMode.ACTIVE.value:
 
@@ -259,6 +263,7 @@ class Node:
         parallel: bool = None,
         inputs: dict = None,
         pandas_on_spark_use_pandas: bool = False,
+        pyspark_use_sparkleframe: bool = False,
         parameters: dict = None,
         cache: dict = None,
         preprocess: Union[dict, PreProcessMode] = None,
@@ -271,6 +276,7 @@ class Node:
             parallel=parallel,
             provided_inputs=inputs,
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+            pyspark_use_sparkleframe=pyspark_use_sparkleframe,
             parameters=parameters,
             cache_modes=cache,
             dependencies_preprocess_modes=preprocess,
@@ -444,6 +450,7 @@ class Node:
         height=800,
         inputs=None,
         pandas_on_spark_use_pandas=False,
+        pyspark_use_sparkleframe=False,
         parameters=None,
         cache=None,
     ):
@@ -462,6 +469,8 @@ class Node:
             they have been provided
         pandas_on_spark_use_pandas : bool, default False
             If True, convert and runs `pandas_on_spark` as `pandas`
+        pyspark_use_sparkleframe : bool, default False
+            If True, convert and runs `pyspark` nodes as `sparkleframe`
         parameters : dict, default None
             dictionary dict(Node,dict(str,obj)) of parameters to be given to the nodes when executing them.
 
@@ -480,6 +489,7 @@ class Node:
             self,
             inputs=inputs,
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
+            pyspark_use_sparkleframe=pyspark_use_sparkleframe,
             parameters=parameters,
             cache=cache,
             add_node_to_graph=True,

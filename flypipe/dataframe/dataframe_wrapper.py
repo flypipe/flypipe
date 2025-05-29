@@ -30,6 +30,13 @@ class DataFrameWrapper(ABC):
 
             df_instance = PandasDataFrameWrapper
 
+        elif df_type == DataFrameType.SPARKLEFRAME:
+            from flypipe.dataframe.sparkle_dataframe_wrapper import (
+                SparkleDataFrameWrapper,
+            )
+
+            df_instance = SparkleDataFrameWrapper
+
         elif df_type == DataFrameType.PYSPARK:
             from flypipe.dataframe.spark_dataframe_wrapper import SparkDataFrameWrapper
 
