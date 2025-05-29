@@ -35,14 +35,6 @@ jobs:
           docker-compose version
       - name: Setup dependencies
         uses: ./.github/actions/setup-dependencies
-      - name: Run formatter on backend (black)
-        run: make black-check
-      - name: Run formatter on frontend (prettier)
-        run: |
-          cd frontend
-          yarn prettier-check
-      - name: Run linter (ruff)
-        run: make lint
       - name: Run unit tests for scripts (calculate wheel version and changelogs)
         run: pytest scripts/*_test.py
       - name: Calculate new version number
@@ -52,6 +44,14 @@ jobs:
         run: python scripts/generate_changelog.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run formatter on backend (black)
+        run: make black-check
+      - name: Run formatter on frontend (prettier)
+        run: |
+          cd frontend
+          yarn prettier-check
+      - name: Run linter (ruff)
+        run: make lint
       - name: Run unit tests using Spark Session
         run: make coverage USE_SPARK_CONNECT=0
       - name: Run unit tests using Spark Connect Session
