@@ -96,4 +96,5 @@ if __name__ == '__main__':
     to_branch = "HEAD" if not commands else commands[0]
     new_version = calculate_version(to_branch)
     save_version(new_version)
+    print("Version is",'.'.join([str(v) for v in new_version]))
 

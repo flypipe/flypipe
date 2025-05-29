@@ -55,7 +55,7 @@ def save_changelog(issues, version):
     lines = [f'- {issues[issue_id]}\n' for issue_id in issue_ids]
 
     path = os.path.join(pathlib.Path(__file__).parent.parent.resolve(), "changelog.md")
-    prepend_lines_to_file(path, lines, version)
+    return prepend_lines_to_file(path, lines, version)
 
 if __name__ == '__main__':
     import sys
@@ -64,4 +64,6 @@ if __name__ == '__main__':
     issues = generate_changelog(to_branch,)
 
     version = calculate_version(to_branch=to_branch)
-    save_changelog(issues, version)
+    contents = save_changelog(issues, version)
+
+    print("".join(contents))

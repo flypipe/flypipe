@@ -59,6 +59,8 @@ def prepend_lines_to_file(file_path, lines_to_prepend, version):
     lines_to_prepend = [f"\n\n{version}\n\n"] + lines_to_prepend
 
     contents = lines_to_prepend + original_content
-
+    contents = ["Changelog\n=========\n"] + contents
     with open(file_path, 'w') as modified:
-        modified.writelines(["Changelog\n=========\n"] + contents)
+        modified.writelines(contents)
+
+    return contents
