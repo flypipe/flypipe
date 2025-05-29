@@ -36,14 +36,14 @@ jobs:
       - name: Download changelog
         uses: actions/download-artifact@v4
         with:
-          name: changelog.txt
+          name: changelog.md
       - name: Create new branch
         run: |
           git config --global user.email "flypipe@dummy.com"
           git config --global user.name "flypipe"
           git checkout -b "release/${{ env.VERSION_NUMBER }}"
           git add flypipe/version.txt
-          git add changelog.txt
+          git add changelog.md
           git commit -m 'chore: update version file'
           git push origin "release/${{ env.VERSION_NUMBER }}"
       - name: Build frontend
