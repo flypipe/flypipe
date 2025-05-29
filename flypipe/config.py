@@ -17,6 +17,8 @@ class _Config:
         "node_run_max_workers": os.cpu_count(),
         "require_node_description": False,
         "require_schema_description": False,
+        "default_dependencies_preprocess_module": None,
+        "default_dependencies_preprocess_function": None,
     }
     VALID_OPTIONS = set(config_name for config_name in OPTIONS.keys())
     ACTIVE_CONFIGS = []

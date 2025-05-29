@@ -1,0 +1,5 @@
+[run]
+omit=
+    # put your paths here
+    flypipe/tests/*
+    flypipe/examples/*

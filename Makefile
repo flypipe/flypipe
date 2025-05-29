@@ -37,7 +37,7 @@ lint:
 .PHONY: lint
 
 coverage:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) -k '_test.py' --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) -k '_test.py' --cov-config=flypipe/.coverage --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
 .PHONY: coverage
 
 test:
@@ -69,3 +69,20 @@ spark-bash:
 	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml build
 	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" -it spark-master bash
 .PHONY: spark-bash
+
+pr-check:
+	make black
+	make lint
+	make coverage
+.PHONY: pr-check
+
+githooks:
+	chmod +x .github/hooks/prepare-commit-msg
+	git config --local core.hooksPath .github/hooks
+	echo "Custom Git hooks enabled (core.hooksPath set to .githooks)"
+.PHONY: githooks
+
+setup:
+	make githooks
+	make build-image
+.PHONY: setup

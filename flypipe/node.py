@@ -2,13 +2,14 @@ import logging
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List
+from typing import List, Union, Callable
 
 from pyspark.sql import SparkSession
 
 from flypipe.cache.cache import Cache
+from flypipe.dependency.preprocess_mode import PreProcessMode
 from flypipe.config import get_config
-from flypipe.node_input import InputNode
+from flypipe.dependency.node_input import InputNode
 from flypipe.node_run_context import NodeRunContext
 from flypipe.node_type import NodeType
 from flypipe.run_context import RunContext
@@ -192,6 +193,9 @@ class Node:
 
         self.node_graph = NodeGraph(self, run_context=run_context)
 
+    def preprocess(self, *arg: Union[PreProcessMode, Callable]) -> InputNode:
+        return InputNode(self).set_preprocess(*arg)
+
     def select(self, *columns):
         return InputNode(self).select(*columns)
 
@@ -204,10 +208,19 @@ class Node:
             node_input_value = run_context.node_results[input_node.key].as_type(
                 self.dataframe_type
             )
+
+            # Preprocess the Input Node
+            node_input_value = input_node.apply_preprocess(
+                run_context, self, node_input_value
+            )
+
+            # Select only necessary columns
             if input_node.selected_columns:
                 node_input_value = node_input_value.select_columns(
                     *input_node.selected_columns
                 )
+
+            # Set dataframe aliases
             alias = input_node.get_alias()
             inputs[alias] = node_input_value.get_df()
             if self.type == "spark_sql":
@@ -231,6 +244,7 @@ class Node:
         pandas_on_spark_use_pandas: bool = False,
         parameters: dict = None,
         cache: dict = None,
+        preprocess: Union[dict, PreProcessMode] = None,
     ):
         if not inputs:
             inputs = {}
@@ -242,6 +256,7 @@ class Node:
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
             parameters=parameters,
             cache_modes=cache,
+            dependencies_preprocess_modes=preprocess,
         )
 
         self.create_graph(run_context)
