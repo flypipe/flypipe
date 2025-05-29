@@ -37,10 +37,12 @@ jobs:
         uses: ./.github/actions/setup-dependencies
       - name: Run unit tests for scripts (calculate wheel version and changelogs)
         run: pytest scripts/*_test.py
-      - name: Calculate new version number
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Package version number (preview)
         run: |
           python scripts/calculate_version.py
-      - name: Calculate changelog for new version
+      - name: Changelog (preview)
         run: python scripts/generate_changelog.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
