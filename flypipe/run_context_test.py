@@ -61,7 +61,7 @@ class TestRunContext:
         )
 
         assert (
-            run_context.get_dependency_preprocess_mode(t2, t2.input_nodes[0]).value
+            run_context.get_dependency_preprocess_mode(t2, t2.input_nodes[0].node).value
             == PreProcessMode.DISABLE.value
         )
 
@@ -71,6 +71,6 @@ class TestRunContext:
         )
 
         assert (
-            run_context.get_dependency_preprocess_mode(t2, t2.input_nodes[0]).value
+            run_context.get_dependency_preprocess_mode(t2, t2.input_nodes[0].node).value
             == PreProcessMode.ACTIVE.value
         )
