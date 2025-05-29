@@ -13,6 +13,6 @@ if [[ "$COMMIT_SOURCE" != "merge" && "$COMMIT_SOURCE" != "squash" ]]; then
     COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
 
     # Prepend branch name
-    echo "[$BRANCH_NAME] $COMMIT_MSG" > "$COMMIT_MSG_FILE"
+    echo "#$BRANCH_NAME $COMMIT_MSG" > "$COMMIT_MSG_FILE"
   fi
 fi
