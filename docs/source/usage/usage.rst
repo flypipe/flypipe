@@ -8,6 +8,7 @@ Tutorials
    Node Parameters <../notebooks/tutorial/node-parameters>
    Node Function <./node-function>
    Cache and Persist Data <../notebooks/how-to/cache>
+   Dependencies Pre-processing <../notebooks/how-to/preprocess>
    Relationships <./relationships>
    Data Sources <./data-sources>
    Visualisation/Catalog <./catalog>
