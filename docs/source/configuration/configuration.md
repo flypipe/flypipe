@@ -60,16 +60,16 @@ FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE=my_project.utils
 FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_FUNCTION=global_preprocess
 ```
 
-:type: integer
-:default: `str`
+:type: string
+:default: `None`
 
 
 **FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_FUNCTION**
 
 See `FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE` description above 
 
-:type: integer
-:default: `str`
+:type: string
+:default: `None`
 
 
 ## Catalog
