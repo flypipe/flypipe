@@ -43,6 +43,8 @@ jobs:
           yarn prettier-check
       - name: Run linter (ruff)
         run: make lint
+      - name: Run unit tests for scripts (calculate wheel version and changelogs)
+        run: pytest scripts/*_test.py
       - name: Run unit tests using Spark Session
         run: make coverage USE_SPARK_CONNECT=0
       - name: Run unit tests using Spark Connect Session

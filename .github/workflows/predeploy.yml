@@ -52,8 +52,8 @@ jobs:
       - name: Upload changelog file
         uses: actions/upload-artifact@v4
         with:
-          name: changelog.txt
-          path: ./changelog.txt
+          name: changelog.md
+          path: ./changelog.md
       - name: Build frontend
         run: |
           cd frontend
