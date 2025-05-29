@@ -7,6 +7,7 @@ import pyspark.sql.dataframe as sql
 import pyspark.sql.connect.dataframe as sql_connect
 from pandas.testing import assert_frame_equal
 
+from sparkleframe.base.dataframe import DataFrame as SparkleFrameDataFrame
 from flypipe.exceptions import (
     DataframeDifferentDataError,
     DataframeSchemasDoNotMatchError,
@@ -22,6 +23,7 @@ class DataFrameType(Enum):
     PANDAS = "pandas"
     PANDAS_ON_SPARK = "pandas_on_spark"
     PYSPARK = "pyspark"
+    SPARKLEFRAME = "sparkleframe"
 
 
 def assert_schemas_are_equals(df1, df2) -> None:
@@ -61,6 +63,8 @@ def assert_dataframes_equals(df1, df2) -> None:
 def dataframe_type(df) -> DataFrameType:
     if isinstance(df, pd.DataFrame):
         return DataFrameType.PANDAS
+    if isinstance(df, SparkleFrameDataFrame):
+        return DataFrameType.SPARKLEFRAME
     if isinstance(df, ps.DataFrame):
         return DataFrameType.PANDAS_ON_SPARK
     if isinstance(df, sql.DataFrame) or isinstance(df, sql_connect.DataFrame):
