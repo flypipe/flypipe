@@ -16,8 +16,8 @@ def get_release_branches():
 
 def get_commit_list(from_branch=None, to_branch=None):
     to_branch=to_branch or "HEAD"
-    if from_branch:
-        print(f'Check diff between {from_branch} and {to_branch}')
+    # if from_branch:
+    #     print(f'Check diff between {from_branch} and {to_branch}')
 
     from_branch = f"{from_branch}.." if from_branch else ""
     git_cmd = f"git rev-list {from_branch}{to_branch} --no-merges"

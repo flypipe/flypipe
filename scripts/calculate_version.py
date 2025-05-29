@@ -29,13 +29,13 @@ def get_changes(re_commit_type, commit_message):
     is_breaking_change, is_feature_change = False, False
     commit_type_match = re.search(re_commit_type, commit_message)
     if commit_type_match:
-        print(' *** commit contains a type')
+        # print(' *** commit contains a type')
         commit_type_str = commit_type_match.group(1)
         if commit_type_str[-1] == '!':
-            print(' *** detected breaking change')
+            # print(' *** detected breaking change')
             is_breaking_change = True
         elif commit_type_str == "feat":
-            print(' *** detected feature')
+            # print(' *** detected feature')
             is_feature_change = True
 
     return is_breaking_change, is_feature_change
@@ -47,7 +47,7 @@ def calculate_version(to_branch: str = None, re_commit_type: str = None) -> List
 
     latest_version = [0, 0, 0]
     release_branches = get_release_branches()
-    print(f'Check diff for {to_branch}')
+    # print(f'Check diff for {to_branch}')
     if not release_branches:
         # Unable to find a previous release
         commit_list = get_commit_list(to_branch=to_branch)
@@ -62,26 +62,26 @@ def calculate_version(to_branch: str = None, re_commit_type: str = None) -> List
 
     is_breaking_change = False
     is_feature_change = False
-    print('*** Start checking through list of commits ***')
+    # print('*** Start checking through list of commits ***')
     for commit_id in commit_list:
         commit_message = get_commit_message(commit_id)
-        print(f'Checking msg {commit_message} (commit id {commit_id})')
+        # print(f'Checking msg {commit_message} (commit id {commit_id})')
         commit_message_summary = commit_message.split("\n", maxsplit=1)[0]
-        print(f'Check commit "{commit_message_summary}"')
+        # print(f'Check commit "{commit_message_summary}"')
         is_breaking_change, is_feature_change = get_changes(re_commit_type, commit_message_summary)
-    print('*** Finished checking through list of commits ***')
+    # print('*** Finished checking through list of commits ***')
 
     if is_breaking_change:
-        print('Conclusion- breaking change, incrementing major version')
+        # print('Conclusion- breaking change, incrementing major version')
         new_version[0] += 1
         new_version[1] = 0
         new_version[2] = 0
     elif is_feature_change:
-        print('Conclusion- backwards compatible feature change, incrementing minor version')
+        # print('Conclusion- backwards compatible feature change, incrementing minor version')
         new_version[1] += 1
         new_version[2] = 0
     else:
-        print('Conclusion- minor change, incrementing patch version')
+        # print('Conclusion- minor change, incrementing patch version')
         new_version[2] += 1
 
     return new_version

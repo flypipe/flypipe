@@ -29,15 +29,7 @@ class TestCalculateVersion:
 
     def test_release_branches(self):
         for r in get_release_branches():
-            print(r, re.compile(r'^origin/release/\d+\.\d+\.\d+$').match(r).group(0))
-
             assert re.compile(r'^origin/release/\d+\.\d+\.\d+$').match(r).group(0) == r
-
-            def test_release_branches(self):
-                for r in get_release_branches():
-                    print(r, re.compile(r'^origin/release/\d+\.\d+\.\d+$').match(r).group(0))
-
-                    assert re.compile(r'^origin/release/\d+\.\d+\.\d+$').match(r).group(0) == r
 
     def test_get_commit_list_of_existing_old_branch_returns_non_empty_list(self):
         first_release_branch = min(get_release_branches())

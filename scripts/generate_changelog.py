@@ -37,12 +37,12 @@ def generate_changelog(to_branch: str=None):
         commit_message_summary = commit_message.split("\n", maxsplit=1)[0]
         re_match = re.search(RE_GITHUB_ISSUE, commit_message_summary)
         if re_match:
-            print(f'Found github issue {re_match.group(0)} in commit msg summary {commit_message_summary}')
+            # print(f'Found github issue {re_match.group(0)} in commit msg summary {commit_message_summary}')
             issue_id = re_match.group(0)[1:]
             url = f'{GITHUB_URL}/issues/{issue_id}'
             issue = github_connection.get(url, headers={'Authorization': f'Bearer {GITHUB_TOKEN}'}).json()
             if 'title' not in issue:
-                print(f'Unable to find title for issue {issue_id}')
+                # print(f'Unable to find title for issue {issue_id}')
                 continue
             issues[issue_id] = f'<a href="https://github.com/flypipe/flypipe/issues/{issue_id}" target="_blank" rel="noopener noreferrer">{issue_id} {issue["title"]}</a>'
 
