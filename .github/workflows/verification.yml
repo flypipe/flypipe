@@ -44,6 +44,8 @@ jobs:
       - name: Run linter (ruff)
         run: make lint
       - name: Run unit tests for scripts (calculate wheel version and changelogs)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pytest scripts/*_test.py
       - name: Run unit tests using Spark Session
         run: make coverage USE_SPARK_CONNECT=0
