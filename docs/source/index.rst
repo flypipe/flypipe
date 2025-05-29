@@ -20,6 +20,7 @@ Welcome to FlyPipe!
    License <license/license>
    Questions and Suggestions <questions-suggentions/questions-suggentions>
    API <modules/modules>
+   Changelog <changelog/changelog>
 
 
 Indices and tables
