@@ -220,10 +220,13 @@ class Node:
             run_process_mode = run_context.get_run_preprocess_mode()
             if run_process_mode.value == PreProcessMode.ACTIVE.value:
 
-                input_node_preprocess_mode_run_context = run_context.get_dependency_preprocess_mode(
-                    self, input_node
+                input_node_preprocess_mode_run_context = (
+                    run_context.get_dependency_preprocess_mode(self, input_node)
                 )
-                if input_node_preprocess_mode_run_context.value == PreProcessMode.ACTIVE.value:
+                if (
+                    input_node_preprocess_mode_run_context.value
+                    == PreProcessMode.ACTIVE.value
+                ):
 
                     if input_node.preprocess_mode.value == PreProcessMode.ACTIVE.value:
 
