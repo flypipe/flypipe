@@ -43,7 +43,10 @@ class DataFrameWrapper(ABC):
             df_instance = SparkDataFrameWrapper
 
         elif df_type == DataFrameType.PANDAS_ON_SPARK:
-            import pyspark.pandas as ps
+            try:  # when activating sparkleframe, it does not implement pyspark.pandas
+                import pyspark.pandas as ps
+            except ModuleNotFoundError:
+                import pandas as ps
 
             ps.set_option("compute.ops_on_diff_frames", True)
             from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import (
