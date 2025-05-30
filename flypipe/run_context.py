@@ -84,18 +84,17 @@ class RunContext:
         # By default all PreProcesses ar active
         return PreProcessMode.ACTIVE
 
-    def get_dependency_preprocess_mode(self, parent_node, dependency_node):
+    def get_dependency_preprocess_mode(
+        self, parent_node: "Node", dependency_node: "Node"  # noqa: F821
+    ):
         """
         Returns the PreProcessMode for a specific dependency (dependency_node) of a node (parent_node).
         """
         if isinstance(self.dependencies_preprocess_modes, dict):
             if parent_node in self.dependencies_preprocess_modes:
-                if (
-                    dependency_node.node
-                    in self.dependencies_preprocess_modes[parent_node]
-                ):
+                if dependency_node in self.dependencies_preprocess_modes[parent_node]:
                     return self.dependencies_preprocess_modes[parent_node][
-                        dependency_node.node
+                        dependency_node
                     ]
 
         # By default, it is active

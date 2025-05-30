@@ -1,7 +1,6 @@
 import logging
 import re
 import sys
-from argparse import ArgumentError
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Union, Callable
 
@@ -196,13 +195,7 @@ class Node:
         self.node_graph = NodeGraph(self, run_context=run_context)
 
     def preprocess(self, *arg: Union[PreProcessMode, Callable]) -> InputNode:
-
-        if not arg:
-            raise ArgumentError(None, "Preprocess function must not be empty")
-
-        if isinstance(arg[0], PreProcessMode):
-            return InputNode(self).set_preprocess_mode(arg[0])
-        return InputNode(self).preprocess(*arg)
+        return InputNode(self).set_preprocess(*arg)
 
     def select(self, *columns):
         return InputNode(self).select(*columns)
@@ -218,22 +211,9 @@ class Node:
             )
 
             # Preprocess the Input Node
-            run_process_mode = run_context.get_run_preprocess_mode()
-            if run_process_mode.value == PreProcessMode.ACTIVE.value:
-
-                input_node_preprocess_mode_run_context = (
-                    run_context.get_dependency_preprocess_mode(self, input_node)
-                )
-                if (
-                    input_node_preprocess_mode_run_context.value
-                    == PreProcessMode.ACTIVE.value
-                ):
-
-                    if input_node.preprocess_mode.value == PreProcessMode.ACTIVE.value:
-
-                        if input_node.has_preprocess():
-                            for func in input_node.node_input_preprocess:
-                                node_input_value = node_input_value.apply(func)
+            node_input_value = input_node.apply_preprocess(
+                run_context, self, node_input_value
+            )
 
             # Select only necessary columns
             if input_node.selected_columns:
