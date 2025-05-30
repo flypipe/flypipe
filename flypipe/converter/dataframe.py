@@ -1,8 +1,10 @@
 # ruff: noqa: E731
 from pyspark.sql.types import StructType, StructField, StringType
 
+from sparkleframe.base.dataframe import DataFrame as SparkleDataFrame
 from flypipe.utils import DataFrameType, dataframe_type
 from logging import warning
+import pyarrow as pa
 
 
 class DataFrameConverter:
@@ -49,25 +51,48 @@ class DataFrameConverter:
         pandas_to_pandas_on_spark = lambda df: self._convert_pandas_to_spark(
             df
         ).pandas_api()
+        pandas_to_sparkleframe = lambda df: SparkleDataFrame(
+            pa.Table.from_pandas(df, preserve_index=False)
+        )
 
         pandas_on_spark_to_pandas = lambda df: df.to_pandas()
         pandas_on_spark_to_spark = lambda df: df.to_spark()
+        pandas_on_spark_to_sparkleframe = lambda df: SparkleDataFrame(
+            pa.Table.from_pandas(df.to_pandas(), preserve_index=False)
+        )
 
         spark_to_pandas = lambda df: df.toPandas()
         spark_to_pandas_on_spark = lambda df: df.pandas_api()
+        spark_to_sparkleframe = lambda df: SparkleDataFrame(
+            pa.Table.from_batches(df._collect_as_arrow())
+        )
+
+        sparkleframe_to_pandas = lambda df: df.toPandas()
+        sparkleframe_to_pandas_on_spark = lambda df: self._convert_pandas_to_spark(
+            df.toPandas()
+        ).pandas_api()
+        sparkleframe_to_spark = lambda df: self._convert_pandas_to_spark(df.toPandas())
 
         return {
             DataFrameType.PANDAS: {
                 DataFrameType.PYSPARK: pandas_to_spark,
                 DataFrameType.PANDAS_ON_SPARK: pandas_to_pandas_on_spark,
+                DataFrameType.SPARKLEFRAME: pandas_to_sparkleframe,
             },
             DataFrameType.PANDAS_ON_SPARK: {
                 DataFrameType.PANDAS: pandas_on_spark_to_pandas,
                 DataFrameType.PYSPARK: pandas_on_spark_to_spark,
+                DataFrameType.SPARKLEFRAME: pandas_on_spark_to_sparkleframe,
             },
             DataFrameType.PYSPARK: {
                 DataFrameType.PANDAS: spark_to_pandas,
                 DataFrameType.PANDAS_ON_SPARK: spark_to_pandas_on_spark,
+                DataFrameType.SPARKLEFRAME: spark_to_sparkleframe,
+            },
+            DataFrameType.SPARKLEFRAME: {
+                DataFrameType.PANDAS: sparkleframe_to_pandas,
+                DataFrameType.PANDAS_ON_SPARK: sparkleframe_to_pandas_on_spark,
+                DataFrameType.PYSPARK: sparkleframe_to_spark,
             },
         }[from_type][to_type]
 

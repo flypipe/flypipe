@@ -3,7 +3,12 @@ from dataclasses import dataclass, field
 from typing import Mapping, Union
 
 from pandas import DataFrame as PandasDataFrame
-from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
+
+try:  # when activating sparkleframe, it does not implement pyspark.pandas
+    from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
+except ModuleNotFoundError:
+    from pandas import DataFrame as PandasApiDataFrame
+
 from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
 
@@ -24,6 +29,7 @@ class RunContext:
     parallel: bool = None
     provided_inputs: dict = None
     pandas_on_spark_use_pandas: bool = False
+    pyspark_use_sparkleframe: bool = False
     parameters: dict = None
     cache_modes: dict = None
     dependencies_preprocess_modes: Union[dict, PreProcessMode] = None
@@ -41,6 +47,11 @@ class RunContext:
             False
             if self.pandas_on_spark_use_pandas is None
             else self.pandas_on_spark_use_pandas
+        )
+        self.pyspark_use_sparkleframe = (
+            False
+            if self.pyspark_use_sparkleframe is None
+            else self.pyspark_use_sparkleframe
         )
         self.parameters = self.parameters or {}
         self.cache_modes = self.cache_modes or {}
