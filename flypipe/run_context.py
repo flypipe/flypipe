@@ -12,7 +12,7 @@ except ModuleNotFoundError:
 from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
 
-from flypipe.dependency.preprocess_mode import PreProcessMode
+from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.config import get_config, RunMode
 from flypipe.node_result import NodeResult
 from flypipe.schema import Schema
@@ -32,7 +32,7 @@ class RunContext:
     pyspark_use_sparkleframe: bool = False
     parameters: dict = None
     cache_modes: dict = None
-    dependencies_preprocess_modes: Union[dict, PreProcessMode] = None
+    dependencies_preprocess_modes: Union[dict, PreprocessMode] = None
     node_results: Mapping[str, NodeResult] = field(init=False, default=None)
 
     def __post_init__(self):
@@ -77,23 +77,23 @@ class RunContext:
     def skipped_node_keys(self):
         return [node.key for node in self.provided_inputs.keys()]
 
-    def get_run_preprocess_mode(self) -> PreProcessMode:
+    def get_run_preprocess_mode(self) -> PreprocessMode:
         """
-        Returns the PreProcessMode for the whole run
+        Returns the PreprocessMode for the whole run
         """
 
-        # it is a PreProcessMode to apply to all dependencies
-        if isinstance(self.dependencies_preprocess_modes, PreProcessMode):
+        # it is a PreprocessMode to apply to all dependencies
+        if isinstance(self.dependencies_preprocess_modes, PreprocessMode):
             return self.dependencies_preprocess_modes
 
-        # By default all PreProcesses ar active
-        return PreProcessMode.ACTIVE
+        # By default all Preprocesses ar active
+        return PreprocessMode.ACTIVE
 
     def get_dependency_preprocess_mode(
         self, parent_node: "Node", dependency_node: "Node"  # noqa: F821
     ):
         """
-        Returns the PreProcessMode for a specific dependency (dependency_node) of a node (parent_node).
+        Returns the PreprocessMode for a specific dependency (dependency_node) of a node (parent_node).
         """
         if isinstance(self.dependencies_preprocess_modes, dict):
             if parent_node in self.dependencies_preprocess_modes:
@@ -103,4 +103,4 @@ class RunContext:
                     ]
 
         # By default, it is active
-        return PreProcessMode.ACTIVE
+        return PreprocessMode.ACTIVE

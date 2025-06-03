@@ -1,24 +1,22 @@
 import importlib
-from argparse import ArgumentTypeError
-from typing import Callable, List
-from argparse import ArgumentError
+from typing import Callable, List, Union
 
 from flypipe.config import get_config
-from flypipe.dependency import PreProcessMode
+from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.run_context import RunContext
 
 
-class PreProcess:
-    def __init__(self, mode: PreProcessMode = None, preprocess: [Callable] = None):
+class Preprocess:
+    def __init__(self, mode: PreprocessMode = None, preprocess: [Callable] = None):
         self._preprocess = preprocess or []
-        self.preprocess_mode = mode or PreProcessMode.ACTIVE
+        self.preprocess_mode = mode or PreprocessMode.ACTIVE
 
-    def set(self, *function: Callable):
+    def set(self, *function: Union[PreprocessMode, Callable]):
 
         if not function:
-            raise ArgumentError(None, "Preprocess function must not be empty")
+            raise ValueError("Preprocess function must not be empty")
 
-        if isinstance(function[0], PreProcessMode):
+        if isinstance(function[0], PreprocessMode):
             self.preprocess_mode = function[0]
 
         else:
@@ -28,14 +26,13 @@ class PreProcess:
 
             for func in self._preprocess:
                 if not isinstance(func, Callable):
-                    raise ArgumentTypeError(
+                    raise ValueError(
                         f"Only callable function are allowed for preprocessing, type {type(func)} not allowed, {self._preprocess}"
                     )
         return self
 
     def has_preprocess(self):
-        preprocesses = self.preprocess_functions
-        return True if preprocesses is not None and len(preprocesses) > 0 else False
+        return bool(self.preprocess_functions)
 
     @property
     def preprocess_functions(self) -> List[Callable]:
@@ -78,17 +75,17 @@ class PreProcess:
         df,
     ):
         run_process_mode = run_context.get_run_preprocess_mode()
-        if run_process_mode.value == PreProcessMode.ACTIVE.value:
+        if run_process_mode.value == PreprocessMode.ACTIVE.value:
 
             input_node_preprocess_mode_run_context = (
                 run_context.get_dependency_preprocess_mode(parent_node, dependency_node)
             )
             if (
                 input_node_preprocess_mode_run_context.value
-                == PreProcessMode.ACTIVE.value
+                == PreprocessMode.ACTIVE.value
             ):
 
-                if self.preprocess_mode.value == PreProcessMode.ACTIVE.value:
+                if self.preprocess_mode.value == PreprocessMode.ACTIVE.value:
 
                     if self.has_preprocess():
                         for func in self.preprocess_functions:
@@ -97,4 +94,4 @@ class PreProcess:
         return df
 
     def copy(self):
-        return PreProcess(self.preprocess_mode, self._preprocess)
+        return Preprocess(self.preprocess_mode, self._preprocess)
