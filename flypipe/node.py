@@ -7,7 +7,7 @@ from typing import List, Union, Callable
 from pyspark.sql import SparkSession
 
 from flypipe.cache.cache import Cache
-from flypipe.dependency.preprocess_mode import PreProcessMode
+from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.config import get_config
 from flypipe.dependency.node_input import InputNode
 from flypipe.node_run_context import NodeRunContext
@@ -193,7 +193,7 @@ class Node:
 
         self.node_graph = NodeGraph(self, run_context=run_context)
 
-    def preprocess(self, *arg: Union[PreProcessMode, Callable]) -> InputNode:
+    def preprocess(self, *arg: Union[PreprocessMode, Callable]) -> InputNode:
         return InputNode(self).set_preprocess(*arg)
 
     def select(self, *columns):
@@ -244,7 +244,7 @@ class Node:
         pandas_on_spark_use_pandas: bool = False,
         parameters: dict = None,
         cache: dict = None,
-        preprocess: Union[dict, PreProcessMode] = None,
+        preprocess: Union[dict, PreprocessMode] = None,
     ):
         if not inputs:
             inputs = {}

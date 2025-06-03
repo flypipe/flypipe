@@ -1,6 +1,7 @@
-from typing import Callable
+from typing import Callable, Union
 
-from flypipe.dependency.preprocess import PreProcess
+from flypipe.dependency import PreprocessMode
+from flypipe.dependency.preprocess import Preprocess
 from flypipe.run_context import RunContext
 
 
@@ -17,7 +18,7 @@ class InputNode:
         self.node = node
         self._selected_columns = None
         self._alias = None
-        self._preprocess = PreProcess()
+        self._preprocess = Preprocess()
 
     @property
     def __name__(self):
@@ -27,7 +28,7 @@ class InputNode:
     def key(self):
         return self.node.key
 
-    def set_preprocess(self, *function: Callable):
+    def set_preprocess(self, *function: Union[PreprocessMode, Callable]):
         self._preprocess.set(*function)
         return self
 
