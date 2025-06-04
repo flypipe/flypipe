@@ -204,33 +204,9 @@ class Node:
 
     def get_node_inputs(self, run_context: RunContext):
         inputs = {}
+        is_sql = (self.type == 'spark_sql')
         for input_node in self.input_nodes:
-            node_input_value = run_context.node_results[input_node.key].as_type(
-                self.dataframe_type
-            )
-
-            # Preprocess the Input Node
-            node_input_value = input_node.apply_preprocess(
-                run_context, self, node_input_value
-            )
-
-            # Select only necessary columns
-            if input_node.selected_columns:
-                node_input_value = node_input_value.select_columns(
-                    *input_node.selected_columns
-                )
-
-            # Set dataframe aliases
-            alias = input_node.get_alias()
-            inputs[alias] = node_input_value.get_df()
-            if self.type == "spark_sql":
-                # SQL doesn't work with dataframes, so we need to:
-                # - save all incoming dataframes as unique temporary tables
-                # - pass the names of these tables instead of the dataframes
-                table_name = f"{self.__name__}__{alias}"
-                inputs[alias].createOrReplaceTempView(table_name)
-                inputs[alias] = table_name
-
+            inputs[input_node.get_alias()] = input_node.get_value(run_context, self.dataframe_type, is_sql)
         return inputs
 
     def __call__(self, *args):
