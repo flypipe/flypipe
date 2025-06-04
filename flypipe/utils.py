@@ -2,9 +2,22 @@ import json
 from enum import Enum
 
 import pandas as pd
-import pyspark.pandas as ps
+
+try:
+    # if using sparkleframe/sqlframe activate, it will fail because they do not implement pyspark.pandas
+    import pyspark.pandas as ps
+except ModuleNotFoundError:
+    import pandas as ps
+
+
 import pyspark.sql.dataframe as sql
-import pyspark.sql.connect.dataframe as sql_connect
+
+try:
+    # if using sparkleframe/sqlframe activate, it will fail because they do not implement pyspark.sql.connect
+    import pyspark.sql.connect.dataframe as sql_connect
+except ModuleNotFoundError:
+    import pyspark.sql.dataframe as sql_connect
+
 from pandas.testing import assert_frame_equal
 
 from flypipe.exceptions import (

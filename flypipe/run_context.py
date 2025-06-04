@@ -3,7 +3,14 @@ from dataclasses import dataclass, field
 from typing import Mapping, Union
 
 from pandas import DataFrame as PandasDataFrame
-from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
+
+try:
+    # if using sparkleframe/sqlframe activate, it will fail because they do not implement pyspark.pandas
+    from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
+except ModuleNotFoundError:
+    from pandas import DataFrame as PandasApiDataFrame
+
+
 from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
 
