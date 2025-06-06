@@ -4,11 +4,18 @@ from typing import Mapping, Union
 
 from pandas import DataFrame as PandasDataFrame
 
-try:
+from flypipe.utils import sparkleframe_sqlframe_are_active
+
+if sparkleframe_sqlframe_are_active():
+    from pandas import DataFrame as PandasApiDataFrame
+    from pyspark.sql.dataframe import DataFrame as PySparkConnectDataFrame
+else:
+
     # if using sparkleframe/sqlframe activate, it will fail because they do not implement pyspark.pandas
     from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
-except ModuleNotFoundError:
-    from pandas import DataFrame as PandasApiDataFrame
+
+    # if using sparkleframe/sqlframe activate, it will fail because they do not implement pyspark.sql.connect
+    from pyspark.sql.connect.dataframe import DataFrame as PySparkConnectDataFrame
 
 
 from pyspark.sql import SparkSession
@@ -64,7 +71,12 @@ class RunContext:
     def update_node_results(
         self,
         node_key: str,
-        df: Union[PandasDataFrame, PySparkDataFrame, PandasApiDataFrame],
+        df: Union[
+            PandasDataFrame,
+            PySparkDataFrame,
+            PandasApiDataFrame,
+            PySparkConnectDataFrame,
+        ],
         schema: Schema = None,
     ):
         self.node_results[node_key] = NodeResult(self.spark, df, schema=schema)

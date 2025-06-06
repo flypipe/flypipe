@@ -1,23 +1,5 @@
 import json
 from enum import Enum
-
-import pandas as pd
-
-try:
-    # if using sparkleframe/sqlframe activate, it will fail because they do not implement pyspark.pandas
-    import pyspark.pandas as ps
-except ModuleNotFoundError:
-    import pandas as ps
-
-
-import pyspark.sql.dataframe as sql
-
-try:
-    # if using sparkleframe/sqlframe activate, it will fail because they do not implement pyspark.sql.connect
-    import pyspark.sql.connect.dataframe as sql_connect
-except ModuleNotFoundError:
-    import pyspark.sql.dataframe as sql_connect
-
 from pandas.testing import assert_frame_equal
 
 from flypipe.exceptions import (
@@ -25,6 +7,32 @@ from flypipe.exceptions import (
     DataframeSchemasDoNotMatchError,
     DataframeTypeNotSupportedError,
 )
+
+import pandas as pd
+import pyspark.sql.dataframe as sql
+
+
+def sparkleframe_sqlframe_are_active():
+    from pyspark.sql import SparkSession
+
+    if SparkSession.__module__ in [
+        "sparkleframe.polarsdf.session",
+        "sqlframe.duckdb.session",
+    ]:
+        return True
+
+    return False
+
+
+if sparkleframe_sqlframe_are_active():
+    # if using sparkleframe/sqlframe activate, it will fail because they do not implement pyspark.pandas
+    import pandas as ps
+
+    # if using sparkleframe/sqlframe activate, it will fail because they do not implement pyspark.sql.connect
+    import pyspark.sql.connect.dataframe as sql_connect
+else:
+    import pyspark.pandas as ps
+    import pyspark.sql.dataframe as sql_connect
 
 
 class DataFrameType(Enum):
