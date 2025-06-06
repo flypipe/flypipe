@@ -1,12 +1,9 @@
-from __future__ import annotations
-from typing import Callable, Union, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from flypipe.node import Node
+from typing import Callable, Union
 
 from flypipe.dependency import PreprocessMode
 from flypipe.dependency.preprocess import Preprocess
 from flypipe.run_context import RunContext
+from flypipe.utils import DataFrameType
 
 
 class InputNode:
@@ -32,14 +29,14 @@ class InputNode:
     def key(self):
         return self.node.key
 
-    def get_value(self, run_context: RunContext, parent_node: Node):
+    def get_value(self, run_context: RunContext, dataframe_type: DataFrameType, is_sql: bool = False):
         """
         Retrieve the value of this node input which will be passed to the node that specified this.
         """
         try:
             # We can assume that the computation of the raw node this node input comes from is already done and stored
             # in the run context because it's an ancestor node in the run graph.
-            node_input_value = run_context.node_results[self.key].as_type(parent_node.dataframe_type)
+            node_input_value = run_context.node_results[self.key].as_type(dataframe_type)
         except KeyError:
             raise RuntimeError(
                 f'Unexpected state- unable to find computed result for node {self.key} when used as an input, please '
@@ -47,7 +44,7 @@ class InputNode:
 
         # Preprocess the Input Node
         node_input_value = self.apply_preprocess(
-            run_context, parent_node, node_input_value
+            run_context, self, node_input_value
         )
 
         # Select only necessary columns
@@ -56,13 +53,13 @@ class InputNode:
                 *self.selected_columns
             )
 
-        if parent_node.type == "spark_sql":
+        if is_sql:
             # SQL doesn't work with dataframes, so we need to:
             # - save all incoming dataframes as unique temporary tables
             # - pass the names of these tables instead of the dataframes
             alias = self.get_alias()
-            table_name = f"{parent_node.__name__}__{alias}"
-            node_input_value.get_df().createOrReplaceTempView(table_name)
+            table_name = f"{self.__name__}__{alias}"
+            node_input_value.createOrReplaceTempView(table_name)
             return table_name
 
         return node_input_value.get_df()
