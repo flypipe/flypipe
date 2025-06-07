@@ -32,7 +32,9 @@ class TestRunContext:
         )
 
     def test_get_dependency_preprocess_mode_locally_disabled(self):
-        run_context = RunContext(dependencies_preprocess_modes={t2: {t1: PreprocessMode.DISABLE}})
+        run_context = RunContext(
+            dependencies_preprocess_modes={t2: {t1: PreprocessMode.DISABLE}}
+        )
 
         assert (
             run_context.get_dependency_preprocess_mode(t2, t1) == PreprocessMode.DISABLE

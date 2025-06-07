@@ -204,9 +204,11 @@ class Node:
 
     def get_node_inputs(self, run_context: RunContext):
         inputs = {}
-        is_sql = (self.type == 'spark_sql')
+        is_sql = self.type == "spark_sql"
         for input_node in self.input_nodes:
-            inputs[input_node.get_alias()] = input_node.get_value(run_context, self, is_sql)
+            inputs[input_node.get_alias()] = input_node.get_value(
+                run_context, self, is_sql
+            )
         return inputs
 
     def __call__(self, *args):

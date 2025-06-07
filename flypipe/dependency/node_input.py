@@ -29,7 +29,9 @@ class InputNode:
     def key(self):
         return self.node.key
 
-    def get_value(self, run_context: RunContext, dependent_node: 'Node', is_sql: bool = False):
+    def get_value(
+        self, run_context: RunContext, dependent_node: "Node", is_sql: bool = False
+    ):
         """
         Retrieve the value of this node input which will be passed to a dependent node.
         """
@@ -37,11 +39,14 @@ class InputNode:
         try:
             # We can assume that the computation of the raw node this node input comes from is already done and stored
             # in the run context because it's an ancestor node in the run graph.
-            node_input_value = run_context.node_results[self.key].as_type(dataframe_type)
+            node_input_value = run_context.node_results[self.key].as_type(
+                dataframe_type
+            )
         except KeyError:
             raise RuntimeError(
-                f'Unexpected state- unable to find computed result for node {self.key} when used as an input, please '
-                f'raise this as a bug in https://github.com/flypipe/flypipe')
+                f"Unexpected state- unable to find computed result for node {self.key} when used as an input, please "
+                f"raise this as a bug in https://github.com/flypipe/flypipe"
+            )
 
         # Preprocess the Input Node
         node_input_value = self.apply_preprocess(
@@ -50,9 +55,7 @@ class InputNode:
 
         # Select only necessary columns
         if self.selected_columns:
-            node_input_value = node_input_value.select_columns(
-                *self.selected_columns
-            )
+            node_input_value = node_input_value.select_columns(*self.selected_columns)
 
         if is_sql:
             # SQL doesn't work with dataframes, so we need to:
@@ -70,7 +73,7 @@ class InputNode:
         return self
 
     def apply_preprocess(
-        self, run_context: RunContext, dependent_node: 'Node', df  # noqa: F821
+        self, run_context: RunContext, dependent_node: "Node", df  # noqa: F821
     ):
         return self._preprocess.apply(run_context, dependent_node, self.node, df)
 
