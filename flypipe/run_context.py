@@ -66,28 +66,21 @@ class RunContext:
     def skipped_node_keys(self):
         return [node.key for node in self.provided_inputs.keys()]
 
-    def get_run_preprocess_mode(self) -> PreprocessMode:
-        """
-        Returns the PreprocessMode for the whole run
-        """
-
-        # it is a PreprocessMode to apply to all dependencies
-        if isinstance(self.dependencies_preprocess_modes, PreprocessMode):
-            return self.dependencies_preprocess_modes
-
-        # By default all Preprocesses ar active
-        return PreprocessMode.ACTIVE
-
     def get_dependency_preprocess_mode(
-        self, parent_node: "Node", dependency_node: "Node"  # noqa: F821
+        self, dependent_node: "Node", dependency_node: "Node"  # noqa: F821
     ):
         """
         Returns the PreprocessMode for a specific dependency (dependency_node) of a node (parent_node).
         """
+        # Global PreprocessMode set for all dependency nodes
+        if isinstance(self.dependencies_preprocess_modes, PreprocessMode):
+            return self.dependencies_preprocess_modes
+
+        # Specific PreprocessMode set for a specific dependency node
         if isinstance(self.dependencies_preprocess_modes, dict):
-            if parent_node in self.dependencies_preprocess_modes:
-                if dependency_node in self.dependencies_preprocess_modes[parent_node]:
-                    return self.dependencies_preprocess_modes[parent_node][
+            if dependent_node in self.dependencies_preprocess_modes:
+                if dependency_node in self.dependencies_preprocess_modes[dependent_node]:
+                    return self.dependencies_preprocess_modes[dependent_node][
                         dependency_node
                     ]
 

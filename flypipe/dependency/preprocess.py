@@ -67,30 +67,30 @@ class Preprocess:
                 )
                 print(error_msg)
 
+    def should_apply_preprocess(self, run_context: RunContext, dependent_node: 'Node', dependency_node: 'Node') -> bool:
+        run_context_preprocess_mode = (
+            run_context.get_dependency_preprocess_mode(dependent_node, dependency_node)
+        )
+        if run_context_preprocess_mode == PreprocessMode.DISABLE:
+            return False
+
+        if self.preprocess_mode == PreprocessMode.DISABLE:
+            return False
+
+        return True
+
     def apply(
         self,
         run_context: RunContext,
-        parent_node: "Node",  # noqa: F821
+        dependent_node: "Node",  # noqa: F821
         dependency_node: "Node",  # noqa: F821
         df,
     ):
-        run_process_mode = run_context.get_run_preprocess_mode()
-        if run_process_mode.value == PreprocessMode.ACTIVE.value:
-
-            input_node_preprocess_mode_run_context = (
-                run_context.get_dependency_preprocess_mode(parent_node, dependency_node)
-            )
-            if (
-                input_node_preprocess_mode_run_context.value
-                == PreprocessMode.ACTIVE.value
-            ):
-
-                if self.preprocess_mode.value == PreprocessMode.ACTIVE.value:
-
-                    if self.has_preprocess():
-                        for func in self.preprocess_functions:
-                            df = df.apply(func)
-
+        if not self.should_apply_preprocess(run_context, dependent_node, dependency_node):
+            return df
+        if self.has_preprocess():
+            for func in self.preprocess_functions:
+                df = df.apply(func)
         return df
 
     def copy(self):

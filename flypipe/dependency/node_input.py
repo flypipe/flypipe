@@ -3,7 +3,7 @@ from typing import Callable, Union
 from flypipe.dependency import PreprocessMode
 from flypipe.dependency.preprocess import Preprocess
 from flypipe.run_context import RunContext
-from flypipe.utils import DataFrameType
+from flypipe.utils import DataFrameType, dataframe_type
 
 
 class InputNode:
@@ -29,10 +29,11 @@ class InputNode:
     def key(self):
         return self.node.key
 
-    def get_value(self, run_context: RunContext, dataframe_type: DataFrameType, is_sql: bool = False):
+    def get_value(self, run_context: RunContext, dependent_node: 'Node', is_sql: bool = False):
         """
-        Retrieve the value of this node input which will be passed to the node that specified this.
+        Retrieve the value of this node input which will be passed to a dependent node.
         """
+        dataframe_type = dependent_node.dataframe_type
         try:
             # We can assume that the computation of the raw node this node input comes from is already done and stored
             # in the run context because it's an ancestor node in the run graph.
@@ -44,7 +45,7 @@ class InputNode:
 
         # Preprocess the Input Node
         node_input_value = self.apply_preprocess(
-            run_context, self, node_input_value
+            run_context, dependent_node, node_input_value
         )
 
         # Select only necessary columns
@@ -69,9 +70,9 @@ class InputNode:
         return self
 
     def apply_preprocess(
-        self, run_context: RunContext, parent: "Node", df  # noqa: F821
+        self, run_context: RunContext, dependent_node: 'Node', df  # noqa: F821
     ):
-        return self._preprocess.apply(run_context, parent, self.node, df)
+        return self._preprocess.apply(run_context, dependent_node, self.node, df)
 
     @property
     def selected_columns(self):
