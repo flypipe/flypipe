@@ -43,6 +43,35 @@ nodes running IO operations such as in datasource nodes. This is because most ot
 Python only permits a single thread per process to execute Python bytecode. 
 ```
 
+**FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE**
+
+Flypipe uses `FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE` and 
+`FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_FUNCTION` to import the preprocess function to apply on all nodes dependencies
+ (if the node dependency does not have a preprocess function already set).
+
+for example if your function import looks like:
+
+`from my_project.utils import global_preprocess`
+
+the environment variables would look like:
+
+```
+FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE=my_project.utils
+FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_FUNCTION=global_preprocess
+```
+
+:type: string
+:default: `None`
+
+
+**FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_FUNCTION**
+
+See `FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE` description above 
+
+:type: string
+:default: `None`
+
+
 ## Catalog
 
 ### catalog_count_box_tags
