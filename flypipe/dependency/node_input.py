@@ -34,7 +34,7 @@ class InputNode:
 
     def get_value(self, run_context: RunContext, parent_node: Node):
         """
-        Retrieve the value of this node input which will be passed to the node that specified this.
+        Retrieve the value of this node input which will be passed to the parent node.
         """
         try:
             # We can assume that the computation of the raw node this node input comes from is already done and stored
