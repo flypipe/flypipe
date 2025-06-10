@@ -73,9 +73,9 @@ class InputNode:
         return self
 
     def apply_preprocess(
-        self, run_context: RunContext, parent: "Node", df  # noqa: F821
+        self, run_context: RunContext, parent_node: "Node", df  # noqa: F821
     ):
-        return self._preprocess.apply(run_context, parent, self.node, df)
+        return self._preprocess.apply(run_context, parent_node, self.node, df)
 
     @property
     def selected_columns(self):

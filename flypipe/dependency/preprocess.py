@@ -1,6 +1,10 @@
-import importlib
-from typing import Callable, List, Union
+from __future__ import annotations
+from typing import Callable, Union, TYPE_CHECKING, List
 
+if TYPE_CHECKING:
+    from flypipe.node import Node
+
+import importlib
 from flypipe.config import get_config
 from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.run_context import RunContext
@@ -67,6 +71,20 @@ class Preprocess:
                 )
                 print(error_msg)
 
+    def is_preprocess_active(
+        self, run_context: RunContext, parent_node: "Node", dependency_node: "Node"
+    ) -> bool:
+        run_context_preprocess_mode = run_context.get_dependency_preprocess_mode(
+            parent_node, dependency_node
+        )
+        if run_context_preprocess_mode == PreprocessMode.DISABLE:
+            return False
+
+        if self.preprocess_mode == PreprocessMode.DISABLE:
+            return False
+
+        return True
+
     def apply(
         self,
         run_context: RunContext,
@@ -74,23 +92,11 @@ class Preprocess:
         dependency_node: "Node",  # noqa: F821
         df,
     ):
-        run_process_mode = run_context.get_run_preprocess_mode()
-        if run_process_mode.value == PreprocessMode.ACTIVE.value:
-
-            input_node_preprocess_mode_run_context = (
-                run_context.get_dependency_preprocess_mode(parent_node, dependency_node)
-            )
-            if (
-                input_node_preprocess_mode_run_context.value
-                == PreprocessMode.ACTIVE.value
-            ):
-
-                if self.preprocess_mode.value == PreprocessMode.ACTIVE.value:
-
-                    if self.has_preprocess():
-                        for func in self.preprocess_functions:
-                            df = df.apply(func)
-
+        if not self.is_preprocess_active(run_context, parent_node, dependency_node):
+            return df
+        if self.has_preprocess():
+            for func in self.preprocess_functions:
+                df = df.apply(func)
         return df
 
     def copy(self):
