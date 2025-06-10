@@ -1,9 +1,12 @@
-from typing import Callable, Union
+from __future__ import annotations
+from typing import Callable, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from flypipe.node import Node
 
 from flypipe.dependency import PreprocessMode
 from flypipe.dependency.preprocess import Preprocess
 from flypipe.run_context import RunContext
-from flypipe.utils import DataFrameType, dataframe_type
 
 
 class InputNode:
@@ -29,18 +32,15 @@ class InputNode:
     def key(self):
         return self.node.key
 
-    def get_value(
-        self, run_context: RunContext, dependent_node: "Node", is_sql: bool = False
-    ):
+    def get_value(self, run_context: RunContext, parent_node: Node):
         """
-        Retrieve the value of this node input which will be passed to a dependent node.
+        Retrieve the value of this node input which will be passed to the parent node.
         """
-        dataframe_type = dependent_node.dataframe_type
         try:
             # We can assume that the computation of the raw node this node input comes from is already done and stored
             # in the run context because it's an ancestor node in the run graph.
             node_input_value = run_context.node_results[self.key].as_type(
-                dataframe_type
+                parent_node.dataframe_type
             )
         except KeyError:
             raise RuntimeError(
@@ -50,20 +50,20 @@ class InputNode:
 
         # Preprocess the Input Node
         node_input_value = self.apply_preprocess(
-            run_context, dependent_node, node_input_value
+            run_context, parent_node, node_input_value
         )
 
         # Select only necessary columns
         if self.selected_columns:
             node_input_value = node_input_value.select_columns(*self.selected_columns)
 
-        if is_sql:
+        if parent_node.type == "spark_sql":
             # SQL doesn't work with dataframes, so we need to:
             # - save all incoming dataframes as unique temporary tables
             # - pass the names of these tables instead of the dataframes
             alias = self.get_alias()
-            table_name = f"{self.__name__}__{alias}"
-            node_input_value.createOrReplaceTempView(table_name)
+            table_name = f"{parent_node.__name__}__{alias}"
+            node_input_value.get_df().createOrReplaceTempView(table_name)
             return table_name
 
         return node_input_value.get_df()
@@ -73,9 +73,9 @@ class InputNode:
         return self
 
     def apply_preprocess(
-        self, run_context: RunContext, dependent_node: "Node", df  # noqa: F821
+        self, run_context: RunContext, parent_node: "Node", df  # noqa: F821
     ):
-        return self._preprocess.apply(run_context, dependent_node, self.node, df)
+        return self._preprocess.apply(run_context, parent_node, self.node, df)
 
     @property
     def selected_columns(self):

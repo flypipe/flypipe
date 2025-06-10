@@ -1,6 +1,10 @@
-import importlib
-from typing import Callable, List, Union
+from __future__ import annotations
+from typing import Callable, Union, TYPE_CHECKING, List
 
+if TYPE_CHECKING:
+    from flypipe.node import Node
+
+import importlib
 from flypipe.config import get_config
 from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.run_context import RunContext
