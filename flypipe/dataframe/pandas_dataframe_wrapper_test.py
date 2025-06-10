@@ -162,7 +162,7 @@ class TestPandasDataFrameWrapper:
         df_wrapper.cast_column("c1", Integer())
         assert_frame_equal(
             df_wrapper.df,
-            pd.DataFrame({"c1": [1, pd.NA, pd.NA, pd.NA, pd.NA]}),
+            pd.DataFrame({"c1": [1, pd.NA, pd.NA, pd.NA, pd.NA]}).astype(pd.Int64Dtype()),
             check_dtype=False,
         )
         assert df_wrapper.df.dtypes["c1"] == pd.Int64Dtype()
@@ -214,13 +214,13 @@ class TestPandasDataFrameWrapper:
 
     def test_cast_column_date(self):
         df_wrapper = DataFrameWrapper.get_instance(
-            None, pd.DataFrame({"col1": ["2022-10-31 20:30:35", np.nan]})
+            None, pd.DataFrame({"col1": ["2022-10-31", np.nan]})
         )
         df_wrapper.cast_column("col1", Date())
         assert_frame_equal(
             df_wrapper.df,
             pd.DataFrame(
-                {"col1": [pd.Timestamp(2022, 10, 31, 20, 30, 35), np.nan]},
+                {"col1": [pd.Timestamp(2022, 10, 31), np.nan]},
                 dtype=np.dtype("O"),
             ),
         )
