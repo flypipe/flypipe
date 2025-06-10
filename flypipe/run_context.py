@@ -67,7 +67,7 @@ class RunContext:
         return [node.key for node in self.provided_inputs.keys()]
 
     def get_dependency_preprocess_mode(
-        self, dependent_node: "Node", dependency_node: "Node"  # noqa: F821
+        self, parent_node: "Node", dependency_node: "Node"  # noqa: F821
     ):
         """
         Returns the PreprocessMode for a specific dependency (dependency_node) of a node (parent_node).
@@ -78,12 +78,12 @@ class RunContext:
 
         # Specific PreprocessMode set for a specific dependency node
         if isinstance(self.dependencies_preprocess_modes, dict):
-            if dependent_node in self.dependencies_preprocess_modes:
+            if parent_node in self.dependencies_preprocess_modes:
                 if (
                     dependency_node
-                    in self.dependencies_preprocess_modes[dependent_node]
+                    in self.dependencies_preprocess_modes[parent_node]
                 ):
-                    return self.dependencies_preprocess_modes[dependent_node][
+                    return self.dependencies_preprocess_modes[parent_node][
                         dependency_node
                     ]
 

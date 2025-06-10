@@ -72,10 +72,10 @@ class Preprocess:
                 print(error_msg)
 
     def can_apply_preprocess(
-        self, run_context: RunContext, dependent_node: "Node", dependency_node: "Node"
+        self, run_context: RunContext, parent_node: "Node", dependency_node: "Node"
     ) -> bool:
         run_context_preprocess_mode = run_context.get_dependency_preprocess_mode(
-            dependent_node, dependency_node
+            parent_node, dependency_node
         )
         if run_context_preprocess_mode == PreprocessMode.DISABLE:
             return False
@@ -88,11 +88,11 @@ class Preprocess:
     def apply(
         self,
         run_context: RunContext,
-        dependent_node: "Node",  # noqa: F821
+        parent_node: "Node",  # noqa: F821
         dependency_node: "Node",  # noqa: F821
         df,
     ):
-        if not self.can_apply_preprocess(run_context, dependent_node, dependency_node):
+        if not self.can_apply_preprocess(run_context, parent_node, dependency_node):
             return df
         if self.has_preprocess():
             for func in self.preprocess_functions:
