@@ -104,9 +104,7 @@ class PandasDataFrameWrapper(DataFrameWrapper):
         # Automatic casts to the pandas integer extension type from float error out, we have to manually tweak it,
         # solution adapted from
         # https://stackoverflow.com/questions/62899860/how-can-i-resolve-typeerror-cannot-safely-cast-non-equivalent-float64-to-int6
-        self.df[column] = np.floor(pd.to_numeric(self.df[column])).astype(
-            integer_type
-        )
+        self.df[column] = np.floor(pd.to_numeric(self.df[column])).astype(integer_type)
 
     def _cast_column_decimal(self, column, flypipe_type):
         rows = self._get_rows_for_cast(column, flypipe_type)
