@@ -79,10 +79,7 @@ class RunContext:
         # Specific PreprocessMode set for a specific dependency node
         if isinstance(self.dependencies_preprocess_modes, dict):
             if parent_node in self.dependencies_preprocess_modes:
-                if (
-                    dependency_node
-                    in self.dependencies_preprocess_modes[parent_node]
-                ):
+                if dependency_node in self.dependencies_preprocess_modes[parent_node]:
                     return self.dependencies_preprocess_modes[parent_node][
                         dependency_node
                     ]
