@@ -29,7 +29,7 @@ def t1(df):
 As each node (transformation) is connected to its ancestors, we can easily view the pipeline graphically in a html page 
 (`my_graph.html()`) or execute it by invoking `my_graph.run()`
 
-![Flypipe Graph Pipeline](/docs/source/_static/images/flypipe_pipelines.png)
+![Flypipe Graph Pipeline](/docs/source/_static/images/flypipe_pipelines.svg)
 
 ## What Flypipe aims to facilitate?
 
