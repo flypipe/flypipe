@@ -34,7 +34,7 @@ class InputNode:
 
     def get_value(self, run_context: RunContext, parent_node: Node):
         """
-        Retrieve the value of this node input which will be passed to the node that specified this.
+        Retrieve the value of this node input which will be passed to the parent node.
         """
         try:
             # We can assume that the computation of the raw node this node input comes from is already done and stored
@@ -73,9 +73,9 @@ class InputNode:
         return self
 
     def apply_preprocess(
-        self, run_context: RunContext, parent: "Node", df  # noqa: F821
+        self, run_context: RunContext, parent_node: "Node", df  # noqa: F821
     ):
-        return self._preprocess.apply(run_context, parent, self.node, df)
+        return self._preprocess.apply(run_context, parent_node, self.node, df)
 
     @property
     def selected_columns(self):

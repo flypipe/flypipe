@@ -1,7 +1,4 @@
 import re
-from unittest import mock
-
-import pytest
 
 from scripts.utils import get_release_branches, get_commit_list
 
