@@ -23,8 +23,7 @@ dependencies  = [
     "Jinja2 >=3.1",
     "networkx >=3.1",
     "tabulate >=0.9",
-    "numpy >=1.26",
-    "pandas >=2.3",
+    "sparkleframe >=0.2"
 ]
 
 [project.urls]
