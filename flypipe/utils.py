@@ -11,10 +11,13 @@ from flypipe.exceptions import (
 import pandas as pd
 import pyspark.sql.dataframe as sql
 
+
 def sparkleframe_is_active():
     from pyspark.sql import SparkSession
-    spark_session_module = SparkSession.__module__.split('.')[0]
-    return spark_session_module == 'sparkleframe'
+
+    spark_session_module = SparkSession.__module__.split(".")[0]
+    return spark_session_module == "sparkleframe"
+
 
 if sparkleframe_is_active():
     # if using sparkleframe activate, it will fail because they do not implement pyspark.pandas
@@ -27,6 +30,7 @@ else:
     import pyspark.sql.connect.dataframe as sql_connect
 
 import sparkleframe.polarsdf.dataframe as sparkle_dataframe
+
 
 class DataFrameType(Enum):
     """
@@ -77,7 +81,11 @@ def dataframe_type(df) -> DataFrameType:
         return DataFrameType.PANDAS
     if isinstance(df, ps.DataFrame):
         return DataFrameType.PANDAS_ON_SPARK
-    if isinstance(df, sql.DataFrame) or isinstance(df, sql_connect.DataFrame) or isinstance(df, sparkle_dataframe.DataFrame):
+    if (
+        isinstance(df, sql.DataFrame)
+        or isinstance(df, sql_connect.DataFrame)
+        or isinstance(df, sparkle_dataframe.DataFrame)
+    ):
         return DataFrameType.PYSPARK
     raise DataframeTypeNotSupportedError(type(df))
 
