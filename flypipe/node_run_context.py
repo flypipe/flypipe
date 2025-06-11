@@ -3,17 +3,16 @@ from typing import Union
 
 from pandas import DataFrame as PandasDataFrame
 
-from flypipe.utils import sparkleframe_sqlframe_are_active
+from flypipe.utils import sparkleframe_is_active
 
-if sparkleframe_sqlframe_are_active():
+if sparkleframe_is_active():
+    # if using sparkleframe activate, it will fail because they do not implement pyspark.pandas
     from pandas import DataFrame as PandasApiDataFrame
+
+    # if using sparkleframe activate, it will fail because they do not implement pyspark.sql.connect
     from pyspark.sql.dataframe import DataFrame as PySparkConnectDataFrame
 else:
-
-    # if using sparkleframe/sqlframe activate, it will fail because they do not implement pyspark.pandas
     from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
-
-    # if using sparkleframe/sqlframe activate, it will fail because they do not implement pyspark.sql.connect
     from pyspark.sql.connect.dataframe import DataFrame as PySparkConnectDataFrame
 
 
