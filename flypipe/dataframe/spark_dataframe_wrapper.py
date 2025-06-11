@@ -88,8 +88,6 @@ class SparkDataFrameWrapper(DataFrameWrapper):
     def _get_column_flypipe_type(self, df, target_column):
         try:
             dtype = df.schema[target_column].dataType
-        except TypeError:
-            dtype = [col for col in df.schema if col.name == target_column][0].dataType
         except KeyError as exc:
             raise ValueError(
                 f'Column "{target_column}" not found in df, available columns are {df.columns}'
