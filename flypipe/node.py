@@ -2,13 +2,14 @@ import logging
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List
+from typing import List, Union, Callable
 
 from pyspark.sql import SparkSession
 
 from flypipe.cache.cache import Cache
+from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.config import get_config
-from flypipe.node_input import InputNode
+from flypipe.dependency.node_input import InputNode
 from flypipe.node_run_context import NodeRunContext
 from flypipe.node_type import NodeType
 from flypipe.run_context import RunContext
@@ -192,6 +193,9 @@ class Node:
 
         self.node_graph = NodeGraph(self, run_context=run_context)
 
+    def preprocess(self, *arg: Union[PreprocessMode, Callable]) -> InputNode:
+        return InputNode(self).set_preprocess(*arg)
+
     def select(self, *columns):
         return InputNode(self).select(*columns)
 
@@ -201,23 +205,7 @@ class Node:
     def get_node_inputs(self, run_context: RunContext):
         inputs = {}
         for input_node in self.input_nodes:
-            node_input_value = run_context.node_results[input_node.key].as_type(
-                self.dataframe_type
-            )
-            if input_node.selected_columns:
-                node_input_value = node_input_value.select_columns(
-                    *input_node.selected_columns
-                )
-            alias = input_node.get_alias()
-            inputs[alias] = node_input_value.get_df()
-            if self.type == "spark_sql":
-                # SQL doesn't work with dataframes, so we need to:
-                # - save all incoming dataframes as unique temporary tables
-                # - pass the names of these tables instead of the dataframes
-                table_name = f"{self.__name__}__{alias}"
-                inputs[alias].createOrReplaceTempView(table_name)
-                inputs[alias] = table_name
-
+            inputs[input_node.get_alias()] = input_node.get_value(run_context, self)
         return inputs
 
     def __call__(self, *args):
@@ -231,6 +219,7 @@ class Node:
         pandas_on_spark_use_pandas: bool = False,
         parameters: dict = None,
         cache: dict = None,
+        preprocess: Union[dict, PreprocessMode] = None,
     ):
         if not inputs:
             inputs = {}
@@ -242,6 +231,7 @@ class Node:
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
             parameters=parameters,
             cache_modes=cache,
+            dependencies_preprocess_modes=preprocess,
         )
 
         self.create_graph(run_context)
