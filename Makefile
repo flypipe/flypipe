@@ -74,6 +74,7 @@ pr-check:
 	make black
 	make lint
 	make coverage
+	pytest scripts/*_test.py
 .PHONY: pr-check
 
 githooks:

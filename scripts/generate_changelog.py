@@ -1,12 +1,10 @@
-import base64
 import os
 import pathlib
+import re
+import sys
 
 import requests
-import re
-import subprocess
 
-import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from scripts.utils import prepend_lines_to_file
@@ -18,7 +16,8 @@ GITHUB_URL = 'https://api.github.com/repos/flypipe/flypipe'
 GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
 github_connection = requests.session()
 
-
+def git_get(url):
+    return github_connection.get(url, headers={'Authorization': f'Bearer {GITHUB_TOKEN}'}).json()
 
 def generate_changelog(to_branch: str=None):
     to_branch = to_branch or "HEAD"
@@ -40,12 +39,11 @@ def generate_changelog(to_branch: str=None):
             # print(f'Found github issue {re_match.group(0)} in commit msg summary {commit_message_summary}')
             issue_id = re_match.group(0)[1:]
             url = f'{GITHUB_URL}/issues/{issue_id}'
-            issue = github_connection.get(url, headers={'Authorization': f'Bearer {GITHUB_TOKEN}'}).json()
+            issue = git_get(url)
             if 'title' not in issue:
                 # print(f'Unable to find title for issue {issue_id}')
                 continue
             issues[issue_id] = f'<a href="https://github.com/flypipe/flypipe/issues/{issue_id}" target="_blank" rel="noopener noreferrer">{issue_id} {issue["title"]}</a>'
-
 
     return issues
 

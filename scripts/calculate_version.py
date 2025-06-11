@@ -14,11 +14,11 @@ We leverage these to get the appropriate version for new releases in the followi
     - If neither of the above two events occurred then we increment the patch version on the most recent released
     version and the resultant version number is our new release number.
 """
-import sys
-import subprocess
-import re
 import os
+import re
+import sys
 from typing import List
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from scripts.utils import get_release_branches, get_commit_list, get_commit_message
 
