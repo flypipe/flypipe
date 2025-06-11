@@ -10,6 +10,7 @@ from flypipe.exceptions import (
 
 import pandas as pd
 import pyspark.sql.dataframe as sql
+import sparkleframe.polarsdf.dataframe as sparkle_dataframe
 
 
 def sparkleframe_is_active():
@@ -28,8 +29,6 @@ if sparkleframe_is_active():
 else:
     import pyspark.pandas as ps
     import pyspark.sql.connect.dataframe as sql_connect
-
-import sparkleframe.polarsdf.dataframe as sparkle_dataframe
 
 
 class DataFrameType(Enum):
