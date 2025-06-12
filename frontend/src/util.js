@@ -476,6 +476,15 @@ const getNodeTypeColorClass = (nodeType) => {
     }
 };
 
+// utils.js
+const formatTextToHtml = (text) => {
+    if (!text) return "";
+
+    return text
+        .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;") // Replace tabs
+        .replace(/\n/g, "<br/>"); // Replace newlines
+};
+
 export {
     assignNodePositions,
     addNodeAndPredecessors,
@@ -488,4 +497,5 @@ export {
     deleteNode,
     deleteEdge,
     getNodeTypeColorClass,
+    formatTextToHtml,
 };
