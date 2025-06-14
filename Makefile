@@ -73,7 +73,9 @@ spark-bash:
 pr-check:
 	make black
 	make lint
-	make coverage
+	make coverage USE_SPARK_CONNECT=0
+	make coverage USE_SPARK_CONNECT=1
+	make test f=flypipe/tests/activate/sparkleframe_test.py
 	pytest scripts/*_test.py
 .PHONY: pr-check
 
