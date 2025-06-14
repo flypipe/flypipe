@@ -23,6 +23,8 @@ doc_versions = []
 for versions in releases_by_minor_version.values():
     doc_versions.append("(" + r"\.".join(max(versions)) + ")")
 
+doc_versions = doc_versions[-3:]
+
 doc_versions_re = r'release/({doc_versions})'.format(doc_versions='|'.join(doc_versions))
 if 'PRODUCTION_DOCS_DEPLOY' not in os.environ or os.environ['PRODUCTION_DOCS_DEPLOY'] == '0':
     doc_versions_re += '|main'
