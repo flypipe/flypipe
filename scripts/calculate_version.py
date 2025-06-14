@@ -14,9 +14,9 @@ We leverage these to get the appropriate version for new releases in the followi
     - If neither of the above two events occurred then we increment the patch version on the most recent released
     version and the resultant version number is our new release number.
 """
-import os
-import re
 import sys
+import re
+import os
 from typing import List
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -68,7 +68,13 @@ def calculate_version(to_branch: str = None, re_commit_type: str = None) -> List
         # print(f'Checking msg {commit_message} (commit id {commit_id})')
         commit_message_summary = commit_message.split("\n", maxsplit=1)[0]
         # print(f'Check commit "{commit_message_summary}"')
-        is_breaking_change, is_feature_change = get_changes(re_commit_type, commit_message_summary)
+        is_breaking_change_, is_feature_change_ = get_changes(re_commit_type, commit_message_summary)
+        if is_breaking_change_:
+            is_breaking_change = True
+            break
+
+        if is_feature_change_:
+            is_feature_change = True
     # print('*** Finished checking through list of commits ***')
 
     if is_breaking_change:

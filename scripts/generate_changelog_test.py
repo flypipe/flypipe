@@ -1,7 +1,5 @@
 from unittest import mock
-
 import pytest
-
 from scripts.generate_changelog import generate_changelog
 
 
