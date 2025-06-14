@@ -1,10 +1,5 @@
 import json
 from enum import Enum
-
-import pandas as pd
-import pyspark.pandas as ps
-import pyspark.sql.dataframe as sql
-import pyspark.sql.connect.dataframe as sql_connect
 from pandas.testing import assert_frame_equal
 
 from flypipe.exceptions import (
@@ -12,6 +7,28 @@ from flypipe.exceptions import (
     DataframeSchemasDoNotMatchError,
     DataframeTypeNotSupportedError,
 )
+
+import pandas as pd
+import pyspark.sql.dataframe as sql
+import sparkleframe.polarsdf.dataframe as sparkle_dataframe
+
+
+def sparkleframe_is_active():
+    from pyspark.sql import SparkSession
+
+    spark_session_module = SparkSession.__module__.split(".")[0]
+    return spark_session_module == "sparkleframe"
+
+
+if sparkleframe_is_active():
+    # if using sparkleframe activate, it will fail because they do not implement pyspark.pandas
+    import pandas as ps
+
+    # if using sparkleframe activate, it will fail because they do not implement pyspark.sql.connect
+    import pyspark.sql.dataframe as sql_connect
+else:
+    import pyspark.pandas as ps
+    import pyspark.sql.connect.dataframe as sql_connect
 
 
 class DataFrameType(Enum):
@@ -63,7 +80,11 @@ def dataframe_type(df) -> DataFrameType:
         return DataFrameType.PANDAS
     if isinstance(df, ps.DataFrame):
         return DataFrameType.PANDAS_ON_SPARK
-    if isinstance(df, sql.DataFrame) or isinstance(df, sql_connect.DataFrame):
+    if (
+        isinstance(df, sql.DataFrame)
+        or isinstance(df, sql_connect.DataFrame)
+        or isinstance(df, sparkle_dataframe.DataFrame)
+    ):
         return DataFrameType.PYSPARK
     raise DataframeTypeNotSupportedError(type(df))
 

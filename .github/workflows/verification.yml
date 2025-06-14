@@ -58,3 +58,5 @@ jobs:
         run: make coverage USE_SPARK_CONNECT=0
       - name: Run unit tests using Spark Connect Session
         run: make coverage USE_SPARK_CONNECT=1
+      - name: Run unit tests using Sparkleframe Activate
+        run: make test f=flypipe/tests/activate/sparkleframe_test.py

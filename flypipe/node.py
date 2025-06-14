@@ -410,7 +410,6 @@ class Node:
 
         Parameters
         ----------
-
         width : int, default None
             viewport width in pixels
         height : int, default 1000

@@ -14,7 +14,6 @@ Welcome to FlyPipe!
    Usage <usage/usage>
    How-to Guides <how-to/how-to>
    Miscellaneous <miscellaneous/miscellaneous>
-   Data Design Patterns (DDP) <data-design-patterns/data-design-patterns>
    Project <project/project>
    Contribute <contribute/contribute>
    License <license/license>

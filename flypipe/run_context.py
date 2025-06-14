@@ -3,7 +3,20 @@ from dataclasses import dataclass, field
 from typing import Mapping, Union
 
 from pandas import DataFrame as PandasDataFrame
-from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
+
+from flypipe.utils import sparkleframe_is_active
+
+if sparkleframe_is_active():
+    # if using sparkleframe activate, it will fail because they do not implement pyspark.pandas
+    from pandas import DataFrame as PandasApiDataFrame
+
+    # if using sparkleframe activate, it will fail because they do not implement pyspark.sql.connect
+    from pyspark.sql.dataframe import DataFrame as PySparkConnectDataFrame
+else:
+    from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
+    from pyspark.sql.connect.dataframe import DataFrame as PySparkConnectDataFrame
+
+
 from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
 
@@ -57,7 +70,12 @@ class RunContext:
     def update_node_results(
         self,
         node_key: str,
-        df: Union[PandasDataFrame, PySparkDataFrame, PandasApiDataFrame],
+        df: Union[
+            PandasDataFrame,
+            PySparkDataFrame,
+            PandasApiDataFrame,
+            PySparkConnectDataFrame,
+        ],
         schema: Schema = None,
     ):
         self.node_results[node_key] = NodeResult(self.spark, df, schema=schema)

@@ -2,7 +2,7 @@ SHELL                       :=/bin/bash
 
 LOCAL_DIR=./local
 PYTEST_THREADS ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
-min_coverage=85
+min_coverage=90
 min_branch_coverage=95
 USE_SPARK_CONNECT=0
 
@@ -37,7 +37,7 @@ lint:
 .PHONY: lint
 
 coverage:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) -k '_test.py' --cov-config=flypipe/.coverage --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py -k '_test.py' --cov-config=flypipe/.coverage --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
 .PHONY: coverage
 
 test:
@@ -73,7 +73,9 @@ spark-bash:
 pr-check:
 	make black
 	make lint
-	make coverage
+	make coverage USE_SPARK_CONNECT=0
+	make coverage USE_SPARK_CONNECT=1
+	make test f=flypipe/tests/activate/sparkleframe_test.py
 	pytest scripts/*_test.py
 .PHONY: pr-check
 
