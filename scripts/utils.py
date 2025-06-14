@@ -68,6 +68,6 @@ def get_changelog_latest_branch_release():
         latest_version_branch_name = max(release_branches)
         lines = get_github_file_content(latest_version_branch_name.replace("origin/", ""), "changelog.md", owner="flypipe", repo="flypipe")
         lines = lines.splitlines()[2:]
-        lines = ['\n' if l.strip() == "" else l for l in lines]
+        lines = ['\n\n' if l.strip() == "" else l for l in lines]
         lines = [l.replace('- <a', '\n- <a')for l in lines]
         return lines
