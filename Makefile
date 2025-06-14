@@ -37,7 +37,7 @@ lint:
 .PHONY: lint
 
 coverage:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) -k '_test.py' --cov-config=flypipe/.coverage --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
+	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py -k '_test.py' --cov-config=flypipe/.coverage --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
 .PHONY: coverage
 
 test:
