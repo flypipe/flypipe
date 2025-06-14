@@ -1,5 +1,31 @@
-import os.path
 import subprocess
+import requests
+import base64
+
+def get_github_file_content(branch, file_path, owner="flypipe", repo="sparkleframe"):
+    """
+    Fetches the content of a file from a specific branch in a GitHub repo.
+
+    Args:
+        owner (str): GitHub username or organization.
+        repo (str): Repository name.
+        branch (str): Branch name.
+        file_path (str): Path to the file within the repo.
+        token (str, optional): GitHub personal access token for private repos or higher rate limits.
+
+    Returns:
+        str: Content of the file as a string.
+    """
+    url = (f"https://api.github.com/repos/{owner}/{repo}/contents/{file_path}")
+    headers = {'Accept': 'application/vnd.github.v3+json'}
+    params = {'ref': branch}
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        content = response.json().get('content')
+        return base64.b64decode(content).decode('utf-8')
+    else:
+        raise Exception(f"Failed to fetch file: {response.status_code} {response.text}")
 
 
 def get_release_branches():
@@ -12,7 +38,7 @@ def get_release_branches():
         branch for branch in all_branches if branch.startswith("origin/release/")
     ]
 
-    return release_branches
+    return sorted(release_branches)
 
 def get_commit_list(from_branch=None, to_branch=None):
     to_branch=to_branch or "HEAD"
@@ -36,31 +62,12 @@ def get_commit_message(commit_id):
 
     return commit_message
 
-def prepend_lines_to_file(file_path, lines_to_prepend, version):
-    """
-    Prepend a list of lines to the beginning of a file.
-
-    Args:
-        file_path (str): Path to the target file.
-        lines_to_prepend (list[str]): Lines to insert at the beginning.
-    """
-    original_content = []
-
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as original:
-            original_content = original.readlines()
-
-    if original_content:
-        original_content = original_content[2:]
-
-
-    version = '.'.join([str(v) for v in version])
-    version = f'<h2><a href="https://github.com/flypipe/flypipe/tree/release/{version}" target="_blank" rel="noopener noreferrer">release/{version}</a><h2>'
-    lines_to_prepend = [f"\n\n{version}\n\n"] + lines_to_prepend
-
-    contents = lines_to_prepend + original_content
-    contents = ["Changelog\n=========\n"] + contents
-    with open(file_path, 'w') as modified:
-        modified.writelines(contents)
-
-    return contents
+def get_changelog_latest_branch_release():
+    release_branches = get_release_branches()
+    if release_branches:
+        latest_version_branch_name = max(release_branches)
+        lines = get_github_file_content(latest_version_branch_name.replace("origin/", ""), "changelog.md", owner="flypipe", repo="sparkleframe")
+        lines = lines.splitlines()[2:]
+        lines = ['\n\n' if l.strip() == "" else l for l in lines]
+        lines = [l.replace('- <a', '\n- <a')for l in lines]
+        return lines

@@ -1,13 +1,11 @@
 import os
 import pathlib
+import requests
 import re
 import sys
-
-import requests
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scripts.utils import prepend_lines_to_file
+from scripts.utils import get_changelog_latest_branch_release
 from scripts.utils import get_release_branches, get_commit_list
 from scripts.calculate_version import get_commit_message, calculate_version
 
@@ -49,11 +47,20 @@ def generate_changelog(to_branch: str=None):
 
 
 def save_changelog(issues, version):
-    issue_ids = sorted(list(issues.keys()))
-    lines = [f'- {issues[issue_id]}\n' for issue_id in issue_ids]
+    lines = ["Changelog", "\n========="]
+    issue_ids = sorted(list(issues.keys()), reverse=True)
+    version = '.'.join([str(v) for v in version])
+    version = f'<h2><a href="https://github.com/flypipe/flypipe/tree/release/{version}" target="_blank" rel="noopener noreferrer">release/{version}</a><h2>'
+    lines += [f"\n\n{version}\n"] + [f'- {issues[issue_id]}\n' for issue_id in issue_ids]
 
-    path = os.path.join(pathlib.Path(__file__).parent.parent.resolve(), "changelog.md")
-    return prepend_lines_to_file(path, lines, version)
+    lines = lines + (get_changelog_latest_branch_release() or [])
+
+    file_path = os.path.join(pathlib.Path(__file__).parent.parent.resolve(), "changelog.md")
+
+    with open(file_path, 'w') as file:
+        file.writelines(lines)
+
+    return lines
 
 if __name__ == '__main__':
     import sys
