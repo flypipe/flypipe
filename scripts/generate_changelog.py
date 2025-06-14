@@ -68,7 +68,7 @@ if __name__ == '__main__':
     import sys
     commands = sys.argv[1:]
     to_branch = "HEAD" if not commands else commands[0]
-    issues = generate_changelog(to_branch,)
+    issues = generate_changelog(to_branch)
 
     version = calculate_version(to_branch=to_branch)
     contents = save_changelog(issues, version)
