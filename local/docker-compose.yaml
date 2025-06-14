@@ -64,13 +64,14 @@ services:
       GIT_PYTHON_REFRESH: quiet
     volumes:
       - ../.pylintrc:/.pylintrc
+      - ../.coverage:/flypipe/.coverage
       - ../flypipe:/flypipe
       - ../scripts:/scripts
       - ../docs:/docs
       - ./start.py:/etc/ipython/startup/start.py
       - ../docs/source/notebooks:/notebooks/docs
       - ./wait-for-it.sh:/wait-for-it.sh
-      - ../.coverage:/flypipe/.coverage
+
     depends_on:
       - spark-connect
     networks:
