@@ -16,6 +16,8 @@ nav:
     - Cache/Persist Data: notebooks/usage/cache.ipynb
     - Dependencies Preprocessing: notebooks/usage/preprocess.ipynb
     - Relationships: relationships.md
+    - Data Sources: data-sources.md
+    - Graph Catalog UI: graph-catalog-ui.md
   - Miscellaneous:
       - Build ERD: notebooks/miscellaneous/build-erd.ipynb
   - Changelog: changelog.md
