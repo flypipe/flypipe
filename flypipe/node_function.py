@@ -124,34 +124,34 @@ def node_function(*args, **kwargs):
     # Examples
 
     ``` py
-        # Syntax
-        @node_function(
-            requested_columns=True,
-            node_dependencies=[
-                Spark("table")
+    # Syntax
+    @node_function(
+        requested_columns=True,
+        node_dependencies=[
+            Spark("table")
+        ]
+    )
+    def my_node_function(requested_columns):
+
+        @node(
+            type="pandas",
+            dependencies=[
+                Spark("table").select(requested_columns).alias("df")
             ]
         )
-        def my_node_function(requested_columns):
+        def internal_node_1(df):
+            return df
 
-            @node(
-                type="pandas",
-                dependencies=[
-                    Spark("table").select(requested_columns).alias("df")
-                ]
-            )
-            def internal_node_1(df):
-                return df
+        @node(
+            type="pandas",
+            dependencies=[
+                internal_node_1.alias("df")
+            ]
+        )
+        def internal_node_2(df):
+            return df
 
-            @node(
-                type="pandas",
-                dependencies=[
-                    internal_node_1.alias("df")
-                ]
-            )
-            def internal_node_2(df):
-                return df
-
-            return internal_node_1, internal_node_2 # <-- ALL INTERNAL NODES CREATED MUST BE RETURNED
+        return internal_node_1, internal_node_2 # <-- ALL INTERNAL NODES CREATED MUST BE RETURNED
     ```
 
     """

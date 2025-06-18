@@ -15,6 +15,7 @@ nav:
     - Node Function Examples: notebooks/usage/node-function.ipynb
     - Cache/Persist Data: notebooks/usage/cache.ipynb
     - Dependencies Preprocessing: notebooks/usage/preprocess.ipynb
+    - Relationships: relationships.md
   - Changelog: changelog.md
 theme:
   name: material
@@ -59,6 +60,7 @@ plugins:
           paths: [ flypipe ]
           options:
             docstring_style: google
+            merge_init_into_class: true
 
 markdown_extensions:
   - tables

@@ -58,7 +58,7 @@ for example if your function import looks like:
 
 the environment variables would look like:
 
-```python
+``` py
 FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE=my_project.utils
 FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_FUNCTION=global_preprocess
 ```
@@ -99,7 +99,7 @@ The environment variable map of a flypipe variable is always prefixed with FLYPI
 For example, to switch on the configuration `require_node_description` we can either set the environment variable 
 FLYPIPE_REQUIRE_NODE_DESCRIPTION=True or in the code with: 
 
-```python
+``` py
 from flypipe.config import config_context
 
 with config_context(require_node_description=True):

@@ -1,4 +1,6 @@
 # Node
 
-::: flypipe.node.node
+!!! note "flypipe.node.node"
+
+    ::: flypipe.node.node
 

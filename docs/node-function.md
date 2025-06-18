@@ -1,4 +1,6 @@
 # Node Function
 
-::: flypipe.node_function.node_function
+!!! note "flypipe.node_function.node_function"
+
+    ::: flypipe.node_function.node_function
 

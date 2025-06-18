@@ -486,66 +486,64 @@ def node(type, *args, **kwargs):
     Examples
 
     ``` py
-        # Syntax
-        @node(
-            type="pyspark", "pandas_on_spark" or "pandas",
-            description="this is a description of what this node does",
-            tags=["a", "list", "of", "tags"],
-            dependencies=[other_node_1, other_node_2, ...],
-            output=Schema(
-                Column("col_name", String(), "a description of the column"),
-            ),
-            spark_context = True or False
-        )
-        def your_function_name(other_node_1, other_node_2, ...):
-            # YOUR TRANSFORMATION LOGIC HERE
-            # use pandas syntax if type is `pandas` or `pandas_on_spark`
-            # use PySpark syntax if type is `pyspark`
-            return dataframe
+    # Syntax
+    @node(
+        type="pyspark", "pandas_on_spark" or "pandas",
+        description="this is a description of what this node does",
+        tags=["a", "list", "of", "tags"],
+        dependencies=[other_node_1, other_node_2, ...],
+        output=Schema(
+            Column("col_name", String(), "a description of the column"),
+        ),
+        spark_context = True or False
+    )
+    def your_function_name(other_node_1, other_node_2, ...):
+        # YOUR TRANSFORMATION LOGIC HERE
+        # use pandas syntax if type is `pandas` or `pandas_on_spark`
+        # use PySpark syntax if type is `pyspark`
+        return dataframe
     ```
 
     ``` py
-
-        # Node without dependency
-        from flypipe.node import node
-        from flypipe.schema import Schema, Column
-        from flypipe.schema.types import String
-        import pandas as pd
-        @node(
-            type="pandas",
-            description="Only outputs a pandas dataframe",
-            output=Schema(
-                t0.output.get("fruit"),
-                Column("flavour", String(), "fruit flavour")
-            )
+    # Node without dependency
+    from flypipe.node import node
+    from flypipe.schema import Schema, Column
+    from flypipe.schema.types import String
+    import pandas as pd
+    @node(
+        type="pandas",
+        description="Only outputs a pandas dataframe",
+        output=Schema(
+            t0.output.get("fruit"),
+            Column("flavour", String(), "fruit flavour")
         )
-        def t1(df):
-            return pd.DataFrame({"fruit": ["mango"], "flavour": ["sweet"]})
+    )
+    def t1(df):
+        return pd.DataFrame({"fruit": ["mango"], "flavour": ["sweet"]})
     ```
 
     ``` py
-
-        # Node with dependency
-        from flypipe.node import node
-        from flypipe.schema import Schema, Column
-        from flypipe.schema.types import String
-        import pandas as pd
-        @node(
-            type="pandas",
-            description="Only outputs a pandas dataframe",
-            dependencies = [
-                t0.select("fruit").alias("df")
-            ],
-            output=Schema(
-                t0.output.get("fruit"),
-                Column("flavour", String(), "fruit flavour")
-            )
+    # Node with dependency
+    from flypipe.node import node
+    from flypipe.schema import Schema, Column
+    from flypipe.schema.types import String
+    import pandas as pd
+    @node(
+        type="pandas",
+        description="Only outputs a pandas dataframe",
+        dependencies = [
+            t0.select("fruit").alias("df")
+        ],
+        output=Schema(
+            t0.output.get("fruit"),
+            Column("flavour", String(), "fruit flavour")
         )
-        def t1(df):
-            categories = {'mango': 'sweet', 'lemon': 'citric'}
-            df['flavour'] = df['fruit']
-            df = df.replace({'flavour': categories})
-            return df
+    )
+    def t1(df):
+        categories = {'mango': 'sweet', 'lemon': 'citric'}
+        df['flavour'] = df['fruit']
+        df = df.replace({'flavour': categories})
+        return df
     ```
 
     """
