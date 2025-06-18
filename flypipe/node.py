@@ -399,7 +399,7 @@ class Node:
     def html(
         self,
         spark=None,
-        height=800,
+        height=700,
         inputs=None,
         pandas_on_spark_use_pandas=False,
         parameters=None,
