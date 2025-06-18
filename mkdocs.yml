@@ -12,6 +12,7 @@ nav:
     - Node Examples: notebooks/tutorial/node.ipynb
     - Node Parameters: notebooks/tutorial/node-parameters.ipynb
     - Node Function: node-function.md
+    - Node Function Examples: notebooks/tutorial/node-function.ipynb
   - Changelog: changelog.md
   - Notebook Page: notebooks/concept/dag.ipynb
 theme:

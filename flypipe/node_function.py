@@ -109,17 +109,12 @@ def node_function(*args, **kwargs):
     Decorator factory that returns the given function wrapped inside a NodeFunction class
 
     Parameters:
-        requested_columns (bool,optional): List of requested columns that successors nodes are demanding from the node
-        function, if True will retrieve `requested_columns` as named argument. Defaults to `False`.
-    node_dependencies (List[Node or NodeFunction],optional): List of external nodes that the node function is
-        dependent on. Any node retrieved by the node function (called internal node) can only be dependent on any
-        internal node or any node inside `node_dependencies`. True, returns spark context as argument to the function.
-        Defaults to `False`.
-    output (Schema,optional): Defines the output schema of the node. Defaults to `None`.
+        requested_columns (bool,optional): List of requested columns that successors nodes are demanding from the node function, if True will retrieve `requested_columns` as named argument. Defaults to `False`.
+        node_dependencies (List[Node or NodeFunction],optional): List of external nodes that the node function is dependent on. Any node retrieved by the node function (called internal node) can only be dependent on any internal node or any node inside `node_dependencies`. True, returns spark context as argument to the function. Defaults to `False`.
+        output (Schema,optional): Defines the output schema of the node. Defaults to `None`.
 
     Returns:
-        List[Node]
-            a list of nodes created internally
+        (List[Node]): a list of nodes created internally
 
     Raises:
         ValueError
