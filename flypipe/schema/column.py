@@ -83,6 +83,7 @@ class Column:
     Parent: {'None' if self.parent is None else self.parent.function.__name__}
     Data Type: {str(self.type)}
     Description: '{self.description}{foreign_key}'
+    PK: {self.pk}
         """
 
         return s

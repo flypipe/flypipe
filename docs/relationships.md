@@ -5,7 +5,7 @@ You can document relationships between node outputs. These relationships differ 
 how the outputs of different nodes are related to each other.
 
 Documenting these relationships helps your team better understand how nodes interact, making it easier to work with
-materialized tables. Additionally, these relationships facilitate the generation of `Entity-Relationship Diagrams (ERDs) <../notebooks/miscellaneous/build-erd.ipynb>`_.
+materialized tables. Additionally, these relationships facilitate the generation of [Entity-Relationship Diagrams (ERDs)](notebooks/miscellaneous/build-erd.ipynb).
 
 **Advantages of Having ERD Diagrams Available for the Team**
 
