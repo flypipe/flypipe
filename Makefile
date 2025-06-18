@@ -1,6 +1,6 @@
 SHELL                       :=/bin/bash
 
-LOCAL_DIR=./local
+LOCAL_DIR=.docker
 PYTEST_THREADS ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
 min_coverage=90
 min_branch_coverage=95
@@ -62,7 +62,7 @@ wheel:
 .PHONY: wheel
 
 pip-compile:
-	pip install -r requirements-pkg.in --force-reinstall
+	pip install -r requirements-pkg.in
 	pip-compile requirements-pkg.in --no-annotate --no-header
 	pip-compile requirements-dev.in --no-annotate --no-header
 .PHONY: pip-compile
