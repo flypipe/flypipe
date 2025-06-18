@@ -4,6 +4,11 @@ repo_name: flypipe/flypipe
 nav:
   - Flypipe: index.md
   - Configuration: configuration.md
+  - Quick Start:
+    - Pandas: notebooks/quick_start/pandas.ipynb
+    - Databricks: notebooks/quick_start/databricks.ipynb
+  - Usage:
+      - Node: node.md
   - Changelog: changelog.md
   - Notebook Page: notebooks/concept/dag.ipynb
 theme:
@@ -46,6 +51,9 @@ plugins:
       handlers:
         python:
           paths: [ flypipe ]
+          options:
+            docstring_style: google
+
 markdown_extensions:
   - tables
   - pymdownx.highlight:

@@ -471,32 +471,21 @@ class Node:
 
 
 def node(type, *args, **kwargs):
-    """
-    Nodes are the fundamental building block of Flypipe. Simply apply the node function as a decorator to a
+    """Nodes are the fundamental building block of Flypipe. Simply apply the node function as a decorator to a
     transformation function in order to declare the transformation as a Flypipe node.
 
-    Parameters
-    ----------
+    Parameters:
+        type (str): Type of the node transformation "pandas", "pandas_on_spark", "pyspark", "spark_sql"
+        description (str,optional): Description of the node. Defaults to `None`.
+        group (str,optional): Group the node falls under, nodes in the same group are clustered together in the Catalog UI. Defaults to `None`.
+        tags (List[str],optional): List of tags for the node. Defaults to `None`.
+        dependencies (List[Node],optional): List of other dependent nodes. Defaults to `None`.
+        output (Schema,optional): Defines the output schema of the node. Defaults to `None`.
+        spark_context (bool,optional): True, returns spark context as argument to the function. Defaults to `False`.
 
-    type : str
-            Type of the node transformation "pandas", "pandas_on_spark", "pyspark", "spark_sql"
-    description : str, optional
-        Description of the node (default is None)
-    group : str, optional
-        Group the node falls under, nodes in the same group are clustered together in the Catalog UI.
-    tags : List[str], optional
-        List of tags for the node (default is None)
-    dependencies : List[Node], optional
-        List of other dependent nodes
-    output : Schema, optional
-        Defines the output schema of the node (default is None)
-    spark_context : bool, optional
-        True, returns spark context as argument to the function (default is False)
+    Examples:
 
-
-    .. highlight:: python
-    .. code-block:: python
-
+    ```python
         # Syntax
         @node(
             type="pyspark", "pandas_on_spark" or "pandas",
@@ -513,10 +502,9 @@ def node(type, *args, **kwargs):
             # use pandas syntax if type is `pandas` or `pandas_on_spark`
             # use PySpark syntax if type is `pyspark`
             return dataframe
+    ```
 
-
-    .. highlight:: python
-    .. code-block:: python
+    ```python
 
         # Node without dependency
         from flypipe.node import node
@@ -533,10 +521,9 @@ def node(type, *args, **kwargs):
         )
         def t1(df):
             return pd.DataFrame({"fruit": ["mango"], "flavour": ["sweet"]})
+    ```
 
-
-    .. highlight:: python
-    .. code-block:: python
+    ```python
 
         # Node with dependency
         from flypipe.node import node
@@ -559,6 +546,8 @@ def node(type, *args, **kwargs):
             df['flavour'] = df['fruit']
             df = df.replace({'flavour': categories})
             return df
+    ```
+
     """
 
     def decorator(func):

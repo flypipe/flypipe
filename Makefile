@@ -55,6 +55,7 @@ bash: build
 .PHONY: bash
 
 docs:
+	export PYTHONPATH=$PYTHONPATH:./flypipe
 	@if [ ! -f changelog.md ]; then \
 		echo "changelog.md does not exist, running command..."; \
 		python scripts/generate_changelog.py; \
