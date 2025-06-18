@@ -21,7 +21,7 @@ jobs:
   verification:
     uses: ./.github/workflows/verification.yml
 
-  build-wheel:
+  build:
     needs: verification
     runs-on: ubuntu-latest
     timeout-minutes: 10
