@@ -16,7 +16,6 @@ nav:
     - Cache/Persist Data: notebooks/usage/cache.ipynb
     - Dependencies Preprocessing: notebooks/usage/preprocess.ipynb
   - Changelog: changelog.md
-  - Notebook Page: notebooks/concept/dag.ipynb
 theme:
   name: material
   navigation_depth: 3

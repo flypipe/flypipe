@@ -483,7 +483,7 @@ def node(type, *args, **kwargs):
         output (Schema,optional): Defines the output schema of the node. Defaults to `None`.
         spark_context (bool,optional): True, returns spark context as argument to the function. Defaults to `False`.
 
-    Examples:
+    Examples
 
     ```python
         # Syntax

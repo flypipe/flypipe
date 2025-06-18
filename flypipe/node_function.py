@@ -121,7 +121,7 @@ def node_function(*args, **kwargs):
             If any internal node is of type NodeFunction; if any internal node has a dependency that is not to another
             internal node and not declared in node_dependencies
 
-    # Examples:
+    # Examples
 
     ```python
         # Syntax
@@ -141,9 +141,7 @@ def node_function(*args, **kwargs):
             )
             def internal_node_1(df):
                 return df
-    ```
 
-    ```python
             @node(
                 type="pandas",
                 dependencies=[
