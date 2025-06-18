@@ -13,11 +13,16 @@ nav:
     - Node Parameters: notebooks/usage/node-parameters.ipynb
     - Node Function: node-function.md
     - Node Function Examples: notebooks/usage/node-function.ipynb
-    - Cache/Persist Data: notebooks/usage/cache.ipynb
-    - Dependencies Preprocessing: notebooks/usage/preprocess.ipynb
+    - Cache/Persist Data:
+      - API: notebooks/usage/cache.ipynb
+      - Sequence Diagrams: cache-flow.md
+    - Dependencies Preprocessing:
+      - How it works?: preprocessing-flow.md
+      - More Examples: notebooks/usage/preprocess.ipynb
     - Relationships: relationships.md
     - Data Sources: data-sources.md
     - Graph Catalog UI: graph-catalog-ui.md
+    - Multi Node Graphs: notebooks/usage/multiple-node-types.ipynb
   - Miscellaneous:
       - Build ERD: notebooks/miscellaneous/build-erd.ipynb
   - Changelog: changelog.md
@@ -70,6 +75,8 @@ markdown_extensions:
   - tables
   - pymdownx.highlight:
       anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences

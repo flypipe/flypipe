@@ -5,6 +5,7 @@ PYTEST_THREADS ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
 min_coverage=90
 min_branch_coverage=95
 USE_SPARK_CONNECT=0
+export PYTHONPATH := $(PYTHONPATH):./flypipe
 
 clean:
 	python docs/notebooks/clean.py
@@ -55,7 +56,6 @@ bash: build
 .PHONY: bash
 
 docs:
-	export PYTHONPATH=$PYTHONPATH:./flypipe
 	@if [ ! -f changelog.md ]; then \
 		echo "changelog.md does not exist, running command..."; \
 		python scripts/generate_changelog.py; \
@@ -88,7 +88,6 @@ githooks:
 .PHONY: githooks
 
 setup: pip-compile githooks clean
-	export PYTHONPATH=$PYTHONPATH:./flypipe
 	pip install -r requirements-dev.txt
 	make build
 .PHONY: setup
