@@ -26,8 +26,9 @@ RUN node -v
 RUN npm install -g @softwaretechnik/dbml-renderer
 RUN npm install -g dbdocs
 
+COPY ./requirements-dev.txt .
+RUN pip install -r requirements-dev.txt
+
 COPY /flypipe /flypipe
 ENV PYTHONPATH "${PYTHONPATH}:/local:/flypipe:/:"
 
-COPY ./requirements-dev.txt .
-RUN pip install -r requirements-dev.txt
