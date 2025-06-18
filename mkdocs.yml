@@ -8,11 +8,15 @@ nav:
     - Pandas: notebooks/quick_start/pandas.ipynb
     - Databricks: notebooks/quick_start/databricks.ipynb
   - Usage:
-      - Node: node.md
+    - Node: node.md
+    - Node Examples: notebooks/tutorial/node.ipynb
+    - Node Parameters: notebooks/tutorial/node-parameters.ipynb
+    - Node Function: node-function.md
   - Changelog: changelog.md
   - Notebook Page: notebooks/concept/dag.ipynb
 theme:
   name: material
+  navigation_depth: 3
   logo: images/logo.png
   favicon: images/favicon.ico
   custom_dir: docs/overrides
