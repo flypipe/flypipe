@@ -1,61 +1,68 @@
 SHELL                       :=/bin/bash
 
-LOCAL_DIR=.docker
+DOCKER_DIR=.docker
 PYTEST_THREADS ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
 min_coverage=90
 min_branch_coverage=95
 USE_SPARK_CONNECT=0
 
-build:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml build
+clean:
+	python $(DOCKER_DIR)/notebooks/clean.py
+.PHONY: clean
+
+build: clean
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml build
 .PHONY: build
 
 up: build
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml up
+	python $(DOCKER_DIR)/notebooks/clean.py
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml up
 .PHONY: up
 
+
 down:
-	rm -r $(LOCAL_DIR)/data || true
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml down -v --rmi all
+	rm -r $(DOCKER_DIR)/data || true
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml down -v --rmi all
 .PHONY: down
 
 ping:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter sh -c "chmod +x ./wait-for-it.sh && ./wait-for-it.sh -h flypipe-mariadb -p 3306"
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter sh -c "chmod +x ./wait-for-it.sh && ./wait-for-it.sh -h flypipe-hive-metastore -p 9083"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter sh -c "chmod +x ./wait-for-it.sh && ./wait-for-it.sh -h flypipe-mariadb -p 3306"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter sh -c "chmod +x ./wait-for-it.sh && ./wait-for-it.sh -h flypipe-hive-metastore -p 9083"
 .PHONY: ping
 
 black:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe"
 .PHONY: black
 
 black-check:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe --check"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe --check"
 .PHONY: black-check
 
 lint:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "python -m ruff check flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "python -m ruff check flypipe"
 .PHONY: lint
 
 coverage:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py -k '_test.py' --cov-config=flypipe/.coverage --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py -k '_test.py' --cov-config=flypipe/.coverage --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
 .PHONY: coverage
 
 test:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest -n $(PYTEST_THREADS) -k '_test.py' -vv $(f) --rootdir flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest -n $(PYTEST_THREADS) -k '_test.py' -vv $(f) --rootdir flypipe"
 .PHONY: test
 
 
 bash: build
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" -it flypipe-jupyter bash
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" -it flypipe-jupyter bash
 .PHONY: bash
 
 docs:
-	sh docs/build_docs.sh
+	@if [ ! -f changelog.md ]; then \
+		echo "changelog.md does not exist, running command..."; \
+		python scripts/generate_changelog.py; \
+	fi
+	cp changelog.md ./docs
+	mkdocs serve
 .PHONY: docs
-
-docs-dev: build
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "sh ./docs/build_docs_dev.sh"
-.PHONY: docs-dev
 
 wheel:
 	flit build --format wheel
@@ -67,9 +74,7 @@ pip-compile:
 	pip-compile requirements-dev.in --no-annotate --no-header
 .PHONY: pip-compile
 
-pr-check:
-	make black
-	make lint
+pr-check: clean black lint
 	make coverage USE_SPARK_CONNECT=0
 	make coverage USE_SPARK_CONNECT=1
 	make test f=flypipe/tests/activate/sparkleframe_test.py
@@ -82,7 +87,7 @@ githooks:
 	echo "Custom Git hooks enabled (core.hooksPath set to .githooks)"
 .PHONY: githooks
 
-setup: pip-compile githooks
+setup: pip-compile githooks clean
 	export PYTHONPATH=$PYTHONPATH:./flypipe
 	pip install -r requirements-dev.txt
 	make build

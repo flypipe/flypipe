@@ -29,7 +29,7 @@ def t1(df):
 As each node (transformation) is connected to its ancestors, we can easily view the pipeline graphically in a html page 
 (`my_graph.html()`) or execute it by invoking `my_graph.run()`
 
-![Flypipe Graph Pipeline](/docs/source/_static/images/flypipe_pipelines.png)
+![Flypipe Graph Pipeline](docs/images/flypipe_pipelines.png)
 
 ## What Flypipe aims to facilitate?
 
@@ -50,8 +50,8 @@ latency. This in turn allows for on-demand feature generation/predictions.
 ## Commonly used
 
 <p float="left">
-  <img src="./docs/source/_static/images/databricks_logo.png" alt="Databricks" style="height:100px;"/>
-  <img src="./docs/source/_static/images/python.png" alt="Python" style="height:80px;"/>
+  <img src="docs/images/databricks_logo.png" alt="Databricks" style="height:100px;"/>
+  <img src="docs/images/python.png" alt="Python" style="height:80px;"/>
 </p>
 
 ## Source Code
