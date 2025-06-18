@@ -23,27 +23,20 @@ class RelationshipType(Enum):
 @dataclass
 class Relationship:
     type: RelationshipType
-    description: str = None
+    description: str = ""
 
     def __repr__(self):
         return f"Relationship: {self.type}, {self.description}"
 
 
 class Column:
-    """
-    Defines a column in the output of a flypipe node.
+    """Defines a column in the output of a flypipe node.
 
-    Parameters
-    ----------
-
-    name : str
-        Name of the column
-    type : flypipe.schema.types.Type
-        Data type of the column
-    description : str, optional
-        A description of the column
-    pk : bool, optional, default: False
-        marks the column as primary key or not
+    Parameters:
+        name (str): Name of the column.
+        type (flypipe.schema.types.Type): Data type of the column.
+        description (str,optional): A description of the column.
+        pk (bool,optional): Marks the column as primary key or not. Defaults to `False`.
     """
 
     def __init__(
@@ -127,7 +120,7 @@ class Column:
         self,
         other: "Column",
         relationship_type: RelationshipType,
-        description: str = "",
+        description: str = None,
     ):
         if self.get_foreign_key(other) is not None:
             raise ValueError(
@@ -136,97 +129,105 @@ class Column:
         self.relationships[other] = Relationship(relationship_type, description)
         return self
 
-    def many_to_one(self, other: "Column", description: str = ""):
-        """
-        Adds a N:1 relationship between this column and other node output column
+    def many_to_one(self, other: "Column", description: str = None):
+        """Adds a N:1 relationship between this column and other node output column
+
+        Args:
+            other (Column): Node output column.
+            description (str,optional): A description of the relationship between this column and other node output column.
 
         Usage:
 
-        .. highlight:: python
-        .. code-block:: python
-
-            @node(
+        ``` py
+        @node(
+            ...
+            output=Schema(
                 ...
-                output=Schema(
-                    ...
-                    Column("col_name", String(), "description)
-                    .many_to_one(another_node.output.col, "relationship description")
-                    ...
-                )
+                Column("col_name", String(), "description)
+                .many_to_one(another_node.output.col, "relationship description")
+                ...
             )
-            def my_node(...):
-                ...
+        )
+        def my_node(...):
+            ...
+        ```
         """
         return self._add_relationship(other, RelationshipType.MANY_TO_ONE, description)
 
-    def one_to_many(self, other: "Column", description: str = ""):
-        """
-        Adds a 1:N relationship between this column and other node output column
+    def one_to_many(self, other: "Column", description: str = None):
+        """Adds a 1:N relationship between this column and other node output column
+
+        Args:
+            other (Column): Node output column.
+            description (str,optional): A description of the relationship between this column and other node output column.
 
         Usage:
 
-        .. highlight:: python
-        .. code-block:: python
-
-            @node(
+        ``` py
+        @node(
+            ...
+            output=Schema(
                 ...
-                output=Schema(
-                    ...
-                    Column("col_name", String(), "description)
-                    .one_to_many(another_node.output.col, "relationship description")
-                    ...
-                )
+                Column("col_name", String(), "description)
+                .one_to_many(another_node.output.col, "relationship description")
+                ...
             )
-            def my_node(...):
-                ...
+        )
+        def my_node(...):
+            ...
+        ```
         """
 
         return self._add_relationship(other, RelationshipType.ONE_TO_MANY, description)
 
-    def many_to_many(self, other: "Column", description: str = ""):
-        """
-        Adds a N:N relationship between this column and other node output column
+    def many_to_many(self, other: "Column", description: str = None):
+        """Adds a N:N relationship between this column and other node output column
+
+        Args:
+            other (Column): Node output column.
+            description (str,optional): A description of the relationship between this column and other node output column.
 
         Usage:
 
-        .. highlight:: python
-        .. code-block:: python
-
-            @node(
+        ``` py
+        @node(
+            ...
+            output=Schema(
                 ...
-                output=Schema(
-                    ...
-                    Column("col_name", String(), "description)
-                    .many_to_many(another_node.output.col, "relationship description")
-                    ...
-                )
+                Column("col_name", String(), "description)
+                .many_to_many(another_node.output.col, "relationship description")
+                ...
             )
-            def my_node(...):
-                ...
+        )
+        def my_node(...):
+            ...
+        ```
         """
 
         return self._add_relationship(other, RelationshipType.MANY_TO_MANY, description)
 
-    def one_to_one(self, other: "Column", description: str = ""):
-        """
-        Adds a 1:1 relationship between this column and other node output column
+    def one_to_one(self, other: "Column", description: str = None):
+        """Adds a 1:1 relationship between this column and other node output column
+
+        Args:
+            other (Column): Node output column.
+            description (str,optional): A description of the relationship between this column and other node output column.
 
         Usage:
 
-        .. highlight:: python
-        .. code-block:: python
-
-            @node(
+        ``` py
+        @node(
+            ...
+            output=Schema(
                 ...
-                output=Schema(
-                    ...
-                    Column("col_name", String(), "description)
-                    .one_to_one(another_node.output.col, "relationship description")
-                    ...
-                )
+                Column("col_name", String(), "description)
+                .one_to_one(another_node.output.col, "relationship description")
+                ...
             )
-            def my_node(...):
-                ...
+        )
+        def my_node(...):
+            ...
+        ```
         """
         return self._add_relationship(other, RelationshipType.ONE_TO_ONE, description)
 

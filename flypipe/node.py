@@ -485,7 +485,7 @@ def node(type, *args, **kwargs):
 
     Examples
 
-    ```python
+    ``` py
         # Syntax
         @node(
             type="pyspark", "pandas_on_spark" or "pandas",
@@ -504,7 +504,7 @@ def node(type, *args, **kwargs):
             return dataframe
     ```
 
-    ```python
+    ``` py
 
         # Node without dependency
         from flypipe.node import node
@@ -523,7 +523,7 @@ def node(type, *args, **kwargs):
             return pd.DataFrame({"fruit": ["mango"], "flavour": ["sweet"]})
     ```
 
-    ```python
+    ``` py
 
         # Node with dependency
         from flypipe.node import node

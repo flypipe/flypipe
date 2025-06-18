@@ -123,7 +123,7 @@ def node_function(*args, **kwargs):
 
     # Examples
 
-    ```python
+    ``` py
         # Syntax
         @node_function(
             requested_columns=True,
