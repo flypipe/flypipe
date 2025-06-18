@@ -7,3 +7,8 @@
 [data-md-color-scheme="green"] img[src$="#gh-light-mode-only"] {
   display: none; /* Hide dark images in light mode */
 }
+
+
+.md-grid {
+  max-width: 100%;
+}

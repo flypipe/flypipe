@@ -2,8 +2,10 @@ site_name: Flypipe
 repo_url: https://github.com/flypipe/flypipe
 repo_name: flypipe/flypipe
 nav:
-  - index.md
+  - Flypipe: index.md
+  - Configuration: configuration.md
   - Changelog: changelog.md
+  - Notebook Page: notebooks/concept/dag.ipynb
 theme:
   name: material
   logo: images/logo.png
@@ -39,6 +41,7 @@ theme:
 plugins:
   - include-markdown
   - search
+  - mkdocs-jupyter
   - mkdocstrings:
       handlers:
         python:
@@ -54,6 +57,8 @@ markdown_extensions:
       alternate_style: true
   - admonition
   - pymdownx.details
+  - pymdownx.critic
+  - pymdownx.mark
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid

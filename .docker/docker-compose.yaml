@@ -68,7 +68,7 @@ services:
       - ../flypipe:/flypipe
       - ../scripts:/scripts
       - ./start.py:/etc/ipython/startup/start.py
-      - ./notebooks:/notebooks
+      - ../docs/notebooks:/notebooks
       - ./wait-for-it.sh:/wait-for-it.sh
 
     depends_on:

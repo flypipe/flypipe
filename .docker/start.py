@@ -49,7 +49,7 @@ if "ipython" in globals():
     ipython.magic("autoreload 2")
 
 html_width = "100%"
-html_height = "1000"
+html_height = "700"
 
 
 def displayHTML(html):

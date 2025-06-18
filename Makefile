@@ -7,7 +7,7 @@ min_branch_coverage=95
 USE_SPARK_CONNECT=0
 
 clean:
-	python $(DOCKER_DIR)/notebooks/clean.py
+	python docs/notebooks/clean.py
 .PHONY: clean
 
 build: clean
@@ -15,7 +15,6 @@ build: clean
 .PHONY: build
 
 up: build
-	python $(DOCKER_DIR)/notebooks/clean.py
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml up
 .PHONY: up
 
