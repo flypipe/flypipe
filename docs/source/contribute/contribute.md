@@ -23,7 +23,7 @@ Access JupyterLab http://127.0.0.1:8888/lab
 
 **Access Jupyter docker**
 
-`make jupyter-bash`
+`make bash`
 
 **pylint**
 

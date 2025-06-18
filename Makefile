@@ -44,14 +44,10 @@ test:
 	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest -n $(PYTEST_THREADS) -k '_test.py' -vv $(f) --rootdir flypipe"
 .PHONY: test
 
-branch-coverage:
-	coverage xml
-	diff-cover coverage.xml --fail-under=$(min_branch_coverage)
-.PHONY: branch-coverage
 
-jupyter-bash: build-image
+bash: build-image
 	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" -it flypipe-jupyter bash
-.PHONY: jupyter-bash
+.PHONY: bash
 
 docs:
 	sh docs/build_docs.sh
@@ -61,14 +57,9 @@ docs-dev: build-image
 	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "sh ./docs/build_docs_dev.sh"
 .PHONY: docs-dev
 
-build:
+wheel:
 	flit build --format wheel
-.PHONY: build
-
-spark-bash:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml build
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" -it spark-master bash
-.PHONY: spark-bash
+.PHONY: wheel
 
 pr-check:
 	make black
