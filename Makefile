@@ -6,11 +6,11 @@ min_coverage=90
 min_branch_coverage=95
 USE_SPARK_CONNECT=0
 
-build-image:
+build:
 	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml build
-.PHONY: build-image
+.PHONY: build
 
-up: build-image
+up: build
 	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml up
 .PHONY: up
 
@@ -45,7 +45,7 @@ test:
 .PHONY: test
 
 
-bash: build-image
+bash: build
 	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" -it flypipe-jupyter bash
 .PHONY: bash
 
@@ -53,13 +53,19 @@ docs:
 	sh docs/build_docs.sh
 .PHONY: docs
 
-docs-dev: build-image
+docs-dev: build
 	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "sh ./docs/build_docs_dev.sh"
 .PHONY: docs-dev
 
 wheel:
 	flit build --format wheel
 .PHONY: wheel
+
+pip-compile:
+	pip install -r requirements-pkg.in --force-reinstall
+	pip-compile requirements-pkg.in --no-annotate --no-header
+	pip-compile requirements-dev.in --no-annotate --no-header
+.PHONY: pip-compile
 
 pr-check:
 	make black
@@ -78,5 +84,12 @@ githooks:
 
 setup:
 	make githooks
-	make build-image
+	make build
 .PHONY: setup
+
+setup: pip-compile githooks
+	export PYTHONPATH=$PYTHONPATH:./flypipe
+	pip install -r requirements-dev.txt
+	#make build
+.PHONY: setup
+
