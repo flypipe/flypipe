@@ -150,3 +150,4 @@ artifacts/
 tmp/
 /.docker/data/
 /flypipe/.coverage
+.Trash-0
