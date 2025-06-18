@@ -82,14 +82,9 @@ githooks:
 	echo "Custom Git hooks enabled (core.hooksPath set to .githooks)"
 .PHONY: githooks
 
-setup:
-	make githooks
-	make build
-.PHONY: setup
-
 setup: pip-compile githooks
 	export PYTHONPATH=$PYTHONPATH:./flypipe
 	pip install -r requirements-dev.txt
-	#make build
+	make build
 .PHONY: setup
 
