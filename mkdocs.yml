@@ -9,10 +9,12 @@ nav:
     - Databricks: notebooks/quick_start/databricks.ipynb
   - Usage:
     - Node: node.md
-    - Node Examples: notebooks/tutorial/node.ipynb
-    - Node Parameters: notebooks/tutorial/node-parameters.ipynb
+    - Node Examples: notebooks/usage/node.ipynb
+    - Node Parameters: notebooks/usage/node-parameters.ipynb
     - Node Function: node-function.md
-    - Node Function Examples: notebooks/tutorial/node-function.ipynb
+    - Node Function Examples: notebooks/usage/node-function.ipynb
+    - Cache/Persist Data: notebooks/usage/cache.ipynb
+    - Dependencies Preprocessing: notebooks/usage/preprocess.ipynb
   - Changelog: changelog.md
   - Notebook Page: notebooks/concept/dag.ipynb
 theme:
