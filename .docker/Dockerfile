@@ -16,17 +16,6 @@ ENV PYSPARK_PYTHON "/usr/local/bin/python3"
 ENV PYSPARK_DRIVER_PYTHON "${PYSPARK_PYTHON}"
 ENV USE_SPARK_CONNECT "0"
 
-COPY ./requirements.txt .
-COPY ./local/requirements.txt requirements_dev.txt
-RUN pip install -r requirements.txt
-RUN pip install -r requirements_dev.txt
-
-## Set up Pandoc
-RUN wget https://github.com/jgm/pandoc/releases/download/3.6.2/pandoc-3.6.2-1-`dpkg --print-architecture`.deb
-RUN dpkg -i pandoc-3.6.2-1-`dpkg --print-architecture`.deb
-## Check installation
-RUN pandoc -v
-
 ### Set up NodeJS
 RUN curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh
 RUN bash nodesource_setup.sh
@@ -39,3 +28,6 @@ RUN npm install -g dbdocs
 
 COPY /flypipe /flypipe
 ENV PYTHONPATH "${PYTHONPATH}:/local:/flypipe:/:"
+
+COPY ./requirements-dev.txt .
+RUN pip install -r requirements-dev.txt
