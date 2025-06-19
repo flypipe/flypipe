@@ -1,12 +1,12 @@
 Changelog
 =========
 
-<h2><a href="https://github.com/flypipe/flypipe/tree/release/4.3.1" target="_blank" rel="noopener noreferrer">release/4.3.1</a><h2>
+<h2><a href="https://github.com/flypipe/flypipe/tree/release/4.3.1" target="_blank" rel="noopener noreferrer">release/4.3.1</a></h2>
 
 - <a href="https://github.com/flypipe/flypipe/issues/188" target="_blank" rel="noopener noreferrer">188 documentation failling to deploy</a>
 
 
-<h2><a href="https://github.com/flypipe/flypipe/tree/release/4.3.0" target="_blank" rel="noopener noreferrer">release/4.3.0</a><h2>
+<h2><a href="https://github.com/flypipe/flypipe/tree/release/4.3.0" target="_blank" rel="noopener noreferrer">release/4.3.0</a></h2>
 
 
 - <a href="https://github.com/flypipe/flypipe/issues/186" target="_blank" rel="noopener noreferrer">186 fix changeglog</a>
@@ -18,7 +18,7 @@ Changelog
 
 
 
-<h2><a href="https://github.com/flypipe/flypipe/tree/release/4.2.0" target="_blank" rel="noopener noreferrer">release/4.2.0</a><h2>
+<h2><a href="https://github.com/flypipe/flypipe/tree/release/4.2.0" target="_blank" rel="noopener noreferrer">release/4.2.0</a></h2>
 
 
 
