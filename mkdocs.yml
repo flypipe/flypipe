@@ -2,7 +2,7 @@ site_name: Flypipe
 repo_url: https://github.com/flypipe/flypipe
 repo_name: flypipe/flypipe
 nav:
-  - Flypipe: index.md
+  - Welcome: index.md
   - Configuration: configuration.md
   - Quick Start:
     - Pandas: notebooks/quick_start/pandas.ipynb
