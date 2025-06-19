@@ -7,6 +7,12 @@ min_branch_coverage=95
 USE_SPARK_CONNECT=0
 export PYTHONPATH := $(PYTHONPATH):./flypipe
 
+# This block checks for .env and exports it for all recipes
+ifneq (,$(wildcard .env))
+  include .env
+  export $(shell sed 's/=.*//' .env)
+endif
+
 clean:
 	python docs/notebooks/clean.py
 .PHONY: clean
