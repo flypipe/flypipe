@@ -1,10 +1,12 @@
 SHELL                       :=/bin/bash
 
-DOCKER_DIR=.docker
-PYTEST_THREADS ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
-min_coverage=90
-min_branch_coverage=95
-USE_SPARK_CONNECT=0
+DOCKER_DIR          =.docker
+PYTEST_THREADS      ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
+min_coverage        =90
+min_branch_coverage =95
+USE_SPARK_CONNECT   =0
+version			    ?=
+
 export PYTHONPATH := $(PYTHONPATH):./flypipe
 
 # This block checks for .env and exports it for all recipes
@@ -61,15 +63,6 @@ bash: build
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" -it flypipe-jupyter bash
 .PHONY: bash
 
-docs:
-	@if [ ! -f changelog.md ]; then \
-		echo "changelog.md does not exist, running command..."; \
-		python scripts/generate_changelog.py; \
-	fi
-	cp changelog.md ./docs
-	mkdocs serve
-.PHONY: docs
-
 wheel:
 	flit build --format wheel
 .PHONY: wheel
@@ -98,3 +91,18 @@ setup: pip-compile githooks clean
 	make build
 .PHONY: setup
 
+docs:
+	@if [ ! -f changelog.md ]; then \
+		echo "changelog.md does not exist, running command..."; \
+		python scripts/generate_changelog.py; \
+	fi
+	cp changelog.md ./docs
+	mkdocs serve
+.PHONY: docs
+
+docs-deploy:
+	@[ -n "$(version)" ] || (echo "ERROR: version is required"; exit 1)
+	cp changelog.md ./docs
+	mike deploy --allow-empty --push --update-aliases $(shell echo $(version) | awk -F. '{print $$1"."$$2}') latest
+	mike set-default --push latest
+.PHONY: docs-deploy
