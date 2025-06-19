@@ -13,18 +13,24 @@ nav:
     - Node Parameters: notebooks/usage/node-parameters.ipynb
     - Node Function: node-function.md
     - Node Function Examples: notebooks/usage/node-function.ipynb
+    - Different ways of running:
+        - Multi Node Graphs: notebooks/usage/multiple-node-types.ipynb
+        - Low latency transformations: notebooks/usage/sparkleframe.ipynb
     - Cache/Persist Data:
-      - API: notebooks/usage/cache.ipynb
-      - Sequence Diagrams: cache-flow.md
+      - How it works?: notebooks/usage/cache.ipynb
+      - Cache Handling Process: cache-flow.md
     - Dependencies Preprocessing:
       - How it works?: preprocessing-flow.md
-      - More Examples: notebooks/usage/preprocess.ipynb
+      - Working Example: notebooks/usage/preprocess.ipynb
     - Relationships: relationships.md
     - Data Sources: data-sources.md
     - Graph Catalog UI: graph-catalog-ui.md
-    - Multi Node Graphs: notebooks/usage/multiple-node-types.ipynb
   - Miscellaneous:
       - Build ERD: notebooks/miscellaneous/build-erd.ipynb
+      - Databricks:
+        - ML Graphs (with mlflow): notebooks/miscellaneous/databricks/ml-graphs.ipynb
+  - License: license.md
+  - Questions and suggestions: questions-suggestions.md
   - Changelog: changelog.md
 theme:
   name: material

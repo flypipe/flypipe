@@ -1,4 +1,6 @@
-## Case 1: node has no cache
+The following flow diagrams demonstrate how Flypipe interacts with a node to handle its cache management.
+
+## Case 1: `node.cache is None`
 
 ``` mermaid
 sequenceDiagram
@@ -9,7 +11,7 @@ sequenceDiagram
   node->>Flypipe: retrieve dataframe 
 ```
 
-## Case 2: node has cache, but it has been saved
+## Case 2: `node.cache is not None` and cache exists
 
 ``` mermaid
 sequenceDiagram
@@ -23,7 +25,7 @@ sequenceDiagram
 ```
 
 
-## Case 2: node has cache and has NOT been saved
+## Case 2: `node.cache is not None` and cache does NOT exist
 ``` mermaid
 sequenceDiagram
   autonumber
