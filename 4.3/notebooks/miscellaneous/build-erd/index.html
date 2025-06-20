@@ -1732,13 +1732,13 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=d7b95078-8aa7-49b0-b623-18b56c191cc9">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d7b95078-8aa7-49b0-b623-18b56c191cc9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-1">
@@ -1762,6 +1762,49 @@ help(build_dbml)</div>
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Help on function build_dbml in module flypipe.misc.dbml:
+
+build_dbml(nodes: Union[List[&lt;property object at 0xf99150038680&gt;.Node], &lt;property object at 0xf99150038680&gt;.Node], only_nodes_with_tags: Union[List[str], str] = None, only_nodes_with_cache: bool = False, file_path_name=None)
+    Reads flypipe nodes and builds a dbml source code with the relationships, if output columns have been defined.
+    
+    Parameters
+    ----------
+    
+    nodes : Union[List[Node], Node]
+        nodes to be considered to be added to the dbml
+    only_nodes_with_tags : Union[List[str], str], optional, defafult None
+        include only nodes with tags
+    only_nodes_with_cache: bool, optional, default True
+        True: include nodes with cache, False: do not include nodes.
+    
+        Note: the cache objects must have name method implemented, example:
+    
+            class MyCache(Cache):
+                ...
+                @property
+                def name(self):
+                    return &lt;NAME TO BE USED FOR THE DBML TABLE NAME&gt;
+    
+    file_path_name: str, optional, default None
+        full file path name where the dbml table is stored.
+    
+    Returns
+    -------
+    
+    dbml string if file_path_name is None else it will return None
+
+</pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ac5ea4c8-d1f4-484c-9163-97dc178f605d">
@@ -1774,13 +1817,13 @@ help(build_dbml)</div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a9e6bca3-986b-47ed-aa41-8d4398ee80a1">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a9e6bca3-986b-47ed-aa41-8d4398ee80a1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-2">
@@ -1906,6 +1949,27 @@ print(f"{dbml}")</div>
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Table b {
+	node_b_col1 String() [note: '''description node_b_col1''']
+	node_b_col2 String() [note: '''description node_b_col2''']
+	node_b_col3 String() [note: '''description node_b_col3''']
+
+	Note: '''Managed by flypipe node `B`
+
+this is node B'''
+}
+</pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=53245d42-f57f-43df-8387-af9453d3e8e1">
@@ -1937,13 +2001,13 @@ print(f"{dbml}")</div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5aa2fe74-de11-4d98-b625-71d5c7a6018f">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5aa2fe74-de11-4d98-b625-71d5c7a6018f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
@@ -1973,6 +2037,26 @@ B.output.node_b_col1.many_to_one(A.output.node_a_col1)</div>
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[3]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>
+    Column: node_b_col1
+    Parent: B
+    Data Type: String()
+    Description: 'description node_b_col1
+	Foreign Keys:
+		B.node_b_col1 N:1 A.node_a_col1'
+    PK: True
+        </pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9549a057-b57f-4aae-8f96-e695270ff783">
@@ -1985,13 +2069,13 @@ B.output.node_b_col1.many_to_one(A.output.node_a_col1)</div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=bc2b93b7-bd03-4472-b46d-95dd88866a5c">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bc2b93b7-bd03-4472-b46d-95dd88866a5c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
@@ -2017,14 +2101,51 @@ build_erd_svg(B, "test.svg")</div>
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a2c1e64a-ca56-4970-94b2-1884ae29bdc5">
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Help on function build_erd_svg in module flypipe.misc.erd:
+
+build_erd_svg(nodes: Union[List[&lt;property object at 0xf99150038680&gt;.Node], &lt;property object at 0xf99150038680&gt;.Node], output_path, only_nodes_with_tags: Union[List[str], str] = None, only_nodes_with_cache: bool = False)
+    Reads flypipe nodes and builds a SVG image with the ERD diagram
+    
+    Parameters
+    ----------
+    
+    nodes : Union[List[Node], Node]
+        nodes to be considered to be added to the dbml
+    output_path: str
+        full file path name where the svg is stored.
+    only_nodes_with_tags : Union[List[str], str], optional, defafult None
+        include only nodes with tags
+    only_nodes_with_cache: bool, optional, default True
+        True: include nodes with cache, False: do not include nodes.
+    
+        Note: the cache objects must have name method implemented, example:
+    
+            class MyCache(Cache):
+                ...
+                @property
+                def name(self):
+                    return &lt;NAME TO BE USED FOR THE DBML TABLE NAME&gt;
+
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a2c1e64a-ca56-4970-94b2-1884ae29bdc5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
@@ -2045,6 +2166,18 @@ build_erd_svg(B, "test.svg")</div>
 
 display(SVG(filename="test.svg"))  # Replace with your SVG file path
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedSVG jp-OutputArea-output" data-mime-type="image/svg+xml" tabindex="0">
+<img alt="No description has been provided for this image" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMTA0MnB0IiBoZWlnaHQ9IjM1M3B0IiB2aWV3Qm94PSIwLjAwIDAuMDAgMTA0Mi40MyAzNTMuMDciPgo8ZyBpZD0iZ3JhcGgwIiBjbGFzcz0iZ3JhcGgiIHRyYW5zZm9ybT0ic2NhbGUoMSAxKSByb3RhdGUoMCkgdHJhbnNsYXRlKDQgMzQ5LjA3KSI+Cjx0aXRsZT5kYm1sPC90aXRsZT4KPCEtLSBiIC0tPgo8ZyBpZD0iYiIgY2xhc3M9Im5vZGUiPgo8dGl0bGU+YjwvdGl0bGU+CjxnIGlkPSJhX2IiPjxhIHhsaW5rOnRpdGxlPSJiCk1hbmFnZWQgYnkgZmx5cGlwZSBub2RlIGBCYAoKdGhpcyBpcyBub2RlIEIiPgo8ZWxsaXBzZSBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjAiIGN4PSI3ODguMzYiIGN5PSItMTcyLjUzIiByeD0iMjQ2LjE1IiByeT0iMTcyLjU3Ii8+Cjxwb2x5Z29uIGZpbGw9IiMxZDcxYjgiIHN0cm9rZT0idHJhbnNwYXJlbnQiIHBvaW50cz0iNjE2LjM2LC0yMzIuNTMgNjE2LjM2LC0yOTIuNTMgOTYwLjM2LC0yOTIuNTMgOTYwLjM2LC0yMzIuNTMgNjE2LjM2LC0yMzIuNTMiLz4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjkyMzVjIiBwb2ludHM9IjYxNi4zNiwtMjMyLjUzIDYxNi4zNiwtMjkyLjUzIDk2MC4zNiwtMjkyLjUzIDk2MC4zNiwtMjMyLjUzIDYxNi4zNiwtMjMyLjUzIi8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iNzE3LjIyIiB5PSItMjUzLjczIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjMyLjAwIiBmaWxsPSIjZmZmZmZmIj4gwqDCoMKgwqDCoMKgYiDCoMKgwqDCoMKgwqA8L3RleHQ+Cjxwb2x5Z29uIGZpbGw9IiNlN2UyZGQiIHN0cm9rZT0idHJhbnNwYXJlbnQiIHBvaW50cz0iNjE2LjM2LC0xNzIuNTMgNjE2LjM2LC0yMzIuNTMgOTYwLjM2LC0yMzIuNTMgOTYwLjM2LC0xNzIuNTMgNjE2LjM2LC0xNzIuNTMiLz4KPHBvbHlnb24gZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjkyMzVjIiBwb2ludHM9IjYxNi4zNiwtMTcyLjUzIDYxNi4zNiwtMjMyLjUzIDk2MC4zNiwtMjMyLjUzIDk2MC4zNiwtMTcyLjUzIDYxNi4zNiwtMTcyLjUzIi8+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iNjI2Ljk4IiB5PSItMTkyLjczIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMzIuMDAiIGZpbGw9IiMyOTIzNWMiPm5vZGVfYl9jb2wxIMKgwqDCoDwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSI4NDQuOTMiIHk9Ii0xOTMuNzMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zdHlsZT0iaXRhbGljIiBmb250LXNpemU9IjMyLjAwIiBmaWxsPSIjMjkyMzVjIj5TdHJpbmcoKTwvdGV4dD4KPHBvbHlnb24gZmlsbD0iI2U3ZTJkZCIgc3Ryb2tlPSJ0cmFuc3BhcmVudCIgcG9pbnRzPSI2MTYuMzYsLTExMi41MyA2MTYuMzYsLTE3Mi41MyA5NjAuMzYsLTE3Mi41MyA5NjAuMzYsLTExMi41MyA2MTYuMzYsLTExMi41MyIvPgo8cG9seWdvbiBmaWxsPSJub25lIiBzdHJva2U9IiMyOTIzNWMiIHBvaW50cz0iNjE2LjM2LC0xMTIuNTMgNjE2LjM2LC0xNzIuNTMgOTYwLjM2LC0xNzIuNTMgOTYwLjM2LC0xMTIuNTMgNjE2LjM2LC0xMTIuNTMiLz4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSI2MjYuOTgiIHk9Ii0xMzIuNzMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zaXplPSIzMi4wMCIgZmlsbD0iIzI5MjM1YyI+bm9kZV9iX2NvbDIgwqDCoMKgPC90ZXh0Pgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9Ijg0NC45MyIgeT0iLTEzMy43MyIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXN0eWxlPSJpdGFsaWMiIGZvbnQtc2l6ZT0iMzIuMDAiIGZpbGw9IiMyOTIzNWMiPlN0cmluZygpPC90ZXh0Pgo8cG9seWdvbiBmaWxsPSIjZTdlMmRkIiBzdHJva2U9InRyYW5zcGFyZW50IiBwb2ludHM9IjYxNi4zNiwtNTIuNTMgNjE2LjM2LC0xMTIuNTMgOTYwLjM2LC0xMTIuNTMgOTYwLjM2LC01Mi41MyA2MTYuMzYsLTUyLjUzIi8+Cjxwb2x5Z29uIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI5MjM1YyIgcG9pbnRzPSI2MTYuMzYsLTUyLjUzIDYxNi4zNiwtMTEyLjUzIDk2MC4zNiwtMTEyLjUzIDk2MC4zNiwtNTIuNTMgNjE2LjM2LC01Mi41MyIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9IjYyNi45OCIgeT0iLTcyLjczIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMzIuMDAiIGZpbGw9IiMyOTIzNWMiPm5vZGVfYl9jb2wzIMKgwqDCoDwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSI4NDQuOTMiIHk9Ii03My43MyIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXN0eWxlPSJpdGFsaWMiIGZvbnQtc2l6ZT0iMzIuMDAiIGZpbGw9IiMyOTIzNWMiPlN0cmluZygpPC90ZXh0Pgo8cG9seWdvbiBmaWxsPSJub25lIiBzdHJva2U9IiMyOTIzNWMiIHN0cm9rZS13aWR0aD0iMiIgcG9pbnRzPSI2MTUuMzYsLTUxLjUzIDYxNS4zNiwtMjkzLjUzIDk2MS4zNiwtMjkzLjUzIDk2MS4zNiwtNTEuNTMgNjE1LjM2LC01MS41MyIvPgo8L2E+CjwvZz4KPC9nPgo8IS0tIGNhY2hlX3RhYmxlX2EgLS0+CjxnIGlkPSJjYWNoZV90YWJsZV9hIiBjbGFzcz0ibm9kZSI+Cjx0aXRsZT5jYWNoZV90YWJsZV9hPC90aXRsZT4KPGcgaWQ9ImFfY2FjaGVfdGFibGVfYSI+PGEgeGxpbms6dGl0bGU9ImNhY2hlX3RhYmxlX2EKTWFuYWdlZCBieSBmbHlwaXBlIG5vZGUgYEFgCgp0aGlzIGlzIG5vZGUgQSI+CjxlbGxpcHNlIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIHN0cm9rZS13aWR0aD0iMCIgY3g9IjI1My4xNCIgY3k9Ii0yMDIuNTMiIHJ4PSIyNTMuMjkiIHJ5PSIxMzAuMjIiLz4KPHBvbHlnb24gZmlsbD0iIzM0OThkYiIgc3Ryb2tlPSJ0cmFuc3BhcmVudCIgcG9pbnRzPSI3Ni4xNCwtMjMyLjUzIDc2LjE0LC0yOTIuNTMgNDMwLjE0LC0yOTIuNTMgNDMwLjE0LC0yMzIuNTMgNzYuMTQsLTIzMi41MyIvPgo8cG9seWdvbiBmaWxsPSJub25lIiBzdHJva2U9IiMyOTIzNWMiIHBvaW50cz0iNzYuMTQsLTIzMi41MyA3Ni4xNCwtMjkyLjUzIDQzMC4xNCwtMjkyLjUzIDQzMC4xNCwtMjMyLjUzIDc2LjE0LC0yMzIuNTMiLz4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSI4Ni44NSIgeT0iLTI1My43MyIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXdlaWdodD0iYm9sZCIgZm9udC1zaXplPSIzMi4wMCIgZmlsbD0iI2ZmZmZmZiI+IMKgwqDCoMKgwqDCoGNhY2hlX3RhYmxlX2EgwqDCoMKgwqDCoMKgPC90ZXh0Pgo8cG9seWdvbiBmaWxsPSIjZTdlMmRkIiBzdHJva2U9InRyYW5zcGFyZW50IiBwb2ludHM9Ijc2LjE0LC0xNzIuNTMgNzYuMTQsLTIzMi41MyA0MzAuMTQsLTIzMi41MyA0MzAuMTQsLTE3Mi41MyA3Ni4xNCwtMTcyLjUzIi8+Cjxwb2x5Z29uIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI5MjM1YyIgcG9pbnRzPSI3Ni4xNCwtMTcyLjUzIDc2LjE0LC0yMzIuNTMgNDMwLjE0LC0yMzIuNTMgNDMwLjE0LC0xNzIuNTMgNzYuMTQsLTE3Mi41MyIvPgo8dGV4dCB0ZXh0LWFuY2hvcj0ic3RhcnQiIHg9Ijg3LjE0IiB5PSItMTkyLjczIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMzIuMDAiIGZpbGw9IiMyOTIzNWMiPm5vZGVfYV9jb2wxIMKgwqDCoDwvdGV4dD4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSIzMTQuMjciIHk9Ii0xOTMuNzMiIGZvbnQtZmFtaWx5PSJIZWx2ZXRpY2Esc2Fucy1TZXJpZiIgZm9udC1zdHlsZT0iaXRhbGljIiBmb250LXNpemU9IjMyLjAwIiBmaWxsPSIjMjkyMzVjIj5TdHJpbmcoKTwvdGV4dD4KPHBvbHlnb24gZmlsbD0iI2U3ZTJkZCIgc3Ryb2tlPSJ0cmFuc3BhcmVudCIgcG9pbnRzPSI3Ni4xNCwtMTEyLjUzIDc2LjE0LC0xNzIuNTMgNDMwLjE0LC0xNzIuNTMgNDMwLjE0LC0xMTIuNTMgNzYuMTQsLTExMi41MyIvPgo8cG9seWdvbiBmaWxsPSJub25lIiBzdHJva2U9IiMyOTIzNWMiIHBvaW50cz0iNzYuMTQsLTExMi41MyA3Ni4xNCwtMTcyLjUzIDQzMC4xNCwtMTcyLjUzIDQzMC4xNCwtMTEyLjUzIDc2LjE0LC0xMTIuNTMiLz4KPHRleHQgdGV4dC1hbmNob3I9InN0YXJ0IiB4PSI4Ny4xNCIgeT0iLTEzMi43MyIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjMyLjAwIiBmaWxsPSIjMjkyMzVjIj5ub2RlX2FfY29sMiDCoMKgwqA8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJzdGFydCIgeD0iMzE0LjI3IiB5PSItMTMzLjczIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc3R5bGU9Iml0YWxpYyIgZm9udC1zaXplPSIzMi4wMCIgZmlsbD0iIzI5MjM1YyI+U3RyaW5nKCk8L3RleHQ+Cjxwb2x5Z29uIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI5MjM1YyIgc3Ryb2tlLXdpZHRoPSIyIiBwb2ludHM9Ijc1LjE0LC0xMTEuNTMgNzUuMTQsLTI5My41MyA0MzEuMTQsLTI5My41MyA0MzEuMTQsLTExMS41MyA3NS4xNCwtMTExLjUzIi8+CjwvYT4KPC9nPgo8L2c+CjwhLS0gY2FjaGVfdGFibGVfYSYjNDU7Jmd0O2IgLS0+CjwhLS0gY2FjaGVfdGFibGVfYSYjNDU7Jmd0O2IgLS0+CjxnIGlkPSJlZGdlMiIgY2xhc3M9ImVkZ2UiPgo8dGl0bGU+Y2FjaGVfdGFibGVfYTplLSZndDtiOnc8L3RpdGxlPgo8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMyOTIzNWMiIHN0cm9rZS13aWR0aD0iMyIgZD0iTTQzMS4xNCwtMjAyLjUzQzUwOS41LC0yMDIuNTMgNTMxLjYxLC0yMDIuNTMgNjA1LjE0LC0yMDIuNTMiLz4KPHBvbHlnb24gZmlsbD0iIzI5MjM1YyIgc3Ryb2tlPSIjMjkyMzVjIiBzdHJva2Utd2lkdGg9IjMiIHBvaW50cz0iNjA1LjM2LC0yMDYuMDMgNjE1LjM2LC0yMDIuNTMgNjA1LjM2LC0xOTkuMDMgNjA1LjM2LC0yMDYuMDMiLz4KPHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iNjA2LjQ3IiB5PSItMTczLjczIiBmb250LWZhbWlseT0iSGVsdmV0aWNhLHNhbnMtU2VyaWYiIGZvbnQtc2l6ZT0iMzIuMDAiIGZpbGw9IiMyOTIzNWMiPjE8L3RleHQ+Cjx0ZXh0IHRleHQtYW5jaG9yPSJtaWRkbGUiIHg9IjQyNC45MiIgeT0iLTE3My43MyIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxzYW5zLVNlcmlmIiBmb250LXNpemU9IjMyLjAwIiBmaWxsPSIjMjkyMzVjIj4qPC90ZXh0Pgo8L2c+CjwvZz4KPC9zdmc+"/>
 </div>
 </div>
 </div>
@@ -2093,13 +2226,13 @@ display(SVG(filename="test.svg"))  # Replace with your SVG file path
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=936b7573-ff82-4295-a486-0dc6a97ee90b">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=936b7573-ff82-4295-a486-0dc6a97ee90b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
@@ -2123,6 +2256,18 @@ IFrame("https://dbdiagram.io/e/67c9e4b0263d6cf9a07dd726/67c9e4f6263d6cf9a07dde8e
 </div>
 </div>
 </div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[6]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<iframe allowfullscreen="" frameborder="0" height="600" src="https://dbdiagram.io/e/67c9e4b0263d6cf9a07dd726/67c9e4f6263d6cf9a07dde8e" width="800"></iframe>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=89bd0b71-b50e-466d-b76d-fbadc6069aa5">
@@ -2140,13 +2285,13 @@ IFrame("https://dbdiagram.io/e/67c9e4b0263d6cf9a07dd726/67c9e4f6263d6cf9a07dde8e
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8317438f-f7ed-4910-ac39-3a42ca5f957f">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8317438f-f7ed-4910-ac39-3a42ca5f957f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
@@ -2166,6 +2311,18 @@ IFrame("https://dbdiagram.io/e/67c9e4b0263d6cf9a07dd726/67c9e4f6263d6cf9a07dde8e
 <div class="clipboard-copy-txt" id="cell-7">from IPython.display import IFrame
 
 IFrame("https://dbdocs.io/joseheliomuller/flypipe", width=1280, height=1000)</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[7]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<iframe allowfullscreen="" frameborder="0" height="1000" src="https://dbdocs.io/joseheliomuller/flypipe" width="1280"></iframe>
 </div>
 </div>
 </div>
