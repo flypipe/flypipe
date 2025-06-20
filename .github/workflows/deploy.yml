@@ -5,7 +5,6 @@
 name: 'deploy'
 
 on:
-
   # Allow for manual invocation
   workflow_dispatch:
 
@@ -13,7 +12,7 @@ jobs:
   predeploy:
     uses: ./.github/workflows/predeploy.yml
 
-  deploy-pypi:
+  deploy:
     needs: predeploy
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -24,19 +23,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Setup Dependencies
         uses: './.github/actions/setup-dependencies'
+
       - name: Download version file
         uses: actions/download-artifact@v4
         with:
           name: version.txt
           path: flypipe
+
       - name: Store version number
         run: echo "VERSION_NUMBER=$(cat flypipe/version.txt)" >> $GITHUB_ENV
+
       - name: Download changelog
         uses: actions/download-artifact@v4
         with:
           name: changelog.md
+
       - name: Create new branch
         run: |
           git config --global user.email "flypipe@dummy.com"
@@ -44,18 +48,25 @@ jobs:
           git checkout -b "release/${{ env.VERSION_NUMBER }}"
           git add flypipe/version.txt
           git add changelog.md
-          git commit -m 'chore: update version file'
+          git commit -m 'chore: update version file, changelog'
           git push origin "release/${{ env.VERSION_NUMBER }}"
+
       - name: Build frontend
         run: |
           cd frontend
           yarn build
+
       - name: Upload to pypi
         run: |
           flit publish
         env:
           FLIT_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
 
-  build-docs:
-    needs: deploy-pypi
-    uses: ./.github/workflows/build-docs.yml
+      - name: Deploy docs
+        run: |
+          git config --global user.email "flypipe@dummy.com"
+          git config --global user.name "flypipe"
+          git fetch
+          make docs-deploy version=${{ env.VERSION_NUMBER }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

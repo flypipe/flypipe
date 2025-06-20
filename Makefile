@@ -1,78 +1,79 @@
 SHELL                       :=/bin/bash
 
-LOCAL_DIR=./local
-PYTEST_THREADS ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
-min_coverage=90
-min_branch_coverage=95
-USE_SPARK_CONNECT=0
+DOCKER_DIR          =.docker
+PYTEST_THREADS      ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
+min_coverage        =90
+min_branch_coverage =95
+USE_SPARK_CONNECT   =0
+version			    ?=
 
-build-image:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml build
-.PHONY: build-image
+export PYTHONPATH := $(PYTHONPATH):./flypipe
 
-up: build-image
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml up
+# This block checks for .env and exports it for all recipes
+ifneq (,$(wildcard .env))
+  include .env
+  export $(shell sed 's/=.*//' .env)
+endif
+
+clean:
+	python docs/notebooks/clean.py
+.PHONY: clean
+
+build: clean
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml build
+.PHONY: build
+
+up: build
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml up
 .PHONY: up
 
+
 down:
-	rm -r $(LOCAL_DIR)/data || true
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml down -v --rmi all
+	rm -r $(DOCKER_DIR)/data || true
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml down -v --rmi all
 .PHONY: down
 
 ping:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter sh -c "chmod +x ./wait-for-it.sh && ./wait-for-it.sh -h flypipe-mariadb -p 3306"
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter sh -c "chmod +x ./wait-for-it.sh && ./wait-for-it.sh -h flypipe-hive-metastore -p 9083"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter sh -c "chmod +x ./wait-for-it.sh && ./wait-for-it.sh -h flypipe-mariadb -p 3306"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter sh -c "chmod +x ./wait-for-it.sh && ./wait-for-it.sh -h flypipe-hive-metastore -p 9083"
 .PHONY: ping
 
 black:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe"
 .PHONY: black
 
 black-check:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe --check"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe --check"
 .PHONY: black-check
 
 lint:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "python -m ruff check flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "python -m ruff check flypipe"
 .PHONY: lint
 
 coverage:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py -k '_test.py' --cov-config=flypipe/.coverage --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py -k '_test.py' --cov-config=flypipe/.coverage --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
 .PHONY: coverage
 
 test:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest -n $(PYTEST_THREADS) -k '_test.py' -vv $(f) --rootdir flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest -n $(PYTEST_THREADS) -k '_test.py' -vv $(f) --rootdir flypipe"
 .PHONY: test
 
-branch-coverage:
-	coverage xml
-	diff-cover coverage.xml --fail-under=$(min_branch_coverage)
-.PHONY: branch-coverage
 
-jupyter-bash: build-image
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" -it flypipe-jupyter bash
-.PHONY: jupyter-bash
+bash: build
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" -it flypipe-jupyter bash
+.PHONY: bash
 
-docs:
-	sh docs/build_docs.sh
-.PHONY: docs
-
-docs-dev: build-image
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "sh ./docs/build_docs_dev.sh"
-.PHONY: docs-dev
-
-build:
+wheel:
 	flit build --format wheel
-.PHONY: build
+.PHONY: wheel
 
-spark-bash:
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml build
-	docker-compose -f $(LOCAL_DIR)/docker-compose.yaml run --entrypoint "" -it spark-master bash
-.PHONY: spark-bash
+pip-compile:
+	pip install -r requirements-pkg.in
+	pip-compile requirements-pkg.in --no-annotate --no-header
+	pip-compile requirements-dev.in --no-annotate --no-header
+.PHONY: pip-compile
 
-pr-check:
-	make black
-	make lint
+pr-check: clean black lint
 	make coverage USE_SPARK_CONNECT=0
 	make coverage USE_SPARK_CONNECT=1
 	make test f=flypipe/tests/activate/sparkleframe_test.py
@@ -85,7 +86,23 @@ githooks:
 	echo "Custom Git hooks enabled (core.hooksPath set to .githooks)"
 .PHONY: githooks
 
-setup:
-	make githooks
-	make build-image
+setup: pip-compile githooks clean
+	pip install -r requirements-dev.txt
+	make build
 .PHONY: setup
+
+docs:
+	@if [ ! -f changelog.md ]; then \
+		echo "changelog.md does not exist, running command..."; \
+		python scripts/generate_changelog.py; \
+	fi
+	cp changelog.md ./docs
+	mkdocs serve
+.PHONY: docs
+
+docs-deploy:
+	@[ -n "$(version)" ] || (echo "ERROR: version is required"; exit 1)
+	cp changelog.md ./docs
+	mike deploy --allow-empty --push --update-aliases $(shell echo $(version) | awk -F. '{print $$1"."$$2}') latest
+	mike set-default --push latest
+.PHONY: docs-deploy

@@ -1,0 +1,8 @@
+###
+### Note: This file pins packaging libraries required to build and install other libraries.
+### Install this requirements before installing other requirements-*.txt
+###
+flit==3.12.0
+packaging==24.2
+pip==25.0
+pip-tools==7.4.1

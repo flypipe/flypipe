@@ -12,9 +12,9 @@ class TestNodeGraph:
         """
         Ensure an appropriate graph is built for a transformation
            T2
-          /  \
+          // \\
         T1    T4
-          \  /
+          \\ //
            T3
         """
 

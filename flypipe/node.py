@@ -399,7 +399,7 @@ class Node:
     def html(
         self,
         spark=None,
-        height=800,
+        height=700,
         inputs=None,
         pandas_on_spark_use_pandas=False,
         parameters=None,
@@ -471,94 +471,81 @@ class Node:
 
 
 def node(type, *args, **kwargs):
-    """
-    Nodes are the fundamental building block of Flypipe. Simply apply the node function as a decorator to a
+    """Nodes are the fundamental building block of Flypipe. Simply apply the node function as a decorator to a
     transformation function in order to declare the transformation as a Flypipe node.
 
-    Parameters
-    ----------
+    Parameters:
+        type (str): Type of the node transformation "pandas", "pandas_on_spark", "pyspark", "spark_sql"
+        description (str,optional): Description of the node. Defaults to `None`.
+        group (str,optional): Group the node falls under, nodes in the same group are clustered together in the Catalog UI. Defaults to `None`.
+        tags (List[str],optional): List of tags for the node. Defaults to `None`.
+        dependencies (List[Node],optional): List of other dependent nodes. Defaults to `None`.
+        output (Schema,optional): Defines the output schema of the node. Defaults to `None`.
+        spark_context (bool,optional): True, returns spark context as argument to the function. Defaults to `False`.
 
-    type : str
-            Type of the node transformation "pandas", "pandas_on_spark", "pyspark", "spark_sql"
-    description : str, optional
-        Description of the node (default is None)
-    group : str, optional
-        Group the node falls under, nodes in the same group are clustered together in the Catalog UI.
-    tags : List[str], optional
-        List of tags for the node (default is None)
-    dependencies : List[Node], optional
-        List of other dependent nodes
-    output : Schema, optional
-        Defines the output schema of the node (default is None)
-    spark_context : bool, optional
-        True, returns spark context as argument to the function (default is False)
+    Examples
 
+    ``` py
+    # Syntax
+    @node(
+        type="pyspark", "pandas_on_spark" or "pandas",
+        description="this is a description of what this node does",
+        tags=["a", "list", "of", "tags"],
+        dependencies=[other_node_1, other_node_2, ...],
+        output=Schema(
+            Column("col_name", String(), "a description of the column"),
+        ),
+        spark_context = True or False
+    )
+    def your_function_name(other_node_1, other_node_2, ...):
+        # YOUR TRANSFORMATION LOGIC HERE
+        # use pandas syntax if type is `pandas` or `pandas_on_spark`
+        # use PySpark syntax if type is `pyspark`
+        return dataframe
+    ```
 
-    .. highlight:: python
-    .. code-block:: python
-
-        # Syntax
-        @node(
-            type="pyspark", "pandas_on_spark" or "pandas",
-            description="this is a description of what this node does",
-            tags=["a", "list", "of", "tags"],
-            dependencies=[other_node_1, other_node_2, ...],
-            output=Schema(
-                Column("col_name", String(), "a description of the column"),
-            ),
-            spark_context = True or False
+    ``` py
+    # Node without dependency
+    from flypipe.node import node
+    from flypipe.schema import Schema, Column
+    from flypipe.schema.types import String
+    import pandas as pd
+    @node(
+        type="pandas",
+        description="Only outputs a pandas dataframe",
+        output=Schema(
+            t0.output.get("fruit"),
+            Column("flavour", String(), "fruit flavour")
         )
-        def your_function_name(other_node_1, other_node_2, ...):
-            # YOUR TRANSFORMATION LOGIC HERE
-            # use pandas syntax if type is `pandas` or `pandas_on_spark`
-            # use PySpark syntax if type is `pyspark`
-            return dataframe
+    )
+    def t1(df):
+        return pd.DataFrame({"fruit": ["mango"], "flavour": ["sweet"]})
+    ```
 
-
-    .. highlight:: python
-    .. code-block:: python
-
-        # Node without dependency
-        from flypipe.node import node
-        from flypipe.schema import Schema, Column
-        from flypipe.schema.types import String
-        import pandas as pd
-        @node(
-            type="pandas",
-            description="Only outputs a pandas dataframe",
-            output=Schema(
-                t0.output.get("fruit"),
-                Column("flavour", String(), "fruit flavour")
-            )
+    ``` py
+    # Node with dependency
+    from flypipe.node import node
+    from flypipe.schema import Schema, Column
+    from flypipe.schema.types import String
+    import pandas as pd
+    @node(
+        type="pandas",
+        description="Only outputs a pandas dataframe",
+        dependencies = [
+            t0.select("fruit").alias("df")
+        ],
+        output=Schema(
+            t0.output.get("fruit"),
+            Column("flavour", String(), "fruit flavour")
         )
-        def t1(df):
-            return pd.DataFrame({"fruit": ["mango"], "flavour": ["sweet"]})
+    )
+    def t1(df):
+        categories = {'mango': 'sweet', 'lemon': 'citric'}
+        df['flavour'] = df['fruit']
+        df = df.replace({'flavour': categories})
+        return df
+    ```
 
-
-    .. highlight:: python
-    .. code-block:: python
-
-        # Node with dependency
-        from flypipe.node import node
-        from flypipe.schema import Schema, Column
-        from flypipe.schema.types import String
-        import pandas as pd
-        @node(
-            type="pandas",
-            description="Only outputs a pandas dataframe",
-            dependencies = [
-                t0.select("fruit").alias("df")
-            ],
-            output=Schema(
-                t0.output.get("fruit"),
-                Column("flavour", String(), "fruit flavour")
-            )
-        )
-        def t1(df):
-            categories = {'mango': 'sweet', 'lemon': 'citric'}
-            df['flavour'] = df['fruit']
-            df = df.replace({'flavour': categories})
-            return df
     """
 
     def decorator(func):
