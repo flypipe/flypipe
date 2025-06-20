@@ -50,6 +50,8 @@ jobs:
           git add changelog.md
           git commit -m 'chore: update version file, changelog'
           git push origin "release/${{ env.VERSION_NUMBER }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build frontend
         run: |
