@@ -64,8 +64,6 @@ jobs:
 
       - name: Deploy docs
         run: |
-          git config --global user.email "flypipe@dummy.com"
-          git config --global user.name "flypipe"
           git fetch
           make docs-deploy version=${{ env.VERSION_NUMBER }}
         env:
