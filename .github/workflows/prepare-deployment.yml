@@ -5,7 +5,7 @@
 # By calculating the version/changelog here instead of in the deployment job we can double check these artifacts to
 # ensure they are looking fine prior to releasing.
 
-name: 'prepare-for-deployment'
+name: 'prepare-deployment'
 
 on:
   # Allow for manual invocation
@@ -18,7 +18,7 @@ jobs:
   verification:
     uses: ./.github/workflows/verification.yml
 
-  prepare-artifacts:
+  prepare-deployment:
     needs: verification
     runs-on: ubuntu-latest
     timeout-minutes: 10

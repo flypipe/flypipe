@@ -9,11 +9,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  prepare-artifacts:
-    uses: ./.github/workflows/prepare-artifacts.yml
+  prepare-deployment:
+    uses: ./.github/workflows/prepare-deployment.yml
 
   deploy-docs:
-    needs: prepare-artifacts
+    needs: prepare-deployment
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
