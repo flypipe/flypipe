@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Callable
 
 from flypipe.schema.types import Type
 from flypipe.utils import dataframe_type, DataFrameType
@@ -62,6 +63,15 @@ class DataFrameWrapper(ABC):
         if columns and isinstance(columns[0], list):
             columns = columns[0]
         return self.__class__(self.spark, self._select_columns(columns))
+
+    def apply(self, func: Callable):
+        """
+        Applies the function func to the dataframe and returns a new dataframe.
+        """
+
+        # It needs to use self.get_df() as get_df knows how to copy the dataframe or how to convert it,
+        # see PandasDataFrameWrapper.get_df() and PandasOnSparkDataFrameWrapper.get_df()
+        return self.__class__(self.spark, func(self.get_df()))
 
     @abstractmethod
     def _select_columns(self, columns):

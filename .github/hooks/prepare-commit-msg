@@ -1,0 +1,18 @@
+#!/bin/bash
+
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="$2"
+
+# Skip certain commit types (e.g., merge, squash)
+if [[ "$COMMIT_SOURCE" != "merge" && "$COMMIT_SOURCE" != "squash" ]]; then
+  BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+
+  # Skip if detached HEAD
+  if [ "$BRANCH_NAME" != "HEAD" ]; then
+    # Read existing message
+    COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+    # Prepend branch name
+    echo "#$BRANCH_NAME $COMMIT_MSG" > "$COMMIT_MSG_FILE"
+  fi
+fi

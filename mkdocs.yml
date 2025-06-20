@@ -1,0 +1,112 @@
+site_name: Flypipe
+repo_url: https://github.com/flypipe/flypipe
+repo_name: flypipe/flypipe
+nav:
+  - Welcome: index.md
+  - Configuration: configuration.md
+  - Quick Start:
+    - Pandas: notebooks/quick_start/pandas.ipynb
+    - Databricks: notebooks/quick_start/databricks.ipynb
+  - Usage:
+    - Node: node.md
+    - Node Examples: notebooks/usage/node.ipynb
+    - Node Parameters: notebooks/usage/node-parameters.ipynb
+    - Node Function: node-function.md
+    - Node Function Examples: notebooks/usage/node-function.ipynb
+    - Different ways of running:
+        - Multi Node Graphs: notebooks/usage/multiple-node-types.ipynb
+        - Low latency transformations: notebooks/usage/sparkleframe.ipynb
+    - Cache/Persist Data:
+      - How it works?: notebooks/usage/cache.ipynb
+      - Cache Handling Process: cache-flow.md
+    - Dependencies Preprocessing:
+      - How it works?: preprocessing-flow.md
+      - Working Example: notebooks/usage/preprocess.ipynb
+    - Relationships: relationships.md
+    - Data Sources: data-sources.md
+    - Graph Catalog UI: graph-catalog-ui.md
+  - Miscellaneous:
+      - Build ERD: notebooks/miscellaneous/build-erd.ipynb
+      - Databricks:
+        - ML Graphs (with mlflow): notebooks/miscellaneous/databricks/ml-graphs.ipynb
+  - License: license.md
+  - Questions and suggestions: questions-suggestions.md
+  - Changelog: changelog.md
+theme:
+  name: material
+  navigation_depth: 3
+  logo: images/logo.png
+  favicon: images/favicon.ico
+  custom_dir: docs/overrides
+  icon:
+    repo: fontawesome/brands/github
+
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: #091c79
+      accent: #cce8fe
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: #cce8fe
+      accent: #091c79
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+  features:
+    - navigation.top
+    - navigation.path
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.select
+plugins:
+  - include-markdown
+  - search
+  - mkdocs-jupyter
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [ flypipe ]
+          options:
+            docstring_style: google
+            merge_init_into_class: true
+
+markdown_extensions:
+  - tables
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.critic
+  - pymdownx.mark
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - md_in_html
+  - pymdownx.blocks.caption
+extra_css:
+  - stylesheets/extra.css
+extra:
+  version:
+    provider: mike
+    default: latest
+    alias: true

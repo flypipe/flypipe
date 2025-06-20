@@ -1,6 +1,6 @@
-# Flypipe
-
-[![verification](https://github.com/flypipe/flypipe/actions/workflows/verification.yml/badge.svg?branch=main)](https://github.com/flypipe/flypipe/actions/workflows/verification.yml)
+<div style="text-align: center;">
+  <img src="docs/images/logo_white.png#only-dark" alt="Flypipe" width="500px"/>
+</div>
 
 Flypipe is a Python framework to simplify development, management and maintenance of transformation pipelines, which are 
 commonly used in the data, feature and ML model space.
@@ -8,6 +8,21 @@ commonly used in the data, feature and ML model space.
 Each transformation is implemented in a small, composable function, a special decorator is then used to define it as a 
 Flypipe node, which is the primary model Flypipe uses. Metadata on the node decorator allows for multiple nodes to be 
 linked together into a Directed Acyclic Graph (DAG). 
+
+As each node (transformation) is connected to its ancestors, we can easily view the pipeline graphically in a html page 
+(`my_graph.html()`) or execute it by invoking `my_graph.run()`
+
+![Flypipe Graph Pipeline](docs/images/flypipe_pipelines.png)
+
+## Installation
+
+```
+pip install flypipe
+```
+
+Package published in [PyPI](https://pypi.org/project/flypipe/).
+
+## Example Usage
 
 ```python
 from flypipe.node import node
@@ -23,13 +38,6 @@ def t1(df):
   df = df.replace({'flavour': categories})
   return df
 ```
-
-### Flypipe Pipelines
-
-As each node (transformation) is connected to its ancestors, we can easily view the pipeline graphically in a html page 
-(`my_graph.html()`) or execute it by invoking `my_graph.run()`
-
-![Flypipe Graph Pipeline](/docs/source/_static/images/flypipe_pipelines.png)
 
 ## What Flypipe aims to facilitate?
 
@@ -50,8 +58,8 @@ latency. This in turn allows for on-demand feature generation/predictions.
 ## Commonly used
 
 <p float="left">
-  <img src="./docs/source/_static/images/databricks_logo.png" alt="Databricks" style="height:100px;"/>
-  <img src="./docs/source/_static/images/python.png" alt="Python" style="height:80px;"/>
+  <img src="docs/images/databricks_logo.png" alt="Databricks" style="height:100px;"/>
+  <img src="docs/images/python.png" alt="Python" style="height:80px;"/>
 </p>
 
 ## Source Code

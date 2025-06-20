@@ -556,11 +556,11 @@ class TestCache:
         assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
 
-    def test_only_skip_nodes_all_acestors_not_active_nor_cached(self, mocker):
+    def test_only_skip_nodes_all_ancestors_not_active_nor_cached(self, mocker):
         """
         t1 (cached) -> t2 (cached)
-                \       /
-                  \   /
+                \\      //
+                  \\   //
                     t3
 
         running t3, expect to both t1 and t2 check if exists and write cache
@@ -640,8 +640,8 @@ class TestCache:
     def test_only_skip_nodes_cached_ancestors(self, cache, mocker):
         """
         t0 (cached) -> t1 (cached) -> t2 (cached)
-                \                         /
-                  \                     /
+                \\                         //
+                  \\                     //
                              t3
 
         running t3, expect to both t1 and t2 check if exists and write cache

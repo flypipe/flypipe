@@ -75,7 +75,7 @@ class SparkDataFrameWrapper(DataFrameWrapper):
 
     def _select_columns(self, columns):
 
-        df_cols = [col for col, _ in self.df.dtypes]
+        df_cols = self.df.columns
 
         if not set(columns).issubset(set(df_cols)):
             raise DataFrameMissingColumns(df_cols, columns)

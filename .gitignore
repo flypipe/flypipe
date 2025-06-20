@@ -46,7 +46,6 @@ pip-delete-this-directory.txt
 htmlcov/
 .tox/
 .nox/
-.coverage
 .coverage.*
 .cache
 nosetests.xml
@@ -149,4 +148,6 @@ spark-warehouse/
 mlruns/
 artifacts/
 tmp/
-/local/data/
+/.docker/data/
+/flypipe/.coverage
+.Trash-0

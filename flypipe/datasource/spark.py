@@ -5,26 +5,26 @@ from flypipe.node_type import NodeType
 
 
 def Spark(table):
-    """
+    """Creates a flypipe node that loads a Spark table
 
-    Args:
-        table: str
-            name of the spark table table
+    Attributes:
+        table (str): name of the spark table table
 
     Returns:
         Node
 
-    >>> # Usage
-        @node(
-            ...
-            dependencies = [
-                Spark("your_spark_table_name_here").select("column1", "column2",...).alias("any_alias_df")
-            ]
-            ...
-        )
-        def my_transformation(any_alias_df):
-            return any_alias_df
-
+    Usage:
+    ``` py
+    @node(
+        ...
+        dependencies = [
+            Spark("your_spark_table_name_here").select("column1", "column2",...).alias("any_alias_df")
+        ]
+        ...
+    )
+    def my_transformation(any_alias_df):
+        return any_alias_df
+    ```
     """
 
     @node(

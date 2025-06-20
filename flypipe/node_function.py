@@ -108,64 +108,51 @@ def node_function(*args, **kwargs):
     """
     Decorator factory that returns the given function wrapped inside a NodeFunction class
 
-    Parameters
-    ----------
+    Parameters:
+        requested_columns (bool,optional): List of requested columns that successors nodes are demanding from the node function, if True will retrieve `requested_columns` as named argument. Defaults to `False`.
+        node_dependencies (List[Node or NodeFunction],optional): List of external nodes that the node function is dependent on. Any node retrieved by the node function (called internal node) can only be dependent on any internal node or any node inside `node_dependencies`. True, returns spark context as argument to the function. Defaults to `False`.
+        output (Schema,optional): Defines the output schema of the node. Defaults to `None`.
 
-    requested_columns : bool, optional (default `False`)
-        List of requested columns that successors nodes are demanding from the node function.
-        if True will retrieve `requested_columns` as named argument
-    node_dependencies : List[Node or NodeFunction], optional
-        List of external nodes that the node function is dependent on.
-        Any node retrieved by the node function (called internal node) can only be dependent on any internal node or
-        any node inside `node_dependencies`.
-        True, returns spark context as argument to the function (default is False)
-    output : Schema, optional
-        Defines the output schema of the node (default is None)
+    Returns:
+        (List[Node]): a list of nodes created internally
 
-    Returns
-    -------
-    List[Node]
-        a list of nodes created internally
+    Raises:
+        ValueError
+            If any internal node is of type NodeFunction; if any internal node has a dependency that is not to another
+            internal node and not declared in node_dependencies
 
-    Raises
-    ------
-    ValueError
-        If any internal node is of type NodeFunction; if any internal node has a dependency that is not to another
-        internal node and not declared in node_dependencies
+    # Examples
 
+    ``` py
+    # Syntax
+    @node_function(
+        requested_columns=True,
+        node_dependencies=[
+            Spark("table")
+        ]
+    )
+    def my_node_function(requested_columns):
 
-    .. highlight:: python
-    .. code-block:: python
-
-        # Syntax
-        @node_function(
-            requested_columns=True,
-            node_dependencies=[
-                Spark("table")
+        @node(
+            type="pandas",
+            dependencies=[
+                Spark("table").select(requested_columns).alias("df")
             ]
         )
-        def my_node_function(requested_columns):
+        def internal_node_1(df):
+            return df
 
-            @node(
-                type="pandas",
-                dependencies=[
-                    Spark("table").select(requested_columns).alias("df")
-                ]
-            )
-            def internal_node_1(df):
-                return df
+        @node(
+            type="pandas",
+            dependencies=[
+                internal_node_1.alias("df")
+            ]
+        )
+        def internal_node_2(df):
+            return df
 
-
-            @node(
-                type="pandas",
-                dependencies=[
-                    internal_node_1.alias("df")
-                ]
-            )
-            def internal_node_2(df):
-                return df
-
-            return internal_node_1, internal_node_2 # <-- ALL INTERNAL NODES CREATED MUST BE RETURNED
+        return internal_node_1, internal_node_2 # <-- ALL INTERNAL NODES CREATED MUST BE RETURNED
+    ```
 
     """
 
