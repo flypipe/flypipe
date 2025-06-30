@@ -2,6 +2,8 @@ import React, { useCallback, useMemo, useContext } from "react";
 import classNames from "classnames";
 import { Badge } from "react-bootstrap";
 import { NodeDetailsContext } from "../node-details/context";
+import { formatTextToHtml } from "../util";
+import DOMPurify from "dompurify";
 
 const Node = ({ node, handleClickGraphBuilder }) => {
     const { nodeKey, name, description, tags } = node;
@@ -53,7 +55,17 @@ const Node = ({ node, handleClickGraphBuilder }) => {
                     {text}
                 </Badge>
             ))}
-            <p>{description}</p>
+            <p
+                dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(
+                        formatTextToHtml(
+                            description.length > 250
+                                ? description.slice(0, 250) + "..."
+                                : description
+                        )
+                    ),
+                }}
+            />
         </div>
     );
 };
