@@ -15,11 +15,11 @@ ifneq (,$(wildcard .env))
   export $(shell sed 's/=.*//' .env)
 endif
 
-clean:
+notebooks-clean:
 	python docs/notebooks/clean.py
 .PHONY: clean
 
-build: clean
+build:
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml build
 .PHONY: build
 
@@ -73,7 +73,7 @@ pip-compile:
 	pip-compile requirements-dev.in --no-annotate --no-header
 .PHONY: pip-compile
 
-pr-check: clean black lint
+pr-check: black lint
 	make coverage USE_SPARK_CONNECT=0
 	make coverage USE_SPARK_CONNECT=1
 	make test f=flypipe/tests/activate/sparkleframe_test.py
@@ -86,7 +86,7 @@ githooks:
 	echo "Custom Git hooks enabled (core.hooksPath set to .githooks)"
 .PHONY: githooks
 
-setup: pip-compile githooks clean
+setup: pip-compile githooks
 	pip install -r requirements-dev.txt
 	make build
 .PHONY: setup

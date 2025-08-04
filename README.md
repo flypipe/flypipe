@@ -25,7 +25,15 @@ Package published in [PyPI](https://pypi.org/project/flypipe/).
 ## Example Usage
 
 ```python
+import pandas as pd
 from flypipe.node import node
+
+
+@node(
+  type="pandas"
+)
+def t0():
+  return pd.DataFrame(data={"fruit": ["mango", "lemon"]})
 
 
 @node(
@@ -37,7 +45,20 @@ def t1(df):
   df['flavour'] = df['fruit']
   df = df.replace({'flavour': categories})
   return df
+
+df = t1.run()
 ```
+```python
+>>> print(df)
++----+---------+-----------+
+|    | fruit   | flavour   |
++====+=========+===========+
+|  0 | mango   | sweet     |
++----+---------+-----------+
+|  1 | lemon   | sour      |
++----+---------+-----------+
+```
+
 
 ## What Flypipe aims to facilitate?
 

@@ -68,7 +68,9 @@ theme:
 plugins:
   - include-markdown
   - search
-  - mkdocs-jupyter
+  - mkdocs-jupyter:
+      execute: false
+      allow_errors: false
   - mkdocstrings:
       handlers:
         python:

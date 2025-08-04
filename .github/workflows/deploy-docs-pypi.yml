@@ -1,0 +1,73 @@
+# Release a new version of Flypipe and docs. Changes that take place:
+#
+# - Documentation is regenerated and a new pypi version is released.
+
+name: 'deploy-docs-pypi'
+
+on:
+  # Allow for manual invocation
+  workflow_dispatch:
+
+jobs:
+  prepare-deployment:
+    uses: ./.github/workflows/prepare-deployment.yml
+
+  deploy:
+    needs: prepare-deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      FLIT_USERNAME: __token__
+      FLIT_INDEX_URL: https://upload.pypi.org/legacy/
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Dependencies
+        uses: './.github/actions/setup-dependencies'
+
+      - name: Download version file
+        uses: actions/download-artifact@v4
+        with:
+          name: version.txt
+          path: flypipe
+
+      - name: Store version number
+        run: echo "VERSION_NUMBER=$(cat flypipe/version.txt)" >> $GITHUB_ENV
+
+      - name: Download changelog
+        uses: actions/download-artifact@v4
+        with:
+          name: changelog.md
+
+      - name: Set git user email and name
+        run: |
+          git config --global user.email "flypipe@dummy.com"
+          git config --global user.name "flypipe"
+
+      - name: Create and Push new release branch
+        run: |
+          git checkout -b "release/${{ env.VERSION_NUMBER }}"
+          git add flypipe/version.txt
+          git add changelog.md
+          git commit -m 'chore: update version file, changelog'
+          git push origin "release/${{ env.VERSION_NUMBER }}"
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          yarn build
+
+      - name: Upload to pypi
+        run: |
+          flit publish
+        env:
+          FLIT_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+
+      - name: Deploy docs
+        run: |
+          git fetch
+          make docs-deploy version=${{ env.VERSION_NUMBER }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
