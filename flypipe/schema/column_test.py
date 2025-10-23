@@ -192,5 +192,5 @@ class TestColumn:
         col = Column("t1c1", String())
         assert (
             str(col).replace("\n", "").replace(" ", "")
-            == """Column:t1c1Parent:NoneDataType:String()Description:''PK:False"""
+            == """Parent:NoneColumn:t1c1DataType:String()Description:''PK:False"""
         )
