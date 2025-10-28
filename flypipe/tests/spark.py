@@ -11,8 +11,7 @@ def build_spark():
         print("Building spark session (spark_connect)")
 
         spark = (
-            SparkSession.builder
-            .appName(str(uuid4()))
+            SparkSession.builder.appName(str(uuid4()))
             .remote("sc://spark-connect:15002")
             # Fail fast if gRPC isn’t reachable (e.g., 20s)
             .config("spark.connect.grpc.client.deadlineSeconds", "20")
