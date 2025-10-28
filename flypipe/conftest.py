@@ -5,7 +5,9 @@ import pytest
 @pytest.hookimpl(tryfirst=True)
 def pytest_runtest_logstart(nodeid, location):
     filename = location[0]
-    print(f"\n🏃 Running file: {filename}")
+    test_name = nodeid.split("::")[-1]
+    sys.stdout.flush()
+    print(f"\n🏃 Running: {filename} -> {test_name}")
 
 
 pytest.register_assert_rewrite("src.assert_pyspark_df_equal")
