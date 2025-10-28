@@ -20,13 +20,14 @@ notebooks-clean:
 .PHONY: clean
 
 build:
+	mkdir -p .docker/logs/spark-master .docker/logs/spark-worker .docker/logs/spark-connect
+	chmod -R 777 .docker/logs
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml build
 .PHONY: build
 
 up: build
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml up
 .PHONY: up
-
 
 down:
 	rm -r $(DOCKER_DIR)/data || true
@@ -57,7 +58,6 @@ coverage:
 test:
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest -n $(PYTEST_THREADS) -k '_test.py' -vv $(f) --rootdir flypipe"
 .PHONY: test
-
 
 bash: build
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" -it flypipe-jupyter bash
