@@ -25,7 +25,7 @@ class Table:
     def columns(self):
         columns = []
 
-        for col in self.node.output.columns:
+        for col in self.node.output_schema.columns:
             column = f"\t{col.name} {str(col.type).replace(' ','')}"
             note = None if not col.description else f"note: '''{col.description}'''"
             pk = None
@@ -45,7 +45,7 @@ class Table:
     def references(self):
         references = []
 
-        for col in self.node.output.columns:
+        for col in self.node.output_schema.columns:
 
             source = f"{self.table_name}.{col.name}"
 
@@ -145,7 +145,7 @@ def is_tag_in_considered(tags, required_tags):
 
 
 def add_to_frontier(node: Node, frontier: Set[Node]):
-    if node.output is not None:
+    if node.output_schema is not None:
         frontier.add(node)
 
     return frontier
@@ -222,7 +222,7 @@ def build_dbml(
         table = Table(node_, only_nodes_with_tags, only_nodes_with_cache)
         dbml[table.table_name] = table.to_dbml()
 
-        for column in node_.output.columns:
+        for column in node_.output_schema.columns:
             for fk_node, fk in column.relationships.items():
                 if is_tag_in_considered(fk_node.parent.tags, only_nodes_with_tags) and (
                     not only_nodes_with_cache

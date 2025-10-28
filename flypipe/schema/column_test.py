@@ -59,9 +59,9 @@ class TestColumn:
         def t2():
             return
 
-        relationships = t2.output.t2c1.relationships
-        assert relationships[t1.output.t1c1].type == RelationshipType.ONE_TO_ONE
-        assert relationships[t1.output.t1c1].description == "my desc"
+        relationships = t2.output_schema.t2c1.relationships
+        assert relationships[t1.output_schema.t1c1].type == RelationshipType.ONE_TO_ONE
+        assert relationships[t1.output_schema.t1c1].description == "my desc"
 
     def test_relationship_many_to_one(self):
         print()
@@ -91,9 +91,9 @@ class TestColumn:
         def t2():
             return
 
-        relationships = t2.output.t2c1.relationships
-        assert relationships[t1.output.t1c1].type == RelationshipType.MANY_TO_ONE
-        assert relationships[t1.output.t1c1].description == "my desc"
+        relationships = t2.output_schema.t2c1.relationships
+        assert relationships[t1.output_schema.t1c1].type == RelationshipType.MANY_TO_ONE
+        assert relationships[t1.output_schema.t1c1].description == "my desc"
 
     def test_relationship_one_to_many(self):
         @node(
@@ -121,9 +121,9 @@ class TestColumn:
         def t2():
             return
 
-        relationships = t2.output.t2c1.relationships
-        assert relationships[t1.output.t1c1].type == RelationshipType.ONE_TO_MANY
-        assert relationships[t1.output.t1c1].description == "my desc"
+        relationships = t2.output_schema.t2c1.relationships
+        assert relationships[t1.output_schema.t1c1].type == RelationshipType.ONE_TO_MANY
+        assert relationships[t1.output_schema.t1c1].description == "my desc"
 
     def test_relationship_many_to_many(self):
         @node(
@@ -151,9 +151,11 @@ class TestColumn:
         def t2():
             return
 
-        relationships = t2.output.t2c1.relationships
-        assert relationships[t1.output.t1c1].type == RelationshipType.MANY_TO_MANY
-        assert relationships[t1.output.t1c1].description == "my desc"
+        relationships = t2.output_schema.t2c1.relationships
+        assert (
+            relationships[t1.output_schema.t1c1].type == RelationshipType.MANY_TO_MANY
+        )
+        assert relationships[t1.output_schema.t1c1].description == "my desc"
 
     def test_declared_more_than_one_relationship_same_column_raises_exception(self):
         @node(
@@ -175,8 +177,8 @@ class TestColumn:
                 output=Schema(
                     [
                         Column("t2c1", String(), "test")
-                        .one_to_many(t1.output.t1c1, "my desc")
-                        .many_to_many(t1.output.t1c1, "my desc"),
+                        .one_to_many(t1.output_schema.t1c1, "my desc")
+                        .many_to_many(t1.output_schema.t1c1, "my desc"),
                     ]
                 ),
             )
@@ -194,3 +196,56 @@ class TestColumn:
             str(col).replace("\n", "").replace(" ", "")
             == """Parent:NoneColumn:t1c1DataType:String()Description:''PK:False"""
         )
+
+    def test_relationship_is_valid_on_output(self):
+        def replace_chars(s: str) -> str:
+            old_chars = [" ", "\n", "\t"]
+            new_chars = ["", "", ""]
+            translation_table = str.maketrans(dict(zip(old_chars, new_chars)))
+            return s.translate(translation_table)
+
+        @node(type="pyspark", output=Schema(Column("node_1_id", String(), "node_1 id")))
+        def node_1():
+            return None
+
+        @node(
+            type="pyspark",
+            output=Schema(
+                Column("node_2_id", String(), "node_2 id").many_to_one(
+                    node_1.output.node_1_id, "as of"
+                )
+            ),
+        )
+        def node_2():
+            return None
+
+        @node(
+            type="pyspark",
+            output=Schema(
+                node_2.output.node_2_id.many_to_one(node_2.output.node_2_id, "relates")
+            ),
+        )
+        def node_3():
+            return None
+
+        col = node_2.output_schema.node_2_id
+        col_expected = """
+        Parent: node_2
+        Column: node_2_id
+        Data Type: String()
+        Description: 'node_2 id'
+        Foreign Keys:
+                node_2.node_2_id N:1 (as of) node_1.node_1_id
+        PK: False"""
+        assert replace_chars(str(col)) == replace_chars(col_expected)
+
+        col = node_3.output_schema.node_2_id
+        col_expected = """
+                Parent: node_3
+                Column: node_2_id
+                Data Type: String()
+                Description: 'node_2 id'
+                Foreign Keys:
+                        node_3.node_2_id N:1 (relates) node_2.node_2_id
+                PK: False"""
+        assert replace_chars(str(col)) == replace_chars(col_expected)
