@@ -1,14 +1,14 @@
-FROM apache/spark:3.5.7-java17-python3@sha256:7897b9a69efa94caccc52579e310a2fe68fb75b88a3d55b97b31568e5e233176 AS base
+FROM spark:3.5.7-python3@sha256:5b75b64a42010ba072c2b0a987cc8d1c4b9ec70e0e99b1c72c7f1871855ff631
 
 USER root
 
-# base
-RUN apt-get update && apt-get install -y apt-utils curl wget graphviz gcc gnupg \
-    software-properties-common && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Useful OS utilities
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils curl wget graphviz gcc gnupg -qq net-tools && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# use python3 as python
-RUN ln -s $(which python3) /usr/local/bin/python
-ENV USE_SPARK_CONNECT=0
+# Link python3 to python command line
+RUN ln -sf $(which python3) /usr/local/bin/python
 
 ### Set up NodeJS
 RUN curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh
@@ -23,7 +23,15 @@ RUN npm install -g dbdocs
 COPY ./requirements-dev.txt .
 RUN pip install -r requirements-dev.txt
 
+COPY ./.docker/wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
 COPY ./flypipe /flypipe
-ENV PYTHONPATH "${PYTHONPATH}:/local:/flypipe:/:"
+
+# Environment variables
+ENV USE_SPARK_CONNECT=0
+ENV PYTHONPATH=${PYTHONPATH}:/local:/flypipe:/:
 
 WORKDIR /
+
+
