@@ -136,7 +136,7 @@ class TestNodeFunction:
 
             return t2
 
-        assert t1.output.col1 == col1
+        assert t1.output_schema.col1 == col1
 
     def test_node_function_output_is_not_same_as_node_output_if_declared_raise_valuerror(
         self,
@@ -174,7 +174,7 @@ class TestNodeFunction:
         execution_graph = t1.node_graph.get_execution_graph(run_context)
         end_node_name = execution_graph.get_end_node_name(execution_graph.graph)
         end_node = execution_graph.get_node(end_node_name)["transformation"]
-        assert t1.output == end_node.output
+        assert t1.output_schema == end_node.output_schema
 
     def test_node_function_output_is_set_but_return_node_has_no_output_use_node_function_output_to_returned_node(
         self,
@@ -195,7 +195,7 @@ class TestNodeFunction:
         end_node_name = execution_graph.get_end_node_name(execution_graph.graph)
 
         end_node = execution_graph.get_node(end_node_name)["transformation"]
-        assert t1.output == end_node.output
+        assert t1.output_schema == end_node.output_schema
 
     def test_node_function_output_is_none_but_return_node_has_output(self):
         col1 = Column("col1", String(), "test")
@@ -214,5 +214,5 @@ class TestNodeFunction:
         end_node_name = execution_graph.get_end_node_name(execution_graph.graph)
 
         end_node = execution_graph.get_node(end_node_name)["transformation"]
-        assert t1.output is None
-        assert end_node.output is not None
+        assert t1.output_schema is None
+        assert end_node.output_schema is not None

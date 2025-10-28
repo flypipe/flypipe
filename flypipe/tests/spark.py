@@ -10,13 +10,19 @@ def build_spark():
     if os.environ.get("USE_SPARK_CONNECT") == "1":
         print("Building spark session (spark_connect)")
 
-        return (
+        spark = (
             SparkSession.builder.appName(str(uuid4()))
             .remote("sc://spark-connect:15002")
+            # Fail fast if gRPC isn’t reachable (e.g., 20s)
+            .config("spark.connect.grpc.client.deadlineSeconds", "20")
+            # Log client connection details to stdout
+            .config("spark.connect.client.verbose", "true")
+            # your prefs
             .config("spark.sql.repl.eagerEval.enabled", "true")
             .config("spark.sql.execution.arrow.pyspark.enabled", "true")
             .getOrCreate()
         )
+        return spark
 
     print("Building spark session")
 

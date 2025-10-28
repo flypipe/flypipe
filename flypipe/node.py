@@ -90,6 +90,7 @@ class Node:
         self.cache = cache
 
         self.output_schema = output
+
         # For each column if the schema, declare that this node is the parent for all of them
         # this for loop leaves columns aware of its owner to guide relationships definition
         if self.output_schema is not None:
@@ -97,7 +98,9 @@ class Node:
 
     @property
     def output(self):
-        return self.output_schema
+        schema = self.output_schema.copy()
+        schema.reset_relationships()
+        return schema
 
     def _get_input_nodes(self, dependencies):
         input_nodes = []

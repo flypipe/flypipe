@@ -262,17 +262,17 @@ class NodeGraph:
         end_node["node_run_context"].provided_input = node_run_context.provided_input
 
         # In case the node function had declared an output, but the returned not has not declared, use the node function output
-        if end_node["transformation"].output is None:
+        if end_node["transformation"].output_schema is None:
             end_node["transformation"].output_schema = node_function.output_schema
 
-        if end_node["transformation"].output is not None:
+        if end_node["transformation"].output_schema is not None:
             # Because the end node has been renamed, we need to reset parent of the columns of the output
-            for col in end_node["transformation"].output.columns:
+            for col in end_node["transformation"].output_schema.columns:
                 col._set_parent(end_node["transformation"])
 
         if (
-            node_function.output is not None
-            and node_function.output != end_node["transformation"].output
+            node_function.output_schema is not None
+            and node_function.output_schema != end_node["transformation"].output_schema
         ):
             raise ValueError(
                 f"The output of the node function `{node_function.function.__name__}` is different from "

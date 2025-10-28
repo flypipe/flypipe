@@ -18,12 +18,16 @@ class Schema:
         @node(
             ...
             output=Schema(
-                t1.output.get("col1") OR t1.output.col1 
+                t1.column.get("col1") OR t1.column.col1 
             )
         )
         """
         for col in self.columns:
             setattr(self, col.name, col)
+
+    def reset_relationships(self):
+        for col in self.columns:
+            col.reset_relationships()
 
     def set_parents(self, parent: "Node"):
         for col in self.columns:

@@ -1,20 +1,14 @@
-FROM python:3.9-slim
+FROM spark:3.5.7-python3@sha256:5b75b64a42010ba072c2b0a987cc8d1c4b9ec70e0e99b1c72c7f1871855ff631
 
-RUN apt-get update && apt-get install -y apt-utils build-essential default-jdk curl wget graphviz man-db
-RUN pip install --upgrade pip
+USER root
 
-WORKDIR .
-RUN wget https://archive.apache.org/dist/spark/spark-3.5.4/spark-3.5.4-bin-hadoop3.tgz
-RUN tar xf spark-* && \
-    mv spark-3.5.4-bin-hadoop3 /opt/spark && \
-    rm spark-*.tgz
+# Useful OS utilities
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils curl wget graphviz gcc gnupg -qq net-tools && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-ENV SPARK_HOME "/opt/spark"
-ENV HADOOP_HOME "${SPARK_HOME}"
-ENV PATH "${PATH}:${SPARK_HOME}/bin:${SPARK_HOME}/sbin"
-ENV PYSPARK_PYTHON "/usr/local/bin/python3"
-ENV PYSPARK_DRIVER_PYTHON "${PYSPARK_PYTHON}"
-ENV USE_SPARK_CONNECT "0"
+# Link python3 to python command line
+RUN ln -sf $(which python3) /usr/local/bin/python
 
 ### Set up NodeJS
 RUN curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh
@@ -29,6 +23,15 @@ RUN npm install -g dbdocs
 COPY ./requirements-dev.txt .
 RUN pip install -r requirements-dev.txt
 
-COPY /flypipe /flypipe
-ENV PYTHONPATH "${PYTHONPATH}:/local:/flypipe:/:"
+COPY ./.docker/wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
+COPY ./flypipe /flypipe
+
+# Environment variables
+ENV USE_SPARK_CONNECT=0
+ENV PYTHONPATH=${PYTHONPATH}:/local:/flypipe:/:
+
+WORKDIR /
+
 

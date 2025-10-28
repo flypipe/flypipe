@@ -1,64 +1,102 @@
+version: "3.9"
+
 services:
+  # ----------------
+  # Spark Master
+  # ----------------
   spark-master:
-    image: bitnami/spark:3.5.4
+    image: spark:3.5.7-python3@sha256:5b75b64a42010ba072c2b0a987cc8d1c4b9ec70e0e99b1c72c7f1871855ff631
     container_name: spark-master
+    hostname: spark-master
+    command: >
+      bash -lc "
+      ${SPARK_HOME:-/opt/spark}/bin/spark-class
+      org.apache.spark.deploy.master.Master
+      --host spark-master --port 7077 --webui-port 8080"
     environment:
-      - SPARK_MODE=master
-      - SPARK_MASTER_WEBUI_PORT=8080
-      - SPARK_MASTER_PORT=7077
-      - SPARK_SUBMIT_OPTIONS=--packages io.delta:delta-spark_2.12:3.3.0
-      - SPARK_MASTER_HOST=spark-master
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_LOG_DIR=/opt/spark/logs
+    volumes:
+      - ./logs/spark-master:/opt/spark/logs
     ports:
-      - 8080:8080
-      - 7077:7077
-    networks:
-      - flypipe-ntw
+      - "7077:7077"   # Spark master RPC
+      - "8080:8080"   # Spark master UI
+    networks: [sparknet]
 
+  # ----------------
+  # Spark Worker
+  # ----------------
+  spark-worker:
+    image: spark:3.5.7-python3@sha256:5b75b64a42010ba072c2b0a987cc8d1c4b9ec70e0e99b1c72c7f1871855ff631
+    container_name: spark-worker
+    hostname: spark-worker
+    depends_on: [spark-master]
+    command: >
+      bash -lc "
+      ${SPARK_HOME:-/opt/spark}/bin/spark-class
+      org.apache.spark.deploy.worker.Worker
+      spark://spark-master:7077
+      --webui-port 8081"
+    environment:
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2g
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_LOG_DIR=/opt/spark/logs
+    volumes:
+      - ./logs/spark-worker:/opt/spark/logs
+    ports:
+      - "8081:8081"   # Spark worker UI
+    networks: [sparknet]
+
+  # ----------------
+  # Spark Connect
+  # ----------------
   spark-connect:
-    image: bitnami/spark:3.5.4
+    image: spark:3.5.7-python3@sha256:5b75b64a42010ba072c2b0a987cc8d1c4b9ec70e0e99b1c72c7f1871855ff631
     container_name: spark-connect
+    hostname: spark-connect
+    user: "root"
     environment:
-      - SPARK_MODE=driver
-      - SPARK_MASTER=spark://spark-master:7077
+      - HOME=/root
+      - SPARK_LOG_DIR=/opt/spark/logs
+      - SPARK_NO_DAEMONIZE=true
+    volumes:
+      - ./logs/spark-connect:/opt/spark/logs
+    depends_on: [spark-master]
+    command: >
+      bash -lc "
+      ${SPARK_HOME:-/opt/spark}/sbin/start-connect-server.sh --wait
+      --master spark://spark-master:7077
+      --packages org.apache.spark:spark-connect_2.12:3.5.7,io.delta:delta-spark_2.12:3.3.0
+      --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension
+      --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog
+      --conf spark.connect.grpc.binding.address=0.0.0.0
+      --conf spark.connect.grpc.binding.port=15002
+      --conf spark.ui.port=4041
+      "
     ports:
-      - 15002:15002
-    depends_on:
-      - spark-master
-    networks:
-      - flypipe-ntw
-    command: [ "/bin/bash", "-c", "/opt/bitnami/spark/sbin/start-connect-server.sh --packages org.apache.spark:spark-connect_2.12:3.5.4" ]
+      - "15002:15002"
+      - "4041:4041"
+    healthcheck:
+      test: [ "CMD-SHELL", "ss -lnt | awk '{print $4}' | grep -q ':15002' || netstat -lnt | awk '{print $4}' | grep -q ':15002'" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [sparknet]
 
-  flypipe-mariadb:
-    image: mariadb:10.11.4
-    ports:
-      - 3306:3306
-    environment:
-      MYSQL_ROOT_PASSWORD: admin
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: admin
-      MYSQL_DATABASE: metastore_db
-    networks:
-      - flypipe-ntw
-
-  flypipe-hive-metastore:
-    build:
-      context: .
-      dockerfile: ./hive/Dockerfile
-    ports:
-      - 9083:9083
-    depends_on:
-      - flypipe-mariadb
-    networks:
-      - flypipe-ntw
-    entrypoint: sh -c './../entrypoint.sh'
-
+  # ----------------
+  # Jupyter / Dev box
+  # ----------------
   flypipe-jupyter:
     build:
       context: ../
       dockerfile: .docker/Dockerfile
     container_name: flypipe-jupyter
+    hostname: jupyter
+    depends_on: [spark-master, spark-worker, spark-connect]
     ports:
-      - 8888:8888
+      - "8888:8888"
+      - "4040:4040"   # optional: Spark UI if you use local[*]
     environment:
       FLYPIPE_DEFAULT_RUN_MODE: sequential
       GIT_PYTHON_REFRESH: quiet
@@ -69,23 +107,17 @@ services:
       - ../scripts:/scripts
       - ./start.py:/etc/ipython/startup/start.py
       - ../docs/notebooks:/notebooks
-      - ./wait-for-it.sh:/wait-for-it.sh
-
-    depends_on:
-      - spark-connect
-    networks:
-      - flypipe-ntw
-    entrypoint: sh -c 'jupyter-lab --notebook-dir /notebooks --allow-root --no-browser --port 8888 --ip 0.0.0.0  --NotebookApp.token="" --NotebookApp.password=""'
-
-  flypipe-test:
-    build:
-      context: ../
-      dockerfile: .docker/Dockerfile
-    container_name: flypipe-test
-    environment:
-      FLYPIPE_DEFAULT_RUN_MODE: sequential
-    networks:
-      - flypipe-ntw
+    networks: [sparknet]
+    entrypoint: >
+      bash -lc "
+      /wait-for-it.sh spark-master:7077 -t 60 &&
+      /wait-for-it.sh spark-worker:8081 -t 60 &&
+      /wait-for-it.sh spark-connect:15002 -t 120 &&
+      jupyter-lab --notebook-dir /notebooks --allow-root
+      --no-browser --port 8888 --ip 0.0.0.0
+      --NotebookApp.token='' --NotebookApp.password=''
+      "
 
 networks:
-  flypipe-ntw:
+  sparknet:
+    driver: bridge

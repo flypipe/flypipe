@@ -56,7 +56,7 @@ class Column:
         self.description = description
 
         # Each column knows who is the node that it is associated with, it is used to map the Relationship between
-        # node1.output.col1 and node2.output.col2. In this way, col1 knows that belongs to node1
+        # node1.output_schema.col1 and node2.output_schema.col2. In this way, col1 knows that belongs to node1
         # and col2 to node2
         self.parent = None
 
@@ -69,8 +69,11 @@ class Column:
     def __repr__(self):
         foreign_key = []
         for dest, relationship in self.relationships.items():
+            description = (
+                "" if not relationship.description else f" ({relationship.description})"
+            )
             foreign_key.append(
-                f"{self.parent.function.__name__}.{self.name} {relationship.type.value} {dest.parent.function.__name__}.{dest.name}"
+                f"{self.parent.function.__name__}.{self.name} {relationship.type.value}{description} {dest.parent.function.__name__}.{dest.name}"
             )
         if foreign_key:
             foreign_key = "\n\t\t".join(foreign_key)
@@ -79,10 +82,10 @@ class Column:
             foreign_key = ""
 
         s = f"""
-    Column: {self.name}
     Parent: {'None' if self.parent is None else self.parent.function.__name__}
+    Column: {self.name}
     Data Type: {str(self.type)}
-    Description: '{self.description}{foreign_key}'
+    Description: '{self.description}'{foreign_key}
     PK: {self.pk}
         """
 
@@ -93,6 +96,9 @@ class Column:
 
     def _set_relationships(self, relationships: dict):
         self.relationships = relationships
+
+    def reset_relationships(self):
+        self.relationships = {}
 
     def copy(self):
         col = Column(self.name, self.type, description=self.description, pk=self.pk)
