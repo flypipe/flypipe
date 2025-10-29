@@ -25,9 +25,13 @@ class Schema:
         for col in self.columns:
             setattr(self, col.name, col)
 
-    def reset_relationships(self):
+    def reset(self, *, relationships=True, pk=True):
         for col in self.columns:
-            col.reset_relationships()
+            if relationships:
+                col.reset_relationships()
+
+            if pk:
+                col.reset_pk()
 
     def set_parents(self, parent: "Node"):
         for col in self.columns:

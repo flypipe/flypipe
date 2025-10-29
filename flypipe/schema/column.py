@@ -94,11 +94,19 @@ class Column:
     def _set_parent(self, parent: "Node"):
         self.parent = parent
 
-    def _set_relationships(self, relationships: dict):
-        self.relationships = relationships
+    def _set_relationships(self, relationships: dict = None, reset: bool = False):
+        relationships = relationships or {}
+        self.relationships = {} if reset else relationships
 
     def reset_relationships(self):
-        self.relationships = {}
+        self._set_relationships(reset=True)
+
+    def set_pk(self, pk: bool) -> "Column":
+        self.pk = pk
+        return self
+
+    def reset_pk(self):
+        self.set_pk(False)
 
     def copy(self):
         col = Column(self.name, self.type, description=self.description, pk=self.pk)

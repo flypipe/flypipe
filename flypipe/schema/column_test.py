@@ -249,3 +249,47 @@ class TestColumn:
                         node_3.node_2_id N:1 (relates) node_2.node_2_id
                 PK: False"""
         assert replace_chars(str(col)) == replace_chars(col_expected)
+
+    def test_output_colum_erase_pk_and_relationships(self):
+        @node(
+            type="pandas",
+            output=Schema(
+                [
+                    Column("t1c1", String(), "test", pk=True),
+                ]
+            ),
+        )
+        def t1():
+            pass
+
+        @node(
+            type="pandas",
+            dependencies=[t1.select("t1c1")],
+            output=Schema(
+                [
+                    t1.output.t1c1.many_to_one(t1.output.t1c1, "my desc"),
+                ]
+            ),
+        )
+        def t2():
+            pass
+
+        @node(
+            type="pandas",
+            dependencies=[t2.select("t1c1")],
+            output=Schema(
+                [
+                    t2.output.t1c1,
+                ]
+            ),
+        )
+        def t3():
+            pass
+
+        assert not t2.output.t1c1.pk
+        assert not t3.output.t1c1.pk
+        assert t2.output_schema.get("t1c1").relationships
+        assert not t2.output.t1c1.relationships
+        assert not t3.output_schema.get("t1c1").relationships
+        assert isinstance(t3.output.t1c1.set_pk(True), Column)
+        assert t3.output.t1c1.set_pk(True).pk
