@@ -99,7 +99,7 @@ class Node:
     @property
     def output(self):
         schema = self.output_schema.copy()
-        schema.reset_relationships()
+        schema.reset(relationships=True, pk=True)
         return schema
 
     def _get_input_nodes(self, dependencies):
