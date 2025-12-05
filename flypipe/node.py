@@ -3,12 +3,11 @@ import re
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
-from typing import Dict, List, Union, Callable
+from typing import List, Union, Callable
 
 from pyspark.sql import SparkSession
 
 from flypipe.cache.cache import Cache
-from flypipe.cache.cache_context import CacheContext
 from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.config import get_config
 from flypipe.dependency.node_input import InputNode
@@ -207,12 +206,10 @@ class Node:
     def alias(self, value):
         return InputNode(self).alias(value)
 
-    def get_node_inputs(self, run_context: RunContext, upstream_cache_context_map):
+    def get_node_inputs(self, run_context: RunContext):
         inputs = {}
         for input_node in self.input_nodes:
-            inputs[input_node.get_alias()] = input_node.get_value(
-                run_context, upstream_cache_context_map, self
-            )
+            inputs[input_node.get_alias()] = input_node.get_value(run_context, self)
         return inputs
 
     def __call__(self, *args):
@@ -243,6 +240,7 @@ class Node:
 
         self.create_graph(run_context)
         execution_graph = self.node_graph.get_execution_graph(run_context)
+        run_context.set_cache_context_dependency_map(execution_graph.get_cache_context_dependency_map())
 
         if run_context.parallel:
             self._run_parallel(run_context, execution_graph)
@@ -279,15 +277,10 @@ class Node:
         return schema
 
     def _run_parallel(self, run_context: RunContext, execution_graph):
-        cache_context_dependency_map = (
-            execution_graph.get_cache_context_dependency_map()
-        )
-
         def execute(runnable_node):
             self.process_transformation_with_cache(
                 runnable_node,
                 run_context,
-                cache_context_dependency_map[runnable_node["transformation"]],
             )
             return runnable_node["transformation"].key
 
@@ -305,7 +298,7 @@ class Node:
             ]
             for runnable_node in initial_nodes_to_run:
                 logger.info(
-                    f"Schedule parallelised execution of node {runnable_node['transformation'].__name__}"
+                    f"Schedule paralleled execution of node {runnable_node['transformation'].__name__}"
                 )
 
                 jobs.add(executor.submit(execute, runnable_node))
@@ -335,10 +328,6 @@ class Node:
 
     def _run_sequential(self, run_context: RunContext, execution_graph):
 
-        cache_context_dependency_map = (
-            execution_graph.get_cache_context_dependency_map()
-        )
-
         while not execution_graph.is_empty():
             runnable_nodes = execution_graph.get_runnable_transformations()
 
@@ -348,23 +337,17 @@ class Node:
                 if runnable_node["transformation"].key in run_context.node_results:
                     continue
 
-                self.process_transformation_with_cache(
-                    runnable_node,
-                    run_context,
-                    cache_context_dependency_map[runnable_node["transformation"]],
-                )
+                self.process_transformation_with_cache(runnable_node, run_context)
 
     def process_transformation_with_cache(
         self,
         runnable_node,
         run_context: RunContext,
-        upstream_cache_context_map: Dict["Node", CacheContext],
     ):
 
         result = None
         node_transformation = runnable_node["transformation"]
         ran_transformation = False
-        dependencies = {}
         datetime_start_process_transformation = datetime.now()
 
         if (
@@ -375,9 +358,7 @@ class Node:
         else:
             ran_transformation = True
 
-            dependencies = runnable_node["transformation"].get_node_inputs(
-                run_context, upstream_cache_context_map
-            )
+            dependencies = runnable_node["transformation"].get_node_inputs(run_context)
 
             result = node_transformation.process_transformation(
                 run_context.spark,
@@ -403,15 +384,9 @@ class Node:
                 .get_df()
             )
 
-            dependencies_nodes = [
-                input_node.node
-                for input_node in node_transformation.input_nodes
-                if input_node.node in upstream_cache_context_map
-                and not upstream_cache_context_map[input_node.node].disabled
-            ]
             runnable_node["node_run_context"].cache_context.write_cdc(
                 node_transformation,
-                dependencies_nodes,
+                run_context.get_cache_context_dependencies(node_transformation),
                 datetime_start_process_transformation,
             )
 

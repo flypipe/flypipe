@@ -41,6 +41,7 @@ class RunContext:
     cache_modes: dict = None
     dependencies_preprocess_modes: Union[dict, PreprocessMode] = None
     node_results: Mapping[str, NodeResult] = field(init=False, default=None)
+    cache_context_dependency_map = None
 
     def __post_init__(self):
         self.parallel = (
@@ -63,6 +64,7 @@ class RunContext:
             node.key: NodeResult(self.spark, df, schema=None)
             for node, df in self.provided_inputs.items()
         }
+        self.cache_context_dependency_map = self.cache_context_dependency_map or {}
 
     def copy(self):
         return copy(self)
@@ -104,3 +106,23 @@ class RunContext:
 
         # By default, it is active
         return PreprocessMode.ACTIVE
+
+    def set_cache_context_dependency_map(self, cache_context_dependency_map):
+        self.cache_context_dependency_map = cache_context_dependency_map
+
+    def get_cache_context(self, node, dependency_node):
+        upstream_cache_context_map = self.cache_context_dependency_map.get(node, None)
+        if upstream_cache_context_map:
+            # In cases that dataframe is provided as input, there might not be any CacheContext created, therefore return None
+            return upstream_cache_context_map.get(dependency_node, None)
+        return None
+
+    def get_cache_context_dependencies(self, node):
+        upstream_cache_context_map = self.cache_context_dependency_map.get(node, None)
+        dependencies_nodes = [
+            input_node.node
+            for input_node in node.input_nodes
+            if input_node.node in upstream_cache_context_map
+               and not upstream_cache_context_map[input_node.node].disabled
+        ]
+        return dependencies_nodes

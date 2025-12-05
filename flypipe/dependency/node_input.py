@@ -32,9 +32,7 @@ class InputNode:
     def key(self):
         return self.node.key
 
-    def get_value(
-        self, run_context: RunContext, cache_context_dependency_map, parent_node: Node
-    ):
+    def get_value(self, run_context: RunContext, parent_node: Node):
         """
         Retrieve the value of this node input which will be passed to the parent node.
         """
@@ -51,13 +49,11 @@ class InputNode:
                 f"raise this as a bug in https://github.com/flypipe/flypipe"
             )
 
-        cache_context = cache_context_dependency_map.get(self.node, None)
+        cache_context = run_context.get_cache_context(parent_node, self.node)
 
         # In cases that dataframe is provided as input, there might not be any CacheContext created
         if cache_context:
-            df = cache_context.read_cdc(
-                self.node, parent_node, node_input_value.get_df()
-            )
+            df = cache_context.read_cdc(self.node, parent_node, node_input_value.get_df())
             node_input_value = node_input_value.clone(df)
 
         # Preprocess the Input Node
