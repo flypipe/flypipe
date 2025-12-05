@@ -88,14 +88,19 @@ class Node:
 
         if cache is not None and not isinstance(cache, Cache):
             raise TypeError("cache is not of type flypipe.cache.Cache")
+
         self.cache = cache
+
+        # FWe declare that this node as parent of the cache
+        if self.cache is not None:
+            self.cache.set_parent(self)
 
         self.output_schema = output
 
         # For each column if the schema, declare that this node is the parent for all of them
         # this for loop leaves columns aware of its owner to guide relationships definition
         if self.output_schema is not None:
-            self.output_schema.set_parents(self)
+            self.output_schema.set_parent(self)
 
     @property
     def output(self):
@@ -240,7 +245,9 @@ class Node:
 
         self.create_graph(run_context)
         execution_graph = self.node_graph.get_execution_graph(run_context)
-        run_context.set_cache_context_dependency_map(execution_graph.get_cache_context_dependency_map())
+        run_context.set_cache_context_dependency_map(
+            execution_graph.get_cache_context_dependency_map()
+        )
 
         if run_context.parallel:
             self._run_parallel(run_context, execution_graph)

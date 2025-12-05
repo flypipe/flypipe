@@ -38,7 +38,7 @@ class NodeFunction(Node):
         # For each column if the schema, declare that this node is the parent for all of them
         # this for loop leaves columns aware of its owner to guide relationships definition
         if self.output_schema is not None:
-            self.output_schema.set_parents(self)
+            self.output_schema.set_parent(self)
 
     def _validate_node_dependencies(self):
         if self.node_dependencies:

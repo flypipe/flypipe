@@ -53,7 +53,9 @@ class InputNode:
 
         # In cases that dataframe is provided as input, there might not be any CacheContext created
         if cache_context:
-            df = cache_context.read_cdc(self.node, parent_node, node_input_value.get_df())
+            df = cache_context.read_cdc(
+                self.node, parent_node, node_input_value.get_df()
+            )
             node_input_value = node_input_value.clone(df)
 
         # Preprocess the Input Node

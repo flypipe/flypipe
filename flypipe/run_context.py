@@ -123,6 +123,6 @@ class RunContext:
             input_node.node
             for input_node in node.input_nodes
             if input_node.node in upstream_cache_context_map
-               and not upstream_cache_context_map[input_node.node].disabled
+            and not upstream_cache_context_map[input_node.node].disabled
         ]
         return dependencies_nodes
