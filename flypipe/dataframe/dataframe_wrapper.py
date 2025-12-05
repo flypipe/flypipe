@@ -51,6 +51,9 @@ class DataFrameWrapper(ABC):
     def get_df(self):
         return self.df
 
+    def clone(self, df):
+        return self.__class__(self.spark, df)
+
     def select_columns(self, *columns):
         """
         Accepts either a collection of columns either as *args or a list:

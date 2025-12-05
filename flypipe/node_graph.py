@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 import networkx as nx
 from networkx import DiGraph
@@ -46,6 +46,7 @@ class NodeGraph:
 
         frontier = [transformation]
         while frontier:
+
             current_transformation = frontier.pop()
 
             # We can not add current_transformation.cache now, as current_transformation can be node function
@@ -319,6 +320,9 @@ class NodeGraph:
     def get_transformation(self, name: str) -> Node:
         return self.get_node(name)["transformation"]
 
+    def get_cache_context(self, name: str) -> CacheContext:
+        return self.get_node(name)["node_run_context"].cache_context
+
     def get_end_node_name(self, graph):
         for name in graph.nodes:
             if graph.out_degree[name] == 0:
@@ -386,12 +390,43 @@ class NodeGraph:
             if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN]:
                 raise RuntimeError(f"Run status for node {n} is {RunStatus.UNKNOWN}")
 
-    def get_dependency_map(self):
+    def get_cache_context_dependency_map(self) -> Dict[Node, Dict[Node, CacheContext]]:
+        """
+        Build a dependency map that associates each transformation with its upstream dependencies and their cache contexts.
+
+        This method creates a nested dictionary structure where each node (transformation) maps to its direct
+        dependencies, with each dependency further mapped to its corresponding cache context. This is useful for
+        understanding the caching behavior of upstream nodes when processing a given transformation.
+
+        Returns:
+            dict: A nested dictionary with the following structure:
+                {
+                    Node (destination): {
+                        Node (source): CacheContext,
+                        ...
+                    },
+                    ...
+                }
+                Where each key is a transformation node, and the value is a dictionary mapping its upstream
+                dependency nodes to their respective cache contexts.
+
+        Example:
+            If node C depends on nodes A and B, the structure would be:
+            {
+                C: {A: CacheContext_A, B: CacheContext_B},
+                A: {},
+                B: {}
+            }
+        """
+
         dependencies = {}
         for node in self.graph.nodes:
-            dependencies[node] = set()
+            dependencies[self.get_transformation(node)] = {}
+
         for source, destination in self.graph.edges:
-            dependencies[destination].add(source)
+            dependencies[self.get_transformation(destination)][
+                self.get_transformation(source)
+            ] = self.get_cache_context(source)
         return dependencies
 
     def get_nodes_depth(self):

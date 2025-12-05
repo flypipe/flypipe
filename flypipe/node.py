@@ -2,11 +2,13 @@ import logging
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Union, Callable
+from datetime import datetime
+from typing import Dict, List, Union, Callable
 
 from pyspark.sql import SparkSession
 
 from flypipe.cache.cache import Cache
+from flypipe.cache.cache_context import CacheContext
 from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.config import get_config
 from flypipe.dependency.node_input import InputNode
@@ -205,10 +207,12 @@ class Node:
     def alias(self, value):
         return InputNode(self).alias(value)
 
-    def get_node_inputs(self, run_context: RunContext):
+    def get_node_inputs(self, run_context: RunContext, upstream_cache_context_map):
         inputs = {}
         for input_node in self.input_nodes:
-            inputs[input_node.get_alias()] = input_node.get_value(run_context, self)
+            inputs[input_node.get_alias()] = input_node.get_value(
+                run_context, upstream_cache_context_map, self
+            )
         return inputs
 
     def __call__(self, *args):
@@ -257,17 +261,43 @@ class Node:
     def dataframe_type(self):
         return self.DATAFRAME_TYPE_MAP[self.type]
 
-    def _run_parallel(self, run_context: RunContext, execution_graph):
-        def execute(node):
-            self.process_transformation_with_cache(node, run_context)
-            return node["transformation"].key
+    @classmethod
+    def _get_consolidated_output_schema(cls, output_schema, output_columns):
+        """
+        The output schema for a transformation is currently optional. If not provided, we create a simple one from the
+        set of columns selected by descendant nodes.
+        """
+        if output_schema:
+            schema = output_schema
+        elif output_columns is not None:
+            columns = []
+            for output_column in output_columns:
+                columns.append(Column(output_column, Unknown(), ""))
+            schema = Schema(columns)
+        else:
+            schema = None
+        return schema
 
-        logger.info("Starting parallel processing of node %s", node.__name__)
+    def _run_parallel(self, run_context: RunContext, execution_graph):
+        cache_context_dependency_map = (
+            execution_graph.get_cache_context_dependency_map()
+        )
+
+        def execute(runnable_node):
+            self.process_transformation_with_cache(
+                runnable_node,
+                run_context,
+                cache_context_dependency_map[runnable_node["transformation"]],
+            )
+            return runnable_node["transformation"].key
+
+        logger.info(f"Starting parallel processing of node {node.__name__}")
         with ThreadPoolExecutor(
             max_workers=get_config("node_run_max_workers")
         ) as executor:
             visited = set()
             jobs = set()
+
             initial_nodes_to_run = [
                 runnable_node
                 for runnable_node in execution_graph.get_runnable_transformations()
@@ -275,9 +305,9 @@ class Node:
             ]
             for runnable_node in initial_nodes_to_run:
                 logger.info(
-                    "Schedule parallelised execution of node %s",
-                    runnable_node["transformation"].__name__,
+                    f"Schedule parallelised execution of node {runnable_node['transformation'].__name__}"
                 )
+
                 jobs.add(executor.submit(execute, runnable_node))
                 visited.add(runnable_node["transformation"].key)
             while jobs:
@@ -304,39 +334,38 @@ class Node:
                 jobs = jobs - to_remove
 
     def _run_sequential(self, run_context: RunContext, execution_graph):
+
+        cache_context_dependency_map = (
+            execution_graph.get_cache_context_dependency_map()
+        )
+
         while not execution_graph.is_empty():
             runnable_nodes = execution_graph.get_runnable_transformations()
-            for runnable_node in runnable_nodes:
 
+            for runnable_node in runnable_nodes:
                 execution_graph.remove_node(runnable_node["transformation"].key)
 
                 if runnable_node["transformation"].key in run_context.node_results:
                     continue
 
-                self.process_transformation_with_cache(runnable_node, run_context)
+                self.process_transformation_with_cache(
+                    runnable_node,
+                    run_context,
+                    cache_context_dependency_map[runnable_node["transformation"]],
+                )
 
-    @classmethod
-    def _get_consolidated_output_schema(cls, output_schema, output_columns):
-        """
-        The output schema for a transformation is currently optional. If not provided, we create a simple one from the
-        set of columns selected by descendant nodes.
-        """
-        if output_schema:
-            schema = output_schema
-        elif output_columns is not None:
-            columns = []
-            for output_column in output_columns:
-                columns.append(Column(output_column, Unknown(), ""))
-            schema = Schema(columns)
-        else:
-            schema = None
-        return schema
-
-    def process_transformation_with_cache(self, runnable_node, run_context: RunContext):
+    def process_transformation_with_cache(
+        self,
+        runnable_node,
+        run_context: RunContext,
+        upstream_cache_context_map: Dict["Node", CacheContext],
+    ):
 
         result = None
         node_transformation = runnable_node["transformation"]
         ran_transformation = False
+        dependencies = {}
+        datetime_start_process_transformation = datetime.now()
 
         if (
             runnable_node["status"] == RunStatus.CACHED
@@ -345,15 +374,16 @@ class Node:
             result = runnable_node["node_run_context"].cache_context.read()
         else:
             ran_transformation = True
-            dependency_values = runnable_node["transformation"].get_node_inputs(
-                run_context
+
+            dependencies = runnable_node["transformation"].get_node_inputs(
+                run_context, upstream_cache_context_map
             )
 
             result = node_transformation.process_transformation(
                 run_context.spark,
                 runnable_node["output_columns"],
                 runnable_node["node_run_context"],
-                **dependency_values,
+                **dependencies,
             )
 
         run_context.update_node_results(
@@ -371,6 +401,18 @@ class Node:
                 run_context.node_results[node_transformation.key]
                 .as_type(node_transformation.dataframe_type)
                 .get_df()
+            )
+
+            dependencies_nodes = [
+                input_node.node
+                for input_node in node_transformation.input_nodes
+                if input_node.node in upstream_cache_context_map
+                and not upstream_cache_context_map[input_node.node].disabled
+            ]
+            runnable_node["node_run_context"].cache_context.write_cdc(
+                node_transformation,
+                dependencies_nodes,
+                datetime_start_process_transformation,
             )
 
     def process_transformation(

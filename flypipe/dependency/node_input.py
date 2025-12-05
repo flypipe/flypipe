@@ -32,10 +32,13 @@ class InputNode:
     def key(self):
         return self.node.key
 
-    def get_value(self, run_context: RunContext, parent_node: Node):
+    def get_value(
+        self, run_context: RunContext, cache_context_dependency_map, parent_node: Node
+    ):
         """
         Retrieve the value of this node input which will be passed to the parent node.
         """
+
         try:
             # We can assume that the computation of the raw node this node input comes from is already done and stored
             # in the run context because it's an ancestor node in the run graph.
@@ -47,6 +50,15 @@ class InputNode:
                 f"Unexpected state- unable to find computed result for node {self.key} when used as an input, please "
                 f"raise this as a bug in https://github.com/flypipe/flypipe"
             )
+
+        cache_context = cache_context_dependency_map.get(self.node, None)
+
+        # In cases that dataframe is provided as input, there might not be any CacheContext created
+        if cache_context:
+            df = cache_context.read_cdc(
+                self.node, parent_node, node_input_value.get_df()
+            )
+            node_input_value = node_input_value.clone(df)
 
         # Preprocess the Input Node
         node_input_value = self.apply_preprocess(

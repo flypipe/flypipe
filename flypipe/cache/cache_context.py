@@ -1,7 +1,6 @@
 from pyspark.sql import SparkSession
 
-from flypipe.cache import CacheMode
-from flypipe.cache.cache import Cache
+from flypipe.cache import CacheMode, CDCCache, Cache
 
 
 class CacheContext:
@@ -48,6 +47,14 @@ class CacheContext:
             return self.cache.read(self.spark)
         return self.cache.read()
 
+    def read_cdc(self, from_node, to_node, df):
+        if not self.disabled and isinstance(self.cache, CDCCache):
+            if self.spark:
+                return self.cache.read_cdc(self.spark, from_node, to_node, df)
+            return self.cache.read_cdc(from_node, to_node, df)
+
+        return df
+
     def write(self, df):
         if not self.disabled or self.merge:
 
@@ -56,6 +63,22 @@ class CacheContext:
             return self.cache.write(df)
 
         return None
+
+    def write_cdc(self, current_node, upstream_nodes, datetime_started_transformation):
+        if isinstance(self.cache, CDCCache):
+            if not self.disabled or self.merge:
+
+                if self.spark:
+                    return self.cache.write_cdc(
+                        self.spark,
+                        current_node,
+                        upstream_nodes,
+                        datetime_started_transformation,
+                    )
+
+                return self.cache.write_cdc(
+                    current_node, upstream_nodes, datetime_started_transformation
+                )
 
     def exists(self):
         if self.disabled:
