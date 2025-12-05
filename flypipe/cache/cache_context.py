@@ -25,9 +25,6 @@ class CacheContext:
     def merge(self):
         return self.cache_mode == CacheMode.MERGE
 
-    def has_cache(self):
-        return self.cache is not None
-
     @property
     def exists_cache_to_load(self):
         if self.disabled:

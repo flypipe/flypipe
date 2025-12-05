@@ -53,7 +53,7 @@ class InputNode:
 
         # In cases that dataframe is provided as input, there might not be any CacheContext created
         # and we need to check if the cache context has cache.
-        if cache_context and cache_context.has_cache():
+        if cache_context:
             df = cache_context.read_cdc(
                 self.node, parent_node, node_input_value.get_df()
             )
