@@ -235,8 +235,5 @@ class TestCDCCache:
         cache.write_cdc(cdc2)
 
         result = cache.read_cdc()
-        expected = pd.DataFrame(
-            data={"id": [1, 2], "operation": ["insert", "update"]}
-        )
+        expected = pd.DataFrame(data={"id": [1, 2], "operation": ["insert", "update"]})
         assert_frame_equal(result, expected)
-

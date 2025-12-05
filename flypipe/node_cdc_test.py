@@ -45,10 +45,25 @@ class TestNodeCDC:
                 Filter CDC data for a specific source->destiny edge
                 Returns the dataframe filtered based on CDC timestamps
                 """
-                filtered = self.cdc_data[
+                # Get CDC metadata for this edge
+                edge_data = self.cdc_data[
                     (self.cdc_data["source"] == from_node.key)
                     & (self.cdc_data["destiny"] == to_node.key)
                 ]
+
+                # If no previous run, return all data
+                if edge_data.empty:
+                    return df
+
+                # Get the latest timestamp for this edge
+                last_timestamp = edge_data["cdc_datetime_updated"].max()
+
+                # Filter dataframe to return only rows updated after last timestamp
+                if "cdc_datetime_updated" in df.columns:
+                    filtered_df = df[df["cdc_datetime_updated"] > last_timestamp]
+                    return filtered_df
+
+                # If no cdc_datetime_updated column, return all data
                 return df
 
         cdc_manager = CDCManager()
@@ -98,15 +113,13 @@ class TestNodeCDC:
         spy_write_cdc_t1 = mocker.spy(cache_t1, "write_cdc")
         spy_write_cdc_t2 = mocker.spy(cache_t2, "write_cdc")
         spy_write_cdc_t3 = mocker.spy(cache_t3, "write_cdc")
-        spy_read_cdc_t1 = mocker.spy(cache_t1, "read_cdc")
-        spy_read_cdc_t2 = mocker.spy(cache_t2, "read_cdc")
-        spy_read_cdc_t3 = mocker.spy(cache_t3, "read_cdc")
 
         # First run - should write cache and CDC data
         result = t3.run(parallel=False)
 
         assert_frame_equal(
-            result, pd.DataFrame({"col1": [1, 2, 3], "col2": [2, 4, 6], "col3": [3, 6, 9]})
+            result,
+            pd.DataFrame({"col1": [1, 2, 3], "col2": [2, 4, 6], "col3": [3, 6, 9]}),
         )
 
         # Verify CDC write methods were called
@@ -169,10 +182,25 @@ class TestNodeCDC:
 
             def filter(self, from_node, to_node, df):
                 """Filter CDC data for specific edge"""
-                filtered = self.cdc_data[
+                # Get CDC metadata for this edge
+                edge_data = self.cdc_data[
                     (self.cdc_data["source"] == from_node.key)
                     & (self.cdc_data["destiny"] == to_node.key)
                 ]
+
+                # If no previous run, return all data
+                if edge_data.empty:
+                    return df
+
+                # Get the latest timestamp for this edge
+                last_timestamp = edge_data["cdc_datetime_updated"].max()
+
+                # Filter dataframe to return only rows updated after last timestamp
+                if "cdc_datetime_updated" in df.columns:
+                    filtered_df = df[df["cdc_datetime_updated"] > last_timestamp]
+                    return filtered_df
+
+                # If no cdc_datetime_updated column, return all data
                 return df
 
         cdc_manager = CDCManager()
@@ -289,9 +317,7 @@ class TestNodeCDC:
 
                 # Update last query time
                 if not filtered.empty:
-                    self.last_query_time[key] = filtered[
-                        "cdc_datetime_updated"
-                    ].max()
+                    self.last_query_time[key] = filtered["cdc_datetime_updated"].max()
 
                 return filtered
 
@@ -304,9 +330,7 @@ class TestNodeCDC:
                         "cdc_datetime_updated": [timestamp],
                     }
                 )
-                self.cdc_data = pd.concat(
-                    [self.cdc_data, new_entry], ignore_index=True
-                )
+                self.cdc_data = pd.concat([self.cdc_data, new_entry], ignore_index=True)
 
             def filter_manual(self, source_key, destiny_key):
                 """Manual filter for testing"""
@@ -322,9 +346,7 @@ class TestNodeCDC:
                     ]
 
                 if not filtered.empty:
-                    self.last_query_time[key] = filtered[
-                        "cdc_datetime_updated"
-                    ].max()
+                    self.last_query_time[key] = filtered["cdc_datetime_updated"].max()
 
                 return filtered
 
@@ -433,9 +455,7 @@ class TestNodeCDC:
 
                 # Update last query time
                 if not filtered.empty:
-                    self.last_query_time[key] = filtered[
-                        "cdc_datetime_updated"
-                    ].max()
+                    self.last_query_time[key] = filtered["cdc_datetime_updated"].max()
 
                 # Return the dataframe, not the CDC metadata
                 return df
@@ -449,9 +469,7 @@ class TestNodeCDC:
                         "cdc_datetime_updated": [timestamp],
                     }
                 )
-                self.cdc_data = pd.concat(
-                    [self.cdc_data, new_entry], ignore_index=True
-                )
+                self.cdc_data = pd.concat([self.cdc_data, new_entry], ignore_index=True)
 
             def filter_manual(self, source_key, destiny_key):
                 """Manual filter for testing"""
@@ -467,9 +485,7 @@ class TestNodeCDC:
                     ]
 
                 if not filtered.empty:
-                    self.last_query_time[key] = filtered[
-                        "cdc_datetime_updated"
-                    ].max()
+                    self.last_query_time[key] = filtered["cdc_datetime_updated"].max()
 
                 return filtered
 
@@ -507,10 +523,7 @@ class TestNodeCDC:
 
         @node(type="pyspark", cache=cache_t1)
         def t1():
-            return spark.createDataFrame(
-                data=[(1, ), (2, ), (3, )],
-                schema=["col1"]
-            )
+            return spark.createDataFrame(data=[(1,), (2,), (3,)], schema=["col1"])
 
         @node(type="pyspark", dependencies=[t1], cache=cache_t2)
         def t2(t1):
@@ -545,7 +558,7 @@ class TestNodeCDC:
 
         # Now test with actual node execution using Spark
         result = t2.run(spark, parallel=False)
-        
+
         # Verify result is a Spark DataFrame with correct data
         result_pd = result.toPandas()
         expected_pd = pd.DataFrame({"col1": [1, 2, 3], "col2": [2, 4, 6]})
@@ -558,9 +571,9 @@ class TestNodeCDC:
     def test_cdc_cache_incremental_spark(self, spark, mocker):
         """
         Test CDC cache with incremental processing using Spark - production-like scenario.
-        
+
         Graph structure:
-        
+
             t1 (input passthrough, no cache)
              |
              v
@@ -568,26 +581,26 @@ class TestNodeCDC:
              |
              v
             t3 (final node with CDC cache)
-        
+
         Scenario:
         1. First run: Process initial data (rows 1, 2)
            - Uses CacheMode.MERGE to write to cache
            - Adds cdc_datetime_updated timestamp to each row
            - Writes CDC metadata tracking when data was processed
-        
+
         2. Second run: Process new data (rows 3, 4)
            - Uses CacheMode.MERGE to append to existing cache
            - CDC filter identifies these as new rows based on timestamp
            - Only processes the new rows (3, 4)
            - Cache now contains all rows (1, 2, 3, 4)
-        
+
         This simulates a real CDC scenario where you incrementally process only
         new/changed data and append to an existing table.
         """
 
         class CDCManager:
             """Manager that tracks CDC data and identifies new rows"""
-            
+
             def __init__(self):
                 # Stores CDC metadata: source, destiny, cdc_datetime_updated
                 self.cdc_data = pd.DataFrame(
@@ -617,20 +630,20 @@ class TestNodeCDC:
                     (self.cdc_data["source"] == from_node.key)
                     & (self.cdc_data["destiny"] == to_node.key)
                 ]
-                
+
                 if edge_data.empty:
                     # No previous run, return all data
                     return df
-                
+
                 # Get the latest timestamp for this edge
                 last_timestamp = edge_data["cdc_datetime_updated"].max()
-                
+
                 # Filter dataframe to return only rows updated after last timestamp
                 # Assumes df has a cdc_datetime_updated column
                 if "cdc_datetime_updated" in df.columns:
                     filtered_df = df.filter(df["cdc_datetime_updated"] > last_timestamp)
                     return filtered_df
-                
+
                 # If no cdc_datetime_updated column, return all data
                 return df
 
@@ -638,7 +651,7 @@ class TestNodeCDC:
 
         class IncrementalCDCCache(CDCCache):
             """CDC Cache that supports incremental processing"""
-            
+
             def __init__(self, node_name, cdc_manager):
                 self.node_name = node_name
                 self.cdc_manager = cdc_manager
@@ -681,53 +694,47 @@ class TestNodeCDC:
         def t1():
             """Source node - dummy node to pass through input"""
             return spark.createDataFrame(
-                data=[(1, "A"), (2, "B")],
-                schema=["id", "value"]
+                data=[(1, "A"), (2, "B")], schema=["id", "value"]
             )
 
         @node(type="pyspark", dependencies=[t1], cache=cache_t2)
         def t2(t1):
             """Transformation node"""
             from pyspark.sql.functions import current_timestamp
+
             return t1.selectExpr(
-                "id",
-                "value",
-                "value || '_processed' as processed"
+                "id", "value", "value || '_processed' as processed"
             ).withColumn("cdc_datetime_updated", current_timestamp())
 
         @node(type="pyspark", dependencies=[t2], cache=cache_t3)
         def t3(t2):
             """Final node"""
             return t2.selectExpr(
-                "id",
-                "value",
-                "processed",
-                "id * 10 as score",
-                "cdc_datetime_updated"
+                "id", "value", "processed", "id * 10 as score", "cdc_datetime_updated"
             )
 
         # ===== First Run: Initial data =====
         initial_input = spark.createDataFrame(
-            data=[(1, "A"), (2, "B")],
-            schema=["id", "value"]
+            data=[(1, "A"), (2, "B")], schema=["id", "value"]
         )
-        
+
         from flypipe.cache import CacheMode
+
         result1 = t3.run(
             spark,
             inputs={t1: initial_input},
             parallel=False,
-            cache={t2: CacheMode.MERGE, t3: CacheMode.MERGE}
+            cache={t2: CacheMode.MERGE, t3: CacheMode.MERGE},
         )
         result1_pd = result1.toPandas().sort_values("id").reset_index(drop=True)
-        
+
         # Verify the data columns (excluding cdc_datetime_updated which is dynamic)
         assert list(result1_pd["id"]) == [1, 2]
         assert list(result1_pd["value"]) == ["A", "B"]
         assert list(result1_pd["processed"]) == ["A_processed", "B_processed"]
         assert list(result1_pd["score"]) == [10, 20]
         assert "cdc_datetime_updated" in result1_pd.columns
-        
+
         # Verify caches were written
         assert cache_t2.exists(spark)
         assert cache_t3.exists(spark)
@@ -735,35 +742,41 @@ class TestNodeCDC:
         # ===== Second Run: New data (only new rows) =====
         new_input = spark.createDataFrame(
             data=[(3, "C"), (4, "D")],  # Only new rows (simulating CDC additions)
-            schema=["id", "value"]
+            schema=["id", "value"],
         )
-        
+
         # Run with MERGE mode to append to existing cache
         result2 = t3.run(
             spark,
             inputs={t1: new_input},
             parallel=False,
-            cache={t2: CacheMode.MERGE, t3: CacheMode.MERGE}
+            cache={t2: CacheMode.MERGE, t3: CacheMode.MERGE},
         )
         result2_pd = result2.toPandas().sort_values("id").reset_index(drop=True)
-        
+
         # Result should only have new rows (3 and 4) - CDC filtered the data
         assert list(result2_pd["id"]) == [3, 4]
         assert list(result2_pd["value"]) == ["C", "D"]
         assert list(result2_pd["processed"]) == ["C_processed", "D_processed"]
         assert list(result2_pd["score"]) == [30, 40]
         assert "cdc_datetime_updated" in result2_pd.columns
-        
+
         print(f"✓ CDC correctly processed only {len(result2_pd)} new rows")
 
         # Verify caches now contain all data (appended via MERGE)
-        cached_t3_data = cache_t3.read(spark).toPandas().sort_values("id").reset_index(drop=True)
-        
+        cached_t3_data = (
+            cache_t3.read(spark).toPandas().sort_values("id").reset_index(drop=True)
+        )
+
         assert list(cached_t3_data["id"]) == [1, 2, 3, 4]
         assert list(cached_t3_data["value"]) == ["A", "B", "C", "D"]
-        assert list(cached_t3_data["processed"]) == ["A_processed", "B_processed", "C_processed", "D_processed"]
+        assert list(cached_t3_data["processed"]) == [
+            "A_processed",
+            "B_processed",
+            "C_processed",
+            "D_processed",
+        ]
         assert list(cached_t3_data["score"]) == [10, 20, 30, 40]
         assert "cdc_datetime_updated" in cached_t3_data.columns
-        
-        print(f"✓ Cache contains all {len(cached_t3_data)} rows (original + new)")
 
+        print(f"✓ Cache contains all {len(cached_t3_data)} rows (original + new)")
