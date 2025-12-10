@@ -114,6 +114,8 @@ def log(logger, message):
         else:
             logger.debug(message)
 
+def get_logger():
+    return logging.getLogger("flypipe")
 
 def config_logging(debug: bool = False):
     log_level = logging.WARNING
@@ -158,7 +160,7 @@ def config_logging(debug: bool = False):
 
     # Configure only the Flypipe logger namespace (not the root logger)
     # This prevents interfering with other libraries like Spark/py4j
-    flypipe_logger = logging.getLogger("flypipe")
+    flypipe_logger = get_logger()
     flypipe_logger.setLevel(log_level)
 
     # Remove any existing handlers to avoid duplicates
