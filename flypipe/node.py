@@ -248,7 +248,7 @@ class Node:
             Maximum number of parallel workers for concurrent node execution. If None,
             defaults to 1 (sequential execution). When > 1, independent nodes in the graph
             will be executed in parallel using ThreadPoolExecutor. The actual parallelism
-            is capped at `os.cpu_count() - 1` (default: None).
+            is capped at `os.cpu_count() - 1` (default: 1).
         inputs : dict, optional
             Dictionary mapping Node objects to their pre-computed DataFrames or input parameters.
             Nodes provided here will skip execution and use the supplied data instead. This is

@@ -5,7 +5,7 @@ from contextlib import contextmanager
 class _Config:
     OPTIONS = {
         "catalog_count_box_tags": "bronze,silver,gold",
-        "node_run_max_workers": os.cpu_count() - 1,
+        "node_run_max_workers": 1,
         "require_node_description": False,
         "require_schema_description": False,
         "default_dependencies_preprocess_module": None,
