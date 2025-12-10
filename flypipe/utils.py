@@ -139,26 +139,34 @@ def config_logging(debug: bool = False):
         def format(self, record):
             # Get emoji for the level
             emoji = self.EMOJIS.get(record.levelname, "")
-
-            # Add color based on log level
-            if record.levelno >= logging.ERROR:
-                # Red for ERROR and CRITICAL
-                message = f"{self.RED}{emoji} [Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {record.getMessage()}{self.RESET}"
-            elif record.levelno >= logging.WARNING:
-                # Yellow for WARNING
-                message = f"{self.YELLOW}{emoji} [Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {record.getMessage()}{self.RESET}"
-            elif record.levelno >= logging.INFO:
-                # Blue for INFO
-                emoji_str = "" if not emoji else f"{emoji} "
-                message = f"{self.BLUE}{emoji_str}[Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {record.getMessage()}{self.RESET}"
-            else:
-                # No color for DEBUG
-                message = (
-                    ("" if not emoji else f"{emoji} ")
-                    + f"[Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {record.getMessage()}"
-                )
-
-            return message
+            
+            # Get the message and split by newlines
+            message_text = record.getMessage()
+            lines = message_text.split('\n')
+            
+            # Format each line with the appropriate prefix
+            formatted_lines = []
+            for line in lines:
+                # Add color based on log level
+                if record.levelno >= logging.ERROR:
+                    # Red for ERROR and CRITICAL
+                    formatted_line = f"{self.RED}{emoji} [Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}{self.RESET}"
+                elif record.levelno >= logging.WARNING:
+                    # Yellow for WARNING
+                    formatted_line = f"{self.YELLOW}{emoji} [Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}{self.RESET}"
+                elif record.levelno >= logging.INFO:
+                    # Blue for INFO
+                    emoji_str = "" if not emoji else f"{emoji} "
+                    formatted_line = f"{self.BLUE}{emoji_str}[Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}{self.RESET}"
+                else:
+                    # No color for DEBUG
+                    formatted_line = (
+                        ("" if not emoji else f"{emoji} ")
+                        + f"[Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}"
+                    )
+                formatted_lines.append(formatted_line)
+            
+            return '\n'.join(formatted_lines)
 
     # Configure only the Flypipe logger namespace (not the root logger)
     # This prevents interfering with other libraries like Spark/py4j
