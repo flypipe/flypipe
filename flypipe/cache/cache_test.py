@@ -96,10 +96,11 @@ class TestCache:
         spy_writter.reset_mock()
         spy_reader.reset_mock()
         spy_exists.reset_mock()
+        print("Running t1 again")
         t1.run()
-        assert spy_writter.call_count == 0
         assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
+        assert spy_writter.call_count == 0
 
     def test_cache_spark_provided(self, spark, mocker):
         class GenericCache2(GenericCache):

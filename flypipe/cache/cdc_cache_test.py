@@ -35,6 +35,10 @@ class GenericCDCCache(CDCCache):
         """Write CDC data to the CDC cache"""
         df.to_csv(self.cdc_csv, index=False)
 
+    def create_cdc_table(self, *args, **kwargs):
+        """Ensure CDC table/file structure exists (no-op for CSV-based cache)"""
+        pass
+
 
 @pytest.fixture(scope="function")
 def cdc_cache():
@@ -83,6 +87,7 @@ class TestCDCCache:
         assert hasattr(cdc_cache, "exists")
         assert hasattr(cdc_cache, "read_cdc")
         assert hasattr(cdc_cache, "write_cdc")
+        assert hasattr(cdc_cache, "create_cdc_table")
 
     def test_cdc_cache_write_read(self, cdc_cache):
         """Test basic write and read operations for regular cache"""
@@ -224,6 +229,10 @@ class TestCDCCache:
             def write_cdc(self, df):
                 """Appends CDC entries instead of overwriting"""
                 self.cdc_data.append(df)
+
+            def create_cdc_table(self, *args, **kwargs):
+                """Ensure CDC table/file structure exists (no-op for in-memory cache)"""
+                pass
 
         cache = CustomCDCCache()
 

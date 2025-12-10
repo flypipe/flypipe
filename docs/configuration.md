@@ -22,20 +22,10 @@ Enforces declaration of node **output** schema
 **type** ==boolean==
 <br/>**default** `False`
 
-### FLYPIPE_DEFAULT_RUN_MODE
-
-Defines the default execution mode for Flypipe pipelines:
-
-* **sequential**: will process nodes sequentially
-* **parallel**: permit Flypipe to schedule multiple nodes to be processed concurrently, note that for a node to be 
-processed all the usual rules about ancestors having already been executed will apply. 
-
-**type** ==string==
-<br/>**default** `sequential`
-
 ### FLYPIPE_NODE_RUN_MAX_WORKERS
 
-Sets the maximum number of workers Flypipe will use when running transformations in parallel execution mode. 
+Sets the maximum number of workers Flypipe will use when running transformations in parallel execution mode.
+If maximum number of workers is 1, Flypipe will run transformations sequentially.
 
 **type** ==integer==
 <br/>**default** `os.cpu_count()`

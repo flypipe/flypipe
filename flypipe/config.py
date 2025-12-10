@@ -1,20 +1,11 @@
 import os
 from contextlib import contextmanager
-from enum import Enum
-
-
-class RunMode(Enum):
-    """Mode in which to run when we execute a Flypipe pipeline"""
-
-    PARALLEL = "parallel"
-    SEQUENTIAL = "sequential"
 
 
 class _Config:
     OPTIONS = {
         "catalog_count_box_tags": "bronze,silver,gold",
-        "default_run_mode": RunMode.SEQUENTIAL.value,
-        "node_run_max_workers": os.cpu_count(),
+        "node_run_max_workers": os.cpu_count() - 1,
         "require_node_description": False,
         "require_schema_description": False,
         "default_dependencies_preprocess_module": None,

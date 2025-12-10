@@ -12,6 +12,7 @@ from flypipe.run_context import RunContext
 from flypipe.schema import Column
 from flypipe.schema import Schema
 from flypipe.schema.types import Decimal, Integer, String
+import logging
 
 
 @pytest.fixture(scope="function")
@@ -60,9 +61,7 @@ class TestPySparkNode:
         spark_dummy_table.function.__name__ = func_name
 
         df = spark_view.createDataFrame(schema=("c1", "c2", "c3"), data=[(1, 2, 3)])
-        output_df = t1.run(
-            spark_view, inputs={Spark("dummy_table"): df}, parallel=False
-        )
+        output_df = t1.run(spark_view, inputs={Spark("dummy_table"): df})
         spy.assert_not_called()
         assert_pyspark_df_equal(
             output_df,
@@ -92,7 +91,7 @@ class TestPySparkNode:
         def t1(dummy_table):
             return dummy_table
 
-        df = t1.run(spark_view, parallel=False)
+        df = t1.run(spark_view)
         assert_pyspark_df_equal(df, stored_df, check_dtype=False)
 
     def test_conversion_to_pandas(self, spark_view):
@@ -112,7 +111,7 @@ class TestPySparkNode:
         def t2(t1):
             return t1
 
-        df = t2.run(spark_view, parallel=False)
+        df = t2.run(spark_view)
         assert isinstance(df, pd.DataFrame)
 
     def test_conversion_to_pandas_on_spark(self, spark_view):
@@ -132,10 +131,10 @@ class TestPySparkNode:
         def t2(t1):
             return t1
 
-        df = t2.run(spark_view, parallel=False)
+        df = t2.run(spark_view)
         assert isinstance(df, ps.DataFrame)
 
-    def test_datasource_case_sensitive_columns(self, spark_view):
+    def test_datasource_case_sensitive_columns(self, spark_view, caplog):
         """
         Test columns case sensitive
 
@@ -188,8 +187,8 @@ class TestPySparkNode:
             df = df.rename(columns={"my_col__x": "my_col"})
             return df
 
-        with pytest.raises(DataFrameMissingColumns) as exc_info:
-            my_col.run(spark_view, parallel=False)
+        with pytest.raises(DataFrameMissingColumns):
+            my_col.run(spark_view)
 
         expected_error_df = pd.DataFrame(
             data={
@@ -203,13 +202,25 @@ class TestPySparkNode:
             ["selection", "dataframe"]
         ).reset_index(drop=True)
 
-        assert (
-            str(exc_info.value)
-            == f"Flypipe: could not find some columns in the dataframe"
+        # Assert that the error was logged at ERROR level
+        error_logs = [
+            record for record in caplog.records if record.levelno == logging.ERROR
+        ]
+        assert len(error_logs) > 0, "Expected at least one ERROR level log message"
+
+        # Build the expected error message
+        expected_error_message = (
+            f"Flypipe: could not find some columns in the dataframe"
             f"\n\nOutput Dataframe columns: ['My_Col__x', 'My_Col__y', 'My_Col__z']"
             f"\nGraph selected columns: ['Id', 'My_Col__z', 'my_col__x']"
             f"\n\n\n{tabulate(expected_error_df, headers='keys', tablefmt='mixed_outline')}\n"
         )
+
+        # Check that the complete error message was logged
+        error_messages = [record.message for record in error_logs]
+        assert any(
+            expected_error_message in msg for msg in error_messages
+        ), f"Expected complete error message to be logged at ERROR level. Found logs: {error_messages}"
 
     def test_duplicated_output_columns(self, spark_view):
         @node(
@@ -251,7 +262,7 @@ class TestPySparkNode:
                 continue
             assert len(n["output_columns"]) == len(set(n["output_columns"]))
 
-        df = t4.run(spark_view, parallel=False)
+        df = t4.run(spark_view)
         assert_pyspark_df_equal(
             df,
             spark_view.createDataFrame(schema=("c2",), data=[("2",)]),
@@ -307,4 +318,4 @@ class TestPySparkNode:
             assert t2.loc[0, "c3"] == "t2 set this value"
             return spark_view.createDataFrame(t2)
 
-        t3.run(spark_view, parallel=False)
+        t3.run(spark_view)

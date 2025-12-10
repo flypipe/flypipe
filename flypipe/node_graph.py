@@ -119,11 +119,16 @@ class NodeGraph:
 
         for node_key in graph.nodes:
             node = graph.nodes[node_key]
-            node["node_run_context"].cache_context = CacheContext(
-                spark=run_context.spark,
-                cache_mode=run_context.cache_modes.get(node["transformation"]),
-                cache=node["transformation"].cache,
-            )
+            # Only create cache context if the node has a cache
+            if node["transformation"].cache is None:
+                node["node_run_context"].cache_context = None
+            else:
+                node["node_run_context"].cache_context = CacheContext(
+                    spark=run_context.spark,
+                    cache_mode=run_context.cache_modes.get(node["transformation"]),
+                    cache=node["transformation"].cache,
+                    debug=run_context.debug,
+                )
 
         return graph
 
@@ -339,9 +344,12 @@ class NodeGraph:
         run_status = RunStatus.ACTIVE
 
         if node["node_run_context"].exists_provided_input:
-            run_status = RunStatus.SKIP
+            run_status = RunStatus.PROVIDED_INPUT
 
-        elif node["node_run_context"].cache_context.exists_cache_to_load:
+        elif (
+            node["node_run_context"].cache_context
+            and node["node_run_context"].cache_context.exists_cache_to_load
+        ):
             run_status = RunStatus.CACHED
 
         frontier = [(node_name, run_status)]
@@ -358,9 +366,12 @@ class NodeGraph:
                     ]
 
                     if ancestor_node_run_context.exists_provided_input:
-                        frontier.append((ancestor_name, RunStatus.SKIP))
+                        frontier.append((ancestor_name, RunStatus.PROVIDED_INPUT))
 
-                    elif ancestor_node_run_context.cache_context.exists_cache_to_load:
+                    elif (
+                        ancestor_node_run_context.cache_context
+                        and ancestor_node_run_context.cache_context.exists_cache_to_load
+                    ):
                         frontier.append((ancestor_name, RunStatus.CACHED))
 
                     else:
@@ -373,6 +384,18 @@ class NodeGraph:
                     if self.graph.nodes[ancestor_name]["status"] not in [
                         RunStatus.ACTIVE,
                         RunStatus.CACHED,
+                        RunStatus.PROVIDED_INPUT,
+                    ]:
+                        frontier.append((ancestor_name, RunStatus.SKIP))
+
+            elif descendent_status == RunStatus.PROVIDED_INPUT:
+                current_node["status"] = RunStatus.PROVIDED_INPUT
+
+                for ancestor_name in self.graph.predecessors(current_node_name):
+                    if self.graph.nodes[ancestor_name]["status"] not in [
+                        RunStatus.ACTIVE,
+                        RunStatus.CACHED,
+                        RunStatus.PROVIDED_INPUT,
                     ]:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
@@ -383,6 +406,7 @@ class NodeGraph:
                     if self.graph.nodes[ancestor_name]["status"] not in [
                         RunStatus.ACTIVE,
                         RunStatus.CACHED,
+                        RunStatus.PROVIDED_INPUT,
                     ]:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
@@ -390,44 +414,101 @@ class NodeGraph:
             if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN]:
                 raise RuntimeError(f"Run status for node {n} is {RunStatus.UNKNOWN}")
 
-    def get_cache_context_dependency_map(self) -> Dict[Node, Dict[Node, CacheContext]]:
+    def get_cache_context_dependency_map(self) -> Dict[Node, CacheContext]:
         """
-        Build a dependency map that associates each transformation with its upstream dependencies and their cache contexts.
+        Build a map of nodes to their cache contexts.
 
-        This method creates a nested dictionary structure where each node (transformation) maps to its direct
-        dependencies, with each dependency further mapped to its corresponding cache context. This is useful for
-        understanding the caching behavior of upstream nodes when processing a given transformation.
+        This method creates a dictionary mapping each node that has a cache to its cache context.
+        Only nodes with non-disabled caches are included in the map.
 
-        Returns:
-            dict: A nested dictionary with the following structure:
-                {
-                    Node (destination): {
-                        Node (source): CacheContext,
-                        ...
-                    },
-                    ...
-                }
-                Where each key is a transformation node, and the value is a dictionary mapping its upstream
-                dependency nodes to their respective cache contexts.
+        Returns
+        -------
+        Dict[Node, CacheContext]
+            A dictionary where:
+            - Keys are Node objects (transformations) that have caches
+            - Values are their corresponding CacheContext objects
 
-        Example:
-            If node C depends on nodes A and B, the structure would be:
-            {
-                C: {A: CacheContext_A, B: CacheContext_B},
-                A: {},
-                B: {}
-            }
+        Example
+        -------
+        If nodes A and C have caches, but B doesn't:
+        {
+            A: CacheContext_A,
+            C: CacheContext_C
+        }
         """
+        cache_map = {}
 
-        dependencies = {}
-        for node in self.graph.nodes:
-            dependencies[self.get_transformation(node)] = {}
+        for node_key in self.graph.nodes:
+            transformation = self.get_transformation(node_key)
+            cache_context = self.get_cache_context(node_key)
 
-        for source, destination in self.graph.edges:
-            dependencies[self.get_transformation(destination)][
-                self.get_transformation(source)
-            ] = self.get_cache_context(source)
-        return dependencies
+            # Only include nodes that have a cache
+            if cache_context:
+                cache_map[transformation] = cache_context
+
+        return cache_map
+
+    def get_first_cached_predecessors(self, node_key: str) -> List[Node]:
+        """
+        Get the first cached predecessors of a node by traversing upstream.
+
+        This method traverses the graph upstream from the given node and returns
+        the first predecessors that have a cache. It stops traversing a branch
+        once a cached node is found.
+
+        Parameters
+        ----------
+        node_key : str
+            The key of the node to find cached predecessors for
+
+        Returns
+        -------
+        List[Node]
+            A list of Node objects (transformations) that are the first cached
+            predecessors found when traversing upstream
+
+        Example
+        -------
+        Graph: A(cached) -> B -> C -> D(cached) -> E
+
+        For node E:
+        - Returns [D] (D is cached, so we stop there)
+
+        For node C:
+        - Returns [A] (traverse B, then find A which is cached)
+
+        For node D:
+        - Returns [A] (traverse C, traverse B, then find A which is cached)
+        """
+        cached_predecessors = []
+        visited = set()
+
+        def traverse_upstream(current_key):
+            """Recursively traverse upstream to find cached predecessors"""
+            if current_key in visited:
+                return
+            visited.add(current_key)
+
+            # Get all direct predecessors
+            predecessors = list(self.graph.predecessors(current_key))
+
+            for pred_key in predecessors:
+                # Check if this predecessor has a cache
+                cache_context = self.get_cache_context(pred_key)
+
+                if cache_context:
+                    # Found a cached predecessor, add it and stop traversing this branch
+                    transformation = self.get_transformation(pred_key)
+                    if transformation not in cached_predecessors:
+                        cached_predecessors.append(transformation)
+                else:
+                    # No cache, continue traversing upstream
+                    traverse_upstream(pred_key)
+
+        # Start traversing from the given node
+        traverse_upstream(node_key)
+
+        return cached_predecessors
 
     def get_nodes_depth(self):
         """

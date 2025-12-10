@@ -18,11 +18,15 @@ class InputNode:
     name is used.
     """
 
-    def __init__(self, node):
+    def __init__(self, node: Node, parent_node: Node = None):
         self.node = node
         self._selected_columns = None
         self._alias = None
         self._preprocess = Preprocess()
+        self._parent_node = parent_node
+
+    def set_parent_node(self, parent_node):
+        self._parent_node = parent_node
 
     @property
     def __name__(self):
@@ -32,16 +36,23 @@ class InputNode:
     def key(self):
         return self.node.key
 
-    def get_value(self, run_context: RunContext, parent_node: Node):
+    def get_value(self, run_context: RunContext, root_node: Node):
         """
         Retrieve the value of this node input which will be passed to the parent node.
+
+        Parameters
+        ----------
+        run_context : RunContext
+            The run context containing node results
+        root_node : Node
+            The root/target node (for CDC filtering and determining dataframe type)
         """
 
         try:
             # We can assume that the computation of the raw node this node input comes from is already done and stored
             # in the run context because it's an ancestor node in the run graph.
             node_input_value = run_context.node_results[self.key].as_type(
-                parent_node.dataframe_type
+                self._parent_node.dataframe_type
             )
         except KeyError:
             raise RuntimeError(
@@ -49,31 +60,31 @@ class InputNode:
                 f"raise this as a bug in https://github.com/flypipe/flypipe"
             )
 
-        cache_context = run_context.get_cache_context(parent_node, self.node)
+        cache_context = run_context.get_cache_context(self.node)
 
         # In cases that dataframe is provided as input, there might not be any CacheContext created
         # and we need to check if the cache context has cache.
         if cache_context:
             df = cache_context.read_cdc(
-                self.node, parent_node, node_input_value.get_df()
+                self.node, self._parent_node, root_node, node_input_value.get_df()
             )
             node_input_value = node_input_value.clone(df)
 
         # Preprocess the Input Node
         node_input_value = self.apply_preprocess(
-            run_context, parent_node, node_input_value
+            run_context, self._parent_node, node_input_value
         )
 
         # Select only necessary columns
         if self.selected_columns:
             node_input_value = node_input_value.select_columns(*self.selected_columns)
 
-        if parent_node.type == "spark_sql":
+        if self._parent_node.type == "spark_sql":
             # SQL doesn't work with dataframes, so we need to:
             # - save all incoming dataframes as unique temporary tables
             # - pass the names of these tables instead of the dataframes
             alias = self.get_alias()
-            table_name = f"{parent_node.__name__}__{alias}"
+            table_name = f"{self._parent_node.__name__}__{alias}"
             node_input_value.get_df().createOrReplaceTempView(table_name)
             return table_name
 
@@ -117,7 +128,8 @@ class InputNode:
 
     def copy(self):
         # It's necessary to access protected fields to do a deep copy
-        input_node_copy = InputNode(self.node.copy())
+        # Note: Don't copy _parent_node to avoid infinite recursion
+        input_node_copy = InputNode(self.node.copy(), self._parent_node)
         input_node_copy._selected_columns = self._selected_columns
         input_node_copy._alias = self._alias
         input_node_copy._preprocess = self._preprocess.copy()

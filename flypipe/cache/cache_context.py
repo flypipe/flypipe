@@ -1,6 +1,10 @@
+import logging
 from pyspark.sql import SparkSession
 
 from flypipe.cache import CacheMode, CDCCache, Cache
+from flypipe.utils import log
+
+logger = logging.getLogger(__name__)
 
 
 class CacheContext:
@@ -9,13 +13,20 @@ class CacheContext:
         cache_mode: CacheMode = None,
         spark: SparkSession = None,
         cache: Cache = None,
+        debug: bool = False,
     ):
         self.spark = spark
         self.cache = cache
         self.cache_mode = CacheMode.DISABLE if self.cache is None else cache_mode
+        self.debug = debug
         self._exists_cache_to_load = (
             None  # can not be True or False as both means exist or not exist
         )
+
+    def _log(self, message: str):
+        """Log a message using logger.debug if debug mode is enabled, otherwise print."""
+        if self.debug:
+            log(logger, message)
 
     @property
     def disabled(self):
@@ -43,42 +54,112 @@ class CacheContext:
         if self.disabled:
             raise RuntimeError("Cache disabled, cannot read")
 
+        self._log("      🔄 CacheContext.read() - calling cache.read()")
         if self.spark:
-            return self.cache.read(self.spark)
-        return self.cache.read()
+            result = self.cache.read(self.spark)
+        else:
+            result = self.cache.read()
+        self._log("      🔄 CacheContext.read() - returned result")
+        return result
 
-    def read_cdc(self, from_node, to_node, df):
+    def read_cdc(self, from_node, to_node, root_node, df):
         if not self.disabled and isinstance(self.cache, CDCCache):
+            from_name = (
+                from_node.__name__ if hasattr(from_node, "__name__") else str(from_node)
+            )
+            to_name = to_node.__name__ if hasattr(to_node, "__name__") else str(to_node)
+            self._log(
+                f"      📊 CacheContext.read_cdc() - filtering CDC data from {from_name} to {to_name} (root: {root_node.__name__})"
+            )
             if self.spark:
-                return self.cache.read_cdc(self.spark, from_node, to_node, df)
-            return self.cache.read_cdc(from_node, to_node, df)
-
-        return df
+                result = self.cache.read_cdc(
+                    self.spark, from_node, to_node, root_node, df
+                )
+            else:
+                result = self.cache.read_cdc(from_node, to_node, root_node, df)
+            self._log("      📊 CacheContext.read_cdc() - CDC filtering complete")
+            return result
+        else:
+            if self.disabled:
+                self._log("      ⏭️  CacheContext.read_cdc() - skipped (cache disabled)")
+            else:
+                self._log("      ⏭️  CacheContext.read_cdc() - skipped (not a CDCCache)")
+            return df
 
     def write(self, df):
         if not self.disabled or self.merge:
-
+            mode = "MERGE" if self.merge else "NORMAL"
+            self._log(
+                f"      💾 CacheContext.write() - mode: {mode}, calling cache.write()"
+            )
             if self.spark:
-                return self.cache.write(self.spark, df)
-            return self.cache.write(df)
+                result = self.cache.write(self.spark, df)
+            else:
+                result = self.cache.write(df)
+            self._log("      💾 CacheContext.write() - write complete")
+            return result
+        else:
+            self._log("      ⏭️  CacheContext.write() - skipped (cache disabled)")
+            return None
 
-        return None
+    def create_cdc_table(self):
+        """
+        Ensure CDC metadata table exists.
 
-    def write_cdc(self, current_node, upstream_nodes, datetime_started_transformation):
+        This should be called before parallel execution to avoid concurrent
+        table creation conflicts.
+        """
+        if isinstance(self.cache, CDCCache):
+            if self.spark:
+                self.cache.create_cdc_table(self.spark)
+            else:
+                self.cache.create_cdc_table()
+
+    def write_cdc(
+        self, upstream_nodes, current_node, root_node, datetime_started_transformation
+    ):
         if isinstance(self.cache, CDCCache):
             if not self.disabled or self.merge:
+                current_name = (
+                    current_node.__name__
+                    if hasattr(current_node, "__name__")
+                    else str(current_node)
+                )
+                upstream_names = [
+                    n.__name__ if hasattr(n, "__name__") else str(n)
+                    for n in upstream_nodes
+                ]
+                self._log(
+                    f"      📝 CacheContext.write_cdc() - writing CDC metadata for {current_name} (root {root_node.__name__})"
+                )
+                self._log(
+                    f"         └─ upstream nodes: {', '.join(upstream_names) if upstream_names else 'none'}"
+                )
 
                 if self.spark:
-                    return self.cache.write_cdc(
+                    result = self.cache.write_cdc(
                         self.spark,
-                        current_node,
                         upstream_nodes,
+                        current_node,
+                        root_node,
+                        datetime_started_transformation,
+                    )
+                else:
+                    result = self.cache.write_cdc(
+                        upstream_nodes,
+                        current_node,
+                        root_node,
                         datetime_started_transformation,
                     )
 
-                return self.cache.write_cdc(
-                    current_node, upstream_nodes, datetime_started_transformation
+                self._log("      📝 CacheContext.write_cdc() - CDC metadata written")
+                return result
+            else:
+                self._log(
+                    "      ⏭️  CacheContext.write_cdc() - skipped (cache disabled)"
                 )
+        else:
+            self._log("      ⏭️  CacheContext.write_cdc() - skipped (not a CDCCache)")
 
     def exists(self):
         if self.disabled:

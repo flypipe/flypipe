@@ -14,12 +14,15 @@ class Cache(ABC):
 
     @abstractmethod
     def read(self, *args, **kwargs):
-        raise RuntimeError("Please provide your own cache")
+        """Read data from cache"""
+        raise NotImplementedError("Cache subclass must implement read() method")
 
     @abstractmethod
     def write(self, *args, **kwargs):
-        raise RuntimeError("Please provide your own cache")
+        """Write data to cache"""
+        raise NotImplementedError("Cache subclass must implement write() method")
 
     @abstractmethod
     def exists(self, *args, **kwargs):
-        raise RuntimeError("Please provide your own cache")
+        """Check if cached data exists"""
+        raise NotImplementedError("Cache subclass must implement exists() method")

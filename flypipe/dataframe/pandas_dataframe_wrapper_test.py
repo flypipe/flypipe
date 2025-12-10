@@ -235,4 +235,4 @@ class TestPandasDataFrameWrapper:
         def t1():
             return pd.DataFrame(columns=["c1"])
 
-        t1.run(spark, parallel=False)
+        t1.run(spark)

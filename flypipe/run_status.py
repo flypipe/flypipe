@@ -8,3 +8,4 @@ class RunStatus(Enum):
     ACTIVE = 1
     SKIP = 2
     CACHED = 3
+    PROVIDED_INPUT = 4

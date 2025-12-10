@@ -62,7 +62,7 @@ class TestSparkDataSource:
             schema=StructType([StructField("c1", DecimalType(16, 2))]),
             data=[(PythonDecimal(1),)],
         )
-        assert_pyspark_df_equal(df_expected, t1.run(spark_view, parallel=False))
+        assert_pyspark_df_equal(df_expected, t1.run(spark_view))
 
     def test_multiple_sources(self, spark_view):
         """
@@ -134,7 +134,7 @@ class TestSparkDataSource:
                 (PythonDecimal(0), PythonDecimal(1), PythonDecimal(2), PythonDecimal(3))
             ],
         )
-        assert_pyspark_df_equal(df_expected, t4.run(spark_view, parallel=False))
+        assert_pyspark_df_equal(df_expected, t4.run(spark_view))
 
     def test_datasource_consolidate_columns(self, spark_view, mocker):
         """
@@ -184,7 +184,7 @@ class TestSparkDataSource:
         # Filthy hack to stop the spy removing the __name__ attribute from the function
         spark_dummy_table_2.function.__name__ = func_name2
 
-        t3.run(spark_view, parallel=False)
+        t3.run(spark_view)
         spy.assert_not_called()
         spy2.assert_called_once()
 

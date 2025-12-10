@@ -8,9 +8,18 @@ class CDCCache(Cache, ABC):
     """
 
     @abstractmethod
+    def create_cdc_table(self, *args, **kwargs):
+        """Ensure CDC metadata table exists (for thread-safe parallel execution)"""
+        raise NotImplementedError(
+            "CDCCache subclass must implement create_cdc_table() method"
+        )
+
+    @abstractmethod
     def read_cdc(self, *args, **kwargs):
-        raise RuntimeError("Please provide your own cache")
+        """Read CDC metadata to filter data based on what has already been processed"""
+        raise NotImplementedError("CDCCache subclass must implement read_cdc() method")
 
     @abstractmethod
     def write_cdc(self, *args, **kwargs):
-        raise RuntimeError("Please provide your own cache")
+        """Write CDC metadata to track what data has been processed"""
+        raise NotImplementedError("CDCCache subclass must implement write_cdc() method")

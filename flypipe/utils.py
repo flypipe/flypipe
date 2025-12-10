@@ -1,4 +1,5 @@
 import json
+import logging
 from enum import Enum
 from pandas.testing import assert_frame_equal
 
@@ -103,3 +104,60 @@ def get_schema(df, columns=None):
     if not columns:
         return df.dtypes
     return df.dtypes[columns]
+
+
+def log(logger, message):
+    messages = message.split("\n")
+    for message in messages:
+        if message == "\n":
+            logger.debug("")
+        else:
+            logger.debug(message)
+
+
+def config_logging(debug: bool = False):
+    log_level = logging.WARNING
+    if debug:
+        log_level = logging.DEBUG
+
+    class ColoredFormatter(logging.Formatter):
+        """Custom formatter with colors and emojis for different log levels"""
+
+        # ANSI color codes
+        RED = "\033[91m"
+        YELLOW = "\033[93m"
+        BLUE = "\033[94m"
+        RESET = "\033[0m"
+
+        # Emojis for each level
+        EMOJIS = {"INFO": "ℹ️", "WARNING": "⚠️", "ERROR": "🔴", "CRITICAL": "🚨"}
+
+        def format(self, record):
+            # Get emoji for the level
+            emoji = self.EMOJIS.get(record.levelname, "")
+
+            # Add color based on log level
+            if record.levelno >= logging.ERROR:
+                # Red for ERROR and CRITICAL
+                message = f"{self.RED}{emoji} [Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {record.getMessage()}{self.RESET}"
+            elif record.levelno >= logging.WARNING:
+                # Yellow for WARNING
+                message = f"{self.YELLOW}{emoji} [Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {record.getMessage()}{self.RESET}"
+            elif record.levelno >= logging.INFO:
+                # Blue for INFO
+                emoji_str = "" if not emoji else f"{emoji} "
+                message = f"{self.BLUE}{emoji_str}[Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {record.getMessage()}{self.RESET}"
+            else:
+                # No color for DEBUG
+                message = (
+                    ("" if not emoji else f"{emoji} ")
+                    + f"[Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {record.getMessage()}"
+                )
+
+            return message
+
+    # Configure logging with custom formatter
+    handler = logging.StreamHandler()
+    handler.setFormatter(ColoredFormatter())
+
+    logging.basicConfig(level=log_level, handlers=[handler])

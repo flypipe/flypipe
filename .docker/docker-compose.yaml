@@ -8,8 +8,11 @@ services:
     image: spark:3.5.7-python3@sha256:5b75b64a42010ba072c2b0a987cc8d1c4b9ec70e0e99b1c72c7f1871855ff631
     container_name: spark-master
     hostname: spark-master
+    user: "root"
     command: >
       bash -lc "
+      mkdir -p /shared/delta/warehouse /shared/delta/tables &&
+      chmod -R 777 /shared/delta &&
       ${SPARK_HOME:-/opt/spark}/bin/spark-class
       org.apache.spark.deploy.master.Master
       --host spark-master --port 7077 --webui-port 8080"
@@ -18,6 +21,7 @@ services:
       - SPARK_LOG_DIR=/opt/spark/logs
     volumes:
       - ./logs/spark-master:/opt/spark/logs
+      - shared-data:/shared/delta
     ports:
       - "7077:7077"   # Spark master RPC
       - "8080:8080"   # Spark master UI
@@ -30,6 +34,7 @@ services:
     image: spark:3.5.7-python3@sha256:5b75b64a42010ba072c2b0a987cc8d1c4b9ec70e0e99b1c72c7f1871855ff631
     container_name: spark-worker
     hostname: spark-worker
+    user: "root"
     depends_on: [spark-master]
     command: >
       bash -lc "
@@ -44,6 +49,7 @@ services:
       - SPARK_LOG_DIR=/opt/spark/logs
     volumes:
       - ./logs/spark-worker:/opt/spark/logs
+      - shared-data:/shared/delta
     ports:
       - "8081:8081"   # Spark worker UI
     networks: [sparknet]
@@ -62,14 +68,18 @@ services:
       - SPARK_NO_DAEMONIZE=true
     volumes:
       - ./logs/spark-connect:/opt/spark/logs
+      - shared-data:/shared/delta
     depends_on: [spark-master]
     command: >
       bash -lc "
+      mkdir -p /shared/delta/warehouse /shared/delta/tables &&
+      chmod -R 777 /shared/delta &&
       ${SPARK_HOME:-/opt/spark}/sbin/start-connect-server.sh --wait
       --master spark://spark-master:7077
       --packages org.apache.spark:spark-connect_2.12:3.5.7,io.delta:delta-spark_2.12:3.3.0
       --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension
       --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog
+      --conf spark.sql.warehouse.dir=/shared/delta/warehouse
       --conf spark.connect.grpc.binding.address=0.0.0.0
       --conf spark.connect.grpc.binding.port=15002
       --conf spark.ui.port=4041
@@ -107,7 +117,22 @@ services:
       - ../scripts:/scripts
       - ./start.py:/etc/ipython/startup/start.py
       - ../docs/notebooks:/notebooks
+      - shared-data:/shared/delta
     networks: [sparknet]
+    command: >
+      bash -lc "
+      mkdir -p /shared/delta/warehouse /shared/delta/tables &&
+      chmod -R 777 /shared/delta &&
+      ${SPARK_HOME:-/opt/spark}/sbin/start-connect-server.sh --wait
+      --master spark://spark-master:7077
+      --packages org.apache.spark:spark-connect_2.12:3.5.7,io.delta:delta-spark_2.12:3.3.0
+      --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension
+      --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog
+      --conf spark.sql.warehouse.dir=/shared/delta/warehouse
+      --conf spark.connect.grpc.binding.address=0.0.0.0
+      --conf spark.connect.grpc.binding.port=15002
+      --conf spark.ui.port=4041
+      "
     entrypoint: >
       bash -lc "
       /wait-for-it.sh spark-master:7077 -t 60 &&
@@ -121,3 +146,7 @@ services:
 networks:
   sparknet:
     driver: bridge
+
+volumes:
+  shared-data:
+    driver: local

@@ -63,6 +63,10 @@ bash: build
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" -it flypipe-jupyter bash
 .PHONY: bash
 
+run:
+	docker compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans flypipe-jupyter sh -c "python $(f)"
+.PHONY: run
+
 wheel:
 	flit build --format wheel
 .PHONY: wheel

@@ -18,7 +18,7 @@ class PandasOnSparkDataFrameWrapper(SparkDataFrameWrapper):
         try:
             return self.df[list(columns)]
         except KeyError as exc:
-            raise DataFrameMissingColumns(self.df.columns, list(columns)) from exc
+            raise DataFrameMissingColumns(list(self.df.columns), list(columns)) from exc
 
     def get_df(self):
         return self.df.to_spark().pandas_api()

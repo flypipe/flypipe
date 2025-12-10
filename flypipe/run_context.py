@@ -1,4 +1,3 @@
-from copy import copy
 from dataclasses import dataclass, field
 from typing import Mapping, Union
 
@@ -21,7 +20,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
 
 from flypipe.dependency.preprocess_mode import PreprocessMode
-from flypipe.config import get_config, RunMode
+from flypipe.config import get_config
 from flypipe.node_result import NodeResult
 from flypipe.schema import Schema
 
@@ -34,21 +33,31 @@ class RunContext:
     """
 
     spark: SparkSession = None
-    parallel: bool = None
+    max_workers: int = 1
     provided_inputs: dict = None
     pandas_on_spark_use_pandas: bool = False
     parameters: dict = None
     cache_modes: dict = None
     dependencies_preprocess_modes: Union[dict, PreprocessMode] = None
+    debug: bool = False
     node_results: Mapping[str, NodeResult] = field(init=False, default=None)
     cache_context_dependency_map = None
 
-    def __post_init__(self):
-        self.parallel = (
-            get_config("default_run_mode") == RunMode.PARALLEL.value
-            if self.parallel is None
-            else self.parallel
+    def copy(self):
+        return RunContext(
+            spark=self.spark,
+            max_workers=self.max_workers,
+            provided_inputs=self.provided_inputs,
+            pandas_on_spark_use_pandas=self.pandas_on_spark_use_pandas,
+            parameters=self.parameters,
+            cache_modes=self.cache_modes,
+            dependencies_preprocess_modes=self.dependencies_preprocess_modes,
+            debug=self.debug,
         )
+
+    def __post_init__(self):
+
+        self.max_workers = self.max_workers or int(get_config("node_run_max_workers"))
 
         self.provided_inputs = self.provided_inputs or {}
         self.pandas_on_spark_use_pandas = (
@@ -65,9 +74,6 @@ class RunContext:
             for node, df in self.provided_inputs.items()
         }
         self.cache_context_dependency_map = self.cache_context_dependency_map or {}
-
-    def copy(self):
-        return copy(self)
 
     def update_node_results(
         self,
@@ -110,19 +116,39 @@ class RunContext:
     def set_cache_context_dependency_map(self, cache_context_dependency_map):
         self.cache_context_dependency_map = cache_context_dependency_map
 
-    def get_cache_context(self, node, dependency_node):
-        upstream_cache_context_map = self.cache_context_dependency_map.get(node, None)
-        if upstream_cache_context_map:
-            # In cases that dataframe is provided as input, there might not be any CacheContext created, therefore return None
-            return upstream_cache_context_map.get(dependency_node, None)
-        return None
+    def get_cache_context(self, node):
+        """
+        Get the cache context for a dependency node.
+
+        Parameters
+        ----------
+        node : Node
+            The node requesting
+
+        Returns
+        -------
+        CacheContext or None
+            The cache context for the dependency node, or None if no cache
+        """
+        return self.cache_context_dependency_map.get(node, None)
 
     def get_cache_context_dependencies(self, node):
-        upstream_cache_context_map = self.cache_context_dependency_map.get(node, None)
+        """
+        Get all upstream nodes that have caches.
+
+        Parameters
+        ----------
+        node : Node
+            The node whose upstream cached dependencies we want
+
+        Returns
+        -------
+        list[Node]
+            List of upstream nodes that have non-disabled caches
+        """
         dependencies_nodes = [
             input_node.node
             for input_node in node.input_nodes
-            if input_node.node in upstream_cache_context_map
-            and not upstream_cache_context_map[input_node.node].disabled
+            if input_node.node in self.cache_context_dependency_map
         ]
         return dependencies_nodes

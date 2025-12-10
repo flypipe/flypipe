@@ -80,7 +80,9 @@ class TestNodeGraph:
         assert graph.get_node(t1.key)["status"] == RunStatus.SKIP
         assert graph.get_node(t2.key)["status"] == RunStatus.ACTIVE
         assert graph.get_node(t3.key)["status"] == RunStatus.ACTIVE
-        assert graph.get_node(t4.key)["status"] == RunStatus.SKIP
+        assert (
+            graph.get_node(t4.key)["status"] == RunStatus.PROVIDED_INPUT
+        )  # Changed from SKIP
         assert graph.get_node(t5.key)["status"] == RunStatus.ACTIVE
         assert graph.get_node(t6.key)["status"] == RunStatus.ACTIVE
 
@@ -117,7 +119,9 @@ class TestNodeGraph:
         assert graph.get_node(t1.key)["status"] == RunStatus.SKIP
         assert graph.get_node(t2.key)["status"] == RunStatus.ACTIVE
         assert graph.get_node(t3.key)["status"] == RunStatus.ACTIVE
-        assert graph.get_node(t4.key)["status"] == RunStatus.SKIP
+        assert (
+            graph.get_node(t4.key)["status"] == RunStatus.PROVIDED_INPUT
+        )  # Changed from SKIP
         assert graph.get_node(t5.key)["status"] == RunStatus.ACTIVE
         assert graph.get_node(t6.key)["status"] == RunStatus.ACTIVE
 
@@ -158,13 +162,15 @@ class TestNodeGraph:
 
     def test_get_cache_context_dependency_map(self):
         """
-        Test that get_cache_context_dependency_map returns correct dependency structure
+        Test that get_cache_context_dependency_map returns correct cache map
         Graph structure:
            t1 (with cache)
           /  \\
         t2    t3 (with cache)
           \\  /
            t4
+        
+        Only t1 and t3 should be in the map (they have caches)
         """
 
         class DummyCache(Cache):
@@ -202,43 +208,47 @@ class TestNodeGraph:
         graph = NodeGraph(t4, run_context=RunContext())
         dependency_map = graph.get_cache_context_dependency_map()
 
-        # Verify that all nodes are in the dependency map
+        # Verify only nodes with caches are in the map
+        assert isinstance(dependency_map, dict)
+        assert len(dependency_map) == 2  # Only t1 and t3 have caches
+
+        # Verify t1 is in the map with its cache
         assert t1 in dependency_map
-        assert t2 in dependency_map
+        assert isinstance(dependency_map[t1], CacheContext)
+        assert dependency_map[t1].cache == cache_t1
+
+        # Verify t3 is in the map with its cache
         assert t3 in dependency_map
-        assert t4 in dependency_map
+        assert isinstance(dependency_map[t3], CacheContext)
+        assert dependency_map[t3].cache == cache_t3
 
-        # Verify t1 has no dependencies
-        assert dependency_map[t1] == {}
-
-        # Verify t2 depends on t1
-        assert t1 in dependency_map[t2]
-        assert isinstance(dependency_map[t2][t1], CacheContext)
-        assert dependency_map[t2][t1].cache == cache_t1
-        assert len(dependency_map[t2]) == 1
-
-        # Verify t3 depends on t1
-        assert t1 in dependency_map[t3]
-        assert isinstance(dependency_map[t3][t1], CacheContext)
-        assert dependency_map[t3][t1].cache == cache_t1
-        assert len(dependency_map[t3]) == 1
-
-        # Verify t4 depends on t2 and t3
-        assert t2 in dependency_map[t4]
-        assert t3 in dependency_map[t4]
-        assert isinstance(dependency_map[t4][t2], CacheContext)
-        assert isinstance(dependency_map[t4][t3], CacheContext)
-        assert dependency_map[t4][t2].cache is None  # t2 has no cache
-        assert dependency_map[t4][t3].cache == cache_t3
-        assert len(dependency_map[t4]) == 2
+        # Verify t2 and t4 are NOT in the map (no caches)
+        assert t2 not in dependency_map
+        assert t4 not in dependency_map
 
     def test_get_cache_context_dependency_map_linear(self):
         """
         Test dependency map with a linear chain
-        t1 -> t2 -> t3
+        t1 (with cache) -> t2 -> t3 (with cache)
         """
 
-        @node(type="pandas")
+        class DummyCache(Cache):
+            def __init__(self, name):
+                self.name = name
+
+            def read(self):
+                return pd.DataFrame()
+
+            def write(self, df):
+                pass
+
+            def exists(self):
+                return False
+
+        cache_t1 = DummyCache("cache_t1")
+        cache_t3 = DummyCache("cache_t3")
+
+        @node(type="pandas", cache=cache_t1)
         def t1():
             return pd.DataFrame({"col1": [1]})
 
@@ -246,20 +256,26 @@ class TestNodeGraph:
         def t2(t1):
             return t1
 
-        @node(type="pandas", dependencies=[t2])
+        @node(type="pandas", dependencies=[t2], cache=cache_t3)
         def t3(t2):
             return t2
 
         graph = NodeGraph(t3, run_context=RunContext())
         dependency_map = graph.get_cache_context_dependency_map()
 
-        # Verify structure
-        assert dependency_map[t1] == {}
-        assert t1 in dependency_map[t2]
-        assert len(dependency_map[t2]) == 1
-        assert t2 in dependency_map[t3]
-        assert len(dependency_map[t3]) == 1
+        # Verify only nodes with caches are in the map
+        assert isinstance(dependency_map, dict)
+        assert len(dependency_map) == 2  # Only t1 and t3 have caches
 
-        # Verify all cache contexts are present
-        assert isinstance(dependency_map[t2][t1], CacheContext)
-        assert isinstance(dependency_map[t3][t2], CacheContext)
+        # Verify t1 is in the map
+        assert t1 in dependency_map
+        assert isinstance(dependency_map[t1], CacheContext)
+        assert dependency_map[t1].cache == cache_t1
+
+        # Verify t3 is in the map
+        assert t3 in dependency_map
+        assert isinstance(dependency_map[t3], CacheContext)
+        assert dependency_map[t3].cache == cache_t3
+
+        # Verify t2 is NOT in the map (no cache)
+        assert t2 not in dependency_map
