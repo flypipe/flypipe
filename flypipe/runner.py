@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from flypipe.cache import CacheMode
+from flypipe.cache import CacheMode, CDCCache
 from flypipe.run_status import RunStatus
 from flypipe.run_context import RunContext
 from flypipe.utils import log
@@ -181,7 +181,7 @@ class Runner:
         for node_key in level:
             node_data = self.graph.nodes[node_key]
             cache_context = node_data["node_run_context"].cache_context
-            if cache_context:
+            if cache_context and isinstance(cache_context.cache, CDCCache):
                 self._log("  🔧 Ensuring CDC tables exist")
                 cache_context.create_cdc_table()
                 break
