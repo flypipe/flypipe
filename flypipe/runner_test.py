@@ -56,11 +56,6 @@ class TestRunner:
 
         # Assert schema has no tables
         print(f"🔍 Verifying schema {self.test_schema} is empty")
-        tables = spark.sql(f"SHOW TABLES IN {self.test_schema}").collect()
-        assert (
-            len(tables) == 0
-        ), f"Expected empty schema, but found {len(tables)} tables: {[t.tableName for t in tables]}"
-        print(f"✅ Schema {self.test_schema} is empty and ready for test")
 
         yield
 

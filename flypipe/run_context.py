@@ -131,24 +131,3 @@ class RunContext:
             The cache context for the dependency node, or None if no cache
         """
         return self.cache_context_dependency_map.get(node, None)
-
-    def get_cache_context_dependencies(self, node):
-        """
-        Get all upstream nodes that have caches.
-
-        Parameters
-        ----------
-        node : Node
-            The node whose upstream cached dependencies we want
-
-        Returns
-        -------
-        list[Node]
-            List of upstream nodes that have non-disabled caches
-        """
-        dependencies_nodes = [
-            input_node.node
-            for input_node in node.input_nodes
-            if input_node.node in self.cache_context_dependency_map
-        ]
-        return dependencies_nodes
