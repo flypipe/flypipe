@@ -156,8 +156,18 @@ def config_logging(debug: bool = False):
 
             return message
 
-    # Configure logging with custom formatter
+    # Configure only the Flypipe logger namespace (not the root logger)
+    # This prevents interfering with other libraries like Spark/py4j
+    flypipe_logger = logging.getLogger("flypipe")
+    flypipe_logger.setLevel(log_level)
+
+    # Remove any existing handlers to avoid duplicates
+    flypipe_logger.handlers.clear()
+
+    # Add our custom handler
     handler = logging.StreamHandler()
     handler.setFormatter(ColoredFormatter())
+    flypipe_logger.addHandler(handler)
 
-    logging.basicConfig(level=log_level, handlers=[handler])
+    # Prevent propagation to root logger to avoid duplicate messages
+    flypipe_logger.propagate = False
