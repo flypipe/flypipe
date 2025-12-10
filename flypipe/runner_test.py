@@ -1541,3 +1541,394 @@ class TestRunner:
         print("\n" + "=" * 80)
         print("✅ TEST COMPLETE: CDC timestamp filtering validated successfully!")
         print("=" * 80 + "\n")
+
+
+class TestRunnerExecutionPlan:
+    """Tests for Runner.create_execution_plan() method"""
+
+    def test_execution_plan_linear_graph(self):
+        """
+        Test execution plan for simple linear graph: C -> B -> A
+        
+        Expected plan:
+        - Level 0: [C]
+        - Level 1: [B]
+        - Level 2: [A]
+        """
+        
+        @node(type="pandas")
+        def C():
+            """Source node"""
+            import pandas as pd
+            return pd.DataFrame({"id": [1, 2, 3]})
+        
+        @node(type="pandas", dependencies=[C])
+        def B(C):
+            """Middle node"""
+            return C
+        
+        @node(type="pandas", dependencies=[B])
+        def A(B):
+            """Final node"""
+            return B
+        
+        # Create graph
+        from flypipe.run_context import RunContext
+        run_context = RunContext()
+        A.create_graph(run_context)
+        execution_graph = A.node_graph.get_execution_graph(run_context)
+        
+        # Create runner and execution plan
+        from flypipe.runner import Runner
+        runner = Runner(node_graph=execution_graph, run_context=run_context)
+        plan = runner.create_execution_plan(A)
+        
+        # Assert plan has 3 levels
+        assert len(plan) == 3, f"Expected 3 levels, got {len(plan)}"
+        
+        # Assert level 0 has C
+        level_0_names = [execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[0]]
+        assert level_0_names == ["C"], f"Expected ['C'] in level 0, got {level_0_names}"
+        
+        # Assert level 1 has B
+        level_1_names = [execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[1]]
+        assert level_1_names == ["B"], f"Expected ['B'] in level 1, got {level_1_names}"
+        
+        # Assert level 2 has A
+        level_2_names = [execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[2]]
+        assert level_2_names == ["A"], f"Expected ['A'] in level 2, got {level_2_names}"
+        
+        print("✅ Linear graph execution plan correct")
+    
+    def test_execution_plan_diamond_graph(self):
+        """
+        Test execution plan for diamond graph:
+            D
+           / \
+          B   C
+           \ /
+            A
+        
+        Expected plan:
+        - Level 0: [D]
+        - Level 1: [B, C] (parallel)
+        - Level 2: [A]
+        """
+        
+        @node(type="pandas")
+        def D():
+            """Source node"""
+            import pandas as pd
+            return pd.DataFrame({"id": [1, 2, 3], "value": [10, 20, 30]})
+        
+        @node(type="pandas", dependencies=[D])
+        def B(D):
+            """Branch 1"""
+            return D
+        
+        @node(type="pandas", dependencies=[D])
+        def C(D):
+            """Branch 2"""
+            return D
+        
+        @node(type="pandas", dependencies=[B, C])
+        def A(B, C):
+            """Final node"""
+            return B.merge(C, on="id")
+        
+        # Create graph
+        from flypipe.run_context import RunContext
+        run_context = RunContext()
+        A.create_graph(run_context)
+        execution_graph = A.node_graph.get_execution_graph(run_context)
+        
+        # Create runner and execution plan
+        from flypipe.runner import Runner
+        runner = Runner(node_graph=execution_graph, run_context=run_context)
+        plan = runner.create_execution_plan(A)
+        
+        # Assert plan has 3 levels
+        assert len(plan) == 3, f"Expected 3 levels, got {len(plan)}"
+        
+        # Assert level 0 has D
+        level_0_names = [execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[0]]
+        assert level_0_names == ["D"], f"Expected ['D'] in level 0, got {level_0_names}"
+        
+        # Assert level 1 has B and C (can be in any order)
+        level_1_names = sorted([execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[1]])
+        assert level_1_names == ["B", "C"], f"Expected ['B', 'C'] in level 1, got {level_1_names}"
+        
+        # Assert level 2 has A
+        level_2_names = [execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[2]]
+        assert level_2_names == ["A"], f"Expected ['A'] in level 2, got {level_2_names}"
+        
+        # Assert parallelism is 2 for level 1
+        assert len(plan[1]) == 2, f"Expected 2 nodes in level 1 (parallel), got {len(plan[1])}"
+        
+        print("✅ Diamond graph execution plan correct with parallelism")
+    
+    def test_execution_plan_with_provided_input(self):
+        """
+        Test execution plan when input is provided - should skip upstream nodes
+        
+        Graph: C -> B -> A
+        Provide input for B
+        
+        Expected plan:
+        - Level 0: [B] (provided input)
+        - Level 1: [A]
+        """
+        
+        @node(type="pandas")
+        def C():
+            """Source node - should be skipped"""
+            import pandas as pd
+            return pd.DataFrame({"id": [1, 2, 3]})
+        
+        @node(type="pandas", dependencies=[C])
+        def B(C):
+            """Middle node - provided as input"""
+            return C
+        
+        @node(type="pandas", dependencies=[B])
+        def A(B):
+            """Final node"""
+            return B
+        
+        # Create graph with provided input for B
+        from flypipe.run_context import RunContext
+        import pandas as pd
+        
+        provided_df = pd.DataFrame({"id": [1, 2]})
+        run_context = RunContext(provided_inputs={B: provided_df})
+        A.create_graph(run_context)
+        execution_graph = A.node_graph.get_execution_graph(run_context)
+        
+        # Create runner and execution plan
+        from flypipe.runner import Runner
+        runner = Runner(node_graph=execution_graph, run_context=run_context)
+        plan = runner.create_execution_plan(A)
+        
+        # Assert plan has 2 levels (C is skipped)
+        assert len(plan) == 2, f"Expected 2 levels (C should be skipped), got {len(plan)}"
+        
+        # Assert level 0 has B (provided input)
+        level_0_names = [execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[0]]
+        assert level_0_names == ["B"], f"Expected ['B'] in level 0, got {level_0_names}"
+        
+        # Assert level 1 has A
+        level_1_names = [execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[1]]
+        assert level_1_names == ["A"], f"Expected ['A'] in level 1, got {level_1_names}"
+        
+        # Assert C is not in any level
+        all_node_names = []
+        for level in plan:
+            all_node_names.extend([execution_graph.graph.nodes[key]["transformation"].__name__ for key in level])
+        assert "C" not in all_node_names, "C should be skipped when B has provided input"
+        
+        print("✅ Execution plan correctly skips upstream when input is provided")
+    
+    def test_execution_plan_with_cached_node(self):
+        """
+        Test execution plan when a node is cached - should load from cache
+        
+        Graph: C -> B (cached) -> A
+        
+        Expected plan:
+        - Level 0: [B] (cached, no upstream needed)
+        - Level 1: [A]
+        """
+        from flypipe.cache.cache import Cache
+        
+        class DummyCache(Cache):
+            def __init__(self):
+                super().__init__()
+                self._data = None
+            
+            def read(self):
+                import pandas as pd
+                return pd.DataFrame({"id": [1, 2]})
+            
+            def write(self, df):
+                self._data = df
+            
+            def exists(self):
+                return True
+        
+        @node(type="pandas")
+        def C():
+            """Source node - should be skipped"""
+            import pandas as pd
+            return pd.DataFrame({"id": [1, 2, 3]})
+        
+        @node(type="pandas", dependencies=[C], cache=DummyCache())
+        def B(C):
+            """Cached node"""
+            return C
+        
+        @node(type="pandas", dependencies=[B])
+        def A(B):
+            """Final node"""
+            return B
+        
+        # Create graph
+        from flypipe.run_context import RunContext
+        run_context = RunContext()
+        A.create_graph(run_context)
+        execution_graph = A.node_graph.get_execution_graph(run_context)
+        
+        # Create runner and execution plan
+        from flypipe.runner import Runner
+        runner = Runner(node_graph=execution_graph, run_context=run_context)
+        plan = runner.create_execution_plan(A)
+        
+        # Assert plan has 2 levels (C is skipped because B is cached)
+        assert len(plan) == 2, f"Expected 2 levels (C should be skipped), got {len(plan)}"
+        
+        # Assert level 0 has B (cached)
+        level_0_names = [execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[0]]
+        assert level_0_names == ["B"], f"Expected ['B'] in level 0, got {level_0_names}"
+        
+        # Assert level 1 has A
+        level_1_names = [execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[1]]
+        assert level_1_names == ["A"], f"Expected ['A'] in level 1, got {level_1_names}"
+        
+        print("✅ Execution plan correctly handles cached nodes")
+    
+    def test_execution_plan_complex_graph(self):
+        """
+        Test execution plan for complex graph with multiple branches:
+        
+              E   D
+              |\ /|
+              | X |
+              |/ \|
+              C   B
+               \ /
+                A
+        
+        Expected plan:
+        - Level 0: [D, E] (parallel)
+        - Level 1: [B, C] (parallel)
+        - Level 2: [A]
+        """
+        
+        @node(type="pandas")
+        def D():
+            """Source node 1"""
+            import pandas as pd
+            return pd.DataFrame({"id": [1, 2], "d_val": [10, 20]})
+        
+        @node(type="pandas")
+        def E():
+            """Source node 2"""
+            import pandas as pd
+            return pd.DataFrame({"id": [1, 2], "e_val": [100, 200]})
+        
+        @node(type="pandas", dependencies=[D, E])
+        def B(D, E):
+            """Branch 1 - depends on both D and E"""
+            return D.merge(E, on="id")
+        
+        @node(type="pandas", dependencies=[D, E])
+        def C(D, E):
+            """Branch 2 - depends on both D and E"""
+            return D.merge(E, on="id")
+        
+        @node(type="pandas", dependencies=[B, C])
+        def A(B, C):
+            """Final node"""
+            return B
+        
+        # Create graph
+        from flypipe.run_context import RunContext
+        run_context = RunContext()
+        A.create_graph(run_context)
+        execution_graph = A.node_graph.get_execution_graph(run_context)
+        
+        # Create runner and execution plan
+        from flypipe.runner import Runner
+        runner = Runner(node_graph=execution_graph, run_context=run_context)
+        plan = runner.create_execution_plan(A)
+        
+        # Assert plan has 3 levels
+        assert len(plan) == 3, f"Expected 3 levels, got {len(plan)}"
+        
+        # Assert level 0 has D and E (can be in any order)
+        level_0_names = sorted([execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[0]])
+        assert level_0_names == ["D", "E"], f"Expected ['D', 'E'] in level 0, got {level_0_names}"
+        assert len(plan[0]) == 2, "Level 0 should have 2 nodes for parallel execution"
+        
+        # Assert level 1 has B and C (can be in any order)
+        level_1_names = sorted([execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[1]])
+        assert level_1_names == ["B", "C"], f"Expected ['B', 'C'] in level 1, got {level_1_names}"
+        assert len(plan[1]) == 2, "Level 1 should have 2 nodes for parallel execution"
+        
+        # Assert level 2 has A
+        level_2_names = [execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[2]]
+        assert level_2_names == ["A"], f"Expected ['A'] in level 2, got {level_2_names}"
+        
+        print("✅ Complex graph execution plan correct with maximum parallelism")
+    
+    def test_execution_plan_independent_branches(self):
+        """
+        Test execution plan for graph with independent branches:
+        
+          C     B
+          |     |
+          |     |
+          A     (independent)
+        
+        When running A, B should not be included in the plan
+        
+        Expected plan:
+        - Level 0: [C]
+        - Level 1: [A]
+        """
+        
+        @node(type="pandas")
+        def C():
+            """Source for A"""
+            import pandas as pd
+            return pd.DataFrame({"id": [1, 2]})
+        
+        @node(type="pandas")
+        def B():
+            """Independent source node"""
+            import pandas as pd
+            return pd.DataFrame({"id": [3, 4]})
+        
+        @node(type="pandas", dependencies=[C])
+        def A(C):
+            """Target node"""
+            return C
+        
+        # Create graph for A
+        from flypipe.run_context import RunContext
+        run_context = RunContext()
+        A.create_graph(run_context)
+        execution_graph = A.node_graph.get_execution_graph(run_context)
+        
+        # Create runner and execution plan
+        from flypipe.runner import Runner
+        runner = Runner(node_graph=execution_graph, run_context=run_context)
+        plan = runner.create_execution_plan(A)
+        
+        # Assert plan has 2 levels
+        assert len(plan) == 2, f"Expected 2 levels, got {len(plan)}"
+        
+        # Assert level 0 has C
+        level_0_names = [execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[0]]
+        assert level_0_names == ["C"], f"Expected ['C'] in level 0, got {level_0_names}"
+        
+        # Assert level 1 has A
+        level_1_names = [execution_graph.graph.nodes[key]["transformation"].__name__ for key in plan[1]]
+        assert level_1_names == ["A"], f"Expected ['A'] in level 1, got {level_1_names}"
+        
+        # Assert B is not in any level (it's independent)
+        all_node_names = []
+        for level in plan:
+            all_node_names.extend([execution_graph.graph.nodes[key]["transformation"].__name__ for key in level])
+        assert "B" not in all_node_names, "B should not be in execution plan for A"
+        
+        print("✅ Execution plan correctly excludes independent branches")
