@@ -115,7 +115,7 @@ def log(logger, message):
             logger.debug(message)
 
 
-def get_logger():
+def get_logger() -> logging.Logger:
     return logging.getLogger("flypipe")
 
 
