@@ -77,7 +77,6 @@ class CacheContext:
                 )
             else:
                 result = self.cache.read_cdc(from_node, to_node, root_node, df)
-            self._log("      📊 CacheContext.read_cdc() - CDC filtering complete")
             return result
         else:
             if self.disabled:

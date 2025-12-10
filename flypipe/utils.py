@@ -114,8 +114,10 @@ def log(logger, message):
         else:
             logger.debug(message)
 
+
 def get_logger():
     return logging.getLogger("flypipe")
+
 
 def config_logging(debug: bool = False):
     log_level = logging.WARNING

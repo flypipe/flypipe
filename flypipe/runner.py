@@ -125,8 +125,9 @@ class Runner:
             node_names = [
                 self.graph.nodes[nk]["transformation"].__name__ for nk in level
             ]
-            parallelism = len(level)
-            self._log(f"  Level {level_idx}: {node_names} (parallelism: {parallelism})")
+            self._log(f"  Level {level_idx} (parallelism: {self.run_context.max_workers}):")
+            for node_name in node_names:
+                self._log(f"       {node_name}")
 
         return levels
 
