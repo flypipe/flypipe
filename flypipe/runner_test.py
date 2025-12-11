@@ -1699,10 +1699,11 @@ class TestRunner:
         """
         Test that CDC methods (read_cdc and write_cdc) are NOT called when cache is disabled.
         
-        Graph structure: B (cached) -> A
+        Graph structure: B (cached) -> A (cached)
         
-        This test verifies that when providing B as input and running with CacheMode.DISABLE,
-        the CDC read_cdc and write_cdc methods should not be invoked.
+        This test verifies that when running with CacheMode.DISABLE for node A,
+        the CDC read_cdc and write_cdc methods for A should not be invoked.
+        Node B is run with cache enabled to populate its cache first.
         """
         
         # Create CDC cache for node B
@@ -1713,43 +1714,51 @@ class TestRunner:
             merge_keys=["id"],
         )
         
+        # Create CDC cache for node A
+        cache_a = CDCManagerCache(
+            schema=self.test_schema,
+            table="node_a",
+            cdc_table="cdc_test_disable",
+            merge_keys=["id"],
+        )
+        
         @node(type="pyspark", cache=cache_b)
         def B():
             """Cached source node"""
             data = [(1, 10), (2, 20), (3, 30)]
             return spark.createDataFrame(data, ["id", "value"])
         
-        @node(type="pyspark", dependencies=[B])
+        @node(type="pyspark", dependencies=[B], cache=cache_a)
         def A(B):
-            """Non-cached transformation node"""
+            """Cached transformation node"""
             return B.withColumn("doubled", F.col("value") * 2)
         
-        # Spy on the CDC methods
-        read_cdc_spy = mocker.spy(cache_b, "read_cdc")
-        write_cdc_spy = mocker.spy(cache_b, "write_cdc")
+        # Spy on the CDC methods for cache A
+        read_cdc_spy = mocker.spy(cache_a, "read_cdc")
+        write_cdc_spy = mocker.spy(cache_a, "write_cdc")
         
         # Create input data for B
         input_b = spark.createDataFrame(
-            [(1, 10), (2, 20), (3, 30)],
+            [(1, 10), (2, 20)],
             ["id", "value"]
         )
         
         print("\n" + "=" * 80)
-        print("🚀 Running A with input for B and cache DISABLED")
+        print("🚀 Running A with cache ENABLED for B and DISABLED for A")
         print("=" * 80 + "\n")
         
-        # Run A with input for B and cache disabled
+        # Run A with input for B, cache enabled for B, cache disabled for A
         resultA = A.run(
             spark,
             inputs={B: input_b},
-            cache={B: CacheMode.DISABLE},
+            cache={B: CacheMode.OVERWRITE, A: CacheMode.DISABLE},
             max_workers=max_workers,
             debug=True,
         )
         
         # Verify the result is correct
         expected = spark.createDataFrame(
-            [(1, 10, 20), (2, 20, 40), (3, 30, 60)],
+            [(1, 10, 20), (2, 20, 40)],
             ["id", "value", "doubled"],
         )
         
@@ -1764,12 +1773,18 @@ class TestRunner:
             expected.orderBy("id"),
         )
         
-        # Assert that CDC methods were NOT called
+        # Assert that CDC methods for A were NOT called
         read_cdc_spy.assert_not_called()
         write_cdc_spy.assert_not_called()
         
+        # Verify that B's cache was written (cache enabled)
+        assert cache_b.exists(spark), "Cache B should exist after run"
+        
+        # Verify that A's cache was NOT written (cache disabled)
+        assert not cache_a.exists(spark), "Cache A should not exist when disabled"
+        
         print("\n" + "=" * 80)
-        print("✅ TEST COMPLETE: CDC methods were not called when cache was disabled!")
+        print("✅ TEST COMPLETE: CDC methods for A were not called when cache was disabled!")
         print("=" * 80 + "\n")
 
         assert True == False
