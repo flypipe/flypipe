@@ -13,11 +13,17 @@ class CacheContext:
         cache_mode: CacheMode = None,
         spark: SparkSession = None,
         cache: Cache = None,
+        provided_input: bool = False,
         debug: bool = False,
     ):
         self.spark = spark
         self.cache = cache
-        self.cache_mode = CacheMode.DISABLE if self.cache is None else cache_mode
+        self.provided_input = provided_input
+        self.cache_mode = (
+            CacheMode.DISABLE
+            if self.cache is None or self.provided_input
+            else cache_mode
+        )
         self.debug = debug
         self._exists_cache_to_load = (
             None  # can not be True or False as both means exist or not exist
@@ -127,6 +133,9 @@ class CacheContext:
                     )
                 else:
                     for upstream_node in upstream_nodes:
+                        self._log(
+                            f"            ✍️  Writing CDC: {upstream_node.__name__} -> {to_node.__name__} with timestamp {datetime_started_transformation}"
+                        )
                         if self.spark:
                             self.cache.write_cdc(
                                 self.spark,
