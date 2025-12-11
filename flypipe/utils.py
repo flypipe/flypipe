@@ -139,11 +139,11 @@ def config_logging(debug: bool = False):
         def format(self, record):
             # Get emoji for the level
             emoji = self.EMOJIS.get(record.levelname, "")
-            
+
             # Get the message and split by newlines
             message_text = record.getMessage()
-            lines = message_text.split('\n')
-            
+            lines = message_text.split("\n")
+
             # Format each line with the appropriate prefix
             formatted_lines = []
             for line in lines:
@@ -165,8 +165,8 @@ def config_logging(debug: bool = False):
                         + f"[Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}"
                     )
                 formatted_lines.append(formatted_line)
-            
-            return '\n'.join(formatted_lines)
+
+            return "\n".join(formatted_lines)
 
     # Configure only the Flypipe logger namespace (not the root logger)
     # This prevents interfering with other libraries like Spark/py4j

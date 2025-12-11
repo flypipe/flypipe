@@ -35,6 +35,7 @@ class Runner:
         self.node_graph = node_graph
         self.graph = node_graph.graph
         self.run_context = run_context
+        self.cdc_table_exists = False
 
     def _log(self, message: str):
         """Log a message using logger.debug if debug mode is enabled, otherwise print."""
@@ -125,7 +126,9 @@ class Runner:
             node_names = [
                 self.graph.nodes[nk]["transformation"].__name__ for nk in level
             ]
-            self._log(f"  Level {level_idx} (parallelism: {self.run_context.max_workers}):")
+            self._log(
+                f"  Level {level_idx} (parallelism: {self.run_context.max_workers}):"
+            )
             for node_name in node_names:
                 self._log(f"       {node_name}")
 
@@ -177,6 +180,8 @@ class Runner:
         level : List[str]
             List of node keys in the current level
         """
+        if self.cdc_table_exists:
+            return
 
         for node_key in level:
             node_data = self.graph.nodes[node_key]
@@ -184,6 +189,7 @@ class Runner:
             if cache_context and isinstance(cache_context.cache, CDCCache):
                 self._log("  🔧 Ensuring CDC tables exist")
                 cache_context.create_cdc_table()
+                self.cdc_table_exists = True
                 break
 
     def _execute_level(
@@ -371,6 +377,7 @@ class Runner:
 
             # Normal ACTIVE node - get dependencies and execute
             target_transformation = self.graph.nodes[target_node_key]["transformation"]
+            self._log(f"            {node_name}: Loading node dependencies dataframes")
             dependencies = node_transformation.get_node_inputs(
                 self.run_context, target_transformation
             )
@@ -408,7 +415,6 @@ class Runner:
             )
             cache_context.write_cdc(
                 cached_predecessors,
-                node_transformation,
                 target_transformation,
                 datetime_start_process_transformation,
             )

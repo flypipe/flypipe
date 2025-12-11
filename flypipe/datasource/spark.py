@@ -42,7 +42,7 @@ def Spark(table):
     )
     def spark_datasource(spark):
         logger.warning(
-            "⚠️  WARNING: Spark datasource is DEPRECATED and will be removed in a future version."
+            "WARNING: Spark datasource is DEPRECATED and will be removed in a future version."
         )
 
         if spark is None:

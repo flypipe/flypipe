@@ -256,12 +256,12 @@ class TestRunner:
             expected_cache_b.orderBy("id"),
         )
 
-        # Assert CDC metadata table has entry for B -> A (root A)
+        # Assert CDC metadata table has entry for B -> A
         cdc_metadata_b = spark.table(cache_b.full_cdc_table_name)
 
         # Create expected CDC metadata DataFrame
         expected_cdc = spark.createDataFrame(
-            [(B.__name__, A.__name__, A.__name__)], ["source", "destination", "root"]
+            [(B.__name__, A.__name__)], ["source", "destination"]
         )
 
         print("cdc_metadata_b:")
@@ -271,10 +271,10 @@ class TestRunner:
         expected_cdc.show(truncate=False)
 
         assert_pyspark_df_equal(
-            cdc_metadata_b.select("source", "destination", "root").orderBy(
-                "source", "destination", "root"
+            cdc_metadata_b.select("source", "destination").orderBy(
+                "source", "destination"
             ),
-            expected_cdc.orderBy("source", "destination", "root"),
+            expected_cdc.orderBy("source", "destination"),
         )
 
         # ===== Second run with 2 records =====
@@ -394,12 +394,12 @@ class TestRunner:
             expected_cache_b.orderBy("id"),
         )
 
-        # Assert CDC metadata table has entry for B -> A (root A)
+        # Assert CDC metadata table has entry for B -> A
         cdc_metadata_b = spark.table(cache_b.full_cdc_table_name)
 
         # Create expected CDC metadata DataFrame
         expected_cdc = spark.createDataFrame(
-            [(B.__name__, A.__name__, A.__name__)], ["source", "destination", "root"]
+            [(B.__name__, A.__name__)], ["source", "destination"]
         )
 
         print("cdc_metadata_b (run 1):")
@@ -409,10 +409,10 @@ class TestRunner:
         expected_cdc.show(truncate=False)
 
         assert_pyspark_df_equal(
-            cdc_metadata_b.select("source", "destination", "root").orderBy(
-                "source", "destination", "root"
+            cdc_metadata_b.select("source", "destination").orderBy(
+                "source", "destination"
             ),
-            expected_cdc.orderBy("source", "destination", "root"),
+            expected_cdc.orderBy("source", "destination"),
         )
 
         # ===== Second run with 2 NEW records (ids 4-5) using MERGE mode =====
@@ -608,10 +608,10 @@ class TestRunner:
                 mock_write.call_count == 1
             ), f"Expected cache.write to be called once, but was called {mock_write.call_count} times"
 
-            # Assert cache.write_cdc was called exactly once
+            # Assert cache.write_cdc was not called
             assert (
-                mock_write_cdc.call_count == 1
-            ), f"Expected cache.write_cdc to be called once, but was called {mock_write_cdc.call_count} times"
+                mock_write_cdc.call_count == 0
+            ), "Expected cache.write_cdc not to be called as it has no upstream nodes"
 
             print(f"✅ Verified: cache.write called {mock_write.call_count} time(s)")
             print(
@@ -789,25 +789,25 @@ class TestRunner:
         cdc_metadata_c.show(truncate=False)
         assert (
             cdc_metadata_c_count == 2
-        ), f"Expected 2 CDC entries for C (no upstream), got {cdc_metadata_c_count}"
+        ), f"Expected 2 CDC entries for C, got {cdc_metadata_c_count}"
 
-        # Assert CDC metadata for B (should have C -> B)
+        # Assert CDC metadata for B (should have C -> B and B -> A)
         cdc_metadata_b = spark.table(cache_b.full_cdc_table_name)
         expected_cdc_b = spark.createDataFrame(
             [
-                (B.__name__, A.__name__, A.__name__),
-                (C.__name__, B.__name__, B.__name__),
+                (B.__name__, A.__name__),
+                (C.__name__, B.__name__),
             ],
-            ["source", "destination", "root"],
+            ["source", "destination"],
         )
 
         print("cdc_metadata_b:")
-        cdc_metadata_b.select("source", "destination", "root").show(truncate=False)
+        cdc_metadata_b.select("source", "destination").show(truncate=False)
         assert_pyspark_df_equal(
-            cdc_metadata_b.select("source", "destination", "root").orderBy(
-                "source", "destination", "root"
+            cdc_metadata_b.select("source", "destination").orderBy(
+                "source", "destination"
             ),
-            expected_cdc_b.orderBy("source", "destination", "root"),
+            expected_cdc_b.orderBy("source", "destination"),
         )
 
         print("\n" + "=" * 80)
@@ -922,26 +922,26 @@ class TestRunner:
             expectedA.orderBy("id"),
         )
 
-        # Assert CDC metadata for D (should be empty - no upstream)
+        # Assert CDC metadata for D (should have D -> A entry)
         cdc_metadata = spark.table(cache_d.full_cdc_table_name)
         cdc_metadata_count = cdc_metadata.count()
         print("cdc_metadata_d:")
         cdc_metadata.show(truncate=False)
         assert (
             cdc_metadata_count == 1
-        ), f"Expected 0 CDC entries for D (no upstream), got {cdc_metadata_count}"
+        ), f"Expected 1 CDC entry for D -> A, got {cdc_metadata_count}"
 
         # Assert CDC metadata for A (should have D -> A)
         # Note: C is not cached, so only D (the first cached predecessor) should be in CDC metadata
         expected_cdc = spark.createDataFrame(
-            [(D.__name__, A.__name__, A.__name__)], ["source", "destination", "root"]
+            [(D.__name__, A.__name__)], ["source", "destination"]
         )
 
         assert_pyspark_df_equal(
-            cdc_metadata.select("source", "destination", "root").orderBy(
-                "source", "destination", "root"
+            cdc_metadata.select("source", "destination").orderBy(
+                "source", "destination"
             ),
-            expected_cdc.orderBy("source", "destination", "root"),
+            expected_cdc.orderBy("source", "destination"),
         )
 
         print("\n" + "=" * 80)
@@ -1056,20 +1056,20 @@ class TestRunner:
             expectedB.orderBy("id"),
         )
 
-        # Assert CDC metadata for B (should have C -> B with root B)
+        # Assert CDC metadata for B (should have C -> B)
         cdc_metadata_b = spark.table(cache_b.full_cdc_table_name)
         expected_cdc_b = spark.createDataFrame(
-            [(C.__name__, B.__name__, B.__name__)], ["source", "destination", "root"]
+            [(C.__name__, B.__name__)], ["source", "destination"]
         )
 
         print("cdc_metadata_b:")
-        cdc_metadata_b.select("source", "destination", "root").show(truncate=False)
+        cdc_metadata_b.select("source", "destination").show(truncate=False)
 
         assert_pyspark_df_equal(
-            cdc_metadata_b.select("source", "destination", "root").orderBy(
-                "source", "destination", "root"
+            cdc_metadata_b.select("source", "destination").orderBy(
+                "source", "destination"
             ),
-            expected_cdc_b.orderBy("source", "destination", "root"),
+            expected_cdc_b.orderBy("source", "destination"),
         )
 
         print("\n" + "=" * 80)
@@ -1222,20 +1222,20 @@ class TestRunner:
             expectedB.orderBy("id"),
         )
 
-        # Assert CDC metadata for B (should have D -> B with root B)
+        # Assert CDC metadata for B (should have D -> B)
         cdc_metadata_b = spark.table(cache_b.full_cdc_table_name)
         expected_cdc_b = spark.createDataFrame(
-            [(D.__name__, B.__name__, B.__name__)], ["source", "destination", "root"]
+            [(D.__name__, B.__name__)], ["source", "destination"]
         )
 
         print("cdc_metadata_b:")
-        cdc_metadata_b.select("source", "destination", "root").show(truncate=False)
+        cdc_metadata_b.select("source", "destination").show(truncate=False)
 
         assert_pyspark_df_equal(
-            cdc_metadata_b.select("source", "destination", "root").orderBy(
-                "source", "destination", "root"
+            cdc_metadata_b.select("source", "destination").orderBy(
+                "source", "destination"
             ),
-            expected_cdc_b.orderBy("source", "destination", "root"),
+            expected_cdc_b.orderBy("source", "destination"),
         )
 
         print("\n" + "=" * 80)
@@ -1442,19 +1442,19 @@ class TestRunner:
         # Ensure CDC metadata table exists
         cache_b.create_cdc_table(spark)
 
-        # Insert CDC metadata: source=B, destination=A, root=A, timestamp=dt
+        # Insert CDC metadata: source=B, destination=A, timestamp=dt
         cdc_metadata_row = spark.createDataFrame(
-            [(B.__name__, A.__name__, A.__name__, dt)],
-            ["source", "destination", "root", "cdc_datetime_updated"],
+            [(B.__name__, A.__name__, dt)],
+            ["source", "destination", "cdc_datetime_updated"],
         )
 
         # Write to CDC metadata table
         cdc_metadata_row.write.format("delta").mode("append").partitionBy(
-            "root", "source", "destination"
+            "source", "destination"
         ).save(cache_b.cdc_table_path)
 
         print(
-            f"✅ Inserted CDC metadata: source={B.__name__}, destination={A.__name__}, root={A.__name__}, timestamp={dt}"
+            f"✅ Inserted CDC metadata: source={B.__name__}, destination={A.__name__}, timestamp={dt}"
         )
         print("\nCDC metadata table contents:")
         spark.table(cache_b.full_cdc_table_name).show(truncate=False)
@@ -1535,6 +1535,164 @@ class TestRunner:
 
         print("\n" + "=" * 80)
         print("✅ TEST COMPLETE: CDC timestamp filtering validated successfully!")
+        print("=" * 80 + "\n")
+
+    def test_cdc11(self, spark, max_workers):
+        """
+        Test CDC cache with C (regular cache) -> B (no cache) -> A (merged cache).
+
+        Graph structure: C (cached) -> B -> A (CDC cached MERGE)
+
+        This test demonstrates:
+        1. First run with 3 records - caches data at C and A
+        2. Manually add 1 more row to C's cache table
+        3. Second run - should process only the new row from C through B to A
+        4. Verify A's output has only 1 row (the new one)
+        """
+
+        # Create CDC cache for node C (regular cache, not merged)
+        cache_c = CDCManagerCache(
+            schema=self.test_schema,
+            table="node_c",
+            cdc_table="cdc_test11",
+            merge_keys=["id"],
+        )
+
+        # Create CDC cache for node A (merged)
+        cache_a = CDCManagerCache(
+            schema=self.test_schema,
+            table="node_a",
+            cdc_table="cdc_test11",
+            merge_keys=["id"],
+        )
+
+        @node(type="pyspark", cache=cache_c)
+        def C(number_records: int = 3, start_id: int = 1):
+            """Source node that generates data"""
+            data = [(i, i * 10) for i in range(start_id, start_id + number_records)]
+            return spark.createDataFrame(data, ["id", "value"])
+
+        @node(type="pyspark", dependencies=[C])
+        def B(C):
+            """Non-cached transformation node"""
+            return C.withColumn("score", F.col("value") * 2)
+
+        @node(type="pyspark", dependencies=[B], cache=cache_a)
+        def A(B):
+            """Cached merged node"""
+            return B.withColumn("doubled_score", F.col("score") * 2)
+
+        # ===== First run with 3 records =====
+        print("\n" + "=" * 80)
+        print("🚀 RUN 1: Load with 3 records through C -> B -> A")
+        print("=" * 80 + "\n")
+
+        resultA = A.run(
+            spark,
+            parameters={C: {"number_records": 3}},
+            max_workers=max_workers,
+            debug=True,
+        )
+
+        # Assert run results for A
+        expectedA_run1 = spark.createDataFrame(
+            [(1, 10, 20, 40), (2, 20, 40, 80), (3, 30, 60, 120)],
+            ["id", "value", "score", "doubled_score"],
+        )
+
+        print("resultA (run 1):")
+        resultA.drop("cdc_datetime_updated").orderBy("id").show(truncate=False)
+
+        print("expectedA (run 1):")
+        expectedA_run1.orderBy("id").show(truncate=False)
+
+        assert_pyspark_df_equal(
+            resultA.drop("cdc_datetime_updated").orderBy("id"),
+            expectedA_run1.orderBy("id"),
+        )
+
+        # Verify caches exist
+        assert cache_c.exists(spark)
+        assert cache_a.exists(spark)
+
+        # ===== Manually add 1 more row to C =====
+        print("\n" + "=" * 80)
+        print("🔧 SETUP: Manually adding 1 more row to C's cache table")
+        print("=" * 80 + "\n")
+
+        from datetime import datetime
+
+        new_row = spark.createDataFrame(
+            [(4, 40, datetime.now())], ["id", "value", "cdc_datetime_updated"]
+        )
+
+        # Append to C's cache table
+        new_row.write.format("delta").mode("append").save(cache_c.table_path)
+
+        print("✅ Added row: id=4, value=40 to C's cache")
+        print("\nC's cache table contents:")
+        cache_c.read(spark).orderBy("id").show(truncate=False)
+
+        # ===== Second run - should process only the new row =====
+        print("\n" + "=" * 80)
+        print("🚀 RUN 2: Re-run A (should process only new row from C)")
+        print("=" * 80 + "\n")
+
+        resultA_run2 = A.run(
+            spark,
+            cache={A: CacheMode.MERGE},
+            max_workers=max_workers,
+            debug=True,
+        )
+
+        # Assert run 2 results for A - should only contain the new row (id=4)
+        expectedA_run2 = spark.createDataFrame(
+            [(4, 40, 80, 160)],
+            ["id", "value", "score", "doubled_score"],
+        )
+
+        print("resultA (run 2 - should only have 1 row for id=4):")
+        resultA_run2.drop("cdc_datetime_updated").orderBy("id").show(truncate=False)
+
+        print("expectedA (run 2 - only new row):")
+        expectedA_run2.orderBy("id").show(truncate=False)
+
+        # Assert only 1 row is returned
+        assert (
+            resultA_run2.count() == 1
+        ), f"Expected 1 row in output, but got {resultA_run2.count()}"
+
+        # Assert the row has the correct values
+        assert_pyspark_df_equal(
+            resultA_run2.drop("cdc_datetime_updated").orderBy("id"),
+            expectedA_run2.orderBy("id"),
+        )
+
+        # Verify cache_a now has all 4 rows (merged)
+        result_cache_a = cache_a.read(spark)
+        expected_cache_a_all = spark.createDataFrame(
+            [
+                (1, 10, 20, 40),
+                (2, 20, 40, 80),
+                (3, 30, 60, 120),
+                (4, 40, 80, 160),
+            ],
+            ["id", "value", "score", "doubled_score"],
+        )
+
+        print("result_cache_a (should have all 4 rows after merge):")
+        result_cache_a.drop("cdc_datetime_updated").orderBy("id").show(truncate=False)
+
+        print("expected_cache_a (all 4 rows):")
+        expected_cache_a_all.orderBy("id").show(truncate=False)
+
+        assert_pyspark_df_equal(
+            result_cache_a.drop("cdc_datetime_updated").orderBy("id"),
+            expected_cache_a_all.orderBy("id"),
+        )
+
+        print("\n" + "=" * 80)
+        print("✅ TEST COMPLETE: CDC incremental processing validated successfully!")
         print("=" * 80 + "\n")
 
 

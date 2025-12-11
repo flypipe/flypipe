@@ -62,21 +62,15 @@ class CacheContext:
         self._log("      🔄 CacheContext.read() - returned result")
         return result
 
-    def read_cdc(self, from_node, to_node, root_node, df):
+    def read_cdc(self, from_node, to_node, df):
         if not self.disabled and isinstance(self.cache, CDCCache):
-            from_name = (
-                from_node.__name__ if hasattr(from_node, "__name__") else str(from_node)
-            )
-            to_name = to_node.__name__ if hasattr(to_node, "__name__") else str(to_node)
             self._log(
-                f"      📊 CacheContext.read_cdc() - filtering CDC data from {from_name} to {to_name} (root: {root_node.__name__})"
+                f"      📊 CacheContext.read_cdc() - filtering CDC data from {from_node.__name__} to {to_node.__name__}"
             )
             if self.spark:
-                result = self.cache.read_cdc(
-                    self.spark, from_node, to_node, root_node, df
-                )
+                result = self.cache.read_cdc(self.spark, from_node, to_node, df)
             else:
-                result = self.cache.read_cdc(from_node, to_node, root_node, df)
+                result = self.cache.read_cdc(from_node, to_node, df)
             return result
         else:
             if self.disabled:
@@ -114,45 +108,39 @@ class CacheContext:
             else:
                 self.cache.create_cdc_table()
 
-    def write_cdc(
-        self, upstream_nodes, current_node, root_node, datetime_started_transformation
-    ):
+    def write_cdc(self, upstream_nodes, to_node, datetime_started_transformation):
         if isinstance(self.cache, CDCCache):
             if not self.disabled or self.merge:
-                current_name = (
-                    current_node.__name__
-                    if hasattr(current_node, "__name__")
-                    else str(current_node)
-                )
                 upstream_names = [
                     n.__name__ if hasattr(n, "__name__") else str(n)
                     for n in upstream_nodes
                 ]
                 self._log(
-                    f"      📝 CacheContext.write_cdc() - writing CDC metadata for {current_name} (root {root_node.__name__})"
+                    f"      📝 CacheContext.write_cdc() - writing CDC metadata for {to_node.__name__}"
                 )
                 self._log(
                     f"         └─ upstream nodes: {', '.join(upstream_names) if upstream_names else 'none'}"
                 )
-
-                if self.spark:
-                    result = self.cache.write_cdc(
-                        self.spark,
-                        upstream_nodes,
-                        current_node,
-                        root_node,
-                        datetime_started_transformation,
+                if not upstream_nodes:
+                    self._log(
+                        "            ⏭️ No upstream nodes to write CDC metadata for, skipping"
                     )
                 else:
-                    result = self.cache.write_cdc(
-                        upstream_nodes,
-                        current_node,
-                        root_node,
-                        datetime_started_transformation,
-                    )
+                    for upstream_node in upstream_nodes:
+                        if self.spark:
+                            self.cache.write_cdc(
+                                self.spark,
+                                upstream_node,
+                                to_node,
+                                datetime_started_transformation,
+                            )
+                        else:
+                            self.cache.write_cdc(
+                                upstream_node,
+                                to_node,
+                                datetime_started_transformation,
+                            )
 
-                self._log("      📝 CacheContext.write_cdc() - CDC metadata written")
-                return result
             else:
                 self._log(
                     "      ⏭️  CacheContext.write_cdc() - skipped (cache disabled)"

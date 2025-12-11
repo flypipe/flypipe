@@ -18,7 +18,7 @@ class CDCManagerCache(CDCCache):
 
     This cache stores:
     - Data in a Delta table (with cdc_datetime_updated column)
-    - CDC metadata in a separate Delta table tracking source->destination->root relationships
+    - CDC metadata in a separate Delta table tracking source->destination relationships
 
     All methods work exclusively with Spark DataFrames (not pandas).
 
@@ -180,12 +180,12 @@ class CDCManagerCache(CDCCache):
         )
         return exists
 
-    def read_cdc(self, spark, from_node, to_node, root_node, df):
+    def read_cdc(self, spark, from_node, to_node, df):
         """
         Filter data based on CDC timestamps from Delta table metadata.
 
         Returns only rows that haven't been processed for this specific
-        source->destination->root combination.
+        source->destination combination.
 
         Parameters
         ----------
@@ -194,9 +194,7 @@ class CDCManagerCache(CDCCache):
         from_node : Node
             The source node providing the data
         to_node : Node
-            The destination node receiving the data
-        root_node : Node
-            The root/target node of the current execution
+            The destination/target node of the current execution
         df : DataFrame
             The Spark dataframe to filter
 
@@ -205,7 +203,7 @@ class CDCManagerCache(CDCCache):
         DataFrame
             Filtered Spark dataframe containing only new/changed rows
         """
-        # logger.debug(f"         📊 CDCManagerCache.read_cdc() called: {from_node.__name__} -> {to_node.__name__} (root: {root_node.__name__})")
+        # logger.debug(f"         📊 CDCManagerCache.read_cdc() called: {from_node.__name__} (destination: {to_node.__name__})")
 
         if "cdc_datetime_updated" not in df.columns:
             logger.debug(
@@ -222,11 +220,10 @@ class CDCManagerCache(CDCCache):
 
         cdc_df = spark.table(self.full_cdc_table_name)
 
-        # Find the last processed timestamp for this edge + root combination
+        # Find the last processed timestamp for this source + destination combination
         edge_data = cdc_df.filter(
             (cdc_df.source == from_node.__name__)
             & (cdc_df.destination == to_node.__name__)
-            & (cdc_df.root == root_node.__name__)
         )
 
         if edge_data.count() == 0:
@@ -264,10 +261,10 @@ class CDCManagerCache(CDCCache):
             try:
                 empty_cdc_df = spark.createDataFrame(
                     [],
-                    schema="source STRING, destination STRING, root STRING, cdc_datetime_updated TIMESTAMP",
+                    schema="source STRING, destination STRING, cdc_datetime_updated TIMESTAMP",
                 )
                 empty_cdc_df.write.format("delta").mode("append").partitionBy(
-                    "root", "source", "destination"
+                    "source", "destination"
                 ).save(self.cdc_table_path)
                 spark.sql(
                     f"CREATE TABLE {self.full_cdc_table_name} USING DELTA LOCATION '{self.cdc_table_path}'"
@@ -277,44 +274,38 @@ class CDCManagerCache(CDCCache):
                 if not spark.catalog.tableExists(self.full_cdc_table_name):
                     raise e
 
-    def write_cdc(self, spark, upstream_nodes, current_node, root_node, timestamp):
+    def write_cdc(self, spark, upstream_node, to_node, timestamp):
         """
         Write CDC metadata to Delta table tracking when data was processed.
 
-        Records the processing timestamp for each source->destination->root combination,
+        Records the processing timestamp for a source->destination combination,
         allowing future runs to identify which data has already been processed.
 
         Parameters
         ----------
         spark : SparkSession
             Active Spark session
-        upstream_nodes : list[Node]
-            List of nodes that provided data to current_node
-        current_node : Node
-            The node that processed the data
-        root_node : Node
-            The root/target node of the current execution
+        upstream_node : Node
+            The node that provided data
+        to_node : Node
+            The destination/target node of the current execution
         timestamp : datetime
             The timestamp when processing occurred
         """
+        logger.debug(
+            f"         ✍️  Writing CDC: {upstream_node.__name__} -> {to_node.__name__}"
+        )
+        # Create CDC metadata entry
+        cdc_entry = {
+            "source": upstream_node.__name__,
+            "destination": to_node.__name__,
+            "cdc_datetime_updated": timestamp,
+        }
 
-        # Create CDC metadata entries
-        cdc_entries = []
-        for source_node in upstream_nodes:
-            cdc_entries.append(
-                {
-                    "source": source_node.__name__,
-                    "destination": current_node.__name__,
-                    "root": root_node.__name__,
-                    "cdc_datetime_updated": timestamp,
-                }
-            )
+        # Create Spark DataFrame from CDC entry
+        new_cdc_df = spark.createDataFrame(pd.DataFrame([cdc_entry]))
 
-        if cdc_entries:
-            # Create Spark DataFrame from CDC entries
-            new_cdc_df = spark.createDataFrame(pd.DataFrame(cdc_entries))
-
-            # Write DataFrame to Delta format at the CDC path (append mode)
-            new_cdc_df.write.format("delta").mode("append").partitionBy(
-                "root", "source", "destination"
-            ).save(self.cdc_table_path)
+        # Write DataFrame to Delta format at the CDC path (append mode)
+        new_cdc_df.write.format("delta").mode("append").partitionBy(
+            "source", "destination"
+        ).save(self.cdc_table_path)

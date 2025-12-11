@@ -12,7 +12,6 @@ from flypipe.run_context import RunContext
 from flypipe.schema import Column
 from flypipe.schema import Schema
 from flypipe.schema.types import Decimal, Integer, String
-import logging
 
 
 @pytest.fixture(scope="function")
@@ -134,7 +133,7 @@ class TestPySparkNode:
         df = t2.run(spark_view)
         assert isinstance(df, ps.DataFrame)
 
-    def test_datasource_case_sensitive_columns(self, spark_view, caplog):
+    def test_datasource_case_sensitive_columns(self, spark_view):
         """
         Test columns case sensitive
 
@@ -151,7 +150,6 @@ class TestPySparkNode:
 
 
         """
-
         my_data = spark_view.createDataFrame(
             schema=(
                 "My_Col__x",
@@ -187,9 +185,7 @@ class TestPySparkNode:
             df = df.rename(columns={"my_col__x": "my_col"})
             return df
 
-        with pytest.raises(DataFrameMissingColumns):
-            my_col.run(spark_view)
-
+        # Test that the exception is raised with the correct error message
         expected_error_df = pd.DataFrame(
             data={
                 "dataframe": ["", "My_Col__x ", "My_Col__z"],
@@ -202,13 +198,6 @@ class TestPySparkNode:
             ["selection", "dataframe"]
         ).reset_index(drop=True)
 
-        # Assert that the error was logged at ERROR level
-        error_logs = [
-            record for record in caplog.records if record.levelno == logging.ERROR
-        ]
-        assert len(error_logs) > 0, "Expected at least one ERROR level log message"
-
-        # Build the expected error message
         expected_error_message = (
             f"Flypipe: could not find some columns in the dataframe"
             f"\n\nOutput Dataframe columns: ['My_Col__x', 'My_Col__y', 'My_Col__z']"
@@ -216,11 +205,11 @@ class TestPySparkNode:
             f"\n\n\n{tabulate(expected_error_df, headers='keys', tablefmt='mixed_outline')}\n"
         )
 
-        # Check that the complete error message was logged
-        error_messages = [record.message for record in error_logs]
-        assert any(
-            expected_error_message in msg for msg in error_messages
-        ), f"Expected complete error message to be logged at ERROR level. Found logs: {error_messages}"
+        # Verify the exception is raised with the correct message
+        with pytest.raises(DataFrameMissingColumns) as exc_info:
+            my_col.run(spark_view)
+
+        assert str(exc_info.value) == expected_error_message
 
     def test_duplicated_output_columns(self, spark_view):
         @node(
