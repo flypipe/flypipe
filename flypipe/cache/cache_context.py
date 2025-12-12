@@ -65,7 +65,6 @@ class CacheContext:
             result = self.cache.read(self.spark)
         else:
             result = self.cache.read()
-        self._log("      🔄 CacheContext.read() - returned result")
         return result
 
     def read_cdc(self, from_node, to_node, df):
@@ -80,9 +79,13 @@ class CacheContext:
             return result
         else:
             if self.disabled:
-                self._log("      ⏭️  CacheContext.read_cdc() - skipped (cache disabled)")
+                self._log(
+                    f"      ⏭️ CacheContext.read_cdc() - skipped CDC filter from {from_node.__name__} to {to_node.__name__} (cache disabled)"
+                )
             else:
-                self._log("      ⏭️  CacheContext.read_cdc() - skipped (not a CDCCache)")
+                self._log(
+                    f"      ⏭️ CacheContext.read_cdc() - skipped CDC filter from {from_node.__name__} to {to_node.__name__} (not a CDCCache)"
+                )
             return df
 
     def write(self, df):
