@@ -128,6 +128,8 @@ class NodeGraph:
                     cache_mode=run_context.cache_modes.get(node["transformation"]),
                     cache=node["transformation"].cache,
                     debug=run_context.debug,
+                    provided_input=node["transformation"]
+                    in run_context.provided_inputs,
                 )
 
         return graph

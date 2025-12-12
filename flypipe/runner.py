@@ -322,9 +322,6 @@ class Runner:
         process_merge : bool
             Whether to process nodes with CacheMode.MERGE
         """
-        # Skip if already computed
-        if node_key in self.run_context.node_results:
-            return
 
         # Get node metadata from graph
         node_data = self.graph.nodes[node_key]
@@ -340,11 +337,7 @@ class Runner:
         if status == RunStatus.PROVIDED_INPUT:
             # Get from provided inputs
             self._log(f"     📥 {node_name}: Loading from provided input")
-            result = (
-                self.run_context.node_results[node_key]
-                .as_type(node_transformation.dataframe_type)
-                .get_df()
-            )
+            return
 
         elif status == RunStatus.CACHED:
             # Read from cache
