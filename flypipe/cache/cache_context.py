@@ -136,9 +136,6 @@ class CacheContext:
                     )
                 else:
                     for upstream_node in upstream_nodes:
-                        self._log(
-                            f"            ✍️  Writing CDC: {upstream_node.__name__} -> {to_node.__name__} with timestamp {datetime_started_transformation}"
-                        )
                         if self.spark:
                             self.cache.write_cdc(
                                 self.spark,
