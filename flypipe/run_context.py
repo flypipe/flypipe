@@ -69,22 +69,21 @@ class RunContext:
 
         self.dependencies_preprocess_modes = self.dependencies_preprocess_modes or {}
         self.node_results = {
-            node.key: NodeResult(self.spark, df, schema=None)
+            node: NodeResult(self.spark, df, schema=None)
             for node, df in self.provided_inputs.items()
         }
 
     def update_node_results(
         self,
-        node_key: str,
+        node: "Node",
         df: Union[
             PandasDataFrame,
             PySparkDataFrame,
             PandasApiDataFrame,
             PySparkConnectDataFrame,
-        ],
-        schema: Schema = None,
+        ]
     ):
-        self.node_results[node_key] = NodeResult(self.spark, df, schema=schema)
+        self.node_results[node] = NodeResult(self.spark, df, schema=node.output_schema)
 
     @property
     def skipped_node_keys(self):

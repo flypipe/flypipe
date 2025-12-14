@@ -348,7 +348,7 @@ class Node:
         end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
         end_node = self.node_graph.get_transformation(end_node_name)
         return (
-            run_context.node_results[end_node_name]
+            run_context.node_results[end_node]
             .as_type(end_node.dataframe_type)
             .get_df()
         )

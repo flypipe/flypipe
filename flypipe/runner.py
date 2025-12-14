@@ -33,9 +33,7 @@ class Runner:
             The run context containing inputs, parameters, and results storage
         """
         self.node_graph = node_graph
-        self.graph = node_graph.graph
         self.run_context = run_context
-        self.cdc_table_exists = False
 
     def _log(self, message: str):
         """Log a message using logger.debug if debug mode is enabled, otherwise print."""
@@ -75,8 +73,7 @@ class Runner:
             if node_key in nodes_to_compute:
                 continue
 
-            node_data = self.graph.nodes[node_key]
-            status = node_data["status"]
+            status = self.node_graph.get_run_status(node_key)
 
             # Add this node if it needs to be computed
             if status in (RunStatus.ACTIVE, RunStatus.CACHED, RunStatus.PROVIDED_INPUT):
@@ -84,11 +81,11 @@ class Runner:
 
                 # Only traverse upstream if the node is ACTIVE (needs computation)
                 if status == RunStatus.ACTIVE:
-                    predecessors = list(self.graph.predecessors(node_key))
+                    predecessors = list(self.node_graph.graph.predecessors(node_key))
                     stack.extend(predecessors)
 
         # Create subgraph with only nodes to compute
-        subgraph = self.graph.subgraph(nodes_to_compute)
+        subgraph = self.node_graph.graph.subgraph(nodes_to_compute)
 
         # Topological sort to get levels
         # Level 0: nodes with no dependencies
@@ -124,7 +121,7 @@ class Runner:
         self._log("🗂️  Execution Plan:")
         for level_idx, level in enumerate(levels):
             node_names = [
-                self.graph.nodes[nk]["transformation"].__name__ for nk in level
+                self.node_graph.get_transformation(nk).__name__ for nk in level
             ]
             self._log(
                 f"  Level {level_idx} (parallelism: {self.run_context.max_workers}):"
@@ -157,6 +154,9 @@ class Runner:
         # Create execution plan
         execution_plan = self.create_execution_plan(target_node)
 
+        # Ensure CDC tables exist before execution to avoid concurrent creation conflicts
+        self._ensure_cdc_tables_exist()
+
         # Execute level by level
         target_node_key = target_node.key
 
@@ -169,27 +169,18 @@ class Runner:
         self._log("\n✅  Runner: Execution completed 👍")
         self._log(f"{'='*60}")
 
-    def _ensure_cdc_tables_exist_for_level(self, level: List[str]):
+    def _ensure_cdc_tables_exist(self):
         """
         Ensure CDC tables exist for all nodes in a level.
 
         This prevents concurrent table creation conflicts when nodes execute in parallel.
-
-        Parameters
-        ----------
-        level : List[str]
-            List of node keys in the current level
         """
-        if self.cdc_table_exists:
-            return
 
-        for node_key in level:
-            node_data = self.graph.nodes[node_key]
-            cache_context = node_data["node_run_context"].cache_context
+        for node_key in self.node_graph.graph.nodes:
+            cache_context = self.node_graph.get_cache_context(node_key)
             if cache_context and isinstance(cache_context.cache, CDCCache):
                 self._log("  🔧 Ensuring CDC tables exist")
                 cache_context.create_cdc_table()
-                self.cdc_table_exists = True
                 break
 
     def _execute_level(
@@ -213,15 +204,14 @@ class Runner:
         max_workers : int
             Maximum number of parallel workers (1 = sequential)
         """
-        # Ensure CDC tables exist before execution to avoid concurrent creation conflicts
-        self._ensure_cdc_tables_exist_for_level(level)
+
 
         if len(level) == 1 or max_workers == 1:
             # Single node or sequential execution, execute directly without thread pool
             execution_mode = "single node" if len(level) == 1 else "sequential"
             self._log(f"  🔹 Executing {len(level)} node(s) ({execution_mode})")
             for node_key in level:
-                node_name = self.graph.nodes[node_key]["transformation"].__name__
+                node_name = self.node_graph.get_transformation(node_key).__name__
                 self._log(f"    ▶️  Executing {node_name}")
                 self._process_single_node(node_key, target_node_key, process_merge)
         else:
@@ -236,7 +226,7 @@ class Runner:
                 # Submit all nodes in this level
                 future_to_node = {}
                 for node_key in level:
-                    node_name = self.graph.nodes[node_key]["transformation"].__name__
+                    node_name = self.node_graph.get_transformation(node_key).__name__
                     self._log(f"    ⏺️  Submitting {node_name} to executor")
                     future = executor.submit(
                         self._process_single_node,
@@ -249,7 +239,7 @@ class Runner:
                 # Wait for all nodes to complete
                 for future in as_completed(future_to_node):
                     node_key = future_to_node[future]
-                    node_name = self.graph.nodes[node_key]["transformation"].__name__
+                    node_name = self.node_graph.get_transformation(node_key).__name__
                     try:
                         future.result()
                         self._log(f"    ✅ {node_name} completed successfully")
@@ -324,7 +314,7 @@ class Runner:
         """
 
         # Get node metadata from graph
-        node_data = self.graph.nodes[node_key]
+        node_data = self.node_graph.get_node(node_key)
         node_transformation = node_data["transformation"]
         status = node_data["status"]
         cache_context = node_data["node_run_context"].cache_context
@@ -339,10 +329,14 @@ class Runner:
             self._log(f"     📥 {node_name}: Loading from provided input")
             return
 
-        elif status == RunStatus.CACHED:
+        elif status == RunStatus.CACHED and target_node_key == node_key:
             # Read from cache
             self._log(f"     💾 {node_name}: Reading from cache")
             result = cache_context.read()
+        elif status == RunStatus.CACHED and target_node_key != node_key:
+            # Read from cache
+            self._log(f"     💾 {node_name}: Cache will be read in the future by its successors")
+            return
 
         elif status == RunStatus.ACTIVE:
             # Execute transformation
@@ -360,7 +354,7 @@ class Runner:
                         f"\n\n{'*'*10} Node '{node_name}' MERGE mode - recursively processing as target node {'*'*10}"
                     )
                     self.run(
-                        self.graph.nodes[node_key]["transformation"],
+                        self.node_graph.get_transformation(node_key),
                         process_merge=False,
                     )
                     self._log(
@@ -369,7 +363,7 @@ class Runner:
                     return
 
             # Normal ACTIVE node - get dependencies and execute
-            target_transformation = self.graph.nodes[target_node_key]["transformation"]
+            target_transformation = self.node_graph.get_transformation(target_node_key)
             self._log(f"            {node_name}: Loading node dependencies dataframes")
             dependencies = node_transformation.get_node_inputs(
                 self.run_context, self.node_graph, target_transformation
@@ -388,21 +382,19 @@ class Runner:
         # Store result in run_context (for all statuses except SKIP)
         self._log(f"     ✓ {node_name}: Storing result in run_context")
 
-        self.run_context.update_node_results(
-            node_key, result, schema=node_transformation.output_schema
-        )
+        self.run_context.update_node_results(node_transformation, result)
 
         # Write cache if needed
         if cache_context and status == RunStatus.ACTIVE:
             self._log(f"     💾 {node_name}: Writing to cache")
             cache_context.write(
-                self.run_context.node_results[node_key]
+                self.run_context.node_results[node_transformation]
                 .as_type(node_transformation.dataframe_type)
                 .get_df()
             )
 
             # Write CDC metadata
-            target_transformation = self.graph.nodes[target_node_key]["transformation"]
+            target_transformation = self.node_graph.get_transformation(target_node_key)
             cached_predecessors = self.node_graph.get_first_cached_predecessors(
                 node_key
             )

@@ -112,7 +112,7 @@ class TestRunner:
 
         # ===== First run with 3 records =====
         result1 = A.run(
-            spark, parameters={B: {"number_records": 3}}, max_workers=max_workers
+            spark, parameters={B: {"number_records": 3}}, max_workers=max_workers, debug=True
         )
 
         # Assert first run results
@@ -151,7 +151,7 @@ class TestRunner:
 
         # ===== Second run with 2 records =====
         result3 = A.run(
-            spark, parameters={B: {"number_records": 2}}, max_workers=max_workers
+            spark, parameters={B: {"number_records": 2}}, max_workers=max_workers, debug=True
         )
 
         # Assert second run results (should load from cache - still has 3 records)
@@ -216,7 +216,7 @@ class TestRunner:
 
         # ===== First run with 3 records =====
         resultA = A.run(
-            spark, parameters={B: {"number_records": 3}}, max_workers=max_workers
+            spark, parameters={B: {"number_records": 3}}, max_workers=max_workers, debug=True
         )
 
         # Assert first run results
@@ -279,7 +279,7 @@ class TestRunner:
 
         # ===== Second run with 2 records =====
         resultA = A.run(
-            spark, parameters={B: {"number_records": 2}}, max_workers=max_workers
+            spark, parameters={B: {"number_records": 2}}, max_workers=max_workers, debug=True
         )
 
         # Assert second run results (should load from cache - still has 3 records)

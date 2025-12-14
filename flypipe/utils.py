@@ -1,6 +1,8 @@
 import json
 import logging
 from enum import Enum
+from typing import Union, TYPE_CHECKING
+
 from pandas.testing import assert_frame_equal
 
 from flypipe.exceptions import (

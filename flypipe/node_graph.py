@@ -1,4 +1,4 @@
-from typing import List, overload
+from typing import List, overload, Union
 
 import networkx as nx
 from networkx import DiGraph
@@ -11,6 +11,10 @@ from flypipe.run_context import RunContext
 from flypipe.run_status import RunStatus
 from flypipe.utils import DataFrameType
 
+def get_node_key(node_or_key: Union[Node, str]):
+    if isinstance(node_or_key, Node):
+        return node_or_key.key
+    return node_or_key
 
 class NodeGraph:
     """
@@ -316,29 +320,23 @@ class NodeGraph:
 
         return graph
 
-    def get_node(self, name: str):
-        return self.graph.nodes[name]
+    def get_node(self, node_or_key: Union[Node, str])->dict:
+        return self.graph.nodes[get_node_key(node_or_key)]
 
     def get_edges(self):
         return self.graph.edges
 
-    def get_edge_data(self, source_node_name, target_node_name):
-        return self.graph.get_edge_data(source_node_name, target_node_name)
+    def get_edge_data(self, source_node_key, target_node_key):
+        return self.graph.get_edge_data(source_node_key, target_node_key)
 
-    def get_transformation(self, name: str) -> Node:
-        return self.get_node(name)["transformation"]
+    def get_transformation(self, key: str) -> Node:
+        return self.get_node(key)["transformation"]
 
-    @overload
-    def get_cache_context(self, node_or_name: Node) -> CacheContext: ...
+    def get_run_status(self, node_or_key: Union[Node, str]) -> CacheContext:
+        return self.get_node(get_node_key(node_or_key))["status"]
 
-    @overload
-    def get_cache_context(self, node_or_name: str) -> CacheContext: ...
-
-    def get_cache_context(self, node_or_name):
-        name = node_or_name
-        if isinstance(node_or_name, Node):
-            name = node_or_name.key
-        return self.get_node(name)["node_run_context"].cache_context
+    def get_cache_context(self, node_or_key: Union[Node, str]) -> CacheContext:
+        return self.get_node(get_node_key(node_or_key))["node_run_context"].cache_context
 
     def get_end_node_name(self, graph):
         for name in graph.nodes:

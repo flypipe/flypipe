@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import Callable, Union, TYPE_CHECKING
 
+from flypipe.run_status import RunStatus
+
 if TYPE_CHECKING:
     from flypipe.node import Node
     from flypipe.node_graph import NodeGraph
@@ -51,15 +53,22 @@ class InputNode:
             The root/target node (for CDC filtering and determining dataframe type)
         """
 
+        # Get node metadata from graph
+        node_data = node_graph.get_node(self.node)
+        if node_data["status"] == RunStatus.CACHED:
+            cache_context = node_graph.get_cache_context(self.node)
+            result = cache_context.read()
+            run_context.update_node_results(self.node, result)
+
         try:
             # We can assume that the computation of the raw node this node input comes from is already done and stored
             # in the run context because it's an ancestor node in the run graph.
-            node_input_value = run_context.node_results[self.key].as_type(
+            node_input_value = run_context.node_results[self.node].as_type(
                 self._parent_node.dataframe_type
             )
         except KeyError:
             raise RuntimeError(
-                f"Unexpected state- unable to find computed result for node {self.key} when used as an input, please "
+                f"Unexpected state - unable to find computed result for node {self.key} when used as an input, please "
                 f"raise this as a bug in https://github.com/flypipe/flypipe"
             )
 
