@@ -1,7 +1,7 @@
 import logging
 from pyspark.sql import SparkSession
 
-from flypipe.cache import CacheMode, CDCCache, Cache
+from flypipe.cache import CacheMode, Cache
 from flypipe.utils import log
 
 logger = logging.getLogger(__name__)
@@ -56,54 +56,6 @@ class CacheContext:
 
         return self.exists()
 
-    def read(self):
-        if self.disabled:
-            raise RuntimeError("Cache disabled, cannot read")
-
-        self._log("      🔄 CacheContext.read() - calling cache.read()")
-        if self.spark:
-            result = self.cache.read(self.spark)
-        else:
-            result = self.cache.read()
-        return result
-
-    def read_cdc(self, from_node, to_node, df):
-        if not self.disabled and isinstance(self.cache, CDCCache):
-            self._log(
-                f"      📊 CacheContext.read_cdc() - filtering CDC data from {from_node.__name__} to {to_node.__name__}"
-            )
-            if self.spark:
-                result = self.cache.read_cdc(self.spark, from_node, to_node, df)
-            else:
-                result = self.cache.read_cdc(from_node, to_node, df)
-            return result
-        else:
-            if self.disabled:
-                self._log(
-                    f"      ⏭️ CacheContext.read_cdc() - skipped CDC filter from {from_node.__name__} to {to_node.__name__} (cache disabled)"
-                )
-            else:
-                self._log(
-                    f"      ⏭️ CacheContext.read_cdc() - skipped CDC filter from {from_node.__name__} to {to_node.__name__} (not a CDCCache)"
-                )
-            return df
-
-    def write(self, df):
-        if not self.disabled or self.merge:
-            mode = "MERGE" if self.merge else "NORMAL"
-            self._log(
-                f"      💾 CacheContext.write() - mode: {mode}, calling cache.write()"
-            )
-            if self.spark:
-                result = self.cache.write(self.spark, df)
-            else:
-                result = self.cache.write(df)
-            self._log("      💾 CacheContext.write() - write complete")
-            return result
-        else:
-            self._log("      ⏭️  CacheContext.write() - skipped (cache disabled)")
-            return None
-
     def create_cdc_table(self):
         """
         Ensure CDC metadata table exists.
@@ -111,51 +63,68 @@ class CacheContext:
         This should be called before parallel execution to avoid concurrent
         table creation conflicts.
         """
-        if isinstance(self.cache, CDCCache):
-            if self.spark:
-                self.cache.create_cdc_table(self.spark)
-            else:
-                self.cache.create_cdc_table()
+        if self.spark:
+            self.cache.create_cdc_table(self.spark)
+        else:
+            self.cache.create_cdc_table()
 
-    def write_cdc(self, upstream_nodes, to_node, datetime_started_transformation):
-        if isinstance(self.cache, CDCCache):
-            if not self.disabled or self.merge:
-                upstream_names = [
-                    n.__name__ if hasattr(n, "__name__") else str(n)
-                    for n in upstream_nodes
-                ]
+    def read(self, from_node=None, to_node=None):
+        if self.disabled:
+            raise RuntimeError("Cache disabled, cannot read")
+
+        if from_node is not None and to_node is not None:
+            self._log(
+                f"      📊 CacheContext.read() - read and filter data from {from_node.__name__} to {to_node.__name__}"
+            )
+        else:
+            self._log("      🔄 CacheContext.read() - calling cache.read()")
+
+        if self.spark:
+            result = self.cache.read(self.spark, from_node=from_node, to_node=to_node)
+        else:
+            result = self.cache.read(from_node=from_node, to_node=to_node)
+        return result
+
+    def write(
+        self,
+        df,
+        upstream_nodes=None,
+        to_node=None,
+        datetime_started_transformation=None,
+    ):
+        if not self.disabled or self.merge:
+            # CDC metadata write (with upstream_nodes, to_node, datetime_started_transformation)
+
+            if to_node is not None:
                 self._log(
-                    f"      📝 CacheContext.write_cdc() - writing CDC metadata for {to_node.__name__}"
+                    f"      📝 CacheContext.write() - writing CDC metadata for {to_node.__name__}"
                 )
+
+            if upstream_nodes:
+                upstream_names = [n.__name__ for n in upstream_nodes]
                 self._log(
                     f"         └─ upstream nodes: {', '.join(upstream_names) if upstream_names else 'none'}"
                 )
-                if not upstream_nodes:
-                    self._log(
-                        "            ⏭️ No upstream nodes to write CDC metadata for, skipping"
-                    )
-                else:
-                    for upstream_node in upstream_nodes:
-                        if self.spark:
-                            self.cache.write_cdc(
-                                self.spark,
-                                upstream_node,
-                                to_node,
-                                datetime_started_transformation,
-                            )
-                        else:
-                            self.cache.write_cdc(
-                                upstream_node,
-                                to_node,
-                                datetime_started_transformation,
-                            )
 
+            # Call unified write method with CDC parameters
+            if self.spark:
+                self.cache.write(
+                    self.spark,
+                    df=df,
+                    upstream_nodes=upstream_nodes,
+                    to_node=to_node,
+                    datetime_started_transformation=datetime_started_transformation,
+                )
             else:
-                self._log(
-                    "      ⏭️  CacheContext.write_cdc() - skipped (cache disabled)"
+                self.cache.write(
+                    df=df,
+                    upstream_nodes=upstream_nodes,
+                    to_node=to_node,
+                    datetime_started_transformation=datetime_started_transformation,
                 )
         else:
-            self._log("      ⏭️  CacheContext.write_cdc() - skipped (not a CDCCache)")
+            self._log("      ⏭️  CacheContext.write() - skipped (cache disabled)")
+            return None
 
     def exists(self):
         if self.disabled:

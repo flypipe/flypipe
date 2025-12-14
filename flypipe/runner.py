@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, TYPE_CHECKING
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from flypipe.cache import CacheMode, CDCCache
+from flypipe.cache import CacheMode
 from flypipe.node_run_context import NodeRunContext
 from flypipe.run_status import RunStatus
 from flypipe.run_context import RunContext
@@ -63,7 +63,7 @@ class Runner:
             be executed in parallel
         """
 
-        self._log(f"📋 Creating execution plan for target node: {target_node.__name__}")
+        self._log(f"\n📋 Creating execution plan for target node: {target_node.__name__}")
         self._log(f"{'-'*60}")
 
         target_key = target_node.key
@@ -125,13 +125,14 @@ class Runner:
         self._log("🗂️  Execution Plan:")
         for level_idx, level in enumerate(levels):
             node_names = [
-                self.node_graph.get_transformation(node_key).__name__ for node_key in level
+                self.node_graph.get_transformation(node_key).__name__
+                for node_key in level
             ]
             self._log(
                 f"  Level {level_idx} (parallelism: {self.run_context.max_workers}):"
             )
             for node_name in node_names:
-                self._log(f"       {node_name}")
+                self._log(f"   └─ {node_name}")
 
         return levels
 
@@ -155,14 +156,13 @@ class Runner:
         )
         self._log(f"{'='*60}\n")
 
-        # Create execution plan
-        execution_plan = self.create_execution_plan(target_node)
-
         # Ensure CDC tables exist before execution to avoid concurrent creation conflicts
         self._ensure_cdc_tables_exist()
 
-        # Execute level by level
+        # Create execution plan
+        execution_plan = self.create_execution_plan(target_node)
 
+        # Execute level by level
         for level_idx, level in enumerate(execution_plan):
             self._log(f"\n📊 Executing Level {level_idx} ({len(level)} nodes)")
             self._log(f"{'-'*60}")
@@ -181,8 +181,8 @@ class Runner:
 
         for node_key in self.node_graph.graph.nodes:
             cache_context = self.node_graph.get_cache_context(node_key)
-            if cache_context and isinstance(cache_context.cache, CDCCache):
-                self._log("  🔧 Ensuring CDC tables exist")
+            if cache_context and cache_context.cache:
+                self._log("🔧 Config - Ensuring CDC tables exist")
                 cache_context.create_cdc_table()
                 break
 
@@ -208,14 +208,13 @@ class Runner:
             Maximum number of parallel workers (1 = sequential)
         """
 
-
         if len(level) == 1 or max_workers == 1:
             # Single node or sequential execution, execute directly without thread pool
             execution_mode = "single node" if len(level) == 1 else "sequential"
             self._log(f"  🔹 Executing {len(level)} node(s) ({execution_mode})")
             for node_key in level:
                 node = self.node_graph.get_transformation(node_key)
-                self._log(f"    ▶️  Executing {node.__name__}")
+                self._log(f"    ▶️ Executing {node.__name__}")
                 self._process_single_node(node, target_node, process_merge)
         else:
             # Multiple nodes, execute in parallel
@@ -230,7 +229,7 @@ class Runner:
                 future_to_node = {}
                 for node_key in level:
                     node = self.node_graph.get_transformation(node_key)
-                    self._log(f"    ⏺️  Submitting {node.__name__} to executor")
+                    self._log(f"    ⏺️ Submitting {node.__name__} to executor")
                     future = executor.submit(
                         self._process_single_node,
                         node,
@@ -308,10 +307,10 @@ class Runner:
 
         Parameters
         ----------
-        node_key : str
-            The key of the node to execute
-        target_node_key : str
-            The key of the original target node (for CDC filtering)
+        node : Node
+            The node to execute
+        target_node : Node
+            The original target node (for CDC filtering)
         process_merge : bool
             Whether to process nodes with CacheMode.MERGE
         """
@@ -336,14 +335,17 @@ class Runner:
             # Read from cache
             self._log(f"     💾 {node_name}: Reading from cache")
             result = cache_context.read()
+
         elif status == RunStatus.CACHED and target_node != node:
             # Read from cache
-            self._log(f"     💾 {node_name}: Cache will be read in the future by its successors")
+            self._log(
+                f"     💾 {node_name}: Cache will be read in the future by its successors"
+            )
             return
 
         elif status == RunStatus.ACTIVE:
             # Execute transformation
-            self._log(f"     ▶️  {node_name}: Running transformation")
+            self._log(f"     ▶️ {node_name}: Running transformation")
 
             # Check for MERGE mode
             if (
@@ -366,13 +368,13 @@ class Runner:
                     return
 
             # Normal ACTIVE node - get dependencies and execute
-            self._log(f"            {node_name}: Loading node dependencies dataframes")
+            self._log(f"        🏗️ {node_name}: Loading node dependencies dataframes")
             dependencies = node_transformation.get_node_inputs(
                 self.run_context, self.node_graph, target_node
             )
 
             # Call the transformation function
-            self._log(f"         ⚙️  {node_name}: processing transformation")
+            self._log(f"          ⚙️ {node_name}: processing transformation")
             result = self._execute_transformation(
                 self.run_context.spark,
                 node_transformation,
@@ -389,16 +391,12 @@ class Runner:
         # Write cache if needed
         if cache_context and status == RunStatus.ACTIVE:
             self._log(f"     💾 {node_name}: Writing to cache")
-            cache_context.write(
-                self.run_context.node_results[node_transformation]
-                .as_type(node_transformation.dataframe_type)
-                .get_df()
-            )
-
-            # Write CDC metadata
             cached_predecessors = self.node_graph.get_first_cached_predecessors(node)
-            cache_context.write_cdc(
-                cached_predecessors,
-                target_node,
-                datetime_start_process_transformation,
+            cache_context.write(
+                df=self.run_context.node_results[node_transformation]
+                .as_type(node_transformation.dataframe_type)
+                .get_df(),
+                upstream_nodes=cached_predecessors,
+                to_node=node,
+                datetime_started_transformation=datetime_start_process_transformation,
             )

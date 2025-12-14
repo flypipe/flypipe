@@ -216,6 +216,8 @@ class Node:
             inputs[input_node.get_alias()] = input_node.get_value(
                 run_context, node_graph, target_node or self
             )
+        else:
+            logger.debug(f"          {self.__name__} has no dependencies")
         return inputs
 
     def __call__(self, *args):
@@ -348,9 +350,7 @@ class Node:
         end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
         end_node = self.node_graph.get_transformation(end_node_name)
         return (
-            run_context.node_results[end_node]
-            .as_type(end_node.dataframe_type)
-            .get_df()
+            run_context.node_results[end_node].as_type(end_node.dataframe_type).get_df()
         )
 
     @property

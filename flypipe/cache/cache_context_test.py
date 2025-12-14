@@ -14,10 +14,16 @@ class GenericCache(Cache):
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 
-    def read(self):
+    def read(self, from_node=None, to_node=None):
         return pd.read_csv(self.cache_csv)
 
-    def write(self, df):
+    def write(
+        self,
+        df,
+        upstream_nodes=None,
+        to_node=None,
+        datetime_started_transformation=None,
+    ):
         df.to_csv(self.cache_csv, index=False)
 
     def exists(self):
@@ -28,10 +34,17 @@ class GenericCacheSpark(Cache):
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 
-    def read(self, spark):
+    def read(self, spark, from_node=None, to_node=None):
         return pd.read_csv(self.cache_csv)
 
-    def write(self, spark, df):
+    def write(
+        self,
+        spark,
+        df,
+        upstream_nodes=None,
+        to_node=None,
+        datetime_started_transformation=None,
+    ):
         df.to_csv(self.cache_csv, index=False)
 
     def exists(self, spark):

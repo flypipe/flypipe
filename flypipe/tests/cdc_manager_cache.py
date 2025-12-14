@@ -6,13 +6,13 @@ This module provides a Spark Delta table-based CDC cache implementation.
 
 import logging
 import pandas as pd
-from flypipe.cache import CDCCache
+from flypipe.cache import Cache
 import pyspark.sql.functions as F
 
 logger = logging.getLogger(__name__)
 
 
-class CDCManagerCache(CDCCache):
+class CDCManagerCache(Cache):
     """
     Spark Delta table-based CDC cache for production-like scenarios.
 
@@ -98,18 +98,68 @@ class CDCManagerCache(CDCCache):
 
         self.name = self.full_table_name
 
-    def read(self, spark):
-        """Read cached data from Delta table"""
+    def read(self, spark, from_node=None, to_node=None):
+        """
+        Read cached data from Delta table with optional CDC filtering.
+
+        Parameters
+        ----------
+        spark : SparkSession
+            Active Spark session
+        from_node : Node, optional
+            Source node for CDC filtering
+        to_node : Node, optional
+            Destination node for CDC filtering
+
+        Returns
+        -------
+        DataFrame
+            Cached data or CDC-filtered data
+        """
+        # Just read the cached data
         logger.debug(
             f"         📖 CDCManagerCache.read() called for '{self.full_table_name}'"
         )
-        df = spark.table(self.full_table_name)
-        row_count = df.count()
-        logger.debug(f"         📖 Loaded {row_count} rows from Delta table")
-        return df
+        result_df = spark.table(self.full_table_name)
 
-    def write(self, spark, df):
-        """Write data to Delta table using MERGE INTO if table exists, otherwise CREATE"""
+        # If CDC parameters are provided, do CDC filtering
+        if from_node is not None and to_node is not None:
+            result_df = self._read_cdc_filter(spark, from_node, to_node, result_df)
+        else:
+            row_count = result_df.count()
+            logger.debug(f"         📖 Loaded {row_count} rows from Delta table")
+
+        return result_df
+
+    def write(
+        self,
+        spark,
+        df,
+        upstream_nodes=None,
+        to_node=None,
+        datetime_started_transformation=None,
+    ):
+        """
+        Write data to Delta table or CDC metadata with unified interface.
+
+        Parameters
+        ----------
+        spark : SparkSession
+            Active Spark session
+        *args
+            Additional positional arguments
+        df : DataFrame
+            DataFrame to cache (for regular cache write)
+        upstream_nodes : List[Node], optional
+            List of upstream cached nodes for CDC tracking
+        to_node : Node, optional
+            Destination node for CDC tracking
+        datetime_started_transformation : datetime, optional
+            Timestamp when transformation started for CDC tracking
+        **kwargs
+            Additional keyword arguments
+        """
+        # If CDC parameters are provided, write CDC metadata
         logger.debug(
             f"         💾 CDCManagerCache.write() called for '{self.full_table_name}'"
         )
@@ -172,6 +222,16 @@ class CDCManagerCache(CDCCache):
                 f"         💾 Merged {row_count} rows using keys: {self.merge_keys}"
             )
 
+        if (
+            upstream_nodes is not None
+            and to_node is not None
+            and datetime_started_transformation is not None
+        ):
+            for upstream_node in upstream_nodes:
+                self._write_cdc_metadata(
+                    spark, upstream_node, to_node, datetime_started_transformation
+                )
+
     def exists(self, spark):
         """Check if Delta table exists"""
         exists = spark.catalog.tableExists(self.full_table_name)
@@ -180,9 +240,9 @@ class CDCManagerCache(CDCCache):
         )
         return exists
 
-    def read_cdc(self, spark, from_node, to_node, df):
+    def _read_cdc_filter(self, spark, from_node, to_node, df):
         """
-        Filter data based on CDC timestamps from Delta table metadata.
+        Filter data based on CDC timestamps from Delta table metadata (internal method).
 
         Returns only rows that haven't been processed for this specific
         source->destination combination.
@@ -274,9 +334,9 @@ class CDCManagerCache(CDCCache):
                 if not spark.catalog.tableExists(self.full_cdc_table_name):
                     raise e
 
-    def write_cdc(self, spark, upstream_node, to_node, timestamp):
+    def _write_cdc_metadata(self, spark, upstream_node, to_node, timestamp):
         """
-        Write CDC metadata to Delta table tracking when data was processed.
+        Write CDC metadata to Delta table tracking when data was processed (internal method).
 
         Records the processing timestamp for a source->destination combination,
         allowing future runs to identify which data has already been processed.

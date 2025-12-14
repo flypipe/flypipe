@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Callable, Union, TYPE_CHECKING
+import logging
 
 from flypipe.run_status import RunStatus
 
@@ -10,6 +11,9 @@ if TYPE_CHECKING:
 from flypipe.dependency import PreprocessMode
 from flypipe.dependency.preprocess import Preprocess
 from flypipe.run_context import RunContext
+from flypipe.utils import log
+
+logger = logging.getLogger(__name__)
 
 
 class InputNode:
@@ -39,7 +43,9 @@ class InputNode:
     def key(self):
         return self.node.key
 
-    def get_value(self, run_context: RunContext, node_graph: NodeGraph, root_node: Node):
+    def get_value(
+        self, run_context: RunContext, node_graph: NodeGraph, root_node: Node
+    ):
         """
         Retrieve the value of this node input which will be passed to the parent node.
 
@@ -54,10 +60,16 @@ class InputNode:
         """
 
         # Get node metadata from graph
-        node_data = node_graph.get_node(self.node)
-        if node_data["status"] == RunStatus.CACHED:
-            cache_context = node_graph.get_cache_context(self.node)
-            result = cache_context.read()
+        cache_context = node_graph.get_cache_context(self.node)
+        run_status = node_graph.get_run_status(self.node)
+
+        # Acceptable status Cached, as it is cached and Active, as it is a Cached node with CacheMode.MERGE
+        if cache_context and run_status in [RunStatus.CACHED, RunStatus.ACTIVE]:
+            log(
+                logger,
+                f"          📦 InputNode.get_value() - reading cached data for {self.node.__name__} with filtering from {self.node.__name__} to {root_node.__name__}",
+            )
+            result = cache_context.read(from_node=self.node, to_node=root_node)
             run_context.update_node_results(self.node, result)
 
         try:
@@ -71,14 +83,6 @@ class InputNode:
                 f"Unexpected state - unable to find computed result for node {self.key} when used as an input, please "
                 f"raise this as a bug in https://github.com/flypipe/flypipe"
             )
-
-        cache_context = node_graph.get_cache_context(self.node)
-
-        # In cases that dataframe is provided as input, there might not be any CacheContext created
-        # and we need to check if the cache context has cache.
-        if cache_context:
-            df = cache_context.read_cdc(self.node, root_node, node_input_value.get_df())
-            node_input_value = node_input_value.clone(df)
 
         # Preprocess the Input Node
         node_input_value = self.apply_preprocess(

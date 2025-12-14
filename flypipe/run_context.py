@@ -1,5 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Mapping, Union
+from typing import Mapping, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from flypipe.node import Node
 
 from pandas import DataFrame as PandasDataFrame
 
@@ -22,7 +25,6 @@ from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
 from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.config import get_config
 from flypipe.node_result import NodeResult
-from flypipe.schema import Schema
 
 
 @dataclass
@@ -81,7 +83,7 @@ class RunContext:
             PySparkDataFrame,
             PandasApiDataFrame,
             PySparkConnectDataFrame,
-        ]
+        ],
     ):
         self.node_results[node] = NodeResult(self.spark, df, schema=node.output_schema)
 

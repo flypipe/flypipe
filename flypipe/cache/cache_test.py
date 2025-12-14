@@ -20,10 +20,18 @@ class GenericCache(Cache):
         self.cache_name = str(uuid4()).replace("-", "_")
         self.cache_csv = f"{self.cache_name}.csv"
 
-    def read(self):
+    def read(self, from_node=None, to_node=None):
         return pd.read_csv(self.cache_csv)
 
-    def write(self, df):
+    def write(
+        self,
+        *args,
+        df,
+        upstream_nodes=None,
+        to_node=None,
+        datetime_started_transformation=None,
+        **kwargs,
+    ):
         df.to_csv(self.cache_csv, index=False)
 
     def exists(self):
@@ -60,7 +68,13 @@ class TestCache:
 
     def test_cache_non_spark_trivial(self):
         class GenericCache2(GenericCache):
-            def write(self, df):
+            def write(
+                self,
+                df,
+                upstream_nodes=None,
+                to_node=None,
+                datetime_started_transformation=None,
+            ):
                 df = pd.DataFrame(data={"col1": [1]})
                 df.to_csv(self.cache_csv, index=False)
 
@@ -104,10 +118,19 @@ class TestCache:
 
     def test_cache_spark_provided(self, spark, mocker):
         class GenericCache2(GenericCache):
-            def read(self, spark):
+            def read(self, spark, from_node=None, to_node=None):
                 return spark.read.table(self.cache_name)
 
-            def write(self, spark, df):
+            def write(
+                self,
+                spark,
+                *args,
+                df,
+                upstream_nodes=None,
+                to_node=None,
+                datetime_started_transformation=None,
+                **kwargs,
+            ):
                 df.createOrReplaceTempView(self.cache_name)
 
             def exists(self, spark):
@@ -413,10 +436,16 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            def read(self):
+            def read(self, from_node=None, to_node=None):
                 return pd.read_csv(self.cache_csv)
 
-            def write(self, df):
+            def write(
+                self,
+                df,
+                upstream_nodes=None,
+                to_node=None,
+                datetime_started_transformation=None,
+            ):
                 if self.exists():
                     df = pd.DataFrame(data={"col1": [1, 2], "col2": [2, 3]})
                     df.to_csv(self.cache_csv, index=False)
@@ -573,10 +602,16 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            def read(self):
+            def read(self, from_node=None, to_node=None):
                 return pd.read_csv(self.cache_csv)
 
-            def write(self, df):
+            def write(
+                self,
+                df,
+                upstream_nodes=None,
+                to_node=None,
+                datetime_started_transformation=None,
+            ):
                 df.to_csv(self.cache_csv, index=False)
 
             def exists(self):
@@ -586,10 +621,16 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            def read(self):
+            def read(self, from_node=None, to_node=None):
                 return pd.read_csv(self.cache_csv)
 
-            def write(self, df):
+            def write(
+                self,
+                df,
+                upstream_nodes=None,
+                to_node=None,
+                datetime_started_transformation=None,
+            ):
                 df.to_csv(self.cache_csv, index=False)
 
             def exists(self):
@@ -616,12 +657,12 @@ class TestCache:
         spy_writter_t2 = mocker.spy(t2.cache, "write")
         spy_reader_t2 = mocker.spy(t2.cache, "read")
         spy_exists_t2 = mocker.spy(t2.cache, "exists")
-        t3.run()
+        t3.run(debug=True)
         assert spy_writter_t1.call_count == 1
-        assert spy_reader_t1.call_count == 0
+        assert spy_reader_t1.call_count == 2
         assert spy_exists_t1.call_count == 1
         assert spy_writter_t2.call_count == 1
-        assert spy_reader_t2.call_count == 0
+        assert spy_reader_t2.call_count == 1
         assert spy_exists_t2.call_count == 1
 
         spy_writter_t1.reset_mock()
@@ -630,7 +671,7 @@ class TestCache:
         spy_writter_t2.reset_mock()
         spy_reader_t2.reset_mock()
         spy_exists_t2.reset_mock()
-        t3.run()
+        t3.run(debug=True)
         assert spy_writter_t1.call_count == 0
         assert spy_reader_t1.call_count == 1
         assert spy_exists_t1.call_count == 1
@@ -654,10 +695,16 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            def read(self):
+            def read(self, from_node=None, to_node=None):
                 return pd.read_csv(self.cache_csv)
 
-            def write(self, df):
+            def write(
+                self,
+                df,
+                upstream_nodes=None,
+                to_node=None,
+                datetime_started_transformation=None,
+            ):
                 df.to_csv(self.cache_csv, index=False)
 
             def exists(self):
@@ -667,10 +714,16 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            def read(self):
+            def read(self, from_node=None, to_node=None):
                 return pd.read_csv(self.cache_csv)
 
-            def write(self, df):
+            def write(
+                self,
+                df,
+                upstream_nodes=None,
+                to_node=None,
+                datetime_started_transformation=None,
+            ):
                 df.to_csv(self.cache_csv, index=False)
 
             def exists(self):
@@ -706,17 +759,17 @@ class TestCache:
         spy_writter_t2 = mocker.spy(t2.cache, "write")
         spy_reader_t2 = mocker.spy(t2.cache, "read")
         spy_exists_t2 = mocker.spy(t2.cache, "exists")
-        t3.run()
+        t3.run(debug=True)
         assert spy_writter_t0.call_count == 1
-        assert spy_reader_t0.call_count == 0
+        assert spy_reader_t0.call_count == 2
         assert spy_exists_t0.call_count == 1
 
         assert spy_writter_t1.call_count == 1
-        assert spy_reader_t1.call_count == 0
+        assert spy_reader_t1.call_count == 1
         assert spy_exists_t1.call_count == 1
 
         assert spy_writter_t2.call_count == 1
-        assert spy_reader_t2.call_count == 0
+        assert spy_reader_t2.call_count == 1
         assert spy_exists_t2.call_count == 1
 
         spy_writter_t0.reset_mock()
@@ -729,7 +782,7 @@ class TestCache:
         spy_reader_t2.reset_mock()
         spy_exists_t2.reset_mock()
 
-        t3.run()
+        t3.run(debug=True)
 
         assert spy_writter_t0.call_count == 0
         assert spy_reader_t0.call_count == 1

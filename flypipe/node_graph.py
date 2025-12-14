@@ -1,4 +1,4 @@
-from typing import List, overload, Union
+from typing import List, Union
 
 import networkx as nx
 from networkx import DiGraph
@@ -11,10 +11,12 @@ from flypipe.run_context import RunContext
 from flypipe.run_status import RunStatus
 from flypipe.utils import DataFrameType
 
+
 def get_node_key(node_or_key: Union[Node, str]):
     if isinstance(node_or_key, Node):
         return node_or_key.key
     return node_or_key
+
 
 class NodeGraph:
     """
@@ -320,7 +322,7 @@ class NodeGraph:
 
         return graph
 
-    def get_node(self, node_or_key: Union[Node, str])->dict:
+    def get_node(self, node_or_key: Union[Node, str]) -> dict:
         return self.graph.nodes[get_node_key(node_or_key)]
 
     def get_edges(self):
@@ -336,7 +338,9 @@ class NodeGraph:
         return self.get_node(get_node_key(node_or_key))["status"]
 
     def get_cache_context(self, node_or_key: Union[Node, str]) -> CacheContext:
-        return self.get_node(get_node_key(node_or_key))["node_run_context"].cache_context
+        return self.get_node(get_node_key(node_or_key))[
+            "node_run_context"
+        ].cache_context
 
     def get_end_node_name(self, graph):
         for name in graph.nodes:
@@ -424,7 +428,9 @@ class NodeGraph:
             if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN]:
                 raise RuntimeError(f"Run status for node {n} is {RunStatus.UNKNOWN}")
 
-    def get_first_cached_predecessors(self, node_or_key: Union[Node, str]) -> List["Node"]:
+    def get_first_cached_predecessors(
+        self, node_or_key: Union[Node, str]
+    ) -> List["Node"]:
         """
         Get the first cached predecessors of a node by traversing upstream.
 
