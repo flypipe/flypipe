@@ -209,12 +209,12 @@ class Node:
     def alias(self, value):
         return InputNode(self).alias(value)
 
-    def get_node_inputs(self, run_context: RunContext, target_node=None):
+    def get_node_inputs(self, run_context: RunContext, node_graph, target_node=None):
         inputs = {}
         for input_node in self.input_nodes:
             # Pass target_node as root_node for CDC filtering (use self as fallback for backwards compatibility)
             inputs[input_node.get_alias()] = input_node.get_value(
-                run_context, target_node or self
+                run_context, node_graph, target_node or self
             )
         return inputs
 
@@ -340,9 +340,6 @@ class Node:
 
         self.create_graph(run_context)
         execution_graph = self.node_graph.get_execution_graph(run_context)
-        run_context.set_cache_context_dependency_map(
-            execution_graph.get_cache_context_dependency_map()
-        )
 
         runner = Runner(node_graph=execution_graph, run_context=run_context)
 

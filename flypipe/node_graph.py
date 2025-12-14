@@ -1,13 +1,9 @@
-from typing import List, overload, TYPE_CHECKING
+from typing import List, overload
 
 import networkx as nx
 from networkx import DiGraph
-
 from flypipe.cache.cache_context import CacheContext
-
-if TYPE_CHECKING:
-    from flypipe.node import Node
-
+from flypipe.node import Node
 from flypipe.node_function import NodeFunction
 from flypipe.node_run_context import NodeRunContext
 from flypipe.output_column_set import OutputColumnSet
@@ -333,14 +329,14 @@ class NodeGraph:
         return self.get_node(name)["transformation"]
 
     @overload
-    def get_cache_context(self, node_or_name: "Node") -> CacheContext: ...
+    def get_cache_context(self, node_or_name: Node) -> CacheContext: ...
 
     @overload
     def get_cache_context(self, node_or_name: str) -> CacheContext: ...
 
     def get_cache_context(self, node_or_name):
         name = node_or_name
-        if hasattr(node_or_name, 'key'):
+        if isinstance(node_or_name, Node):
             name = node_or_name.key
         return self.get_node(name)["node_run_context"].cache_context
 
@@ -430,7 +426,7 @@ class NodeGraph:
             if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN]:
                 raise RuntimeError(f"Run status for node {n} is {RunStatus.UNKNOWN}")
 
-    def get_first_cached_predecessors(self, node_key: str) -> List[Node]:
+    def get_first_cached_predecessors(self, node_key: str) -> List["Node"]:
         """
         Get the first cached predecessors of a node by traversing upstream.
 

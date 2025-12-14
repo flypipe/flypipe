@@ -19,7 +19,7 @@ class InputNode:
     name is used.
     """
 
-    def __init__(self, node: Node, parent_node: Node = None):
+    def __init__(self, node: "Node", parent_node: "Node" = None):
         self.node = node
         self._selected_columns = None
         self._alias = None
@@ -45,6 +45,8 @@ class InputNode:
         ----------
         run_context : RunContext
             The run context containing node results
+        node_graph : NodeGraph
+            The node graph containing node metadata and relationships
         root_node : Node
             The root/target node (for CDC filtering and determining dataframe type)
         """

@@ -372,7 +372,7 @@ class Runner:
             target_transformation = self.graph.nodes[target_node_key]["transformation"]
             self._log(f"            {node_name}: Loading node dependencies dataframes")
             dependencies = node_transformation.get_node_inputs(
-                self.run_context, target_transformation
+                self.run_context, self.node_graph, target_transformation
             )
 
             # Call the transformation function

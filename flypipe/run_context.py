@@ -41,7 +41,6 @@ class RunContext:
     dependencies_preprocess_modes: Union[dict, PreprocessMode] = None
     debug: bool = False
     node_results: Mapping[str, NodeResult] = field(init=False, default=None)
-    cache_context_dependency_map = None
 
     def copy(self):
         return RunContext(
@@ -73,7 +72,6 @@ class RunContext:
             node.key: NodeResult(self.spark, df, schema=None)
             for node, df in self.provided_inputs.items()
         }
-        self.cache_context_dependency_map = self.cache_context_dependency_map or {}
 
     def update_node_results(
         self,
@@ -112,22 +110,3 @@ class RunContext:
 
         # By default, it is active
         return PreprocessMode.ACTIVE
-
-    def set_cache_context_dependency_map(self, cache_context_dependency_map):
-        self.cache_context_dependency_map = cache_context_dependency_map
-
-    def get_cache_context(self, node):
-        """
-        Get the cache context for a dependency node.
-
-        Parameters
-        ----------
-        node : Node
-            The node requesting
-
-        Returns
-        -------
-        CacheContext or None
-            The cache context for the dependency node, or None if no cache
-        """
-        return self.cache_context_dependency_map.get(node, None)
