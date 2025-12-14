@@ -1,12 +1,16 @@
 import logging
 from datetime import datetime
-from typing import List
+from typing import List, TYPE_CHECKING
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from flypipe.cache import CacheMode, CDCCache
+from flypipe.node_run_context import NodeRunContext
 from flypipe.run_status import RunStatus
 from flypipe.run_context import RunContext
 from flypipe.utils import log
+
+if TYPE_CHECKING:
+    from flypipe.node import Node
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +44,7 @@ class Runner:
         if self.run_context.debug:
             log(logger, message)
 
-    def create_execution_plan(self, target_node) -> List[List[str]]:
+    def create_execution_plan(self, target_node: "Node") -> List[List[str]]:
         """
         Create a logical execution plan with levels.
 
@@ -121,7 +125,7 @@ class Runner:
         self._log("🗂️  Execution Plan:")
         for level_idx, level in enumerate(levels):
             node_names = [
-                self.node_graph.get_transformation(nk).__name__ for nk in level
+                self.node_graph.get_transformation(node_key).__name__ for node_key in level
             ]
             self._log(
                 f"  Level {level_idx} (parallelism: {self.run_context.max_workers}):"
@@ -131,7 +135,7 @@ class Runner:
 
         return levels
 
-    def run(self, target_node, process_merge: bool = True):
+    def run(self, target_node: "Node", process_merge: bool = True):
         """
         Execute the graph starting from the target node using parallel execution.
 
@@ -158,13 +162,12 @@ class Runner:
         self._ensure_cdc_tables_exist()
 
         # Execute level by level
-        target_node_key = target_node.key
 
         for level_idx, level in enumerate(execution_plan):
             self._log(f"\n📊 Executing Level {level_idx} ({len(level)} nodes)")
             self._log(f"{'-'*60}")
 
-            self._execute_level(level, target_node_key, process_merge, max_workers)
+            self._execute_level(level, target_node, process_merge, max_workers)
 
         self._log("\n✅  Runner: Execution completed 👍")
         self._log(f"{'='*60}")
@@ -186,7 +189,7 @@ class Runner:
     def _execute_level(
         self,
         level: List[str],
-        target_node_key: str,
+        target_node: "Node",
         process_merge: bool,
         max_workers: int,
     ):
@@ -211,9 +214,9 @@ class Runner:
             execution_mode = "single node" if len(level) == 1 else "sequential"
             self._log(f"  🔹 Executing {len(level)} node(s) ({execution_mode})")
             for node_key in level:
-                node_name = self.node_graph.get_transformation(node_key).__name__
-                self._log(f"    ▶️  Executing {node_name}")
-                self._process_single_node(node_key, target_node_key, process_merge)
+                node = self.node_graph.get_transformation(node_key)
+                self._log(f"    ▶️  Executing {node.__name__}")
+                self._process_single_node(node, target_node, process_merge)
         else:
             # Multiple nodes, execute in parallel
             self._log(
@@ -226,12 +229,12 @@ class Runner:
                 # Submit all nodes in this level
                 future_to_node = {}
                 for node_key in level:
-                    node_name = self.node_graph.get_transformation(node_key).__name__
-                    self._log(f"    ⏺️  Submitting {node_name} to executor")
+                    node = self.node_graph.get_transformation(node_key)
+                    self._log(f"    ⏺️  Submitting {node.__name__} to executor")
                     future = executor.submit(
                         self._process_single_node,
-                        node_key,
-                        target_node_key,
+                        node,
+                        target_node,
                         process_merge,
                     )
                     future_to_node[future] = node_key
@@ -249,10 +252,10 @@ class Runner:
 
     def _execute_transformation(
         self,
-        node_transformation,
         spark,
+        node_transformation: "Node",
         requested_columns: list,
-        node_run_context,
+        node_run_context: NodeRunContext,
         **inputs,
     ):
         """
@@ -297,7 +300,7 @@ class Runner:
         return result
 
     def _process_single_node(
-        self, node_key: str, target_node_key: str, process_merge: bool = True
+        self, node: "Node", target_node: "Node", process_merge: bool = True
     ):
         """
         Process a single node (non-recursive).
@@ -314,11 +317,11 @@ class Runner:
         """
 
         # Get node metadata from graph
-        node_data = self.node_graph.get_node(node_key)
+        node_data = self.node_graph.get_node(node)
         node_transformation = node_data["transformation"]
         status = node_data["status"]
         cache_context = node_data["node_run_context"].cache_context
-        node_name = node_transformation.__name__
+        node_name = node.__name__
 
         result = None
         datetime_start_process_transformation = datetime.now()
@@ -329,11 +332,11 @@ class Runner:
             self._log(f"     📥 {node_name}: Loading from provided input")
             return
 
-        elif status == RunStatus.CACHED and target_node_key == node_key:
+        elif status == RunStatus.CACHED and target_node == node:
             # Read from cache
             self._log(f"     💾 {node_name}: Reading from cache")
             result = cache_context.read()
-        elif status == RunStatus.CACHED and target_node_key != node_key:
+        elif status == RunStatus.CACHED and target_node != node:
             # Read from cache
             self._log(f"     💾 {node_name}: Cache will be read in the future by its successors")
             return
@@ -346,7 +349,7 @@ class Runner:
             if (
                 cache_context
                 and cache_context.cache_mode == CacheMode.MERGE
-                and target_node_key != node_key
+                and target_node != node
             ):
                 if process_merge:
                     # The node is marked as cached and requested to be Merged
@@ -354,7 +357,7 @@ class Runner:
                         f"\n\n{'*'*10} Node '{node_name}' MERGE mode - recursively processing as target node {'*'*10}"
                     )
                     self.run(
-                        self.node_graph.get_transformation(node_key),
+                        node_transformation,
                         process_merge=False,
                     )
                     self._log(
@@ -363,17 +366,16 @@ class Runner:
                     return
 
             # Normal ACTIVE node - get dependencies and execute
-            target_transformation = self.node_graph.get_transformation(target_node_key)
             self._log(f"            {node_name}: Loading node dependencies dataframes")
             dependencies = node_transformation.get_node_inputs(
-                self.run_context, self.node_graph, target_transformation
+                self.run_context, self.node_graph, target_node
             )
 
             # Call the transformation function
             self._log(f"         ⚙️  {node_name}: processing transformation")
             result = self._execute_transformation(
-                node_transformation,
                 self.run_context.spark,
+                node_transformation,
                 node_data["output_columns"],
                 node_data["node_run_context"],
                 **dependencies,
@@ -394,12 +396,9 @@ class Runner:
             )
 
             # Write CDC metadata
-            target_transformation = self.node_graph.get_transformation(target_node_key)
-            cached_predecessors = self.node_graph.get_first_cached_predecessors(
-                node_key
-            )
+            cached_predecessors = self.node_graph.get_first_cached_predecessors(node)
             cache_context.write_cdc(
                 cached_predecessors,
-                target_transformation,
+                target_node,
                 datetime_start_process_transformation,
             )

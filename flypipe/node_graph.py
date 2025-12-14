@@ -424,7 +424,7 @@ class NodeGraph:
             if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN]:
                 raise RuntimeError(f"Run status for node {n} is {RunStatus.UNKNOWN}")
 
-    def get_first_cached_predecessors(self, node_key: str) -> List["Node"]:
+    def get_first_cached_predecessors(self, node_or_key: Union[Node, str]) -> List["Node"]:
         """
         Get the first cached predecessors of a node by traversing upstream.
 
@@ -482,7 +482,7 @@ class NodeGraph:
                     traverse_upstream(pred_key)
 
         # Start traversing from the given node
-        traverse_upstream(node_key)
+        traverse_upstream(get_node_key(node_or_key))
 
         return cached_predecessors
 
