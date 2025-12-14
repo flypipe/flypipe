@@ -67,7 +67,7 @@ class InputNode:
         if cache_context and run_status in [RunStatus.CACHED, RunStatus.ACTIVE]:
             log(
                 logger,
-                f"          📦 InputNode.get_value() - reading cached data for {self.node.__name__} with filtering from {self.node.__name__} to {root_node.__name__}",
+                f"          📦 Reading cached data for {self.node.__name__} with filtering from {self.node.__name__} to {root_node.__name__}",
             )
             result = cache_context.read(from_node=self.node, to_node=root_node)
             run_context.update_node_results(self.node, result)

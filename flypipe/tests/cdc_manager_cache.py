@@ -118,7 +118,7 @@ class CDCManagerCache(Cache):
         """
         # Just read the cached data
         logger.debug(
-            f"         📖 CDCManagerCache.read() called for '{self.full_table_name}'"
+            f"              📖 CDCManagerCache.read() called for '{self.full_table_name}'"
         )
         result_df = spark.table(self.full_table_name)
 
@@ -127,7 +127,7 @@ class CDCManagerCache(Cache):
             result_df = self._read_cdc_filter(spark, from_node, to_node, result_df)
         else:
             row_count = result_df.count()
-            logger.debug(f"         📖 Loaded {row_count} rows from Delta table")
+            logger.debug(f"               📖 Loaded {row_count} rows from Delta table")
 
         return result_df
 
@@ -222,15 +222,13 @@ class CDCManagerCache(Cache):
                 f"         💾 Merged {row_count} rows using keys: {self.merge_keys}"
             )
 
-        if (
-            upstream_nodes is not None
-            and to_node is not None
-            and datetime_started_transformation is not None
-        ):
+        if upstream_nodes:
             for upstream_node in upstream_nodes:
                 self._write_cdc_metadata(
                     spark, upstream_node, to_node, datetime_started_transformation
                 )
+        else:
+            logger.debug("         -> No upstream nodes, skipping CDC metadata write")
 
     def exists(self, spark):
         """Check if Delta table exists"""
@@ -263,18 +261,17 @@ class CDCManagerCache(Cache):
         DataFrame
             Filtered Spark dataframe containing only new/changed rows
         """
-        # logger.debug(f"         📊 CDCManagerCache.read_cdc() called: {from_node.__name__} (destination: {to_node.__name__})")
 
         if "cdc_datetime_updated" not in df.columns:
             logger.debug(
-                f"         📊 No CDC datetime updated column found, returning all {df.count()} rows"
+                f"              📊 No CDC datetime updated column found, returning all {df.count()} rows"
             )
             return df
 
         # Check if CDC metadata table exists
         if not spark.catalog.tableExists(self.full_cdc_table_name):
             logger.debug(
-                f"         📊 No CDC metadata table found, returning all {df.count()} rows"
+                f"              📊 No CDC metadata table found, returning all {df.count()} rows"
             )
             return df
 
@@ -288,20 +285,20 @@ class CDCManagerCache(Cache):
 
         if edge_data.count() == 0:
             logger.debug(
-                f"         📊 No CDC history for this edge, returning all {df.count()} rows"
+                f"              📊 No CDC history for this edge, returning all {df.count()} rows"
             )
             return df
 
         last_timestamp = edge_data.agg(
             F.max("cdc_datetime_updated").alias("max_ts")
         ).collect()[0]["max_ts"]
-        logger.debug(f"         📊 Last processed: {last_timestamp}")
+        logger.debug(f"              📊 Last processed: {last_timestamp}")
 
         filtered_df = df.filter(df.cdc_datetime_updated > last_timestamp)
         row_count = filtered_df.count()
         total_count = df.count()
         logger.debug(
-            f"         📊 Filtered to {row_count} new rows (out of {total_count} total)"
+            f"              📊 Filtered to {row_count} new rows (out of {total_count} total)"
         )
         return filtered_df
 
@@ -353,7 +350,7 @@ class CDCManagerCache(Cache):
             The timestamp when processing occurred
         """
         logger.debug(
-            f"         ✍️  Writing CDC: {upstream_node.__name__} -> {to_node.__name__}"
+            f"          ✍️  Writing CDC: {upstream_node.__name__} -> {to_node.__name__}"
         )
         # Create CDC metadata entry
         cdc_entry = {

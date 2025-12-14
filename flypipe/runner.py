@@ -63,7 +63,9 @@ class Runner:
             be executed in parallel
         """
 
-        self._log(f"\n📋 Creating execution plan for target node: {target_node.__name__}")
+        self._log(
+            f"\n📋 Creating execution plan for target node: {target_node.__name__}"
+        )
         self._log(f"{'-'*60}")
 
         target_key = target_node.key
@@ -128,9 +130,12 @@ class Runner:
                 self.node_graph.get_transformation(node_key).__name__
                 for node_key in level
             ]
-            self._log(
-                f"  Level {level_idx} (parallelism: {self.run_context.max_workers}):"
+            parallelism = (
+                "sequential"
+                if self.run_context.max_workers == 1
+                else f"parallelism - {self.run_context.max_workers} workers"
             )
+            self._log(f"  Level {level_idx} ({parallelism}):")
             for node_name in node_names:
                 self._log(f"   └─ {node_name}")
 
@@ -374,7 +379,7 @@ class Runner:
             )
 
             # Call the transformation function
-            self._log(f"          ⚙️ {node_name}: processing transformation")
+            self._log(f"        ⚙️ {node_name}: processing transformation")
             result = self._execute_transformation(
                 self.run_context.spark,
                 node_transformation,

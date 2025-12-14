@@ -74,10 +74,10 @@ class CacheContext:
 
         if from_node is not None and to_node is not None:
             self._log(
-                f"      📊 CacheContext.read() - read and filter data from {from_node.__name__} to {to_node.__name__}"
+                f"           📊 CacheContext.read() - read and filter data from {from_node.__name__} to {to_node.__name__}"
             )
         else:
-            self._log("      🔄 CacheContext.read() - calling cache.read()")
+            self._log("           🔄 CacheContext.read() - calling cache.read()")
 
         if self.spark:
             result = self.cache.read(self.spark, from_node=from_node, to_node=to_node)

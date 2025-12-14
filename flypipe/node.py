@@ -216,8 +216,8 @@ class Node:
             inputs[input_node.get_alias()] = input_node.get_value(
                 run_context, node_graph, target_node or self
             )
-        else:
-            logger.debug(f"          {self.__name__} has no dependencies")
+        if not self.input_nodes:
+            logger.debug(f"                -> {self.__name__} has no dependencies")
         return inputs
 
     def __call__(self, *args):
