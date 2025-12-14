@@ -3,6 +3,7 @@ from typing import Callable, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from flypipe.node import Node
+    from flypipe.node_graph import NodeGraph
 
 from flypipe.dependency import PreprocessMode
 from flypipe.dependency.preprocess import Preprocess
@@ -36,7 +37,7 @@ class InputNode:
     def key(self):
         return self.node.key
 
-    def get_value(self, run_context: RunContext, root_node: Node):
+    def get_value(self, run_context: RunContext, node_graph: NodeGraph, root_node: Node):
         """
         Retrieve the value of this node input which will be passed to the parent node.
 
@@ -60,7 +61,7 @@ class InputNode:
                 f"raise this as a bug in https://github.com/flypipe/flypipe"
             )
 
-        cache_context = run_context.get_cache_context(self.node)
+        cache_context = node_graph.get_cache_context(self.node)
 
         # In cases that dataframe is provided as input, there might not be any CacheContext created
         # and we need to check if the cache context has cache.

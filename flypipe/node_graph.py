@@ -1,10 +1,13 @@
-from typing import Dict, List
+from typing import List, overload, TYPE_CHECKING
 
 import networkx as nx
 from networkx import DiGraph
 
 from flypipe.cache.cache_context import CacheContext
-from flypipe.node import Node
+
+if TYPE_CHECKING:
+    from flypipe.node import Node
+
 from flypipe.node_function import NodeFunction
 from flypipe.node_run_context import NodeRunContext
 from flypipe.output_column_set import OutputColumnSet
@@ -123,7 +126,7 @@ class NodeGraph:
             if node["transformation"].cache is None:
                 node["node_run_context"].cache_context = None
             else:
-                node["node_run_context"].cache_context = CacheContext(
+                cache_context = CacheContext(
                     spark=run_context.spark,
                     cache_mode=run_context.cache_modes.get(node["transformation"]),
                     cache=node["transformation"].cache,
@@ -131,6 +134,8 @@ class NodeGraph:
                     provided_input=node["transformation"]
                     in run_context.provided_inputs,
                 )
+
+                node["node_run_context"].cache_context = cache_context
 
         return graph
 
@@ -327,7 +332,16 @@ class NodeGraph:
     def get_transformation(self, name: str) -> Node:
         return self.get_node(name)["transformation"]
 
-    def get_cache_context(self, name: str) -> CacheContext:
+    @overload
+    def get_cache_context(self, node_or_name: "Node") -> CacheContext: ...
+
+    @overload
+    def get_cache_context(self, node_or_name: str) -> CacheContext: ...
+
+    def get_cache_context(self, node_or_name):
+        name = node_or_name
+        if hasattr(node_or_name, 'key'):
+            name = node_or_name.key
         return self.get_node(name)["node_run_context"].cache_context
 
     def get_end_node_name(self, graph):
@@ -415,40 +429,6 @@ class NodeGraph:
         for n in self.graph.nodes:
             if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN]:
                 raise RuntimeError(f"Run status for node {n} is {RunStatus.UNKNOWN}")
-
-    def get_cache_context_dependency_map(self) -> Dict[Node, CacheContext]:
-        """
-        Build a map of nodes to their cache contexts.
-
-        This method creates a dictionary mapping each node that has a cache to its cache context.
-        Only nodes with non-disabled caches are included in the map.
-
-        Returns
-        -------
-        Dict[Node, CacheContext]
-            A dictionary where:
-            - Keys are Node objects (transformations) that have caches
-            - Values are their corresponding CacheContext objects
-
-        Example
-        -------
-        If nodes A and C have caches, but B doesn't:
-        {
-            A: CacheContext_A,
-            C: CacheContext_C
-        }
-        """
-        cache_map = {}
-
-        for node_key in self.graph.nodes:
-            transformation = self.get_transformation(node_key)
-            cache_context = self.get_cache_context(node_key)
-
-            # Only include nodes that have a cache
-            if cache_context:
-                cache_map[transformation] = cache_context
-
-        return cache_map
 
     def get_first_cached_predecessors(self, node_key: str) -> List[Node]:
         """
@@ -545,23 +525,6 @@ class NodeGraph:
         max_depth = max(nodes_depth.keys())
 
         return {-1 * k + max_depth + 1: v for k, v in nodes_depth.items()}
-
-    def get_runnable_transformations(self) -> List[Node]:
-        candidate_node_names = [
-            node_name
-            for node_name in self.graph
-            if self.graph.in_degree(node_name) == 0
-        ]
-        runnable_node_names = filter(
-            lambda node_name: self.graph.nodes[node_name]["status"]
-            in [RunStatus.ACTIVE, RunStatus.CACHED],
-            candidate_node_names,
-        )
-        runnable_nodes = [self.get_node(node_name) for node_name in runnable_node_names]
-        return runnable_nodes
-
-    def is_empty(self):
-        return nx.number_of_nodes(self.graph) == 0
 
     def get_execution_graph(self, run_context: RunContext):
         """
