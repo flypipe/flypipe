@@ -167,17 +167,6 @@ class Node(NodeDependenciesMixin):
 
         self.node_graph = NodeGraph(self, run_context=run_context)
 
-    def get_node_inputs(self, run_context: RunContext, node_graph, target_node=None):
-        inputs = {}
-        for input_node in self.input_nodes:
-            # Pass target_node as root_node for CDC filtering (use self as fallback for backwards compatibility)
-            inputs[input_node.get_alias()] = input_node.get_value(
-                run_context, node_graph, target_node or self
-            )
-        if not self.input_nodes:
-            logger.debug(f"           └─ {self.__name__} has no predecessors")
-        return inputs
-
     def __call__(self, *args):
         return self.function(*args)
 

@@ -10,7 +10,7 @@ import {
     Alert,
 } from "react-bootstrap";
 import { useReactFlow } from "reactflow";
-import { deleteEdge } from "../util";
+import { isStaticDependency } from "../util";
 import { DeleteEdge } from "./delete/delete";
 
 export const EditEdge = ({ edge, onClose }) => {
@@ -26,6 +26,7 @@ export const EditEdge = ({ edge, onClose }) => {
         () => [graph.getNode(edge.source), graph.getNode(edge.target)],
         [graph, edge]
     );
+    const predecessorIsStatic = isStaticDependency(sourceNode, targetNode);
     const [formError, setFormError] = useState("");
 
     useEffect(() => {
@@ -45,6 +46,7 @@ export const EditEdge = ({ edge, onClose }) => {
         let availableColumns = null;
         let requestedColumns = null;
         let isAvailableColumnsUnknown = null;
+
 
         if (sourceNode.data.output.length > 0) {
             availableColumns = sourceNode.data.output.map(
@@ -78,7 +80,6 @@ export const EditEdge = ({ edge, onClose }) => {
             ).sort();
             isAvailableColumnsUnknown = true;
         }
-
         if (targetNode.data.predecessorColumns[sourceNode.id]) {
             requestedColumns =
                 targetNode.data.predecessorColumns[sourceNode.id];
@@ -173,7 +174,6 @@ export const EditEdge = ({ edge, onClose }) => {
         graph.setNodes([...otherNodes, targetNode]);
         onClose();
     }, [edge, data, graph, onClose]);
-
     return (
         <Offcanvas
             show
@@ -189,7 +189,7 @@ export const EditEdge = ({ edge, onClose }) => {
                 </Offcanvas.Title>
             </Offcanvas.Header>
             <Offcanvas.Body>
-                <h6>Source: {sourceNode.data.label}</h6>
+                <h6>Source: {sourceNode.data.label} {predecessorIsStatic ? "(static)": ""}</h6>
                 <h6>Target: {targetNode.data.label}</h6>
                 <h6>Requested Columns</h6>
                 <Form>

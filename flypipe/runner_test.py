@@ -1938,6 +1938,134 @@ class TestRunner:
         print("✅ TEST COMPLETE: Manual cache merge validated successfully!")
         print("=" * 80 + "\n")
 
+    def test_cdc14_static_node_no_filtering(self, spark, mocker, max_workers):
+        """
+        Test that static nodes skip CDC filtering when reading from cache.
+
+        Graph structure: B (cached MERGE, marked as static) -> A
+
+        This test demonstrates:
+        1. First run with B having CacheMode.MERGE (produces 1 row with id=1)
+        2. Manually add more data to B's cache (add row with id=2)
+        3. Second run where A depends on B.static()
+        4. Verify A's output has 2 rows (all data from B, no CDC filtering)
+        5. Verify that _read_cdc_filter was never called (static skips CDC)
+        """
+
+        # Create CDC cache for node B using Delta table in test schema
+        cache_b = CDCManagerCache(
+            schema=self.test_schema,
+            table="node_b",
+            cdc_table="cdc_test_static",
+            merge_keys=["id"],
+        )
+
+        @node(type="pyspark", cache=cache_b)
+        def B():
+            """Cached source node that generates 1 row"""
+            data = [(1, 10)]
+            return spark.createDataFrame(data, ["id", "value"])
+
+        @node(type="pyspark", dependencies=[B.static()])
+        def A(B):
+            """Node A depends on B as static (no CDC filtering)"""
+            return B.withColumn("score", F.col("value") * 2)
+
+        # Spy on _read_cdc_filter to verify it's never called
+        spy_read_cdc_filter = mocker.spy(cache_b, "_read_cdc_filter")
+
+        # ===== First Run: B produces 1 row with MERGE mode =====
+        print("\n" + "=" * 80)
+        print("🚀 RUN 1: Execute A with B in MERGE mode (B produces 1 row)")
+        print("=" * 80 + "\n")
+
+        result1 = A.run(
+            spark,
+            cache={B: CacheMode.MERGE},
+            max_workers=max_workers,
+            debug=True,
+        )
+
+        print("Result from Run 1 (should have 1 row):")
+        result1.orderBy("id").show(truncate=False)
+
+        # Assert first run has 1 row
+        assert result1.count() == 1, f"Expected 1 row in Run 1, got {result1.count()}"
+
+        # Verify _read_cdc_filter was NOT called (static node)
+        assert (
+            spy_read_cdc_filter.call_count == 0
+        ), f"Expected _read_cdc_filter NOT to be called in Run 1, but was called {spy_read_cdc_filter.call_count} times"
+
+        print("✅ Run 1 complete: 1 row processed, _read_cdc_filter NOT called (static)")
+
+        # ===== Manually add more data to B's cache =====
+        print("\n" + "=" * 80)
+        print("🔧 MANUAL UPDATE: Adding 1 more row to B's cache")
+        print("=" * 80 + "\n")
+
+        from datetime import datetime
+
+        additional_row = spark.createDataFrame(
+            [(2, 20, datetime.now())],
+            ["id", "value", "cdc_datetime_updated"],
+        )
+
+        # Append to B's cache
+        additional_row.write.format("delta").mode("append").save(cache_b.table_path)
+
+        print("✅ Added row: id=2, value=20 to B's cache")
+        print("\nB's cache table contents (after manual addition):")
+        cache_b.read(spark).orderBy("id").show(truncate=False)
+
+        # Verify B's cache now has 2 rows
+        cache_b_contents = cache_b.read(spark)
+        assert (
+            cache_b_contents.count() == 2
+        ), f"Expected 2 rows in B's cache, got {cache_b_contents.count()}"
+
+        # Reset spy counter
+        spy_read_cdc_filter.reset_mock()
+
+        # ===== Second Run: A should get ALL data from B (no CDC filtering) =====
+        print("\n" + "=" * 80)
+        print("🚀 RUN 2: Execute A again (should get ALL 2 rows from static B)")
+        print("=" * 80 + "\n")
+
+        result2 = A.run(
+            spark,
+            max_workers=max_workers,
+            debug=True,
+        )
+
+        print("Result from Run 2 (should have 2 rows - no CDC filtering):")
+        result2.orderBy("id").show(truncate=False)
+
+        # Assert second run has 2 rows (all data from B, because it's static)
+        assert result2.count() == 2, f"Expected 2 rows in Run 2, got {result2.count()}"
+
+        # Verify _read_cdc_filter was NOT called (static node)
+        assert (
+            spy_read_cdc_filter.call_count == 0
+        ), f"Expected _read_cdc_filter NOT to be called in Run 2, but was called {spy_read_cdc_filter.call_count} times"
+
+        # Verify the actual data
+        expected_result = spark.createDataFrame(
+            [(1, 10, 20), (2, 20, 40)],
+            ["id", "value", "score"],
+        )
+
+        print("\nExpected result (2 rows):")
+        expected_result.orderBy("id").show(truncate=False)
+
+        assert_pyspark_df_equal(
+            result2.drop("cdc_datetime_updated").orderBy("id"), expected_result.orderBy("id")
+        )
+
+        print("\n" + "=" * 80)
+        print("✅ TEST COMPLETE: Static node skipped CDC filtering in both runs!")
+        print("=" * 80 + "\n")
+
 
 class TestRunnerExecutionPlan:
     """Tests for Runner.create_execution_plan() method"""

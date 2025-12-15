@@ -21,7 +21,8 @@ class InputNode:
     an input into another node:
     - selected_columns that the receiving node is using.
     - aliasing of the name of the dataframe passed to the receiving node, otherwise a sanitised version of the node
-    name is used.
+      name is used.
+    - static marking to indicate reference data that doesn't require CDC filtering.
     """
 
     def __init__(self, node: "Node", parent_node: "Node" = None):
@@ -30,6 +31,7 @@ class InputNode:
         self._alias = None
         self._preprocess = Preprocess()
         self._parent_node = parent_node
+        self._static = False
 
     def set_parent_node(self, parent_node):
         self._parent_node = parent_node
@@ -147,6 +149,37 @@ class InputNode:
         self._alias = value
         return self
 
+    def set_static(self):
+        """
+        Mark this InputNode as static.
+        
+        When marked as static, CDC (Change Data Capture) filtering will NOT be
+        applied after reading from cache. Static nodes are assumed to contain
+        reference data that doesn't change across runs.
+        
+        Returns
+        -------
+        InputNode
+            Self for method chaining
+        """
+        self._static = True
+        return self
+
+    @property
+    def static(self):
+        """
+        Check if this InputNode is marked as static.
+        
+        Static nodes skip CDC filtering when reading from cache, as they are
+        assumed to contain reference data that doesn't change.
+        
+        Returns
+        -------
+        bool
+            True if static (no CDC filtering), False otherwise
+        """
+        return self._static
+
     def get_alias(self):
         if self._alias:
             return self._alias
@@ -161,4 +194,5 @@ class InputNode:
         input_node_copy._selected_columns = self._selected_columns
         input_node_copy._alias = self._alias
         input_node_copy._preprocess = self._preprocess.copy()
+        input_node_copy._static = self._static
         return input_node_copy

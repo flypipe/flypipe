@@ -1,7 +1,13 @@
-from typing import List, Union, Callable
+import logging
+from typing import List, Union, Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from flypipe.run_context import RunContext
 
 from flypipe.dependency.node_input import InputNode
 from flypipe.dependency.preprocess_mode import PreprocessMode
+
+logger = logging.getLogger(__name__)
 
 
 class NodeDependenciesMixin:
@@ -114,4 +120,51 @@ class NodeDependenciesMixin:
             InputNode with alias applied
         """
         return InputNode(self).alias(value)
+
+    def static(self):
+        """
+        Mark this node as static, meaning its result won't change across runs.
+        
+        Static nodes are cached and reused without re-execution. When a node is
+        marked as static, CDC (Change Data Capture) filtering will NOT be applied
+        after reading from cache, as static nodes are assumed to contain reference
+        data that doesn't change.
+        
+        This is useful for nodes that load reference data (lookup tables, configuration)
+        or perform expensive computations that don't need to be recalculated every time.
+        
+        Returns
+        -------
+        InputNode
+            InputNode marked as static
+        """
+        return InputNode(self).set_static()
+
+    def get_node_inputs(self, run_context: "RunContext", node_graph, target_node=None):
+        """
+        Get the input values for this node from its dependencies.
+        
+        Parameters
+        ----------
+        run_context : RunContext
+            The runtime context containing node results and configuration
+        node_graph : NodeGraph
+            The execution graph containing node metadata
+        target_node : Node, optional
+            The target node for CDC filtering (defaults to self)
+            
+        Returns
+        -------
+        dict
+            Dictionary mapping input aliases to their computed values
+        """
+        inputs = {}
+        for input_node in self.input_nodes:
+            # Pass target_node as root_node for CDC filtering (use self as fallback for backwards compatibility)
+            inputs[input_node.get_alias()] = input_node.get_value(
+                run_context, node_graph, target_node or self
+            )
+        if not self.input_nodes:
+            logger.debug(f"           └─ {self.__name__} has no predecessors")
+        return inputs
 
