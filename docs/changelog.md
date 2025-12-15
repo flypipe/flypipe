@@ -2,8 +2,16 @@ Changelog
 =========
 
 
-<h2><a href="https://github.com/flypipe/flypipe/tree/release/4.4.0" target="_blank" rel="noopener noreferrer">release/4.4.0</a></h2>
+<h2><a href="https://github.com/flypipe/flypipe/tree/release/5.0.0" target="_blank" rel="noopener noreferrer">release/5.0.0</a></h2>
 
+
+<h3>Breaking Changes</h3>
+
+- **Removed `parallel` argument from `node.run()`**: Use `max_workers` parameter instead to control parallel execution. Set `max_workers=1` for sequential execution or `max_workers=N` for parallel execution with N workers. You can also set `FLYPIPE_NODE_RUN_MAX_WORKERS` environment variable to configure this globally (defaults to `1`).
+
+- **Removed `FLYPIPE_DEFAULT_RUN_MODE` config**: This config previously defined parallel or sequential execution mode. Now use `FLYPIPE_NODE_RUN_MAX_WORKERS` instead to control parallelism. Set it to `1` for sequential execution or `N` for parallel execution with N workers. This can be set globally via environment variable or passed directly to `node.run()` as the `max_workers` parameter.
+
+<h3>Commits</h3>
 * <a href="https://github.com/flypipe/flypipe/issues/209" target="_blank" rel="noopener noreferrer">209 🚀 Feature Request: Implement CDC Cache in Flypipe</a>
 
 <h2><a href="https://github.com/flypipe/flypipe/tree/release/4.3.6" target="_blank" rel="noopener noreferrer">release/4.3.6</a></h2>
