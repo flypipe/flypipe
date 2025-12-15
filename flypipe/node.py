@@ -313,23 +313,6 @@ class Node(NodeDependenciesMixin):
     def dataframe_type(self):
         return self.DATAFRAME_TYPE_MAP[self.type]
 
-    # @classmethod
-    # def _get_consolidated_output_schema(cls, output_schema, output_columns):
-    #     """
-    #     The output schema for a transformation is currently optional. If not provided, we create a simple one from the
-    #     set of columns selected by descendant nodes.
-    #     """
-    #     if output_schema:
-    #         schema = output_schema
-    #     elif output_columns is not None:
-    #         columns = []
-    #         for output_column in output_columns:
-    #             columns.append(Column(output_column, Unknown(), ""))
-    #         schema = Schema(columns)
-    #     else:
-    #         schema = None
-    #     return schema
-
     def html(
         self,
         spark=None,
