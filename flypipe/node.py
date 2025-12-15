@@ -9,6 +9,7 @@ from flypipe.cache.cache import Cache
 from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.config import get_config
 from flypipe.dependency.node_input import InputNode
+from flypipe.node_dependencies_mixin import NodeDependenciesMixin
 from flypipe.node_type import NodeType
 from flypipe.run_context import RunContext
 from flypipe.schema import Schema, Column
@@ -19,7 +20,7 @@ from flypipe.runner import Runner
 logger = logging.getLogger(__name__)
 
 
-class Node:
+class Node(NodeDependenciesMixin):
     """
     Central model for Flypipe. Should be used indirectly through the `node` decorator rather than directly referencing
     it.
@@ -105,40 +106,6 @@ class Node:
         schema.reset(relationships=True, pk=True)
         return schema
 
-    def _get_input_nodes(self, dependencies):
-        input_nodes = []
-        input_node_keys = set()
-        input_node_alias = set()
-        if dependencies is None:
-            dependencies = []
-        for dependency in dependencies:
-            if dependency.key in input_node_keys:
-                raise ValueError(
-                    f"Illegal operation- node {self.__name__} is using the same node {dependency.__name__} more than "
-                    f"once"
-                )
-
-            if isinstance(dependency, Node):
-                input_node = InputNode(dependency, parent_node=self)
-                input_nodes.append(input_node)
-            elif isinstance(dependency, InputNode):
-                input_node = dependency
-                input_node.set_parent_node(self)
-                input_nodes.append(input_node)
-            else:
-                raise ValueError(
-                    f"Expected all dependencies of node {self.__name__} to be of format node/node.alias(...)/node."
-                    f"select(...) but received {dependency} of type {type(dependency)}"
-                )
-
-            if input_node.get_alias() in input_node_alias:
-                raise ValueError(
-                    f"Illegal operation- node {self.__name__} has multiple nodes with the same name/alias"
-                )
-            input_node_keys.add(input_node.key)
-            input_node_alias.add(input_node.get_alias())
-        return input_nodes
-
     @property
     def __name__(self):
         if hasattr(self, "name") and self.name:
@@ -199,15 +166,6 @@ class Node:
         from flypipe.node_graph import NodeGraph
 
         self.node_graph = NodeGraph(self, run_context=run_context)
-
-    def preprocess(self, *arg: Union[PreprocessMode, Callable]) -> InputNode:
-        return InputNode(self).set_preprocess(*arg)
-
-    def select(self, *columns):
-        return InputNode(self).select(*columns)
-
-    def alias(self, value):
-        return InputNode(self).alias(value)
 
     def get_node_inputs(self, run_context: RunContext, node_graph, target_node=None):
         inputs = {}
@@ -355,22 +313,22 @@ class Node:
     def dataframe_type(self):
         return self.DATAFRAME_TYPE_MAP[self.type]
 
-    @classmethod
-    def _get_consolidated_output_schema(cls, output_schema, output_columns):
-        """
-        The output schema for a transformation is currently optional. If not provided, we create a simple one from the
-        set of columns selected by descendant nodes.
-        """
-        if output_schema:
-            schema = output_schema
-        elif output_columns is not None:
-            columns = []
-            for output_column in output_columns:
-                columns.append(Column(output_column, Unknown(), ""))
-            schema = Schema(columns)
-        else:
-            schema = None
-        return schema
+    # @classmethod
+    # def _get_consolidated_output_schema(cls, output_schema, output_columns):
+    #     """
+    #     The output schema for a transformation is currently optional. If not provided, we create a simple one from the
+    #     set of columns selected by descendant nodes.
+    #     """
+    #     if output_schema:
+    #         schema = output_schema
+    #     elif output_columns is not None:
+    #         columns = []
+    #         for output_column in output_columns:
+    #             columns.append(Column(output_column, Unknown(), ""))
+    #         schema = Schema(columns)
+    #     else:
+    #         schema = None
+    #     return schema
 
     def html(
         self,
