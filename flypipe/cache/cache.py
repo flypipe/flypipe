@@ -1,4 +1,10 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from flypipe.node import Node
+
 from flypipe.utils import get_logger
 
 logger = get_logger()
@@ -19,7 +25,7 @@ class Cache(ABC):
         self.parent = parent
 
     @abstractmethod
-    def read(self, from_node=None, to_node=None, *args, **kwargs):
+    def read(self, from_node: "Node" = None, to_node: "Node" = None, *args, **kwargs):
         """
         Read data from cache with optional CDC filtering.
 
@@ -44,9 +50,9 @@ class Cache(ABC):
         self,
         *args,
         df,
-        upstream_nodes=None,
-        to_node=None,
-        datetime_started_transformation=None,
+        upstream_nodes: List["Node"] = None,
+        to_node: "Node" = None,
+        datetime_started_transformation: datetime = None,
         **kwargs,
     ):
         """
