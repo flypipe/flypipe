@@ -133,8 +133,6 @@ class NodeGraph:
                     cache_mode=run_context.cache_modes.get(node["transformation"]),
                     cache=node["transformation"].cache,
                     debug=run_context.debug,
-                    provided_input=node["transformation"]
-                    in run_context.provided_inputs,
                 )
 
                 node["node_run_context"].cache_context = cache_context
@@ -473,7 +471,6 @@ class NodeGraph:
 
             # Get all direct predecessors
             predecessors = list(self.graph.predecessors(current_key))
-
             for pred_key in predecessors:
                 # Check if this predecessor has a cache
                 cache_context = self.get_cache_context(pred_key)

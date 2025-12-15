@@ -373,6 +373,7 @@ class TestRunner:
             parameters={B: {"number_records": 3}},
             cache={B: CacheMode.MERGE, A: CacheMode.MERGE},
             max_workers=max_workers,
+            debug=True,
         )
 
         # Assert first run results

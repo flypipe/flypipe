@@ -13,17 +13,11 @@ class CacheContext:
         cache_mode: CacheMode = None,
         spark: SparkSession = None,
         cache: Cache = None,
-        provided_input: bool = False,
         debug: bool = False,
     ):
         self.spark = spark
         self.cache = cache
-        self.provided_input = provided_input
-        self.cache_mode = (
-            CacheMode.DISABLE
-            if self.cache is None or self.provided_input
-            else cache_mode
-        )
+        self.cache_mode = CacheMode.DISABLE if self.cache is None else cache_mode
         self.debug = debug
         self._exists_cache_to_load = (
             None  # can not be True or False as both means exist or not exist

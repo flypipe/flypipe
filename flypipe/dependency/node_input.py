@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import Callable, Union, TYPE_CHECKING
-import logging
 
 from flypipe.run_status import RunStatus
 
@@ -11,9 +10,9 @@ if TYPE_CHECKING:
 from flypipe.dependency import PreprocessMode
 from flypipe.dependency.preprocess import Preprocess
 from flypipe.run_context import RunContext
-from flypipe.utils import log
+from flypipe.utils import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 class InputNode:
@@ -59,23 +58,38 @@ class InputNode:
             The root/target node (for CDC filtering and determining dataframe type)
         """
 
+        logger.debug(f"           └─ {self.node.__name__}: Loading input")
+
         # Get node metadata from graph
         cache_context = node_graph.get_cache_context(self.node)
         run_status = node_graph.get_run_status(self.node)
 
         # Acceptable status Cached, as it is cached and Active, as it is a Cached node with CacheMode.MERGE
-        if cache_context and run_status in [RunStatus.CACHED, RunStatus.ACTIVE]:
-            log(
-                logger,
-                f"          📦 Reading cached data for {self.node.__name__} with filtering from {self.node.__name__} to {root_node.__name__}",
+        if run_context.has_provided_input(self.node):
+            logger.debug(
+                f"              📦 Collecting provided input for {self.node.__name__}",
+            )
+            result = run_context.node_results[self.node][self.node].as_type(
+                self._parent_node.dataframe_type
+            )
+            run_context.update_node_results_with_provided_input(
+                self.node, root_node, result.get_df()
+            )
+
+        elif cache_context and run_status in [
+            RunStatus.CACHED,
+            RunStatus.ACTIVE,  # RunStatus.ACTIVE means it is a Cached node with CacheMode.MERGE
+        ]:
+            logger.debug(
+                f"              📦 Reading cached data for {self.node.__name__} with filtering from {self.node.__name__} to {root_node.__name__}",
             )
             result = cache_context.read(from_node=self.node, to_node=root_node)
-            run_context.update_node_results(self.node, result)
+            run_context.update_node_results(self.node, root_node, result)
 
         try:
             # We can assume that the computation of the raw node this node input comes from is already done and stored
             # in the run context because it's an ancestor node in the run graph.
-            node_input_value = run_context.node_results[self.node].as_type(
+            node_input_value = run_context.node_results[self.node][root_node].as_type(
                 self._parent_node.dataframe_type
             )
         except KeyError:

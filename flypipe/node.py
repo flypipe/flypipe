@@ -217,7 +217,7 @@ class Node:
                 run_context, node_graph, target_node or self
             )
         if not self.input_nodes:
-            logger.debug(f"                -> {self.__name__} has no dependencies")
+            logger.debug(f"           └─ {self.__name__} has no predecessors")
         return inputs
 
     def __call__(self, *args):
@@ -349,9 +349,7 @@ class Node:
 
         end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
         end_node = self.node_graph.get_transformation(end_node_name)
-        return (
-            run_context.node_results[end_node].as_type(end_node.dataframe_type).get_df()
-        )
+        return run_context.get_graph_result(end_node)
 
     @property
     def dataframe_type(self):

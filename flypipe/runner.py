@@ -389,16 +389,17 @@ class Runner:
             )
 
         # Store result in run_context (for all statuses except SKIP)
-        self._log(f"     ✓ {node_name}: Storing result in run_context")
-
-        self.run_context.update_node_results(node_transformation, result)
+        self._log(
+            f"     ✓ {node_name}: Storing result in run_context from {node_transformation.__name__} to {target_node.__name__} (target node)"
+        )
+        self.run_context.update_node_results(node_transformation, target_node, result)
 
         # Write cache if needed
         if cache_context and status == RunStatus.ACTIVE:
             self._log(f"     💾 {node_name}: Writing to cache")
             cached_predecessors = self.node_graph.get_first_cached_predecessors(node)
             cache_context.write(
-                df=self.run_context.node_results[node_transformation]
+                df=self.run_context.node_results[node_transformation][target_node]
                 .as_type(node_transformation.dataframe_type)
                 .get_df(),
                 upstream_nodes=cached_predecessors,

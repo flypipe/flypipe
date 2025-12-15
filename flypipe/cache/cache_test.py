@@ -110,7 +110,6 @@ class TestCache:
         spy_writter.reset_mock()
         spy_reader.reset_mock()
         spy_exists.reset_mock()
-        print("Running t1 again")
         t1.run()
         assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
@@ -795,3 +794,75 @@ class TestCache:
         assert spy_writter_t2.call_count == 0
         assert spy_reader_t2.call_count == 1
         assert spy_exists_t2.call_count == 1
+
+    def test_diamond_graph_cached_source_and_target(self, mocker):
+        """
+        t0 (cached) -> t1 -> t3 (cached)
+                    \\      /
+                     t2 --/
+
+        On first run:
+        - t0 should write=1, read=0 (doesn't exist, so runs and writes)
+        - t3 should write=1, read=0 (runs and writes to cache)
+
+        """
+
+        class GenericCache1(Cache):
+            def __init__(self):
+                self.cache_csv = f"{str(uuid4())}.csv"
+
+            def read(self, from_node=None, to_node=None):
+                return pd.read_csv(self.cache_csv)
+
+            def write(
+                self,
+                df,
+                upstream_nodes=None,
+                to_node=None,
+                datetime_started_transformation=None,
+            ):
+                df.to_csv(self.cache_csv, index=False)
+
+            def exists(self):
+                return os.path.exists(self.cache_csv)
+
+        cache_t0 = GenericCache1()
+        cache_t3 = GenericCache1()
+
+        @node(
+            type="pandas",
+            cache=cache_t0,
+        )
+        def t0():
+            return pd.DataFrame(data={"col1": [1], "col2": [2]})
+
+        @node(type="pandas", dependencies=[t0])
+        def t1(t0):
+            return t0
+
+        @node(type="pandas", dependencies=[t0])
+        def t2(t0):
+            return t0
+
+        @node(type="pandas", cache=cache_t3, dependencies=[t1, t2])
+        def t3(t1, t2):
+            return t1
+
+        spy_writter_t0 = mocker.spy(cache_t0, "write")
+        spy_reader_t0 = mocker.spy(cache_t0, "read")
+        spy_exists_t0 = mocker.spy(cache_t0, "exists")
+
+        spy_writter_t3 = mocker.spy(cache_t3, "write")
+        spy_reader_t3 = mocker.spy(cache_t3, "read")
+        spy_exists_t3 = mocker.spy(cache_t3, "exists")
+
+        # First run - both caches don't exist
+        t3.run(debug=True)
+
+        assert spy_writter_t0.call_count == 1
+        assert spy_reader_t0.call_count == 2
+        assert spy_exists_t0.call_count == 1
+
+        assert spy_writter_t3.call_count == 1
+        assert spy_reader_t3.call_count == 0
+        assert spy_exists_t3.call_count == 1
