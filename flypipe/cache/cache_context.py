@@ -2,9 +2,9 @@ import logging
 from pyspark.sql import SparkSession
 
 from flypipe.cache import CacheMode, Cache
-from flypipe.utils import log
+from flypipe.utils import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 class CacheContext:
@@ -68,11 +68,11 @@ class CacheContext:
 
         if from_node is not None and to_node is not None:
             static_marker = "static " if is_static else ""
-            self._log(
+            logger.debug(
                 f"              📦 CacheContext.read() - {static_marker}read and filter data from {from_node.__name__} to {to_node.__name__}"
             )
         else:
-            self._log("              📦 CacheContext.read() - calling cache.read()")
+            logger.debug("              📦 CacheContext.read() - calling cache.read()")
 
         if self.spark:
             result = self.cache.read(
@@ -95,13 +95,13 @@ class CacheContext:
             # CDC metadata write (with upstream_nodes, to_node, datetime_started_transformation)
 
             if to_node is not None:
-                self._log(
+                logger.debug(
                     f"      📝 CacheContext.write() - writing CDC metadata for {to_node.__name__}"
                 )
 
             if upstream_nodes:
                 upstream_names = [n.__name__ for n in upstream_nodes]
-                self._log(
+                logger.debug(
                     f"         └─ upstream nodes: {', '.join(upstream_names) if upstream_names else 'none'}"
                 )
 
@@ -122,7 +122,7 @@ class CacheContext:
                     datetime_started_transformation=datetime_started_transformation,
                 )
         else:
-            self._log("      ⏭️  CacheContext.write() - skipped (cache disabled)")
+            logger.debug("      ⏭️  CacheContext.write() - skipped (cache disabled)")
             return None
 
     def exists(self):

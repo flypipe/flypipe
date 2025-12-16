@@ -115,72 +115,71 @@ def log(logger, message):
         else:
             logger.debug(message)
 
+class ColoredFormatter(logging.Formatter):
+    """Custom formatter with colors and emojis for different log levels."""
 
-def get_logger() -> logging.Logger:
-    return logging.getLogger("Flypipe")
+    RED = "\033[91m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    RESET = "\033[0m"
 
+    EMOJIS = {
+        logging.INFO: "ℹ️",
+        logging.WARNING: "⚠️",
+        logging.ERROR: "🔴",
+        logging.CRITICAL: "🚨",
+    }
 
-def config_logging(debug: bool = False):
-    log_level = logging.WARNING
-    if debug:
-        log_level = logging.DEBUG
+    def format(self, record: logging.LogRecord) -> str:
+        emoji = self.EMOJIS.get(record.levelno, "")
+        timestamp = self.formatTime(record, "%Y-%m-%d %H:%M:%S")
+        name = record.name
 
-    class ColoredFormatter(logging.Formatter):
-        """Custom formatter with colors and emojis for different log levels"""
+        lines = record.getMessage().split("\n")
+        formatted_lines: list[str] = []
 
-        # ANSI color codes
-        RED = "\033[91m"
-        YELLOW = "\033[93m"
-        BLUE = "\033[94m"
-        RESET = "\033[0m"
+        for line in lines:
 
-        # Emojis for each level
-        EMOJIS = {"INFO": "ℹ️", "WARNING": "⚠️", "ERROR": "🔴", "CRITICAL": "🚨"}
+            messages = ["" if msg == "\n" else msg for msg in line.split("\n")]
+            for message in messages:
 
-        def format(self, record):
-            # Get emoji for the level
-            emoji = self.EMOJIS.get(record.levelname, "")
+                prefix = f"[{name}:{timestamp}] {message}"
 
-            # Get the message and split by newlines
-            message_text = record.getMessage()
-            lines = message_text.split("\n")
-
-            # Format each line with the appropriate prefix
-            formatted_lines = []
-            for line in lines:
-                # Add color based on log level
                 if record.levelno >= logging.ERROR:
-                    # Red for ERROR and CRITICAL
-                    formatted_line = f"{self.RED}{emoji} [%(name)s:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}{self.RESET}"
+                    msg = f"{self.RED}{emoji} {prefix}{self.RESET}"
                 elif record.levelno >= logging.WARNING:
-                    # Yellow for WARNING
-                    formatted_line = f"{self.YELLOW}{emoji} [%(name)s:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}{self.RESET}"
+                    msg = f"{self.YELLOW}{emoji} {prefix}{self.RESET}"
                 elif record.levelno >= logging.INFO:
-                    # Blue for INFO
-                    emoji_str = "" if not emoji else f"{emoji} "
-                    formatted_line = f"{self.BLUE}{emoji_str}[%(name)s:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}{self.RESET}"
+                    emoji_str = f"{emoji} " if emoji else ""
+                    msg = f"{self.BLUE}{emoji_str}{prefix}{self.RESET}"
                 else:
-                    # No color for DEBUG
-                    formatted_line = (
-                        ("" if not emoji else f"{emoji} ")
-                        + f"[%(name)s:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}"
-                    )
-                formatted_lines.append(formatted_line)
+                    emoji_str = f"{emoji} " if emoji else ""
+                    msg = f"{emoji_str}{prefix}"
 
-            return "\n".join(formatted_lines)
+                formatted_lines.append(msg)
 
-    # Configure only the Flypipe logger namespace (not the root logger)
-    # This prevents interfering with other libraries like Spark/py4j
-    flypipe_logger = get_logger()
-    flypipe_logger.setLevel(log_level)
+        return "\n".join(formatted_lines)
 
-    # Remove any existing handlers to avoid duplicates
-    flypipe_logger.handlers.clear()
+def get_logger(
+    logger_name: str = "Flypipe",
+    log_level: int = logging.DEBUG,
+) -> logging.Logger:
+    """
+    Get a named logger, configuring it lazily on first use.
 
-    # Add our custom handler
-    handler = logging.StreamHandler()
-    handler.setFormatter(ColoredFormatter())
-    flypipe_logger.addHandler(handler)
+    `log_level` must be a logging level (e.g. logging.DEBUG).
+    """
+    logger = logging.getLogger(logger_name)
 
-    # Prevent propagation to root logger to avoid duplicate messages
-    flypipe_logger.propagate = False
+    # Configure only once per logger name
+    if not logger.handlers:
+        logger.setLevel(log_level)
+
+        handler = logging.StreamHandler(stream=sys.stderr)
+        handler.setLevel(log_level)
+        handler.setFormatter(ColoredFormatter())
+
+        logger.addHandler(handler)
+        logger.propagate = False
+
+    return logger

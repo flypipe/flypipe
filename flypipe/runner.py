@@ -7,12 +7,12 @@ from flypipe.cache import CacheMode
 from flypipe.node_run_context import NodeRunContext
 from flypipe.run_status import RunStatus
 from flypipe.run_context import RunContext
-from flypipe.utils import log
+from flypipe.utils import get_logger
 
 if TYPE_CHECKING:
     from flypipe.node import Node
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 class Runner:
@@ -39,11 +39,6 @@ class Runner:
         self.node_graph = node_graph
         self.run_context = run_context
 
-    def _log(self, message: str):
-        """Log a message using logger.debug if debug mode is enabled, otherwise print."""
-        if self.run_context.debug:
-            log(logger, message)
-
     def create_execution_plan(self, target_node: "Node") -> List[List[str]]:
         """
         Create a logical execution plan with levels.
@@ -63,10 +58,10 @@ class Runner:
             be executed in parallel
         """
 
-        self._log(
+        logger.debug(
             f"\n📋 Creating execution plan for target node: {target_node.__name__}"
         )
-        self._log(f"{'-'*60}")
+        logger.debug(f"{'-'*60}")
 
         target_key = target_node.key
 
@@ -124,7 +119,7 @@ class Runner:
                 remaining_nodes.remove(node_key)
 
         # Print the execution plan
-        self._log("🗂️  Execution Plan:")
+        logger.debug("🗂️  Execution Plan:")
         for level_idx, level in enumerate(levels):
             node_names = [
                 self.node_graph.get_transformation(node_key).__name__
@@ -135,9 +130,9 @@ class Runner:
                 if self.run_context.max_workers == 1
                 else f"parallelism - {self.run_context.max_workers} workers"
             )
-            self._log(f"  Level {level_idx} ({parallelism}):")
+            logger.debug(f"  Level {level_idx} ({parallelism}):")
             for node_name in node_names:
-                self._log(f"   └─ {node_name}")
+                logger.debug(f"   └─ {node_name}")
 
         return levels
 
@@ -155,11 +150,11 @@ class Runner:
         # Get max_workers from run_context
         max_workers = self.run_context.max_workers
 
-        self._log(f"{'='*60}")
-        self._log(
+        logger.debug(f"{'='*60}")
+        logger.debug(
             f"🚀 Runner: Starting execution for target node: {target_node.__name__} (max_workers={max_workers})"
         )
-        self._log(f"{'='*60}\n")
+        logger.debug(f"{'='*60}\n")
 
         # Ensure CDC tables exist before execution to avoid concurrent creation conflicts
         self._ensure_cdc_tables_exist()
@@ -169,13 +164,13 @@ class Runner:
 
         # Execute level by level
         for level_idx, level in enumerate(execution_plan):
-            self._log(f"\n📊 Executing Level {level_idx} ({len(level)} nodes)")
-            self._log(f"{'-'*60}")
+            logger.debug(f"\n📊 Executing Level {level_idx} ({len(level)} nodes)")
+            logger.debug(f"{'-'*60}")
 
             self._execute_level(level, target_node, process_merge, max_workers)
 
-        self._log("\n✅  Runner: Execution completed 👍")
-        self._log(f"{'='*60}")
+        logger.debug("\n✅  Runner: Execution completed 👍")
+        logger.debug(f"{'='*60}")
 
     def _ensure_cdc_tables_exist(self):
         """
@@ -187,7 +182,7 @@ class Runner:
         for node_key in self.node_graph.graph.nodes:
             cache_context = self.node_graph.get_cache_context(node_key)
             if cache_context and cache_context.cache:
-                self._log("🔧 Config - Ensuring CDC tables exist")
+                logger.debug("🔧 Config - Ensuring CDC tables exist")
                 cache_context.create_cdc_table()
                 break
 
@@ -216,14 +211,14 @@ class Runner:
         if len(level) == 1 or max_workers == 1:
             # Single node or sequential execution, execute directly without thread pool
             execution_mode = "single node" if len(level) == 1 else "sequential"
-            self._log(f"  🔹 Executing {len(level)} node(s) ({execution_mode})")
+            logger.debug(f"  🔹 Executing {len(level)} node(s) ({execution_mode})")
             for node_key in level:
                 node = self.node_graph.get_transformation(node_key)
-                self._log(f"    ▶️ Executing {node.__name__}")
+                logger.debug(f"    ▶️ Executing {node.__name__}")
                 self._process_single_node(node, target_node, process_merge)
         else:
             # Multiple nodes, execute in parallel
-            self._log(
+            logger.debug(
                 f"  🔸 Executing {len(level)} nodes in parallel (max_workers={max_workers})"
             )
 
@@ -234,7 +229,7 @@ class Runner:
                 future_to_node = {}
                 for node_key in level:
                     node = self.node_graph.get_transformation(node_key)
-                    self._log(f"    ⏺️ Submitting {node.__name__} to executor")
+                    logger.debug(f"    ⏺️ Submitting {node.__name__} to executor")
                     future = executor.submit(
                         self._process_single_node,
                         node,
@@ -249,9 +244,9 @@ class Runner:
                     node_name = self.node_graph.get_transformation(node_key).__name__
                     try:
                         future.result()
-                        self._log(f"    ✅ {node_name} completed successfully")
+                        logger.debug(f"    ✅ {node_name} completed successfully")
                     except Exception as e:
-                        self._log(f"    ❌ {node_name} failed with error: {e}")
+                        logger.debug(f"    ❌ {node_name} failed with error: {e}")
                         raise
 
     def _execute_transformation(
@@ -333,24 +328,24 @@ class Runner:
         # Handle different node statuses
         if status == RunStatus.PROVIDED_INPUT:
             # Get from provided inputs
-            self._log(f"     📥 {node_name}: Loading from provided input")
+            logger.debug(f"     📥 {node_name}: Loading from provided input")
             return
 
         elif status == RunStatus.CACHED and target_node == node:
             # Read from cache
-            self._log(f"     💾 {node_name}: Reading from cache")
+            logger.debug(f"     💾 {node_name}: Reading from cache")
             result = cache_context.read()
 
         elif status == RunStatus.CACHED and target_node != node:
             # Read from cache
-            self._log(
+            logger.debug(
                 f"     💾 {node_name}: Cache will be read in the future by its successors"
             )
             return
 
         elif status == RunStatus.ACTIVE:
             # Execute transformation
-            self._log(f"     ▶️ {node_name}: Running transformation")
+            logger.debug(f"     ▶️ {node_name}: Running transformation")
 
             # Check for MERGE mode
             if (
@@ -360,26 +355,26 @@ class Runner:
             ):
                 if process_merge:
                     # The node is marked as cached and requested to be Merged
-                    self._log(
+                    logger.debug(
                         f"\n\n{'*'*10} Node '{node_name}' MERGE mode - recursively processing as target node {'*'*10}"
                     )
                     self.run(
                         node_transformation,
                         process_merge=False,
                     )
-                    self._log(
+                    logger.debug(
                         f"{'*'*26} Finished Node '{node_name}' MERGE mode {'*'*26}\n"
                     )
                     return
 
             # Normal ACTIVE node - get dependencies and execute
-            self._log(f"        🏗️ {node_name}: Loading node dependencies dataframes")
+            logger.debug(f"        🏗️ {node_name}: Loading node dependencies dataframes")
             dependencies = node_transformation.get_node_inputs(
                 self.run_context, self.node_graph, target_node
             )
 
             # Call the transformation function
-            self._log(f"        ⚙️ {node_name}: processing transformation")
+            logger.debug(f"        ⚙️ {node_name}: processing transformation")
             result = self._execute_transformation(
                 self.run_context.spark,
                 node_transformation,
@@ -389,14 +384,14 @@ class Runner:
             )
 
         # Store result in run_context (for all statuses except SKIP)
-        self._log(
+        logger.debug(
             f"     ✓ {node_name}: Storing result in run_context from {node_transformation.__name__} to {target_node.__name__} (target node)"
         )
         self.run_context.update_node_results(node_transformation, target_node, result)
 
         # Write cache if needed
         if cache_context and status == RunStatus.ACTIVE:
-            self._log(f"     💾 {node_name}: Writing to cache")
+            logger.debug(f"     💾 {node_name}: Writing to cache")
             cached_predecessors = self.node_graph.get_first_cached_predecessors(node)
             cache_context.write(
                 df=self.run_context.node_results[node_transformation][target_node]
