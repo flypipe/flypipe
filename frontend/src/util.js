@@ -158,7 +158,7 @@ const getEdgeDef = (graph, source, target, linkedEdge = null) => {
     const targetNode = graph.getNode(linkedEdge ? linkedEdge.target : target);
     const sourceNode = graph.getNode(linkedEdge ? linkedEdge.source : source);
     const predecessorIsStatic = isStaticDependency(sourceNode, targetNode);
-
+    const predecessorEdgeColor = "#ff0073";
     return {
         id: `${source}-${target}`,
         isNew: targetNode.data.isNew || false,
@@ -169,13 +169,13 @@ const getEdgeDef = (graph, source, target, linkedEdge = null) => {
             type: MarkerType.ArrowClosed,
             width: 15,
             height: 15,
+            ...(predecessorIsStatic && { color: predecessorEdgeColor }),
         },
-        ...(predecessorIsStatic && { label: "static", animated: true }),
-        predecessorIsStatic: predecessorIsStatic,
+        ...(predecessorIsStatic && {label: "static",style: { stroke: predecessorEdgeColor },}),
         ...(targetNode.data.isActive || {
             style: {
                 strokeDasharray: "5,5",
-
+                ...(predecessorIsStatic && { stroke: predecessorEdgeColor })
             },
         }),
     };
