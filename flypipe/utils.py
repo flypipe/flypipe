@@ -117,7 +117,7 @@ def log(logger, message):
 
 
 def get_logger() -> logging.Logger:
-    return logging.getLogger("flypipe")
+    return logging.getLogger("Flypipe")
 
 
 def config_logging(debug: bool = False):
@@ -151,19 +151,19 @@ def config_logging(debug: bool = False):
                 # Add color based on log level
                 if record.levelno >= logging.ERROR:
                     # Red for ERROR and CRITICAL
-                    formatted_line = f"{self.RED}{emoji} [Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}{self.RESET}"
+                    formatted_line = f"{self.RED}{emoji} [%(name)s:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}{self.RESET}"
                 elif record.levelno >= logging.WARNING:
                     # Yellow for WARNING
-                    formatted_line = f"{self.YELLOW}{emoji} [Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}{self.RESET}"
+                    formatted_line = f"{self.YELLOW}{emoji} [%(name)s:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}{self.RESET}"
                 elif record.levelno >= logging.INFO:
                     # Blue for INFO
                     emoji_str = "" if not emoji else f"{emoji} "
-                    formatted_line = f"{self.BLUE}{emoji_str}[Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}{self.RESET}"
+                    formatted_line = f"{self.BLUE}{emoji_str}[%(name)s:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}{self.RESET}"
                 else:
                     # No color for DEBUG
                     formatted_line = (
                         ("" if not emoji else f"{emoji} ")
-                        + f"[Flypipe:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}"
+                        + f"[%(name)s:{self.formatTime(record, '%Y-%m-%d %H:%M:%S')}] {line}"
                     )
                 formatted_lines.append(formatted_line)
 
