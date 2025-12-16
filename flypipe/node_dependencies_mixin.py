@@ -1,5 +1,5 @@
 import logging
-from typing import List, Union, Callable, TYPE_CHECKING
+from typing import Union, Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from flypipe.run_context import RunContext
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class NodeDependenciesMixin:
     """
     Mixin class that provides dependency management methods for Node.
-    
+
     This class handles input nodes, preprocessing, column selection, and aliasing
     for node dependencies.
     """
@@ -21,17 +21,17 @@ class NodeDependenciesMixin:
     def _get_input_nodes(self, dependencies):
         """
         Process and validate dependencies, converting them to InputNode objects.
-        
+
         Parameters
         ----------
         dependencies : List
             List of node dependencies (either Node or InputNode objects)
-            
+
         Returns
         -------
         List[InputNode]
             List of validated InputNode objects
-            
+
         Raises
         ------
         ValueError
@@ -51,7 +51,7 @@ class NodeDependenciesMixin:
 
             # Import Node here to avoid circular import
             from flypipe.node import Node
-            
+
             if isinstance(dependency, Node):
                 input_node = InputNode(dependency, parent_node=self)
                 input_nodes.append(input_node)
@@ -76,12 +76,12 @@ class NodeDependenciesMixin:
     def preprocess(self, *arg: Union[PreprocessMode, Callable]) -> InputNode:
         """
         Create an InputNode with preprocessing configuration.
-        
+
         Parameters
         ----------
         *arg : Union[PreprocessMode, Callable]
             Preprocessing mode or custom preprocessing function
-            
+
         Returns
         -------
         InputNode
@@ -92,12 +92,12 @@ class NodeDependenciesMixin:
     def select(self, *columns):
         """
         Create an InputNode with column selection.
-        
+
         Parameters
         ----------
         *columns : str
             Column names to select from this node
-            
+
         Returns
         -------
         InputNode
@@ -108,12 +108,12 @@ class NodeDependenciesMixin:
     def alias(self, value):
         """
         Create an InputNode with an alias.
-        
+
         Parameters
         ----------
         value : str
             Alias name for the node
-            
+
         Returns
         -------
         InputNode
@@ -124,15 +124,15 @@ class NodeDependenciesMixin:
     def static(self):
         """
         Mark this node as static, meaning its result won't change across runs.
-        
+
         Static nodes are cached and reused without re-execution. When a node is
         marked as static, CDC (Change Data Capture) filtering will NOT be applied
         after reading from cache, as static nodes are assumed to contain reference
         data that doesn't change.
-        
+
         This is useful for nodes that load reference data (lookup tables, configuration)
         or perform expensive computations that don't need to be recalculated every time.
-        
+
         Returns
         -------
         InputNode
@@ -143,7 +143,7 @@ class NodeDependenciesMixin:
     def get_node_inputs(self, run_context: "RunContext", node_graph, target_node=None):
         """
         Get the input values for this node from its dependencies.
-        
+
         Parameters
         ----------
         run_context : RunContext
@@ -152,7 +152,7 @@ class NodeDependenciesMixin:
             The execution graph containing node metadata
         target_node : Node, optional
             The target node for CDC filtering (defaults to self)
-            
+
         Returns
         -------
         dict
@@ -167,4 +167,3 @@ class NodeDependenciesMixin:
         if not self.input_nodes:
             logger.debug(f"           └─ {self.__name__} has no predecessors")
         return inputs
-

@@ -20,7 +20,7 @@ class GenericCache(Cache):
         self.cache_name = str(uuid4()).replace("-", "_")
         self.cache_csv = f"{self.cache_name}.csv"
 
-    def read(self, from_node=None, to_node=None):
+    def read(self, from_node=None, to_node=None, is_static=False):
         return pd.read_csv(self.cache_csv)
 
     def write(
@@ -117,7 +117,7 @@ class TestCache:
 
     def test_cache_spark_provided(self, spark, mocker):
         class GenericCache2(GenericCache):
-            def read(self, spark, from_node=None, to_node=None):
+            def read(self, spark, from_node=None, to_node=None, is_static=False):
                 return spark.read.table(self.cache_name)
 
             def write(
@@ -435,7 +435,7 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            def read(self, from_node=None, to_node=None):
+            def read(self, from_node=None, to_node=None, is_static=False):
                 return pd.read_csv(self.cache_csv)
 
             def write(
@@ -601,7 +601,7 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            def read(self, from_node=None, to_node=None):
+            def read(self, from_node=None, to_node=None, is_static=False):
                 return pd.read_csv(self.cache_csv)
 
             def write(
@@ -620,7 +620,7 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            def read(self, from_node=None, to_node=None):
+            def read(self, from_node=None, to_node=None, is_static=False):
                 return pd.read_csv(self.cache_csv)
 
             def write(
@@ -694,7 +694,7 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            def read(self, from_node=None, to_node=None):
+            def read(self, from_node=None, to_node=None, is_static=False):
                 return pd.read_csv(self.cache_csv)
 
             def write(
@@ -713,7 +713,7 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            def read(self, from_node=None, to_node=None):
+            def read(self, from_node=None, to_node=None, is_static=False):
                 return pd.read_csv(self.cache_csv)
 
             def write(
@@ -811,7 +811,7 @@ class TestCache:
             def __init__(self):
                 self.cache_csv = f"{str(uuid4())}.csv"
 
-            def read(self, from_node=None, to_node=None):
+            def read(self, from_node=None, to_node=None, is_static=False):
                 return pd.read_csv(self.cache_csv)
 
             def write(

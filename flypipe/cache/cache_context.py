@@ -62,21 +62,26 @@ class CacheContext:
         else:
             self.cache.create_cdc_table()
 
-    def read(self, from_node=None, to_node=None):
+    def read(self, from_node=None, to_node=None, is_static=False):
         if self.disabled:
             raise RuntimeError("Cache disabled, cannot read")
 
         if from_node is not None and to_node is not None:
+            static_marker = " (static)" if is_static else ""
             self._log(
-                f"           📊 CacheContext.read() - read and filter data from {from_node.__name__} to {to_node.__name__}"
+                f"           📊 CacheContext.read() - read and filter data from {from_node.__name__} to {to_node.__name__}{static_marker}"
             )
         else:
             self._log("           🔄 CacheContext.read() - calling cache.read()")
 
         if self.spark:
-            result = self.cache.read(self.spark, from_node=from_node, to_node=to_node)
+            result = self.cache.read(
+                self.spark, from_node=from_node, to_node=to_node, is_static=is_static
+            )
         else:
-            result = self.cache.read(from_node=from_node, to_node=to_node)
+            result = self.cache.read(
+                from_node=from_node, to_node=to_node, is_static=is_static
+            )
         return result
 
     def write(

@@ -98,7 +98,7 @@ class CDCManagerCache(Cache):
 
         self.name = self.full_table_name
 
-    def read(self, spark, from_node=None, to_node=None):
+    def read(self, spark, from_node=None, to_node=None, is_static=False):
         """
         Read cached data from Delta table with optional CDC filtering.
 
@@ -107,9 +107,11 @@ class CDCManagerCache(Cache):
         spark : SparkSession
             Active Spark session
         from_node : Node, optional
-            Source node for CDC filtering (skipped if node is static)
+            Source node for CDC filtering (skipped if is_static is True)
         to_node : Node, optional
             Destination node for CDC filtering
+        is_static : bool, optional
+            If True, skip CDC filtering and load complete cached data (default: False)
 
         Returns
         -------
@@ -122,15 +124,19 @@ class CDCManagerCache(Cache):
         )
         result_df = spark.table(self.full_table_name)
 
-        # If CDC parameters are provided and from_node is not static, do CDC filtering
-        if from_node is not None and to_node is not None and not from_node.static:
+        # If CDC parameters are provided and node is not static, do CDC filtering
+        if from_node is not None and to_node is not None and not is_static:
             result_df = self._read_cdc_filter(spark, from_node, to_node, result_df)
         else:
             row_count = result_df.count()
-            if from_node is not None and from_node.static:
-                logger.debug(f"               📖 Loaded {row_count} rows from Delta table (static node, no CDC filtering)")
+            if is_static:
+                logger.debug(
+                    f"               📖 Loaded {row_count} rows from Delta table (static node, no CDC filtering)"
+                )
             else:
-                logger.debug(f"               📖 Loaded {row_count} rows from Delta table")
+                logger.debug(
+                    f"               📖 Loaded {row_count} rows from Delta table"
+                )
 
         return result_df
 

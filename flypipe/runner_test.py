@@ -816,7 +816,7 @@ class TestRunner:
     def test_cdc6(self, spark, max_workers):
         """
         Test CDC cache with diamond-shaped graph.
-
+    
         Graph structure:
             D (CDC cached MERGE)
            / \
@@ -825,7 +825,7 @@ class TestRunner:
           \    /
            \  /
             A (CDC cached MERGE)
-
+    
         This test demonstrates:
         1. Single run with 3 records - caches data at D and A, C is computed
         2. Validates CDC metadata tables for all nodes
@@ -1083,7 +1083,7 @@ class TestRunner:
     def test_cdc8(self, spark, max_workers):
         """
         Test CDC cache with complex diamond graph.
-
+    
         Graph structure:
                D (CDC cached MERGE)
               /|\
@@ -1093,14 +1093,14 @@ class TestRunner:
             \ / \ /
              \ /
               A
-
+    
         Where:
         - D -> A (D feeds directly to A)
         - D -> B (D feeds to B, B is cached MERGE)
         - D -> C (D feeds to C, C is not cached)
         - B -> A (B also feeds to A)
         - C -> A (C also feeds to A)
-
+    
         This test demonstrates:
         1. Single run with 3 records - caches data at D and B
         2. Validates CDC metadata tables for D and B
@@ -1250,7 +1250,7 @@ class TestRunner:
     def test_cdc9(self, spark, max_workers):
         """
         Test CDC cache where cached nodes (B and C) don't trigger upstream computation.
-
+    
         Graph structure:
                D (CDC cached MERGE) - should NOT run
               / \
@@ -1259,7 +1259,7 @@ class TestRunner:
              \   /
               \ /
                A
-
+    
         This test demonstrates:
         1. Manually create cache tables for B and C before running
         2. D's function raises an exception to ensure it doesn't run
@@ -1997,7 +1997,9 @@ class TestRunner:
             spy_read_cdc_filter.call_count == 0
         ), f"Expected _read_cdc_filter NOT to be called in Run 1, but was called {spy_read_cdc_filter.call_count} times"
 
-        print("✅ Run 1 complete: 1 row processed, _read_cdc_filter NOT called (static)")
+        print(
+            "✅ Run 1 complete: 1 row processed, _read_cdc_filter NOT called (static)"
+        )
 
         # ===== Manually add more data to B's cache =====
         print("\n" + "=" * 80)
@@ -2059,7 +2061,8 @@ class TestRunner:
         expected_result.orderBy("id").show(truncate=False)
 
         assert_pyspark_df_equal(
-            result2.drop("cdc_datetime_updated").orderBy("id"), expected_result.orderBy("id")
+            result2.drop("cdc_datetime_updated").orderBy("id"),
+            expected_result.orderBy("id"),
         )
 
         print("\n" + "=" * 80)

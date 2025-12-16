@@ -85,7 +85,9 @@ class InputNode:
             logger.debug(
                 f"              📦 Reading cached data for {self.node.__name__} with filtering from {self.node.__name__} to {root_node.__name__}",
             )
-            result = cache_context.read(from_node=self.node, to_node=root_node)
+            result = cache_context.read(
+                from_node=self.node, to_node=root_node, is_static=self.static
+            )
             run_context.update_node_results(self.node, root_node, result)
 
         try:
@@ -152,11 +154,11 @@ class InputNode:
     def set_static(self):
         """
         Mark this InputNode as static.
-        
+
         When marked as static, CDC (Change Data Capture) filtering will NOT be
         applied after reading from cache. Static nodes are assumed to contain
         reference data that doesn't change across runs.
-        
+
         Returns
         -------
         InputNode
@@ -169,10 +171,10 @@ class InputNode:
     def static(self):
         """
         Check if this InputNode is marked as static.
-        
+
         Static nodes skip CDC filtering when reading from cache, as they are
         assumed to contain reference data that doesn't change.
-        
+
         Returns
         -------
         bool

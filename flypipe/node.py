@@ -1,7 +1,7 @@
 import logging
 import re
 import sys
-from typing import List, Union, Callable
+from typing import List, Union
 
 from pyspark.sql import SparkSession
 
@@ -12,8 +12,7 @@ from flypipe.dependency.node_input import InputNode
 from flypipe.node_dependencies_mixin import NodeDependenciesMixin
 from flypipe.node_type import NodeType
 from flypipe.run_context import RunContext
-from flypipe.schema import Schema, Column
-from flypipe.schema.types import Unknown
+from flypipe.schema import Schema
 from flypipe.utils import DataFrameType, config_logging
 from flypipe.runner import Runner
 

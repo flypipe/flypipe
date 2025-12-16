@@ -14,7 +14,7 @@ class GenericCache(Cache):
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 
-    def read(self, from_node=None, to_node=None):
+    def read(self, from_node=None, to_node=None, is_static=False):
         return pd.read_csv(self.cache_csv)
 
     def write(
@@ -34,7 +34,7 @@ class GenericCacheSpark(Cache):
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 
-    def read(self, spark, from_node=None, to_node=None):
+    def read(self, spark, from_node=None, to_node=None, is_static=False):
         return pd.read_csv(self.cache_csv)
 
     def write(

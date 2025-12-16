@@ -25,7 +25,14 @@ class Cache(ABC):
         self.parent = parent
 
     @abstractmethod
-    def read(self, from_node: "Node" = None, to_node: "Node" = None, *args, **kwargs):
+    def read(
+        self,
+        from_node: "Node" = None,
+        to_node: "Node" = None,
+        is_static: bool = False,
+        *args,
+        **kwargs,
+    ):
         """
         Read data from cache with optional CDC filtering.
 
@@ -35,6 +42,8 @@ class Cache(ABC):
             Source node for CDC filtering
         to_node : Node, optional
             Destination node for CDC filtering
+        is_static : bool, optional
+            If True, skip CDC filtering and load complete cached data (default: False)
         *args, **kwargs
             Additional cache-specific parameters (e.g., spark session)
 
