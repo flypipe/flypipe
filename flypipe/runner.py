@@ -164,7 +164,7 @@ class Runner:
 
         # Execute level by level
         for level_idx, level in enumerate(execution_plan):
-            logger.debug(f"\n📊 Executing Level {level_idx} ({len(level)} nodes)")
+            logger.debug(f"\n🛠️ Executing Level {level_idx} ({len(level)} nodes)")
             logger.debug(f"{'-'*60}")
 
             self._execute_level(level, target_node, process_merge, max_workers)
