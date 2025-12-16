@@ -67,12 +67,12 @@ class CacheContext:
             raise RuntimeError("Cache disabled, cannot read")
 
         if from_node is not None and to_node is not None:
-            static_marker = " (static)" if is_static else ""
+            static_marker = "static " if is_static else ""
             self._log(
-                f"           📊 CacheContext.read() - read and filter data from {from_node.__name__} to {to_node.__name__}{static_marker}"
+                f"              📦 CacheContext.read() - {static_marker}read and filter data from {from_node.__name__} to {to_node.__name__}"
             )
         else:
-            self._log("           🔄 CacheContext.read() - calling cache.read()")
+            self._log("              📦 CacheContext.read() - calling cache.read()")
 
         if self.spark:
             result = self.cache.read(

@@ -60,7 +60,7 @@ class InputNode:
             The root/target node (for CDC filtering and determining dataframe type)
         """
 
-        logger.debug(f"           └─ {self.node.__name__}: Loading input")
+        logger.debug(f"           ==> Loading input: {self.node.__name__}")
 
         # Get node metadata from graph
         cache_context = node_graph.get_cache_context(self.node)
@@ -82,9 +82,6 @@ class InputNode:
             RunStatus.CACHED,
             RunStatus.ACTIVE,  # RunStatus.ACTIVE means it is a Cached node with CacheMode.MERGE
         ]:
-            logger.debug(
-                f"              📦 Reading cached data for {self.node.__name__} with filtering from {self.node.__name__} to {root_node.__name__}",
-            )
             result = cache_context.read(
                 from_node=self.node, to_node=root_node, is_static=self.static
             )
