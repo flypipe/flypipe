@@ -1,4 +1,3 @@
-import logging
 from typing import Union, Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -6,8 +5,9 @@ if TYPE_CHECKING:
 
 from flypipe.dependency.node_input import InputNode
 from flypipe.dependency.preprocess_mode import PreprocessMode
+from flypipe.utils import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 class NodeDependenciesMixin:

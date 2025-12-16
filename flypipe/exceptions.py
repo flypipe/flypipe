@@ -1,10 +1,11 @@
-import logging
 from typing import Union
 
 import pandas as pd
 from tabulate import tabulate
 
-logger = logging.getLogger(__name__)
+from flypipe.utils import get_logger
+
+logger = get_logger()
 
 
 class DataframeTypeNotSupportedError(Exception):

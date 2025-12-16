@@ -1,4 +1,3 @@
-import logging
 import re
 import sys
 from typing import List, Union
@@ -13,10 +12,10 @@ from flypipe.node_dependencies_mixin import NodeDependenciesMixin
 from flypipe.node_type import NodeType
 from flypipe.run_context import RunContext
 from flypipe.schema import Schema
-from flypipe.utils import DataFrameType
+from flypipe.utils import DataFrameType, get_logger
 from flypipe.runner import Runner
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 class Node(NodeDependenciesMixin):

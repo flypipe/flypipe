@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 
 from flypipe.catalog.group import Group
@@ -8,8 +7,9 @@ from flypipe.config import get_config
 from flypipe.node_function import NodeFunction
 from flypipe.run_context import RunContext
 from flypipe.template import get_template
+from flypipe.utils import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 class Catalog:

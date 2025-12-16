@@ -5,11 +5,6 @@ from enum import Enum
 
 from pandas.testing import assert_frame_equal
 
-from flypipe.exceptions import (
-    DataframeDifferentDataError,
-    DataframeSchemasDoNotMatchError,
-    DataframeTypeNotSupportedError,
-)
 
 import pandas as pd
 import pyspark.sql.dataframe as sql
@@ -45,6 +40,10 @@ class DataFrameType(Enum):
 
 
 def assert_schemas_are_equals(df1, df2) -> None:
+
+    # Avoid Circular Reference
+    from flypipe.exceptions import DataframeSchemasDoNotMatchError
+
     if dataframe_type(df1) == DataFrameType.PANDAS:
         if not df1.dtypes.equals(df2.dtypes):
             raise DataframeSchemasDoNotMatchError(
@@ -61,6 +60,10 @@ def assert_schemas_are_equals(df1, df2) -> None:
 
 
 def assert_dataframes_equals(df1, df2) -> None:
+
+    # Avoide Circular Reference
+    from flypipe.exceptions import DataframeDifferentDataError
+
     df1_type = dataframe_type(df1)
     assert df1_type == dataframe_type(df2), f"Error: df1 {type(df1)} != {type(df2)}"
 
@@ -79,6 +82,9 @@ def assert_dataframes_equals(df1, df2) -> None:
 
 
 def dataframe_type(df) -> DataFrameType:
+    # Avoid Circular Reference
+    from flypipe.exceptions import DataframeTypeNotSupportedError
+
     if isinstance(df, pd.DataFrame):
         return DataFrameType.PANDAS
     if isinstance(df, ps.DataFrame):
@@ -153,26 +159,43 @@ class ColoredFormatter(logging.Formatter):
 
         return "\n".join(formatted_lines)
 
+
 def get_logger(
     logger_name: str = "Flypipe",
     log_level: int = logging.DEBUG,
+    enabled: bool = True,
 ) -> logging.Logger:
     """
     Get a named logger, configuring it lazily on first use.
 
-    `log_level` must be a logging level (e.g. logging.DEBUG).
+    Parameters
+    ----------
+    logger_name : str
+        Name of the logger (default: "Flypipe")
+    log_level : int
+        Logging level (e.g. logging.DEBUG) (default: logging.DEBUG)
+    enabled : bool
+        If False, disable all logging output (default: True)
     """
     logger = logging.getLogger(logger_name)
 
     # Configure only once per logger name
     if not logger.handlers:
-        logger.setLevel(log_level)
+        # If disabled, set level to CRITICAL + 1 to suppress all logs
+        effective_level = log_level if enabled else logging.WARNING
+        logger.setLevel(effective_level)
 
         handler = logging.StreamHandler(stream=sys.stderr)
-        handler.setLevel(log_level)
+        handler.setLevel(effective_level)
         handler.setFormatter(ColoredFormatter())
 
         logger.addHandler(handler)
         logger.propagate = False
+    else:
+        # Update level if logger already exists
+        effective_level = log_level if enabled else logging.WARNING
+        logger.setLevel(effective_level)
+        for handler in logger.handlers:
+            handler.setLevel(effective_level)
 
     return logger

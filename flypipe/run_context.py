@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 from pandas import DataFrame as PandasDataFrame
 
-from flypipe.utils import sparkleframe_is_active
+from flypipe.utils import sparkleframe_is_active, get_logger
 
 if sparkleframe_is_active():
     # if using sparkleframe activate, it will fail because they do not implement pyspark.pandas
@@ -63,6 +63,9 @@ class RunContext:
         )
 
     def __post_init__(self):
+
+        # Configure logger based on debug flag
+        get_logger(enabled=self.debug)
 
         self.max_workers = self.max_workers or int(get_config("node_run_max_workers"))
 

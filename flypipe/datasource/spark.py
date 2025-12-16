@@ -1,10 +1,11 @@
-import logging
 import re
 
 from flypipe.node import node
 from flypipe.node_type import NodeType
 
-logger = logging.getLogger(__name__)
+from flypipe.utils import get_logger
+
+logger = get_logger()
 
 
 def Spark(table):

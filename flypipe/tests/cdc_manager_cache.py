@@ -4,12 +4,13 @@ CDC Manager Cache implementation for production-like scenarios.
 This module provides a Spark Delta table-based CDC cache implementation.
 """
 
-import logging
 import pandas as pd
 from flypipe.cache import Cache
 import pyspark.sql.functions as F
 
-logger = logging.getLogger(__name__)
+from flypipe.utils import get_logger
+
+logger = get_logger()
 
 
 class CDCManagerCache(Cache):

@@ -1,4 +1,3 @@
-import logging
 from pyspark.sql import SparkSession
 
 from flypipe.cache import CacheMode, Cache
@@ -22,11 +21,6 @@ class CacheContext:
         self._exists_cache_to_load = (
             None  # can not be True or False as both means exist or not exist
         )
-
-    def _log(self, message: str):
-        """Log a message using logger.debug if debug mode is enabled, otherwise print."""
-        if self.debug:
-            log(logger, message)
 
     @property
     def disabled(self):
