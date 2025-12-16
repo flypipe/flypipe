@@ -374,7 +374,7 @@ class Runner:
             )
 
             # Call the transformation function
-            logger.debug(f"        ⚙️ {node_name}: processing transformation")
+            logger.debug(f"        ⚙️ {node_name}: all inputs collected, processing transformation")
             result = self._execute_transformation(
                 self.run_context.spark,
                 node_transformation,

@@ -69,10 +69,10 @@ class CacheContext:
         if from_node is not None and to_node is not None:
             static_marker = "static " if is_static else ""
             logger.debug(
-                f"              📦 CacheContext.read() - {static_marker}read and filter data from {from_node.__name__} to {to_node.__name__}"
+                f"              📤 CacheContext.read() - {static_marker}read and filter data from {from_node.__name__} to {to_node.__name__}"
             )
         else:
-            logger.debug("              📦 CacheContext.read() - calling cache.read()")
+            logger.debug("              📤 CacheContext.read() - calling cache.read()")
 
         if self.spark:
             result = self.cache.read(

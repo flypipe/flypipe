@@ -13,7 +13,7 @@ from flypipe.node_dependencies_mixin import NodeDependenciesMixin
 from flypipe.node_type import NodeType
 from flypipe.run_context import RunContext
 from flypipe.schema import Schema
-from flypipe.utils import DataFrameType, config_logging
+from flypipe.utils import DataFrameType
 from flypipe.runner import Runner
 
 logger = logging.getLogger(__name__)
@@ -272,8 +272,6 @@ class Node(NodeDependenciesMixin):
         - The method is thread-safe for parallel execution when max_workers > 1.
         """
         inputs = inputs or {}
-
-        config_logging(debug)
 
         run_context = RunContext(
             spark=spark,

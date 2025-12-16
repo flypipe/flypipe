@@ -1,5 +1,6 @@
 import json
 import logging
+import sys
 from enum import Enum
 
 from pandas.testing import assert_frame_equal
@@ -106,14 +107,6 @@ def get_schema(df, columns=None):
         return df.dtypes
     return df.dtypes[columns]
 
-
-def log(logger, message):
-    messages = message.split("\n")
-    for message in messages:
-        if message == "\n":
-            logger.debug("")
-        else:
-            logger.debug(message)
 
 class ColoredFormatter(logging.Formatter):
     """Custom formatter with colors and emojis for different log levels."""

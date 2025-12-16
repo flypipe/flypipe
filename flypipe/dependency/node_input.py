@@ -60,7 +60,7 @@ class InputNode:
             The root/target node (for CDC filtering and determining dataframe type)
         """
 
-        logger.debug(f"           ==> Loading input: {self.node.__name__}")
+        logger.debug(f"           ➡ Loading input: {self.node.__name__}")
 
         # Get node metadata from graph
         cache_context = node_graph.get_cache_context(self.node)
