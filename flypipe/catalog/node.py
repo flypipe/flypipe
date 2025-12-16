@@ -45,7 +45,7 @@ class CatalogNode:
             "nodeKey": self.node.key,
             "nodeType": self.node.type,
             "name": self.node.__name__,
-            "description": self.node.description,
+            "description": self.node.description[0:100].strip() + "..." if len(self.node.description) > 100 else self.node.description,
             "tags": [{"id": tag, "name": tag} for tag in sorted(list(tags_set))],
             "filePath": self._get_file_path(),
             "importCmd": self._get_import_cmd(),
