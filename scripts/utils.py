@@ -38,7 +38,9 @@ def get_release_branches():
         branch for branch in all_branches if branch.startswith("origin/release/")
     ]
 
-    return sorted(release_branches)
+    release_branches = sorted(release_branches)[-10:]
+
+    return release_branches
 
 def get_commit_list(from_branch=None, to_branch=None):
     to_branch=to_branch or "HEAD"
