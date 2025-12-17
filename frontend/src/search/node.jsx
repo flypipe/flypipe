@@ -6,9 +6,10 @@ import { NodeDetailsContext } from "../node-details/context";
 const Node = ({ node, handleClickGraphBuilder }) => {
     const { nodeKey, name, description, tags } = node;
     const { openNodeDetails } = useContext(NodeDetailsContext);
-    const truncatedDescription = description && description.length > 100 
-        ? description.substring(0, 100) + '...' 
-        : description;
+    const truncatedDescription =
+        description && description.length > 100
+            ? description.substring(0, 100) + "..."
+            : description;
     const graphBuilderButton = useMemo(() => {
         return (
             <button
@@ -56,7 +57,7 @@ const Node = ({ node, handleClickGraphBuilder }) => {
                     {text}
                 </Badge>
             ))}
-            <p style={{ whiteSpace: 'pre-line' }}>{truncatedDescription}</p>
+            <p style={{ whiteSpace: "pre-line" }}>{truncatedDescription}</p>
         </div>
     );
 };

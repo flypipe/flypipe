@@ -151,7 +151,7 @@ const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
 };
 
 const isStaticDependency = (sourceNode, targetNode) => {
-    return targetNode.data.predecessorsStatic.includes(sourceNode.data.nodeKey)
+    return targetNode.data.predecessorsStatic.includes(sourceNode.data.nodeKey);
 };
 
 const getEdgeDef = (graph, source, target, linkedEdge = null) => {
@@ -171,11 +171,14 @@ const getEdgeDef = (graph, source, target, linkedEdge = null) => {
             height: 15,
             ...(predecessorIsStatic && { color: predecessorEdgeColor }),
         },
-        ...(predecessorIsStatic && {label: "static",style: { stroke: predecessorEdgeColor },}),
+        ...(predecessorIsStatic && {
+            label: "static",
+            style: { stroke: predecessorEdgeColor },
+        }),
         ...(targetNode.data.isActive || {
             style: {
                 strokeDasharray: "5,5",
-                ...(predecessorIsStatic && { stroke: predecessorEdgeColor })
+                ...(predecessorIsStatic && { stroke: predecessorEdgeColor }),
             },
         }),
     };
@@ -500,5 +503,5 @@ export {
     deleteNode,
     deleteEdge,
     getNodeTypeColorClass,
-    isStaticDependency
+    isStaticDependency,
 };

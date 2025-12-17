@@ -47,7 +47,6 @@ export const EditEdge = ({ edge, onClose }) => {
         let requestedColumns = null;
         let isAvailableColumnsUnknown = null;
 
-
         if (sourceNode.data.output.length > 0) {
             availableColumns = sourceNode.data.output.map(
                 ({ column }) => column
@@ -189,7 +188,10 @@ export const EditEdge = ({ edge, onClose }) => {
                 </Offcanvas.Title>
             </Offcanvas.Header>
             <Offcanvas.Body>
-                <h6>Source: {sourceNode.data.label} {predecessorIsStatic ? "(static)": ""}</h6>
+                <h6>
+                    Source: {sourceNode.data.label}{" "}
+                    {predecessorIsStatic ? "(static)" : ""}
+                </h6>
                 <h6>Target: {targetNode.data.label}</h6>
                 <h6>Requested Columns</h6>
                 <Form>
