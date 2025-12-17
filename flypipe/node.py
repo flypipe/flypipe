@@ -306,15 +306,18 @@ class Node(NodeDependenciesMixin):
         pandas_on_spark_use_pandas=False,
         parameters=None,
         cache=None,
+        preprocess: Union[dict, PreprocessMode] = None,
+        debug: bool = False,
     ):
         """
         Retrieves html string of the graph to be executed.
 
         Parameters
         ----------
-        width : int, default None
-            viewport width in pixels
-        height : int, default 1000
+        spark : SparkSession, optional
+            The Spark session to use for Spark-based transformations. Required for nodes
+            that work with Spark DataFrames or execute Spark SQL queries (default: None).
+        height : int, default 700
             viewport height in pixels
         inputs : dict, default None
             dictionary where keys are Nodes and values dataframes, these dataframes will skip the nodes executions as
@@ -323,6 +326,23 @@ class Node(NodeDependenciesMixin):
             If True, convert and runs `pandas_on_spark` as `pandas`
         parameters : dict, default None
             dictionary dict(Node,dict(str,obj)) of parameters to be given to the nodes when executing them.
+        cache : dict, optional
+            Dictionary mapping Node objects to their CacheMode. Controls caching behavior
+            for specific nodes in the execution graph. Supported modes:
+            - CacheMode.MERGE: Incremental caching with CDC support
+            - CacheMode.OVERWRITE: Replace existing cache
+            - CacheMode.DISABLE: Skip caching for this run
+            Format: {Node: CacheMode} (default: None).
+        preprocess : Union[dict, PreprocessMode], optional
+            Controls preprocessing of upstream dependencies. Can be:
+            - PreprocessMode enum: Applied to all dependencies globally
+            - dict: Mapping {ParentNode: {DependencyNode: PreprocessMode}} for fine-grained control
+            Preprocessing includes column selection, type conversion, and format alignment
+            (default: None, which means PreprocessMode.ACTIVE).
+        debug : bool, optional
+            When True, enables debug logging in the Runner. Instead of using print statements,
+            the Runner will use logger.debug() for all execution logs, which can be controlled
+            via Python's logging configuration (default: False).
 
         Returns
         -------
