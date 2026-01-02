@@ -21,3 +21,20 @@ def spark(request):
     from flypipe.tests.spark import build_spark
 
     return build_spark()
+
+1
+@pytest.fixture(scope="function", autouse=False)
+def snowflake_session(request):
+    """
+    Fixture for Snowflake Snowpark session.
+    Uses local testing mode for tests.
+    """
+    from snowflake.snowpark import Session
+    
+    # Create local testing session
+    session = Session.builder.config('local_testing', True).create()
+    
+    yield session
+    
+    # Cleanup
+    session.close()
