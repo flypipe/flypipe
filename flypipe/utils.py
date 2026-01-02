@@ -9,6 +9,7 @@ from pandas.testing import assert_frame_equal
 import pandas as pd
 import pyspark.sql.dataframe as sql
 import sparkleframe.polarsdf.dataframe as sparkle_dataframe
+import snowflake.snowpark.dataframe as snowpark_dataframe
 
 
 def sparkleframe_is_active():
@@ -96,6 +97,8 @@ def dataframe_type(df) -> DataFrameType:
         or isinstance(df, sparkle_dataframe.DataFrame)
     ):
         return DataFrameType.PYSPARK
+    if isinstance(df, snowpark_dataframe.DataFrame):
+        return DataFrameType.SNOWPARK
     raise DataframeTypeNotSupportedError(type(df))
 
 

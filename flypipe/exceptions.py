@@ -105,3 +105,8 @@ class DataFrameMissingColumns(Exception):
         logger.error(msg_error)
 
         super().__init__(msg_error)
+
+
+class UnsupportedConversionError(Exception):
+    """Exception raised when a direct conversion between dataframe types is not supported."""
+    pass
