@@ -51,6 +51,33 @@ class GenericCacheSpark(Cache):
         return os.path.exists(self.cache_csv)
 
 
+class GenericCacheSnowflake(Cache):
+    def __init__(self):
+        self.table_name = f"test_cache_{str(uuid4()).replace('-', '_')}"
+
+    def read(self, session, from_node=None, to_node=None, is_static=False):
+        return session.table(self.table_name).to_pandas()
+
+    def write(
+        self,
+        session,
+        df,
+        upstream_nodes=None,
+        to_node=None,
+        datetime_started_transformation=None,
+    ):
+        # Convert pandas DataFrame to Snowpark DataFrame and save as table
+        snowpark_df = session.create_dataframe(df)
+        snowpark_df.write.mode("overwrite").save_as_table(self.table_name)
+
+    def exists(self, session):
+        try:
+            session.table(self.table_name)
+            return session.table(self.table_name).count() > 0
+        except Exception:
+            return False
+
+
 @pytest.fixture(scope="function")
 def node_cache():
     @node(type="pandas", cache=GenericCache())
@@ -117,5 +144,31 @@ class TestCacheContext:
 
     def test_exists_spark_cache_no_session(self):
         cache_context = CacheContext(cache=GenericCacheSpark())
+        with pytest.raises(TypeError):
+            cache_context.exists()
+
+    def test_write_read_snowpark(self, snowflake_session):
+        cache_context = CacheContext(session=snowflake_session, cache=GenericCacheSnowflake())
+        cache_context.write(pd.DataFrame(data={"col1": [1]}))
+        cache_context.read()
+        cache_context.exists()
+
+    def test_write_non_snowpark(self, snowflake_session):
+        cache_context = CacheContext(session=snowflake_session, cache=GenericCache())
+
+        with pytest.raises(TypeError):
+            cache_context.write(pd.DataFrame(data={"col1": [1]}))
+
+    def test_exists_snowpark(self, snowflake_session):
+        cache_context = CacheContext(session=snowflake_session, cache=GenericCacheSnowflake())
+        cache_context.exists()
+
+    def test_exists_no_snowpark_cache(self, snowflake_session):
+        cache_context = CacheContext(session=snowflake_session, cache=GenericCache())
+        with pytest.raises(TypeError):
+            cache_context.exists()
+
+    def test_exists_snowpark_cache_no_session(self):
+        cache_context = CacheContext(cache=GenericCacheSnowflake())
         with pytest.raises(TypeError):
             cache_context.exists()
