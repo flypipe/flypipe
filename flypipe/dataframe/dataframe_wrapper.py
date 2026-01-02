@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Callable, Union
+
+from pyspark.sql import SparkSession
+from snowflake.snowpark.session import Session as SnowflakeSession
 
 from flypipe.schema.types import Type
 from flypipe.utils import dataframe_type, DataFrameType
@@ -14,12 +17,13 @@ class DataFrameWrapper(ABC):
     DF_TYPE = None
     FLYPIPE_TYPE_TO_DF_TYPE_MAP = {}
 
-    def __init__(self, spark, df):
-        self.spark = spark
+    def __init__(self, session: Union[SnowflakeSession, SparkSession], df):
+        self.session = session
+        self.spark = session  # Keep for backward compatibility
         self.df = df
 
     @classmethod
-    def get_instance(cls, spark, df):
+    def get_instance(cls, session: Union[SnowflakeSession, SparkSession], df):
         # We need to do imports of the various df types within the function to avoid circular imports as they in turn
         # import dataframe_wrapper
         df_type = dataframe_type(df)
@@ -44,15 +48,23 @@ class DataFrameWrapper(ABC):
             )
 
             df_instance = PandasOnSparkDataFrameWrapper
+
+        elif df_type == DataFrameType.SNOWPARK:
+            from flypipe.dataframe.snowpark_dataframe_wrapper import (
+                SnowparkDataFrameWrapper,
+            )
+
+            df_instance = SnowparkDataFrameWrapper
+
         else:
             raise ValueError(f"No flypipe dataframe type found for dataframe {df_type}")
-        return df_instance(spark, df)
+        return df_instance(session, df)
 
     def get_df(self):
         return self.df
 
     def clone(self, df):
-        return self.__class__(self.spark, df)
+        return self.__class__(self.session, df)
 
     def select_columns(self, *columns):
         """
@@ -65,7 +77,7 @@ class DataFrameWrapper(ABC):
         """
         if columns and isinstance(columns[0], list):
             columns = columns[0]
-        return self.__class__(self.spark, self._select_columns(columns))
+        return self.__class__(self.session, self._select_columns(columns))
 
     def apply(self, func: Callable):
         """
@@ -74,7 +86,7 @@ class DataFrameWrapper(ABC):
 
         # It needs to use self.get_df() as get_df knows how to copy the dataframe or how to convert it,
         # see PandasDataFrameWrapper.get_df() and PandasOnSparkDataFrameWrapper.get_df()
-        return self.__class__(self.spark, func(self.get_df()))
+        return self.__class__(self.session, func(self.get_df()))
 
     @abstractmethod
     def _select_columns(self, columns):
