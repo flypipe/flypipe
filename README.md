@@ -22,6 +22,31 @@ pip install flypipe
 
 Package published in [PyPI](https://pypi.org/project/flypipe/).
 
+## Supported DataFrames
+
+Flypipe supports multiple DataFrame types, allowing you to seamlessly work with different data processing frameworks:
+
+- **Pandas** - For in-memory data processing
+- **PySpark** - For distributed data processing with Apache Spark
+- **Pandas-on-Spark** - Pandas API on Spark for familiar syntax with distributed computing
+- **Snowpark** - For Snowflake native data processing
+
+You can mix and match these DataFrame types in your pipeline, and Flypipe will automatically handle conversions between compatible types.
+
+### DataFrame Conversion Matrix
+
+Flypipe automatically converts between DataFrame types where possible. Here's the conversion support matrix:
+
+| From \ To | Pandas | PySpark | Pandas-on-Spark | Snowpark |
+|-----------|:------:|:-------:|:---------------:|:--------:|
+| **Pandas** | ✅ | ✅ | ✅ | ✅ |
+| **PySpark** | ✅ | ✅ | ✅ | ❌ |
+| **Pandas-on-Spark** | ✅ | ✅ | ✅ | ❌ |
+| **Snowpark** | ✅ | ❌ | ❌ | ✅ |
+
+✅ = Direct conversion supported  
+❌ = Not supported
+
 ## Example Usage
 
 ```python
@@ -69,9 +94,9 @@ df = t1.run()
 - Create development standards for Data Engineers, Machine Learning Engineers and Data Scientists
 - Improve re-usability of transformations in different pipelines & contexts via composable nodes
 - Faster integration and portability of pipelines to different contexts with different available technology stacks:
-  - Flexibility to use and mix up pyspark/pandas on spark/pandas in transformations seamlessly
+  - Flexibility to use and mix pandas, PySpark, pandas-on-Spark, and Snowpark in transformations seamlessly
   - As a simple wheel package, it's very lightweight and unopinionated about runtime environment. This allows for it to 
-  be easily integrated into Databricks and independently of Databricks. 
+  be easily integrated into Databricks, Snowflake, and other platforms independently. 
 - Low latency for on-demand feature generation and predictions
 - Framework level optimisations and dynamic transformations help to make even complex transformation pipelines low 
 latency. This in turn allows for on-demand feature generation/predictions.
@@ -81,6 +106,7 @@ latency. This in turn allows for on-demand feature generation/predictions.
 <p float="left">
   <img src="docs/images/databricks_logo.png" alt="Databricks" style="height:100px;"/>
   <img src="docs/images/python.png" alt="Python" style="height:80px;"/>
+  <img src="docs/images/snowflake_logo.png" alt="Snowflake" style="height:80px;"/>
 </p>
 
 ## Source Code
