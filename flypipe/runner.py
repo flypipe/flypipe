@@ -282,7 +282,7 @@ class Runner:
         """
         parameters = inputs
         if node_transformation.session_context:
-            parameters["spark"] = session
+            parameters["session"] = session
         if node_transformation.requested_columns:
             parameters["requested_columns"] = requested_columns
 
