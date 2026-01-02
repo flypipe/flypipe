@@ -6,7 +6,6 @@ docutils==0.21.2
 flit==3.12.0
 flit-core==3.12.0
 idna==3.10
-importlib-metadata==8.7.0
 packaging==24.2
 pip-tools==7.4.1
 pyproject-hooks==1.2.0
@@ -15,7 +14,6 @@ tomli==2.2.1
 tomli-w==1.2.0
 urllib3==2.4.0
 wheel==0.45.1
-zipp==3.23.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
