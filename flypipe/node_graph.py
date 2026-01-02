@@ -129,7 +129,7 @@ class NodeGraph:
                 node["node_run_context"].cache_context = None
             else:
                 cache_context = CacheContext(
-                    spark=run_context.spark,
+                    session=run_context.session,
                     cache_mode=run_context.cache_modes.get(node["transformation"]),
                     cache=node["transformation"].cache,
                     debug=run_context.debug,

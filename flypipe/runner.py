@@ -1,6 +1,9 @@
 from datetime import datetime
-from typing import List, TYPE_CHECKING
+from typing import List, Union, TYPE_CHECKING
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+from pyspark.sql import SparkSession
+from snowflake.snowpark.session import Session as SnowflakeSession
 
 from flypipe.cache import CacheMode
 from flypipe.node_run_context import NodeRunContext
@@ -250,7 +253,7 @@ class Runner:
 
     def _execute_transformation(
         self,
-        spark,
+        session: Union[SnowflakeSession, SparkSession],
         node_transformation: "Node",
         requested_columns: list,
         node_run_context: NodeRunContext,
@@ -261,10 +264,10 @@ class Runner:
 
         Parameters
         ----------
+        session : Union[snowflake.snowpark.session.Session, pyspark.sql.SparkSession]
+            The session to use for transformations (Snowflake or Spark)
         node_transformation : Node
             The node to execute
-        spark : SparkSession
-            Spark session
         requested_columns : list
             List of requested output columns
         node_run_context : NodeRunContext
@@ -279,7 +282,7 @@ class Runner:
         """
         parameters = inputs
         if node_transformation.session_context:
-            parameters["spark"] = spark
+            parameters["spark"] = session
         if node_transformation.requested_columns:
             parameters["requested_columns"] = requested_columns
 
@@ -289,11 +292,11 @@ class Runner:
         result = node_transformation.function(**parameters)
         if node_transformation.type == "spark_sql":
             # Spark SQL functions only return the text of a SQL query, we will need to execute this command.
-            if not spark:
+            if not session:
                 raise ValueError(
-                    "Unable to run spark_sql type node without spark being provided in the transformation.run call"
+                    "Unable to run spark_sql type node without session being provided in the transformation.run call"
                 )
-            result = spark.sql(result)
+            result = session.sql(result)
 
         return result
 
@@ -377,7 +380,7 @@ class Runner:
                 f"        ⚙️ {node_name}: all inputs collected, processing transformation"
             )
             result = self._execute_transformation(
-                self.run_context.spark,
+                self.run_context.session,
                 node_transformation,
                 node_data["output_columns"],
                 node_data["node_run_context"],

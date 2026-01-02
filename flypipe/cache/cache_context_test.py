@@ -34,12 +34,12 @@ class GenericCacheSpark(Cache):
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 
-    def read(self, spark, from_node=None, to_node=None, is_static=False):
+    def read(self, session, from_node=None, to_node=None, is_static=False):
         return pd.read_csv(self.cache_csv)
 
     def write(
         self,
-        spark,
+        session,
         df,
         upstream_nodes=None,
         to_node=None,
@@ -47,7 +47,7 @@ class GenericCacheSpark(Cache):
     ):
         df.to_csv(self.cache_csv, index=False)
 
-    def exists(self, spark):
+    def exists(self, session):
         return os.path.exists(self.cache_csv)
 
 
@@ -67,7 +67,7 @@ class TestCacheContext:
         cache_context = CacheContext()
 
         assert cache_context is not None
-        assert cache_context.spark is None
+        assert cache_context.session is None
         assert cache_context.cache is None
         assert cache_context.disabled
 
@@ -86,13 +86,13 @@ class TestCacheContext:
         cache_context.exists()
 
     def test_write_read_spark(self, spark):
-        cache_context = CacheContext(spark=spark, cache=GenericCacheSpark())
+        cache_context = CacheContext(session=spark, cache=GenericCacheSpark())
         cache_context.write(pd.DataFrame(data={"col1": [1]}))
         cache_context.read()
         cache_context.exists()
 
     def test_write_non_spark(self, spark):
-        cache_context = CacheContext(spark=spark, cache=GenericCache())
+        cache_context = CacheContext(session=spark, cache=GenericCache())
 
         with pytest.raises(TypeError):
             cache_context.write(pd.DataFrame(data={"col1": [1]}))
@@ -102,7 +102,7 @@ class TestCacheContext:
         cache_context.exists()
 
     def test_exists_spark(self, spark):
-        cache_context = CacheContext(spark=spark, cache=GenericCacheSpark())
+        cache_context = CacheContext(session=spark, cache=GenericCacheSpark())
         cache_context.exists()
 
     def test_exists_no_cache(self):
@@ -111,7 +111,7 @@ class TestCacheContext:
             cache_context.exists()
 
     def test_exists_no_spark_cache(self, spark):
-        cache_context = CacheContext(spark=spark, cache=GenericCache())
+        cache_context = CacheContext(session=spark, cache=GenericCache())
         with pytest.raises(TypeError):
             cache_context.exists()
 

@@ -117,12 +117,12 @@ class TestCache:
 
     def test_cache_spark_provided(self, spark, mocker):
         class GenericCache2(GenericCache):
-            def read(self, spark, from_node=None, to_node=None, is_static=False):
-                return spark.read.table(self.cache_name)
+            def read(self, session, from_node=None, to_node=None, is_static=False):
+                return session.read.table(self.cache_name)
 
             def write(
                 self,
-                spark,
+                session,
                 *args,
                 df,
                 upstream_nodes=None,
@@ -132,18 +132,18 @@ class TestCache:
             ):
                 df.createOrReplaceTempView(self.cache_name)
 
-            def exists(self, spark):
+            def exists(self, session):
                 try:
-                    spark.read.table(self.cache_name)
-                    return spark.table(self.cache_name).count() > 0
+                    session.read.table(self.cache_name)
+                    return session.table(self.cache_name).count() > 0
                 except Exception:
                     return False
 
         cache = GenericCache2()
 
         @node(type="pyspark", cache=cache, session_context=True)
-        def t1(spark):
-            return spark.createDataFrame(
+        def t1(session):
+            return session.createDataFrame(
                 schema=("c0", "c1"),
                 data=[
                     (

@@ -863,7 +863,7 @@ class TestNode:
             "sql",
             return_value=spark_view.createDataFrame(schema=("number",), data=[(2,)]),
         ) as sql_mock:
-            t2.run(spark=spark_view)
+            t2.run(session=spark_view)
 
         assert sql_mock.call_args[0][0] == "select number+1 from t2__t1"
         assert createOrReplaceTempView_mock.call_args[0][0] == "t2__t1"
@@ -894,7 +894,7 @@ class TestNode:
             "sql",
             return_value=spark_view.createDataFrame(data=[{"number": 2}]),
         ) as sql_mock:
-            t2.run(spark=spark_view)
+            t2.run(session=spark_view)
         assert sql_mock.call_args[0][0] == "select * from t2__t1"
         assert createOrReplaceTempView_mock.call_args[0][0] == "t2__t1"
 

@@ -1,5 +1,9 @@
 import json
 import os
+from typing import Union
+
+from pyspark.sql import SparkSession
+from snowflake.snowpark.session import Session as SnowflakeSession
 
 from flypipe.catalog.group import Group
 from flypipe.catalog.node import CatalogNode
@@ -18,11 +22,11 @@ class Catalog:
     interactive node builder. The nodes in the catalog need to be manually registered before the catalog is rendered.
     """
 
-    def __init__(self, spark=None):
+    def __init__(self, session: Union[SnowflakeSession, SparkSession] = None):
         self.nodes = {}
         self.groups = {}
         self.initial_nodes = []
-        self.spark = spark
+        self.session = session
 
     def register_node(
         self,
@@ -35,7 +39,7 @@ class Catalog:
     ):
 
         run_context = RunContext(
-            spark=self.spark,
+            session=self.session,
             provided_inputs=inputs,
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
             parameters=parameters,

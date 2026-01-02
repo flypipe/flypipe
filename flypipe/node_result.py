@@ -1,3 +1,8 @@
+from typing import Union
+
+from pyspark.sql import SparkSession
+from snowflake.snowpark.session import Session as SnowflakeSession
+
 from flypipe.converter.dataframe import DataFrameConverter
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from flypipe.utils import DataFrameType
@@ -9,13 +14,13 @@ class NodeResult:
     type casting applied.
     """
 
-    def __init__(self, spark, df, schema):
-        self.spark = spark
-        self.df_wrapper = DataFrameWrapper.get_instance(spark, df)
+    def __init__(self, session: Union[SnowflakeSession, SparkSession], df, schema):
+        self.session = session
+        self.df_wrapper = DataFrameWrapper.get_instance(session, df)
         self._apply_schema_to_df(schema)
         # TODO- should we create an instance level cache decorator instead of doing this manually?
         self.cached_conversions = {}
-        self.dataframe_converter = DataFrameConverter(spark)
+        self.dataframe_converter = DataFrameConverter(session)
 
     def _apply_schema_to_df(self, schema):
         """
@@ -47,7 +52,7 @@ class NodeResult:
             # TODO- is this a good idea? We are having to reach into self.df_wrapper to grab the df, this usually is a
             # mark of a design issue
             dataframe = DataFrameWrapper.get_instance(
-                self.spark,
+                self.session,
                 self.dataframe_converter.convert(self.df_wrapper.df, df_type),
             )
         return dataframe

@@ -15,13 +15,13 @@ class MyCache(Cache):
     def name(self):
         return self.cache_name
 
-    def read(self, spark):
+    def read(self, session):
         pass
 
-    def write(self, spark, df):
+    def write(self, session, df):
         pass
 
-    def exists(self, spark=None):
+    def exists(self, session=None):
         pass
 
 
@@ -610,13 +610,13 @@ class TestDBML:
             def name(self):
                 return self.cache_name
 
-            def read(self, spark):
+            def read(self, session):
                 pass
 
-            def write(self, spark, df):
+            def write(self, session, df):
                 pass
 
-            def exists(self, spark=None):
+            def exists(self, session=None):
                 pass
 
         @node(

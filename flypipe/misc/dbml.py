@@ -129,8 +129,8 @@ class Table:
 }}{self.references}"""
 
 
-def get_node_graph(node, spark=None):
-    run_context = RunContext(spark=spark)
+def get_node_graph(node, session=None):
+    run_context = RunContext(session=session)
     node.create_graph(run_context)
     return node.node_graph
 

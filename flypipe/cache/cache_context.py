@@ -1,4 +1,7 @@
+from typing import Union
+
 from pyspark.sql import SparkSession
+from snowflake.snowpark.session import Session as SnowflakeSession
 
 from flypipe.cache import CacheMode, Cache
 from flypipe.utils import get_logger
@@ -10,11 +13,11 @@ class CacheContext:
     def __init__(
         self,
         cache_mode: CacheMode = None,
-        spark: SparkSession = None,
+        session: Union[SnowflakeSession, SparkSession] = None,
         cache: Cache = None,
         debug: bool = False,
     ):
-        self.spark = spark
+        self.session = session
         self.cache = cache
         self.cache_mode = CacheMode.DISABLE if self.cache is None else cache_mode
         self.debug = debug
@@ -51,8 +54,8 @@ class CacheContext:
         This should be called before parallel execution to avoid concurrent
         table creation conflicts.
         """
-        if self.spark:
-            self.cache.create_cdc_table(self.spark)
+        if self.session:
+            self.cache.create_cdc_table(self.session)
         else:
             self.cache.create_cdc_table()
 
@@ -68,9 +71,9 @@ class CacheContext:
         else:
             logger.debug("              📤 CacheContext.read() - calling cache.read()")
 
-        if self.spark:
+        if self.session:
             result = self.cache.read(
-                self.spark, from_node=from_node, to_node=to_node, is_static=is_static
+                self.session, from_node=from_node, to_node=to_node, is_static=is_static
             )
         else:
             result = self.cache.read(
@@ -100,9 +103,9 @@ class CacheContext:
                 )
 
             # Call unified write method with CDC parameters
-            if self.spark:
+            if self.session:
                 self.cache.write(
-                    self.spark,
+                    self.session,
                     df=df,
                     upstream_nodes=upstream_nodes,
                     to_node=to_node,
@@ -123,8 +126,8 @@ class CacheContext:
         if self.disabled:
             raise RuntimeError("Cache disabled, cannot check if exists")
 
-        if self.spark:
-            self._exists_cache_to_load = self.cache.exists(self.spark)
+        if self.session:
+            self._exists_cache_to_load = self.cache.exists(self.session)
         else:
             self._exists_cache_to_load = self.cache.exists()
         return self._exists_cache_to_load

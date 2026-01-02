@@ -2,7 +2,9 @@ import re
 import sys
 from typing import List, Union
 
+from snowflake.snowpark.session import Session as SnowflakeSession
 from pyspark.sql import SparkSession
+
 
 from flypipe.cache.cache import Cache
 from flypipe.dependency.preprocess_mode import PreprocessMode
@@ -24,12 +26,13 @@ class Node(NodeDependenciesMixin):
     it.
     """
 
-    ALLOWED_TYPES = {"pyspark", "pandas", "pandas_on_spark", "spark_sql"}
+    ALLOWED_TYPES = {"pyspark", "pandas", "pandas_on_spark", "spark_sql", "snowpark"}
     DATAFRAME_TYPE_MAP = {
         "pyspark": DataFrameType.PYSPARK,
         "pandas": DataFrameType.PANDAS,
         "pandas_on_spark": DataFrameType.PANDAS_ON_SPARK,
         "spark_sql": DataFrameType.PYSPARK,
+        "snowpark": DataFrameType.SNOWPARK
     }
 
     def __init__(
@@ -170,7 +173,7 @@ class Node(NodeDependenciesMixin):
 
     def run(
         self,
-        spark: SparkSession = None,
+        session: Union[SnowflakeSession, SparkSession] = None,
         max_workers: int = 1,
         inputs: dict = None,
         pandas_on_spark_use_pandas: bool = False,
@@ -188,9 +191,11 @@ class Node(NodeDependenciesMixin):
 
         Parameters
         ----------
-        spark : SparkSession, optional
-            The Spark session to use for Spark-based transformations. Required for nodes
-            that work with Spark DataFrames or execute Spark SQL queries (default: None).
+        session : Union[snowflake.snowpark.session.Session, pyspark.sql.SparkSession], optional
+            The session to use for transformations. Can be either:
+            - Snowflake Snowpark Session for Snowflake-based transformations
+            - PySpark SparkSession for Spark-based transformations
+            Required for nodes that work with distributed DataFrames or execute SQL queries (default: None).
         max_workers : int, optional
             Maximum number of parallel workers for concurrent node execution. If None,
             defaults to 1 (sequential execution). When > 1, independent nodes in the graph
@@ -233,22 +238,22 @@ class Node(NodeDependenciesMixin):
         -------
         DataFrame
             The computed DataFrame from the target node, converted to the node's
-            configured dataframe_type (pandas, PySpark, or pandas-on-Spark).
+            configured dataframe_type (pandas, PySpark, pandas-on-Spark, or Snowpark).
 
         Examples
         --------
         Basic execution:
 
-        >>> result = my_node.run(spark)
+        >>> result = my_node.run(session)
 
         Parallel execution with 4 workers:
 
-        >>> result = my_node.run(spark, max_workers=4)
+        >>> result = my_node.run(session, max_workers=4)
 
         Providing input data and parameters:
 
         >>> result = my_node.run(
-        ...     spark,
+        ...     session,
         ...     inputs={source_node: external_df},
         ...     parameters={transform_node: {"threshold": 0.5}}
         ... )
@@ -256,7 +261,7 @@ class Node(NodeDependenciesMixin):
         Incremental CDC execution:
 
         >>> result = my_node.run(
-        ...     spark,
+        ...     session,
         ...     cache={node_a: CacheMode.MERGE, node_b: CacheMode.MERGE},
         ...     inputs={source_node: new_rows_df}
         ... )
@@ -273,7 +278,7 @@ class Node(NodeDependenciesMixin):
         inputs = inputs or {}
 
         run_context = RunContext(
-            spark=spark,
+            session=session,
             max_workers=max_workers,
             provided_inputs=inputs,
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
@@ -300,10 +305,10 @@ class Node(NodeDependenciesMixin):
 
     def html(
         self,
-        spark=None,
-        height=700,
+        session: Union[SnowflakeSession, SparkSession]=None,
+        height: int=700,
         inputs=None,
-        pandas_on_spark_use_pandas=False,
+        pandas_on_spark_use_pandas: bool=False,
         parameters=None,
         cache=None,
         preprocess: Union[dict, PreprocessMode] = None,
@@ -314,9 +319,11 @@ class Node(NodeDependenciesMixin):
 
         Parameters
         ----------
-        spark : SparkSession, optional
-            The Spark session to use for Spark-based transformations. Required for nodes
-            that work with Spark DataFrames or execute Spark SQL queries (default: None).
+        session : Union[snowflake.snowpark.session.Session, pyspark.sql.SparkSession], optional
+            The session to use for transformations. Can be either:
+            - Snowflake Snowpark Session for Snowflake-based transformations
+            - PySpark SparkSession for Spark-based transformations
+            Required for nodes that work with distributed DataFrames or execute SQL queries (default: None).
         height : int, default 700
             viewport height in pixels
         inputs : dict, default None
@@ -354,7 +361,7 @@ class Node(NodeDependenciesMixin):
         # This import needs to be here to avoid a circular import issue (graph_html -> node_graph -> imports node)
         from flypipe.catalog import Catalog
 
-        catalog = Catalog(spark=spark)
+        catalog = Catalog(session=session)
         catalog.register_node(
             self,
             inputs=inputs,

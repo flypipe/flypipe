@@ -21,6 +21,7 @@ else:
 
 from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
+from snowflake.snowpark.session import Session as SnowflakeSession
 
 from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.config import get_config
@@ -40,7 +41,7 @@ class RunContext:
     such as parameters, cache mode and inputs.
     """
 
-    spark: SparkSession = None
+    session: Union[SnowflakeSession, SparkSession] = None
     max_workers: int = 1
     provided_inputs: dict = None
     pandas_on_spark_use_pandas: bool = False
@@ -52,7 +53,7 @@ class RunContext:
 
     def copy(self):
         return RunContext(
-            spark=self.spark,
+            session=self.session,
             max_workers=self.max_workers,
             provided_inputs=self.provided_inputs,
             pandas_on_spark_use_pandas=self.pandas_on_spark_use_pandas,
@@ -84,7 +85,7 @@ class RunContext:
         # Initialize node results with provided inputs, it is necessary to do this here because the provided inputs are not available
         # in the node results, and if a graph has only one node and the provided input is not a NodeResult, it will fail.
         for node, df in self.provided_inputs.items():
-            self.node_results[node][node] = NodeResult(self.spark, df, schema=None)
+            self.node_results[node][node] = NodeResult(self.session, df, schema=None)
 
     def update_node_results_with_provided_input(
         self,
@@ -97,7 +98,7 @@ class RunContext:
             PySparkConnectDataFrame,
         ],
     ):
-        self.node_results[from_node][to_node] = NodeResult(self.spark, df, schema=None)
+        self.node_results[from_node][to_node] = NodeResult(self.session, df, schema=None)
 
     def get_graph_result(self, node: "Node") -> Union[
         PandasDataFrame,
@@ -119,7 +120,7 @@ class RunContext:
         ],
     ):
         self.node_results[from_node][to_node] = NodeResult(
-            self.spark, df, schema=from_node.output_schema
+            self.session, df, schema=from_node.output_schema
         )
 
     def has_provided_input(self, node: "Node") -> bool:

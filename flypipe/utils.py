@@ -37,6 +37,7 @@ class DataFrameType(Enum):
     PANDAS = "pandas"
     PANDAS_ON_SPARK = "pandas_on_spark"
     PYSPARK = "pyspark"
+    SNOWPARK = "snowpark"
 
 
 def assert_schemas_are_equals(df1, df2) -> None:

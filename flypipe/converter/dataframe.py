@@ -1,24 +1,29 @@
 # ruff: noqa: E731
+from typing import Union
+from logging import warning
+
 from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.sql import SparkSession
+from snowflake.snowpark.session import Session as SnowflakeSession
 
 from flypipe.utils import DataFrameType, dataframe_type
-from logging import warning
 
 
 class DataFrameConverter:
-    """Converts a dataframe between pandas, pandas on spark and pyspark
+    """Converts a dataframe between pandas, pandas on spark, pyspark and snowflake
 
     Attributes
     ----------
-    spark : spark Session, default None
+    session : Union[snowflake.snowpark.session.Session, pyspark.sql.SparkSession], default None
+        The session to use for dataframe conversions (Snowflake or Spark)
     """
 
-    def __init__(self, spark=None):
-        self.spark = spark
+    def __init__(self, session: Union[SnowflakeSession, SparkSession] = None):
+        self.session = session
 
     def _convert_pandas_to_spark(self, df):
         if df.shape[0] > 0:
-            return self.spark.createDataFrame(df)
+            return self.session.createDataFrame(df)
         else:
             warning(
                 "pyspark.errors.exceptions.base.PySparkValueError: [CANNOT_INFER_EMPTY_SCHEMA] Can not infer "
@@ -28,7 +33,7 @@ class DataFrameConverter:
             schema = StructType(
                 [StructField(column, StringType(), True) for column in df.columns]
             )
-            return self.spark.createDataFrame([], schema=schema)
+            return self.session.createDataFrame([], schema=schema)
 
     def _strategy(self, from_type: DataFrameType, to_type: DataFrameType):
         """Defines the strategy to convert and the function to be applied in this conversion
