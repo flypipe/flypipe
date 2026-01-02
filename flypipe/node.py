@@ -41,7 +41,7 @@ class Node(NodeDependenciesMixin):
         tags: List[str] = None,
         dependencies: List[InputNode] = None,
         output: Schema = None,
-        spark_context: bool = False,
+        session_context: bool = False,
         requested_columns: List[str] = False,
         cache: Cache = None,
     ):
@@ -78,7 +78,7 @@ class Node(NodeDependenciesMixin):
 
         self._provided_inputs = {}
 
-        self.spark_context = spark_context
+        self.session_context = session_context
         self.requested_columns = requested_columns
         self.node_graph = None
 
@@ -381,7 +381,7 @@ class Node(NodeDependenciesMixin):
             tags=list(self.tags),
             dependencies=[input_node.copy() for input_node in self.input_nodes],
             output=None if self.output_schema is None else self.output_schema.copy(),
-            spark_context=self.spark_context,
+            session_context=self.session_context,
             requested_columns=self.requested_columns,
             cache=self.cache,
         )
@@ -403,7 +403,7 @@ def node(type, *args, **kwargs):
         tags (List[str],optional): List of tags for the node. Defaults to `None`.
         dependencies (List[Node],optional): List of other dependent nodes. Defaults to `None`.
         output (Schema,optional): Defines the output schema of the node. Defaults to `None`.
-        spark_context (bool,optional): True, returns spark context as argument to the function. Defaults to `False`.
+        session_context (bool,optional): True, returns session context as argument to the function. Defaults to `False`.
 
     Examples
 
@@ -417,7 +417,7 @@ def node(type, *args, **kwargs):
         output=Schema(
             Column("col_name", String(), "a description of the column"),
         ),
-        spark_context = True or False
+        session_context = True or False
     )
     def your_function_name(other_node_1, other_node_2, ...):
         # YOUR TRANSFORMATION LOGIC HERE

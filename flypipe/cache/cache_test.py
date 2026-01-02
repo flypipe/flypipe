@@ -141,7 +141,7 @@ class TestCache:
 
         cache = GenericCache2()
 
-        @node(type="pyspark", cache=cache, spark_context=True)
+        @node(type="pyspark", cache=cache, session_context=True)
         def t1(spark):
             return spark.createDataFrame(
                 schema=("c0", "c1"),

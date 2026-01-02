@@ -278,7 +278,7 @@ class Runner:
             Result of the transformation
         """
         parameters = inputs
-        if node_transformation.spark_context:
+        if node_transformation.session_context:
             parameters["spark"] = spark
         if node_transformation.requested_columns:
             parameters["requested_columns"] = requested_columns

@@ -28,7 +28,7 @@ class TestSparkleFrame:
 
         @node(
             type="pyspark",
-            spark_context=True,
+            session_context=True,
         )
         def my_node(spark):
             return spark.createDataFrame([1, 2, 3], ["a", "b", "c"])

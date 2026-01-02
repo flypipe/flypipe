@@ -39,7 +39,7 @@ def Spark(table):
         type="pyspark",
         description=f"Spark datasource on table {table}",
         tags=["datasource"],
-        spark_context=True,
+        session_context=True,
     )
     def spark_datasource(spark):
         logger.warning(

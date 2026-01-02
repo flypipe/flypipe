@@ -763,7 +763,7 @@ class TestNode:
             type="pyspark",
             dependencies=[t1.select("c1")],
             requested_columns=True,
-            spark_context=True,
+            session_context=True,
         )
         def t2(t1, requested_columns, spark):
             assert requested_columns == ["c1"]
@@ -780,7 +780,7 @@ class TestNode:
                 t1.select("c1", "c2"),
                 t2.select("c1"),
             ],
-            spark_context=True,
+            session_context=True,
         )
         def t3(t2, t1, spark):
             assert dataframe_type(t1) == DataFrameType.PYSPARK
