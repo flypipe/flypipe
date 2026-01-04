@@ -8,6 +8,7 @@ from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import (
     PandasOnSparkDataFrameWrapper,
 )
 from flypipe.dataframe.spark_dataframe_wrapper import SparkDataFrameWrapper
+from flypipe.dataframe.snowpark_dataframe_wrapper import SnowparkDataFrameWrapper
 from flypipe.schema.types import Boolean, Decimal, String, Unknown
 
 
@@ -60,6 +61,15 @@ class TestDataFrameWrapper:
                 df = df.pandas_api()
         assert isinstance(DataFrameWrapper.get_instance(spark, df), expected_class)
 
+    def test_get_instance_snowpark(self, snowflake_session):
+        df = snowflake_session.create_dataframe(
+            pd.DataFrame({"column": [1]})
+        )
+        assert isinstance(
+            DataFrameWrapper.get_instance(snowflake_session, df), 
+            SnowparkDataFrameWrapper
+        )
+
     @pytest.mark.parametrize(
         "data,type",
         [
@@ -73,15 +83,45 @@ class TestDataFrameWrapper:
         Ensure that DataFrameWrapper.select_columns does the selection operation out-of-place and returns a new
         dataframe wrapper, therefore the original dataframe wrapper should be untouched.
         """
-        # TODO- doesn't look like we're testing anything here?
         if type == "pandas":
             df = data
         else:
             df = spark.createDataFrame(**data)
             if type == "pandas_api":
                 df = df.pandas_api()
+        
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
-        df_wrapper2 = df_wrapper.select_columns("col1")  # noqa: F841
+        df_wrapper2 = df_wrapper.select_columns("col1")
+        
+        # Assert it returns a new instance
+        assert df_wrapper2 is not df_wrapper
+        
+        # Assert the new wrapper has only the selected column
+        assert list(df_wrapper2.df.columns) == ["col1"]
+        
+        # Assert the original wrapper is untouched (still has all columns)
+        assert list(df_wrapper.df.columns) == ["col1", "col2"]
+
+    def test_select_columns_out_of_place_snowpark(self, snowflake_session):
+        """
+        Ensure that DataFrameWrapper.select_columns does the selection operation out-of-place for Snowpark DataFrames.
+        """
+        df = snowflake_session.create_dataframe(
+            pd.DataFrame({"col1": [1], "col2": [2]})
+        )
+        
+        df_wrapper = DataFrameWrapper.get_instance(snowflake_session, df)
+        # Note: Snowflake quotes column names when created from pandas
+        df_wrapper2 = df_wrapper.select_columns('"col1"')
+        
+        # Assert it returns a new instance
+        assert df_wrapper2 is not df_wrapper
+        
+        # Assert the new wrapper has only the selected column
+        assert list(df_wrapper2.df.columns) == ['"col1"']
+        
+        # Assert the original wrapper is untouched (still has all columns)
+        assert list(df_wrapper.df.columns) == ['"col1"', '"col2"']
 
     def test_cast_column_basic(self, mocker):
         """

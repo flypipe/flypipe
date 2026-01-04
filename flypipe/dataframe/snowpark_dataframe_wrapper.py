@@ -1,6 +1,7 @@
 import snowflake.snowpark.functions as F
 from snowflake.snowpark.types import (
     BooleanType,
+    ByteType,
     BinaryType,
     IntegerType,
     ShortType,
@@ -43,7 +44,7 @@ class SnowparkDataFrameWrapper(DataFrameWrapper):
     DF_TYPE = DataFrameType.SNOWPARK
     FLYPIPE_TYPE_TO_DF_TYPE_MAP = {
         Boolean.key(): BooleanType(),
-        Byte.key(): IntegerType(),  # Snowpark doesn't have ByteType, use IntegerType
+        Byte.key(): ByteType(),
         Binary.key(): BinaryType(),
         Integer.key(): IntegerType(),
         Short.key(): ShortType(),
@@ -99,7 +100,8 @@ class SnowparkDataFrameWrapper(DataFrameWrapper):
         else:
             # Get type name from Snowpark datatype
             type_name = dtype.typeName().lower()
-            try:
+            print(f"Column: {target_column}, Type class: {type(dtype).__name__}, typeName: {type_name}, dtype: {dtype.simple_string()}  ")
+            try:   
                 flypipe_type = self.DF_TYPE_TO_FLYPIPE_TYPE_MAP[type_name]
             except KeyError:
                 flypipe_type = Unknown()
