@@ -47,6 +47,7 @@ htmlcov/
 .tox/
 .nox/
 .coverage.*
+.coverage-*-data
 .cache
 nosetests.xml
 coverage.xml
@@ -149,6 +150,6 @@ mlruns/
 artifacts/
 tmp/
 /.docker/data/
-/flypipe/.coverage
+/flypipe/.coverage*
 .Trash-0
 /.docker/logs/
