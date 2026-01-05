@@ -12,8 +12,8 @@ from flypipe.tests.pyspark_test import assert_pyspark_df_equal
 
 
 @pytest.mark.skipif(
-    os.environ.get("USE_SPARK_CONNECT") != "1",
-    reason="Requires Spark Connect environment (USE_SPARK_CONNECT=1)",
+    os.environ.get("RUN_MODE") not in ["SPARK", "SPARK_CONNECT"],
+    reason="PySpark tests require RUN_MODE=SPARK or RUN_MODE=SPARK_CONNECT",
 )
 @pytest.mark.xdist_group(name="cdc_sequential")
 class TestRunner:

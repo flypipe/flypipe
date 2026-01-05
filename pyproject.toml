@@ -29,5 +29,37 @@ dependencies  = [
 [project.urls]
 Home = "https://github.com/flypipe/flypipe.git"
 
+[project.optional-dependencies]
+# Spark support with Delta Lake and Pandas-on-Spark
+spark = [
+    "pyspark[pandas-on-spark,sql] >=3.5.0",
+    "delta-spark >=3.0.0",
+]
+
+# Snowflake support with local testing
+snowflake = [
+    "snowflake-snowpark-python[localtest] >=1.44.0",
+    "snowflake-connector-python >=4.0.0",
+]
+
+# All backends (Spark + Snowflake)
+all = [
+    "pyspark[pandas-on-spark,sql] >=3.5.0",
+    "delta-spark >=3.0.0",
+    "snowflake-snowpark-python[localtest] >=1.44.0",
+    "snowflake-connector-python >=4.0.0",
+]
+
+# Development dependencies (for contributors)
+dev = [
+    "pytest >=8.0.0",
+    "pytest-cov >=6.0.0",
+    "pytest-mock >=3.14.0",
+    "pytest-xdist >=3.6.0",
+    "black >=24.0.0",
+    "ruff >=0.9.0",
+    "chispa >=0.11.0",
+]
+
 [tool.flit.sdist]
 include = ["flypipe/js"]

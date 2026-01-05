@@ -1,8 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Union
+from typing import Callable, Union, Optional
 
-from pyspark.sql import SparkSession
-from snowflake.snowpark.session import Session as SnowflakeSession
+# Optional imports for type hints
+try:
+    from pyspark.sql import SparkSession
+except ImportError:
+    SparkSession = None
+
+try:
+    from snowflake.snowpark.session import Session as SnowflakeSession
+except ImportError:
+    SnowflakeSession = None
 
 from flypipe.schema.types import Type
 from flypipe.utils import dataframe_type, DataFrameType
@@ -17,13 +25,13 @@ class DataFrameWrapper(ABC):
     DF_TYPE = None
     FLYPIPE_TYPE_TO_DF_TYPE_MAP = {}
 
-    def __init__(self, session: Union[SnowflakeSession, SparkSession], df):
+    def __init__(self, session: Optional[Union["SnowflakeSession", "SparkSession"]], df):
         self.session = session
         self.spark = session  # Keep for backward compatibility
         self.df = df
 
     @classmethod
-    def get_instance(cls, session: Union[SnowflakeSession, SparkSession], df):
+    def get_instance(cls, session: Optional[Union["SnowflakeSession", "SparkSession"]], df):
         # We need to do imports of the various df types within the function to avoid circular imports as they in turn
         # import dataframe_wrapper
         df_type = dataframe_type(df)

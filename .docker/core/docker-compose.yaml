@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  # ----------------
+  # Core Pandas environment (no Spark/Snowflake)
+  # ----------------
+  flypipe-core:
+    build:
+      context: ../../
+      dockerfile: .docker/core/Dockerfile
+    container_name: flypipe-core
+    hostname: core
+    ports:
+      - "8888:8888"
+    environment:
+      GIT_PYTHON_REFRESH: quiet
+    volumes:
+      - ../../.pylintrc:/.pylintrc
+      - ../../.coverage-core:/flypipe/.coverage-core
+      - ../../flypipe:/flypipe
+      - ../../scripts:/scripts
+      - ../start.py:/etc/ipython/startup/start.py
+      - ../../docs/notebooks:/notebooks
+    command: >
+      bash -lc "
+      jupyter-lab --notebook-dir /notebooks --allow-root
+      --no-browser --port 8888 --ip 0.0.0.0
+      --NotebookApp.token='' --NotebookApp.password=''
+      "
+
+networks:
+  corenet:
+    driver: bridge
+

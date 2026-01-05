@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  # ----------------
+  # Snowflake Snowpark environment
+  # ----------------
+  flypipe-snowflake:
+    build:
+      context: ../../
+      dockerfile: .docker/snowflake/Dockerfile
+    container_name: flypipe-snowflake
+    hostname: snowflake
+    ports:
+      - "8888:8888"
+    environment:
+      GIT_PYTHON_REFRESH: quiet
+    volumes:
+      - ../../.pylintrc:/.pylintrc
+      - ../../.coverage-snowpark:/flypipe/.coverage-snowpark
+      - ../../flypipe:/flypipe
+      - ../../scripts:/scripts
+      - ../start.py:/etc/ipython/startup/start.py
+      - ../../docs/notebooks:/notebooks
+    command: >
+      bash -lc "
+      jupyter-lab --notebook-dir /notebooks --allow-root
+      --no-browser --port 8888 --ip 0.0.0.0
+      --NotebookApp.token='' --NotebookApp.password=''
+      "
+
+networks:
+  snowflakenet:
+    driver: bridge
+

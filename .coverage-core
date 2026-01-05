@@ -1,0 +1,13 @@
+[run]
+omit=
+    # Test directories and files (we don't measure coverage of tests)
+    flypipe/tests/*
+    flypipe/examples/*
+    *_test.py
+    
+    # Backend-specific production code not used/imported in CORE mode
+    flypipe/dataframe/spark_dataframe_wrapper.py
+    flypipe/dataframe/snowpark_dataframe_wrapper.py
+    flypipe/tests/cdc_manager_cache.py
+    flypipe/tests/cdc_snowflake_manager_cache.py
+

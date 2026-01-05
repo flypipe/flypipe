@@ -38,42 +38,13 @@ class GenericCache(Cache):
         return os.path.exists(self.cache_csv)
 
 
-class GenericCacheSnowflake(Cache):
-    def __init__(self):
-        self.table_name = f"test_cache_{str(uuid4()).replace('-', '_')}"
-
-    def read(self, session, from_node=None, to_node=None, is_static=False):
-        return session.table(self.table_name).to_pandas()
-
-    def write(
-        self,
-        session,
-        *args,
-        df,
-        upstream_nodes=None,
-        to_node=None,
-        datetime_started_transformation=None,
-        **kwargs,
-    ):
-        # Convert pandas DataFrame to Snowpark DataFrame and save as table
-        snowpark_df = session.create_dataframe(df)
-        snowpark_df.write.mode("overwrite").save_as_table(self.table_name)
-
-    def exists(self, session):
-        try:
-            session.table(self.table_name)
-            return session.table(self.table_name).count() > 0
-        except Exception:
-            return False
-
-
 @pytest.fixture(scope="function")
 def cache():
     return GenericCache()
 
 
-class TestCache:
-    """Unit tests on the Cache class"""
+class TestCacheCore:
+    """Unit tests on the Cache class - Core functionality (Pandas only)"""
 
     def test_cache(self):
         class MyCache(Cache):
@@ -95,7 +66,7 @@ class TestCache:
         with pytest.raises(TypeError):
             MyCache()
 
-    def test_cache_non_spark_trivial(self):
+    def test_cache_trivial(self):
         class GenericCache2(GenericCache):
             def write(
                 self,
@@ -121,7 +92,7 @@ class TestCache:
         df = t1.run()
         assert sorted(list(df.columns)) == ["col1"]
 
-    def test_cache_non_spark(self, cache, mocker):
+    def test_cache(self, cache, mocker):
         @node(
             type="pandas",
             cache=cache,
@@ -143,88 +114,6 @@ class TestCache:
         assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
         assert spy_writter.call_count == 0
-
-    def test_cache_spark_provided(self, spark, mocker):
-        class GenericCache2(GenericCache):
-            def read(self, session, from_node=None, to_node=None, is_static=False):
-                return session.read.table(self.cache_name)
-
-            def write(
-                self,
-                session,
-                *args,
-                df,
-                upstream_nodes=None,
-                to_node=None,
-                datetime_started_transformation=None,
-                **kwargs,
-            ):
-                df.createOrReplaceTempView(self.cache_name)
-
-            def exists(self, session):
-                try:
-                    session.read.table(self.cache_name)
-                    return session.table(self.cache_name).count() > 0
-                except Exception:
-                    return False
-
-        cache = GenericCache2()
-
-        @node(type="pyspark", cache=cache, session_context=True)
-        def t1(session):
-            return session.createDataFrame(
-                schema=("c0", "c1"),
-                data=[
-                    (
-                        0,
-                        1,
-                    )
-                ],
-            )
-
-        spy_writter = mocker.spy(cache, "write")
-        spy_reader = mocker.spy(cache, "read")
-        spy_exists = mocker.spy(cache, "exists")
-        t1.run(spark)
-        assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 0
-        assert spy_exists.call_count == 1
-
-        spy_writter.reset_mock()
-        spy_reader.reset_mock()
-        spy_exists.reset_mock()
-        t1.run(spark)
-        assert spy_writter.call_count == 0
-        assert spy_reader.call_count == 1
-        assert spy_exists.call_count == 1
-
-    def test_cache_snowpark_provided(self, snowflake_session, mocker):
-        cache = GenericCacheSnowflake()
-
-        @node(type="pandas", cache=cache, session_context=True)
-        def t1(session):
-            return pd.DataFrame(
-                {
-                    "c0": [0],
-                    "c1": [1],
-                }
-            )
-
-        spy_writter = mocker.spy(cache, "write")
-        spy_reader = mocker.spy(cache, "read")
-        spy_exists = mocker.spy(cache, "exists")
-        t1.run(snowflake_session)
-        assert spy_writter.call_count == 1
-        assert spy_reader.call_count == 0
-        assert spy_exists.call_count == 1
-
-        spy_writter.reset_mock()
-        spy_reader.reset_mock()
-        spy_exists.reset_mock()
-        t1.run(snowflake_session)
-        assert spy_writter.call_count == 0
-        assert spy_reader.call_count == 1
-        assert spy_exists.call_count == 1
 
     def test_query_cache(self, cache):
         """
@@ -321,7 +210,7 @@ class TestCache:
             else:
                 assert node_graph["status"] == RunStatus.SKIP
 
-    def test_cache_non_spark_provided_input(self, cache, mocker):
+    def test_cache_provided_input(self, cache, mocker):
         """
         If input is provided, it does not uses caches at all.
         """
@@ -341,7 +230,7 @@ class TestCache:
         assert spy_reader.call_count == 0
         assert spy_exists.call_count == 0
 
-    def test_cache_non_spark_provided_input_node_function(self, cache, mocker):
+    def test_cache_provided_input_node_function(self, cache, mocker):
         """
         If input is provided for a node function, it does not uses caches at all.
         """

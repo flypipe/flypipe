@@ -6,14 +6,16 @@ from pyspark.sql import SparkSession
 os.environ["PYARROW_IGNORE_TIMEZONE"] = "1"
 
 
-def build_spark(use_spark_connect: bool = False):
-    if os.environ.get("USE_SPARK_CONNECT") == "1" or use_spark_connect:
+def build_spark():
+    run_mode = os.environ.get("RUN_MODE", "CORE")
+    
+    if run_mode == "SPARK_CONNECT":
         print("Building spark session (spark_connect)")
 
         spark = (
             SparkSession.builder.appName(str(uuid4()))
             .remote("sc://spark-connect:15002")
-            # Fail fast if gRPC isn’t reachable (e.g., 20s)
+            # Fail fast if gRPC isn't reachable (e.g., 20s)
             .config("spark.connect.grpc.client.deadlineSeconds", "20")
             # Log client connection details to stdout
             .config("spark.connect.client.verbose", "true")

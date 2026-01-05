@@ -1,0 +1,3 @@
+-r requirements-dev.in
+snowflake-snowpark-python[localtest]==1.44.0
+

@@ -20,8 +20,8 @@ RUN node -v
 RUN npm install -g @softwaretechnik/dbml-renderer
 RUN npm install -g dbdocs
 
-COPY ./requirements-dev.txt .
-RUN pip install -r requirements-dev.txt
+COPY ./requirements-dev-pyspark.txt .
+RUN pip install -r requirements-dev-pyspark.txt
 
 COPY ./.docker/wait-for-it.sh /wait-for-it.sh
 RUN chmod +x /wait-for-it.sh
@@ -29,7 +29,6 @@ RUN chmod +x /wait-for-it.sh
 COPY ./flypipe /flypipe
 
 # Environment variables
-ENV USE_SPARK_CONNECT=0
 ENV PYTHONPATH=${PYTHONPATH}:/local:/flypipe:/:
 
 WORKDIR /

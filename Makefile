@@ -1,11 +1,40 @@
 SHELL                       :=/bin/bash
 
-DOCKER_DIR          =.docker
+DOCKER_BASE_DIR    =.docker
 PYTEST_THREADS      ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
 min_coverage        =80
 min_branch_coverage =95
-USE_SPARK_CONNECT   =0
+RUN_MODE            ?=CORE
 version			    ?=
+
+# Map RUN_MODE to Docker directory and test pattern
+ifeq ($(RUN_MODE),CORE)
+    DOCKER_DIR = $(DOCKER_BASE_DIR)/core
+    CONTAINER_NAME = flypipe-core
+    TEST_PATTERN = core_test.py
+    COVERAGE_CONFIG = .coverage-core
+else ifeq ($(RUN_MODE),SPARK)
+    DOCKER_DIR = $(DOCKER_BASE_DIR)/spark
+    CONTAINER_NAME = flypipe-spark
+    TEST_PATTERN = pyspark_test.py
+    COVERAGE_CONFIG = .coverage-pyspark
+else ifeq ($(RUN_MODE),SPARK_CONNECT)
+    DOCKER_DIR = $(DOCKER_BASE_DIR)/spark
+    CONTAINER_NAME = flypipe-spark
+    TEST_PATTERN = pyspark_test.py
+    COVERAGE_CONFIG = .coverage-pyspark
+else ifeq ($(RUN_MODE),SNOWFLAKE)
+    DOCKER_DIR = $(DOCKER_BASE_DIR)/snowflake
+    CONTAINER_NAME = flypipe-snowflake
+    TEST_PATTERN = snowpark_test.py
+    COVERAGE_CONFIG = .coverage-snowpark
+else
+    # Default to core for unknown modes
+    DOCKER_DIR = $(DOCKER_BASE_DIR)/core
+    CONTAINER_NAME = flypipe-core
+    TEST_PATTERN = core_test.py
+    COVERAGE_CONFIG = .coverage-core
+endif
 
 export PYTHONPATH := $(PYTHONPATH):./flypipe
 
@@ -20,8 +49,12 @@ notebooks-clean:
 .PHONY: clean
 
 build:
-	mkdir -p .docker/logs/spark-master .docker/logs/spark-worker .docker/logs/spark-connect
-	chmod -R 777 .docker/logs
+	@echo "Building for RUN_MODE=$(RUN_MODE) using $(DOCKER_DIR)"
+	ifeq ($(filter $(RUN_MODE),SPARK SPARK_CONNECT),$(RUN_MODE))
+		@echo "Creating Spark log directories..."
+		mkdir -p $(DOCKER_BASE_DIR)/logs/spark-master $(DOCKER_BASE_DIR)/logs/spark-worker $(DOCKER_BASE_DIR)/logs/spark-connect
+		chmod -R 777 $(DOCKER_BASE_DIR)/logs || true
+	endif
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml build
 .PHONY: build
 
@@ -34,37 +67,32 @@ down:
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml down -v --rmi all
 .PHONY: down
 
-ping:
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter sh -c "chmod +x ./wait-for-it.sh && ./wait-for-it.sh -h flypipe-mariadb -p 3306"
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" flypipe-jupyter sh -c "chmod +x ./wait-for-it.sh && ./wait-for-it.sh -h flypipe-hive-metastore -p 9083"
-.PHONY: ping
-
 black:
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --rm --entrypoint "" $(CONTAINER_NAME) sh -c "black flypipe"
 .PHONY: black
 
 black-check:
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "black flypipe --check"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --rm --entrypoint "" $(CONTAINER_NAME) sh -c "black flypipe --check"
 .PHONY: black-check
 
 lint:
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --rm --entrypoint "" flypipe-jupyter sh -c "python -m ruff check flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --rm --entrypoint "" $(CONTAINER_NAME) sh -c "python -m ruff check flypipe"
 .PHONY: lint
 
 coverage:
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py -k '_test.py' --cov-config=flypipe/.coverage --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" $(CONTAINER_NAME) sh -c "export RUN_MODE=$(RUN_MODE) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py -k '$(TEST_PATTERN)' --cov-config=flypipe/$(COVERAGE_CONFIG) --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
 .PHONY: coverage
 
 test:
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" flypipe-jupyter sh -c "export USE_SPARK_CONNECT=$(USE_SPARK_CONNECT) && pytest -n $(PYTEST_THREADS) -k '_test.py' -vv $(f) --rootdir flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" $(CONTAINER_NAME) sh -c "export RUN_MODE=$(RUN_MODE) && pytest -n $(PYTEST_THREADS) -k '$(TEST_PATTERN)' -vv $(f) --rootdir flypipe"
 .PHONY: test
 
 bash: build
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" -it flypipe-jupyter bash
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" -it $(CONTAINER_NAME) bash
 .PHONY: bash
 
 run:
-	docker compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans flypipe-jupyter sh -c "python $(f)"
+	docker compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans $(CONTAINER_NAME) sh -c "python $(f)"
 .PHONY: run
 
 wheel:
@@ -75,11 +103,15 @@ pip-compile:
 	pip install -r requirements-pkg.in
 	pip-compile requirements-pkg.in --no-annotate --no-header
 	pip-compile requirements-dev.in --no-annotate --no-header
+	pip-compile requirements-dev-pyspark.in --no-annotate --no-header
+	pip-compile requirements-dev-snowpark.in --no-annotate --no-header
 .PHONY: pip-compile
 
 pr-check: black lint
-	make coverage USE_SPARK_CONNECT=0
-	make coverage USE_SPARK_CONNECT=1
+	make coverage RUN_MODE=CORE
+	make coverage RUN_MODE=SPARK
+	make coverage RUN_MODE=SPARK_CONNECT
+	make coverage RUN_MODE=SNOWFLAKE
 	make test f=flypipe/tests/activate/sparkleframe_test.py
 	pytest scripts/*_test.py
 .PHONY: pr-check

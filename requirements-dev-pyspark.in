@@ -1,0 +1,7 @@
+-r requirements-dev.in
+chispa==0.11.1
+delta-spark==3.3.0
+grpcio==1.70.0
+grpcio-status==1.70.0
+pyspark[sql,pandas_on_spark]==3.5.7
+

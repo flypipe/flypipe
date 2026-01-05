@@ -16,8 +16,42 @@ As each node (transformation) is connected to its ancestors, we can easily view 
 
 ## Installation
 
-```
+### Basic Installation
+
+For basic DataFrame support (Pandas):
+
+```bash
 pip install flypipe
+```
+
+### Optional Backend Support
+
+Flypipe supports multiple data processing backends. Install the extras you need:
+
+#### Apache Spark (PySpark + Delta Lake)
+```bash
+pip install flypipe[spark]
+```
+
+#### Snowflake (Snowpark)
+```bash
+pip install flypipe[snowflake]
+```
+
+#### All Backends
+```bash
+pip install flypipe[all]
+```
+
+#### Multiple Backends
+```bash
+pip install flypipe[spark,snowflake]
+```
+
+#### Development Setup
+For contributors:
+```bash
+pip install flypipe[dev]
 ```
 
 Package published in [PyPI](https://pypi.org/project/flypipe/).

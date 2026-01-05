@@ -4,30 +4,59 @@ import sys
 from enum import Enum
 
 from pandas.testing import assert_frame_equal
-
-
 import pandas as pd
-import pyspark.sql.dataframe as sql
-import sparkleframe.polarsdf.dataframe as sparkle_dataframe
-import snowflake.snowpark.dataframe as snowpark_dataframe
 
 
-def sparkleframe_is_active():
-    from pyspark.sql import SparkSession
+# Sparkleframe detection and conditional imports
+def sparkleframe_is_active() -> bool:
+    """
+    Check if sparkleframe activation is enabled.
+    
+    Sparkleframe is a Polars-based implementation of the PySpark API.
+    When active, it replaces PySpark's implementation with Polars underneath.
+    
+    Returns
+    -------
+    bool
+        True if sparkleframe is active (PySpark module is actually sparkleframe),
+        False otherwise (regular PySpark or PySpark not installed)
+    """
+    try:
+        from pyspark.sql import SparkSession
+        
+        spark_session_module = SparkSession.__module__.split(".")[0]
+        return spark_session_module == "sparkleframe"
+    except ImportError:
+        # PySpark (or sparkleframe) not installed
+        return False
 
-    spark_session_module = SparkSession.__module__.split(".")[0]
-    return spark_session_module == "sparkleframe"
 
+# Conditional imports based on sparkleframe activation
+try:
+    if sparkleframe_is_active():
+        # If using sparkleframe activate, it will fail because they do not implement pyspark.pandas
+        import pandas as ps
+        
+        # If using sparkleframe activate, it will fail because they do not implement pyspark.sql.connect
+        import pyspark.sql.dataframe as sql_connect
+    else:
+        import pyspark.pandas as ps
+        import pyspark.sql.connect.dataframe as sql_connect
+    
+    import pyspark.sql.dataframe as sql
+    import sparkleframe.polarsdf.dataframe as sparkle_dataframe
+except ImportError:
+    # PySpark/Sparkleframe not installed - these will be None
+    ps = None
+    sql = None
+    sql_connect = None
+    sparkle_dataframe = None
 
-if sparkleframe_is_active():
-    # if using sparkleframe activate, it will fail because they do not implement pyspark.pandas
-    import pandas as ps
-
-    # if using sparkleframe activate, it will fail because they do not implement pyspark.sql.connect
-    import pyspark.sql.dataframe as sql_connect
-else:
-    import pyspark.pandas as ps
-    import pyspark.sql.connect.dataframe as sql_connect
+# Snowpark imports (independent of PySpark)
+try:
+    import snowflake.snowpark.dataframe as snowpark_dataframe
+except ImportError:
+    snowpark_dataframe = None
 
 
 class DataFrameType(Enum):
@@ -63,7 +92,7 @@ def assert_schemas_are_equals(df1, df2) -> None:
 
 def assert_dataframes_equals(df1, df2) -> None:
 
-    # Avoide Circular Reference
+    # Avoid Circular Reference
     from flypipe.exceptions import DataframeDifferentDataError
 
     df1_type = dataframe_type(df1)
@@ -84,22 +113,58 @@ def assert_dataframes_equals(df1, df2) -> None:
 
 
 def dataframe_type(df) -> DataFrameType:
+    """
+    Determine the type of DataFrame.
+    
+    Parameters
+    ----------
+    df : DataFrame
+        A DataFrame object from any supported library
+    
+    Returns
+    -------
+    DataFrameType
+        The type of the DataFrame
+    
+    Raises
+    ------
+    DataframeTypeNotSupportedError
+        If the DataFrame type is not supported
+    """
     # Avoid Circular Reference
     from flypipe.exceptions import DataframeTypeNotSupportedError
 
+    # Check Pandas first (always available)
     if isinstance(df, pd.DataFrame):
         return DataFrameType.PANDAS
-    if isinstance(df, ps.DataFrame):
+    
+    # Check PySpark types (if available)
+    if ps is not None and isinstance(df, ps.DataFrame):
         return DataFrameType.PANDAS_ON_SPARK
+    
     if (
-        isinstance(df, sql.DataFrame)
-        or isinstance(df, sql_connect.DataFrame)
-        or isinstance(df, sparkle_dataframe.DataFrame)
+        (sql is not None and isinstance(df, sql.DataFrame))
+        or (sql_connect is not None and isinstance(df, sql_connect.DataFrame))
+        or (sparkle_dataframe is not None and isinstance(df, sparkle_dataframe.DataFrame))
     ):
         return DataFrameType.PYSPARK
-    if isinstance(df, snowpark_dataframe.DataFrame):
+    
+    # Check Snowpark types (if available)
+    if snowpark_dataframe is not None and isinstance(df, snowpark_dataframe.DataFrame):
         return DataFrameType.SNOWPARK
-    raise DataframeTypeNotSupportedError(type(df))
+    
+    # Provide helpful error messages for missing dependencies
+    error_msg = f"Unsupported DataFrame type: {type(df)}"
+    
+    # Check if it might be a PySpark DataFrame without PySpark installed
+    if "pyspark" in str(type(df)).lower():
+        error_msg += "\n\nPySpark is not installed. Install it with: pip install flypipe[spark]"
+    
+    # Check if it might be a Snowpark DataFrame without Snowflake installed
+    elif "snowpark" in str(type(df)).lower():
+        error_msg += "\n\nSnowflake Snowpark is not installed. Install it with: pip install flypipe[snowflake]"
+    
+    raise DataframeTypeNotSupportedError(error_msg)
 
 
 # TODO: add tests to get_schema

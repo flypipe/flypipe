@@ -55,7 +55,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run formatter on backend (black)
-        run: make black-check
+        run: make black-check RUN_MODE=CORE
 
       - name: Run formatter on frontend (prettier)
         run: |
@@ -63,13 +63,19 @@ jobs:
           yarn prettier-check
 
       - name: Run linter (ruff)
-        run: make lint
+        run: make lint RUN_MODE=CORE
+
+      - name: Run unit tests for Core (Pandas)
+        run: make coverage RUN_MODE=CORE
 
       - name: Run unit tests using Spark Session
-        run: make coverage USE_SPARK_CONNECT=0
+        run: make coverage RUN_MODE=SPARK
 
       - name: Run unit tests using Spark Connect Session
-        run: make coverage USE_SPARK_CONNECT=1
+        run: make coverage RUN_MODE=SPARK_CONNECT
+
+      - name: Run unit tests for Snowflake (Snowpark)
+        run: make coverage RUN_MODE=SNOWFLAKE
 
       - name: Run unit tests using Sparkleframe Activate
-        run: make test f=flypipe/tests/activate/sparkleframe_test.py
+        run: make test f=flypipe/tests/activate/sparkleframe_test.py RUN_MODE=SPARK

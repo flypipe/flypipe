@@ -97,12 +97,12 @@ services:
   # ----------------
   # Jupyter / Dev box
   # ----------------
-  flypipe-jupyter:
+  flypipe-spark:
     build:
-      context: ../
-      dockerfile: .docker/Dockerfile
-    container_name: flypipe-jupyter
-    hostname: jupyter
+      context: ../../
+      dockerfile: .docker/spark/Dockerfile
+    container_name: flypipe-spark
+    hostname: spark
     depends_on: [spark-master, spark-worker, spark-connect]
     ports:
       - "8888:8888"
@@ -112,7 +112,7 @@ services:
       GIT_PYTHON_REFRESH: quiet
     volumes:
       - ../.pylintrc:/.pylintrc
-      - ../.coverage:/flypipe/.coverage
+      - ../.coverage-pyspark:/flypipe/.coverage-pyspark
       - ../flypipe:/flypipe
       - ../scripts:/scripts
       - ./start.py:/etc/ipython/startup/start.py

@@ -20,10 +20,7 @@ def build_spark():
         .config("spark.ui.liveUpdate.period", "-1")
         .config("spark.sql.repl.eagerEval.enabled", "true")
         .config("spark.sql.execution.arrow.pyspark.enabled", "true")
-
-        .enableHiveSupport()
-        .config("hive.metastore.uris", "thrift://flypipe-hive-metastore:9083")
-        .config("spark.sql.warehouse.dir", "/data/warehouse")
+        .config("spark.sql.warehouse.dir", "/shared/delta/warehouse")
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
         .config(
             "spark.sql.catalog.spark_catalog",
