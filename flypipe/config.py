@@ -1,11 +1,7 @@
 import os
 from contextlib import contextmanager
 
-
-def _get_default_date_format_mode():
-    """Lazy import to avoid circular dependency"""
-    from flypipe.schema.util import DateFormat
-    return DateFormat.PYSPARK.value
+from flypipe.schema.util import DateFormat
 
 
 class _Config:
@@ -16,10 +12,9 @@ class _Config:
         "require_schema_description": False,
         "default_dependencies_preprocess_module": None,
         "default_dependencies_preprocess_function": None,
-        "default_date_format_mode": None,  # Will be set lazily
-    }
-    _LAZY_DEFAULTS = {
-        "default_date_format_mode": _get_default_date_format_mode,
+        "default_date_format_style": DateFormat.PYSPARK.value,  # "PYSPARK"
+        "default_date_format": DateFormat.PYSPARK.date_format(),  # "yyyy-MM-dd"
+        "default_datetime_format": DateFormat.PYSPARK.datetime_format(),  # "yyyy-MM-dd H:m:s"
     }
     VALID_OPTIONS = set(config_name for config_name in OPTIONS.keys())
     ACTIVE_CONFIGS = []
@@ -33,7 +28,7 @@ class _Config:
         Retrieve the value of a Flypipe configuration variable. In order of precedence this comes from:
         - Set config via the config_context context manager
         - Corresponding environment variable for a config
-        - Default config value
+        - Default config value (derived from date_format_style if applicable)
         """
         if config_name not in cls.OPTIONS:
             raise KeyError(
@@ -48,12 +43,22 @@ class _Config:
         if environment_config is not None:
             return environment_config
         
+        # For date/datetime format, derive from current style if not explicitly overridden
+        if config_name in ("default_date_format", "default_datetime_format"):
+            # Check if the format was explicitly set (not in context or env, we already checked those)
+            # If default_date_format_style was overridden, derive format from that style
+            style = cls.get_config("default_date_format_style")
+            # Convert string to DateFormat enum if needed
+            if isinstance(style, str):
+                style = DateFormat(style)
+            
+            if config_name == "default_date_format":
+                return style.date_format()
+            else:  # default_datetime_format
+                return style.datetime_format()
+        
         # Get default value
-        default_value = cls.OPTIONS[config_name]
-        # If default is None and there's a lazy loader, call it
-        if default_value is None and config_name in cls._LAZY_DEFAULTS:
-            default_value = cls._LAZY_DEFAULTS[config_name]()
-        return default_value
+        return cls.OPTIONS[config_name]
 
     @classmethod
     def _get_config_from_environment_variables(cls, config_name):

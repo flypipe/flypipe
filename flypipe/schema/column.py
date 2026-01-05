@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from flypipe.config import get_config
+# NOTE: get_config is imported locally in __init__ to avoid circular import with config.py
 from flypipe.schema.types import Type
 
 from typing import TYPE_CHECKING
@@ -46,6 +46,8 @@ class Column:
         description: str = "",
         pk: bool = False,
     ):
+        from flypipe.config import get_config  # Local import to avoid circular dependency
+        
         self.name = name
         self.type = type
         if not description and get_config("require_schema_description"):

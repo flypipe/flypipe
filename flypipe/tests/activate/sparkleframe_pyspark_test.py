@@ -40,8 +40,8 @@ class TestSparkleFramePySpark:
             type="pyspark",
             session_context=True,
         )
-        def my_node(spark):
-            return spark.createDataFrame([1, 2, 3], ["a", "b", "c"])
+        def my_node(session):
+            return session.createDataFrame([1, 2, 3], ["a", "b", "c"])
 
         df = my_node.run(spark)
         assert df.__module__ == "sparkleframe.polarsdf.dataframe"

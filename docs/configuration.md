@@ -64,9 +64,9 @@ See `FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE` description above
 **type** ==string==
 <br/>**default** `None`
 
-### FLYPIPE_DEFAULT_DATE_FORMAT_MODE
+### FLYPIPE_DEFAULT_DATE_FORMAT_STYLE
 
-Sets the default date format mode for `Date` and `DateTime` types when `format_mode` is not explicitly specified.
+Sets the default date format style for `Date` and `DateTime` types when `format_mode` is not explicitly specified.
 
 Available options:
 - `"PYSPARK"` - Use PySpark date format (e.g., `yyyy-MM-dd`)
@@ -82,7 +82,7 @@ specifying `format_mode` on every `Date` or `DateTime` type definition.
 **Example:**
 ```py
 # Set via environment variable
-FLYPIPE_DEFAULT_DATE_FORMAT_MODE=SNOWFLAKE
+FLYPIPE_DEFAULT_DATE_FORMAT_STYLE=SNOWFLAKE
 
 # Or via context manager
 from flypipe.config import config_context
@@ -90,13 +90,57 @@ from flypipe.schema.types import Date
 from flypipe.schema.util import DateFormat
 
 # Using string value
-with config_context(default_date_format_mode="SNOWFLAKE"):
+with config_context(default_date_format_style="SNOWFLAKE"):
     # This Date will use Snowflake format by default
     date_field = Date(format="YYYY-MM-DD")
 
 # Or using enum value
-with config_context(default_date_format_mode=DateFormat.SNOWFLAKE.value):
+with config_context(default_date_format_style=DateFormat.SNOWFLAKE.value):
     date_field = Date(format="YYYY-MM-DD")
+```
+
+### FLYPIPE_DEFAULT_DATE_FORMAT
+
+Sets the default date format string to use for `Date` types when `format` is not explicitly specified.
+
+The format string should match the style specified by `FLYPIPE_DEFAULT_DATE_FORMAT_STYLE`.
+
+**type** ==string==
+<br/>**default** `"yyyy-MM-dd"` (PySpark format)
+
+**Example:**
+```py
+# Set via environment variable
+FLYPIPE_DEFAULT_DATE_FORMAT=dd/MM/yyyy
+
+# Or via context manager
+from flypipe.config import config_context
+
+with config_context(default_date_format="dd/MM/yyyy"):
+    # Date objects created without explicit format will use dd/MM/yyyy
+    pass
+```
+
+### FLYPIPE_DEFAULT_DATETIME_FORMAT
+
+Sets the default datetime format string to use for `DateTime` types when `format` is not explicitly specified.
+
+The format string should match the style specified by `FLYPIPE_DEFAULT_DATE_FORMAT_STYLE`.
+
+**type** ==string==
+<br/>**default** `"yyyy-MM-dd H:m:s"` (PySpark format)
+
+**Example:**
+```py
+# Set via environment variable
+FLYPIPE_DEFAULT_DATETIME_FORMAT=dd/MM/yyyy HH:mm:ss
+
+# Or via context manager
+from flypipe.config import config_context
+
+with config_context(default_datetime_format="dd/MM/yyyy HH:mm:ss"):
+    # DateTime objects created without explicit format will use dd/MM/yyyy HH:mm:ss
+    pass
 ```
 
 

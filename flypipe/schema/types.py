@@ -1,3 +1,5 @@
+from typing import Union
+
 from flypipe.schema.util import DateFormat
 
 
@@ -138,30 +140,40 @@ class Date(Type):
     SNOWFLAKE_PYTHON_DATETIME_SYMBOL_MAP["TZH:TZM"] = "%z"
     SNOWFLAKE_PYTHON_DATETIME_SYMBOL_MAP["TZH"] = "%z"
 
-    def __init__(self, format="yyyy-MM-dd", format_mode=None):
+    def __init__(self, format: str = None, format_mode: Union[DateFormat, str] = None):
         """
         Parameters
         ----------
 
-        format: str, optional
+        format: str
             Date format to use for string -> Date conversion if relevant. Uses either Spark date format,
             Snowflake date format, or Python/Pandas format depending on the value of format_mode.
-        format_mode: DateFormat, optional
+            Defaults to FLYPIPE_DEFAULT_DATE_FORMAT config.
+        format_mode: DateFormat or str
             the format mode to use, this allows the user to pick between Spark date format
             (https://spark.apache.org/docs/latest/sql-ref-datetime-pattern.html), Snowflake date format
             (https://docs.snowflake.com/en/sql-reference/date-time-input-output), and the native Python/Pandas date
-            format. If not specified, uses the FLYPIPE_DEFAULT_DATE_FORMAT_MODE config (defaults to PYSPARK).
+            format. Can be a DateFormat enum or string value ("PYSPARK", "PYTHON", "SNOWFLAKE").
+            Defaults to FLYPIPE_DEFAULT_DATE_FORMAT_STYLE config (PYSPARK by default).
         """
+        from flypipe.config import get_config
+        
         # Get default format mode from config if not specified
         if format_mode is None:
-            from flypipe.config import get_config
-            format_mode_str = get_config("default_date_format_mode")
+            format_mode_str = get_config("default_date_format_style")
             # Convert string to DateFormat enum (or use directly if already enum)
             if isinstance(format_mode_str, DateFormat):
                 format_mode = format_mode_str
             else:
                 # Get enum by value
                 format_mode = DateFormat(format_mode_str)
+        elif isinstance(format_mode, str):
+            # Convert string to DateFormat enum if a string was passed
+            format_mode = DateFormat(format_mode)
+        
+        # Get default format from config if not specified
+        if format is None:
+            format = format_mode.date_format()
         
         # Store the original format mode to give it preference when converting
         self._original_format_mode = format_mode
@@ -318,18 +330,39 @@ class Date(Type):
 class DateTime(Date):
     """Flypipe datetime type"""
 
-    def __init__(self, format="yyyy-MM-dd H:m:s", format_mode=None):
+    def __init__(self, format: str = None, format_mode: Union[DateFormat, str] = None):
         """
         Parameters
         ----------
 
-        format: str, optional
+        format: str
             Date format to use for string -> DateTime conversion if relevant. Uses either Spark datetime format,
             Snowflake datetime format, or Python/Pandas format depending on the value of format_mode.
-        format_mode: DateFormat, optional
+            Defaults to FLYPIPE_DEFAULT_DATETIME_FORMAT config.
+        format_mode: DateFormat or str
             the format mode to use, this allows the user to pick between Spark datetime format
             (https://spark.apache.org/docs/latest/sql-ref-datetime-pattern.html), Snowflake datetime format
             (https://docs.snowflake.com/en/sql-reference/date-time-input-output), and the native Python/Pandas datetime
-            format. If not specified, uses the FLYPIPE_DEFAULT_DATE_FORMAT_MODE config (defaults to PYSPARK).
+            format. Can be a DateFormat enum or string value ("PYSPARK", "PYTHON", "SNOWFLAKE").
+            Defaults to FLYPIPE_DEFAULT_DATE_FORMAT_STYLE config (PYSPARK by default).
         """
+        from flypipe.config import get_config
+        
+        # Get default format mode from config if not specified
+        if format_mode is None:
+            format_mode_str = get_config("default_date_format_style")
+            # Convert string to DateFormat enum (or use directly if already enum)
+            if isinstance(format_mode_str, DateFormat):
+                format_mode = format_mode_str
+            else:
+                # Get enum by value
+                format_mode = DateFormat(format_mode_str)
+        elif isinstance(format_mode, str):
+            # Convert string to DateFormat enum if a string was passed
+            format_mode = DateFormat(format_mode)
+        
+        # Get default format from config if not specified
+        if format is None:
+            format = format_mode.datetime_format()
+        
         super().__init__(format=format, format_mode=format_mode)
