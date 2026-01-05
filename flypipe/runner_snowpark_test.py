@@ -584,7 +584,7 @@ class TestRunnerSnowflake:
         print("=" * 80 + "\n")
 
     def test_cdc6_snowflake(self, snowflake_session, max_workers):
-        """
+        r"""
         Test CDC cache with diamond-shaped graph.
     
         Graph structure:
@@ -704,7 +704,7 @@ class TestRunnerSnowflake:
         print("=" * 80 + "\n")
 
     def test_cdc9_snowflake(self, snowflake_session, max_workers):
-        """
+        r"""
         Test CDC cache where cached nodes (B and C) don't trigger upstream computation.
     
         Graph structure:

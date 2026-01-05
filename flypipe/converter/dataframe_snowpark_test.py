@@ -7,6 +7,14 @@ from flypipe.converter.dataframe import DataFrameConverter, UnsupportedConversio
 from flypipe.utils import assert_dataframes_equals, DataFrameType
 
 
+# Check if PySpark is available for cross-backend conversion tests
+try:
+    import pyspark
+    PYSPARK_AVAILABLE = True
+except ImportError:
+    PYSPARK_AVAILABLE = False
+
+
 @pytest.mark.skipif(
     os.environ.get("RUN_MODE") != "SNOWFLAKE",
     reason="Snowpark tests require RUN_MODE=SNOWFLAKE",
@@ -41,8 +49,13 @@ class TestDataFrameConverterSnowpark:
 
     # ========================================
     # Unsupported Conversions (Snowpark <-> PySpark)
+    # Note: These tests require PySpark to be installed
     # ========================================
 
+    @pytest.mark.skipif(
+        not PYSPARK_AVAILABLE,
+        reason="Test requires PySpark to verify cross-backend conversion errors"
+    )
     def test_convert_snowpark_to_pyspark_raises_error(self, spark, snowflake_session, pandas_df):
         """Test that converting Snowpark to PySpark raises UnsupportedConversionError"""
         snowpark_df = snowflake_session.create_dataframe(pandas_df)
@@ -51,6 +64,10 @@ class TestDataFrameConverterSnowpark:
             converter.convert(snowpark_df, DataFrameType.PYSPARK)
         assert "SNOWPARK to PYSPARK" in str(exc_info.value)
 
+    @pytest.mark.skipif(
+        not PYSPARK_AVAILABLE,
+        reason="Test requires PySpark to verify cross-backend conversion errors"
+    )
     def test_convert_snowpark_to_pandas_on_spark_raises_error(
         self, spark, snowflake_session, pandas_df
     ):
