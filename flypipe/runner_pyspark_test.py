@@ -814,7 +814,7 @@ class TestRunner:
         print("=" * 80 + "\n")
 
     def test_cdc6(self, spark, max_workers):
-        """
+        r"""
         Test CDC cache with diamond-shaped graph.
     
         Graph structure:
@@ -1081,7 +1081,7 @@ class TestRunner:
         print("=" * 80 + "\n")
 
     def test_cdc8(self, spark, max_workers):
-        """
+        r"""
         Test CDC cache with complex diamond graph.
     
         Graph structure:
@@ -1248,7 +1248,7 @@ class TestRunner:
         print("=" * 80 + "\n")
 
     def test_cdc9(self, spark, max_workers):
-        """
+        r"""
         Test CDC cache where cached nodes (B and C) don't trigger upstream computation.
     
         Graph structure:
@@ -2140,7 +2140,7 @@ class TestRunnerExecutionPlan:
         print("✅ Linear graph execution plan correct")
 
     def test_execution_plan_diamond_graph(self):
-        """
+        r"""
         Test execution plan for diamond graph:
             D
            / \
@@ -2383,7 +2383,7 @@ class TestRunnerExecutionPlan:
         print("✅ Execution plan correctly handles cached nodes")
 
     def test_execution_plan_complex_graph(self):
-        """
+        r"""
         Test execution plan for complex graph with multiple branches:
 
               E   D
