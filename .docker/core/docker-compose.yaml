@@ -19,7 +19,6 @@ services:
       - ../../.coverage-core:/flypipe/.coverage-core
       - ../../flypipe:/flypipe
       - ../../scripts:/scripts
-      - ../start.py:/etc/ipython/startup/start.py
       - ../../docs/notebooks:/notebooks
     command: >
       bash -lc "

@@ -1,7 +1,10 @@
-from typing import Union
+from __future__ import annotations
 
-from pyspark.sql import SparkSession
-from snowflake.snowpark.session import Session as SnowflakeSession
+from typing import Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyspark.sql import SparkSession
+    from snowflake.snowpark.session import Session as SnowflakeSession
 
 from flypipe.converter.dataframe import DataFrameConverter
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
@@ -14,7 +17,7 @@ class NodeResult:
     type casting applied.
     """
 
-    def __init__(self, session: Union[SnowflakeSession, SparkSession], df, schema):
+    def __init__(self, session: Union["SnowflakeSession", "SparkSession"], df, schema):
         self.session = session
         self.df_wrapper = DataFrameWrapper.get_instance(session, df)
         self._apply_schema_to_df(schema)

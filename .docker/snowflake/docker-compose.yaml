@@ -19,7 +19,6 @@ services:
       - ../../.coverage-snowpark:/flypipe/.coverage-snowpark
       - ../../flypipe:/flypipe
       - ../../scripts:/scripts
-      - ../start.py:/etc/ipython/startup/start.py
       - ../../docs/notebooks:/notebooks
     command: >
       bash -lc "

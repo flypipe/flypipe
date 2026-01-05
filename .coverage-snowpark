@@ -7,5 +7,7 @@ omit=
     
     # Backend-specific production code not used/imported in SNOWPARK mode
     flypipe/dataframe/spark_dataframe_wrapper.py
+    flypipe/dataframe/pandas_on_spark_dataframe_wrapper.py
+    flypipe/datasource/spark.py
     flypipe/tests/cdc_manager_cache.py
 

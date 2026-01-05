@@ -1,9 +1,11 @@
-# ruff: noqa: E731
-from typing import Union
+from __future__ import annotations
 
-from pyspark.sql.types import StructType, StructField, StringType
-from pyspark.sql import SparkSession
-from snowflake.snowpark.session import Session as SnowflakeSession
+# ruff: noqa: E731
+from typing import Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyspark.sql import SparkSession
+    from snowflake.snowpark.session import Session as SnowflakeSession
 
 from flypipe.utils import DataFrameType, dataframe_type, get_logger
 from flypipe.exceptions import UnsupportedConversionError
@@ -30,10 +32,14 @@ class DataFrameConverter:
     Conversions between PySpark and Snowpark require going through Pandas as an intermediate step.
     """
 
-    def __init__(self, session: Union[SnowflakeSession, SparkSession] = None):
+    def __init__(self, session: Union["SnowflakeSession", "SparkSession"] = None):
         self.session = session
 
     def _convert_pandas_to_spark(self, df):
+        """Convert Pandas DataFrame to PySpark DataFrame"""
+        from pyspark.sql import SparkSession
+        from pyspark.sql.types import StructType, StructField, StringType
+        
         if not isinstance(self.session, SparkSession):
             raise ValueError(
                 "PySpark SparkSession required to convert to PySpark DataFrame"
@@ -53,6 +59,8 @@ class DataFrameConverter:
 
     def _convert_pandas_to_snowpark(self, df):
         """Convert Pandas DataFrame to Snowpark DataFrame"""
+        from snowflake.snowpark.session import Session as SnowflakeSession
+        
         if not isinstance(self.session, SnowflakeSession):
             raise ValueError(
                 "Snowflake session required to convert to Snowpark DataFrame"

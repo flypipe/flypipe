@@ -4,7 +4,7 @@ from flypipe import node
 from flypipe.catalog.node import CatalogNode
 
 
-class TestNode:
+class TestNodeCore:
     def test__is_active(self):
         @node(type="pandas")
         def t0():

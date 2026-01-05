@@ -5,18 +5,31 @@ from pandas import DataFrame as PandasDataFrame
 
 from flypipe.utils import sparkleframe_is_active
 
-if sparkleframe_is_active():
-    # if using sparkleframe activate, it will fail because they do not implement pyspark.pandas
-    from pandas import DataFrame as PandasApiDataFrame
+# Conditional PySpark imports
+try:
+    if sparkleframe_is_active():
+        # if using sparkleframe activate, it will fail because they do not implement pyspark.pandas
+        from pandas import DataFrame as PandasApiDataFrame
 
-    # if using sparkleframe activate, it will fail because they do not implement pyspark.sql.connect
-    from pyspark.sql.dataframe import DataFrame as PySparkConnectDataFrame
-else:
-    from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
-    from pyspark.sql.connect.dataframe import DataFrame as PySparkConnectDataFrame
+        # if using sparkleframe activate, it will fail because they do not implement pyspark.sql.connect
+        from pyspark.sql.dataframe import DataFrame as PySparkConnectDataFrame
+    else:
+        from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
+        from pyspark.sql.connect.dataframe import DataFrame as PySparkConnectDataFrame
 
+    from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
+except ImportError:
+    # PySpark not installed - set to None for type checking
+    PandasApiDataFrame = None
+    PySparkConnectDataFrame = None
+    PySparkDataFrame = None
 
-from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
+# Conditional Snowpark imports
+try:
+    from snowflake.snowpark.dataframe import DataFrame as SnowparkDataFrame
+except ImportError:
+    # Snowpark not installed - set to None for type checking
+    SnowparkDataFrame = None
 
 from flypipe.cache.cache_context import CacheContext
 
@@ -30,7 +43,7 @@ class NodeRunContext:
 
     parameters: dict = None
     provided_input: Union[
-        PandasDataFrame, PySparkDataFrame, PandasApiDataFrame, PySparkConnectDataFrame
+        PandasDataFrame, PySparkDataFrame, PandasApiDataFrame, PySparkConnectDataFrame, SnowparkDataFrame
     ] = None
     cache_context: CacheContext = None
 

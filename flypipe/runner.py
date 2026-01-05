@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import List, Union, TYPE_CHECKING
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from pyspark.sql import SparkSession
-from snowflake.snowpark.session import Session as SnowflakeSession
+if TYPE_CHECKING:
+    from pyspark.sql import SparkSession
+    from snowflake.snowpark.session import Session as SnowflakeSession
 
 from flypipe.cache import CacheMode
 from flypipe.node_run_context import NodeRunContext
@@ -253,7 +256,7 @@ class Runner:
 
     def _execute_transformation(
         self,
-        session: Union[SnowflakeSession, SparkSession],
+        session: Union["SnowflakeSession", "SparkSession"],
         node_transformation: "Node",
         requested_columns: list,
         node_run_context: NodeRunContext,

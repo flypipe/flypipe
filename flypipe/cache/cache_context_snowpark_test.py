@@ -51,7 +51,12 @@ class GenericCacheSnowpark(Cache):
         snowpark_df.write.mode("overwrite").save_as_table(self.table_name)
 
     def exists(self, session):
-        return session.catalog.table_exists(self.table_name) and session.table(self.table_name).count() > 0
+        # Use try-catch approach since catalog API requires snowflake.core which isn't in localtest
+        try:
+            # First check if table can be accessed
+            return session.table(self.table_name).count() > 0
+        except Exception:
+            return False
 
 
 @pytest.mark.skipif(

@@ -111,12 +111,12 @@ services:
       FLYPIPE_DEFAULT_RUN_MODE: sequential
       GIT_PYTHON_REFRESH: quiet
     volumes:
-      - ../.pylintrc:/.pylintrc
-      - ../.coverage-pyspark:/flypipe/.coverage-pyspark
-      - ../flypipe:/flypipe
-      - ../scripts:/scripts
+      - ../../.pylintrc:/.pylintrc
+      - ../../.coverage-pyspark:/flypipe/.coverage-pyspark
+      - ../../flypipe:/flypipe
+      - ../../scripts:/scripts
       - ./start.py:/etc/ipython/startup/start.py
-      - ../docs/notebooks:/notebooks
+      - ../../docs/notebooks:/notebooks
       - shared-data:/shared/delta
     networks: [sparknet]
     command: >

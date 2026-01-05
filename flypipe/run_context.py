@@ -1,27 +1,35 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from flypipe.node import Node
+    from pyspark.sql import SparkSession
+    from snowflake.snowpark.session import Session as SnowflakeSession
 
 from pandas import DataFrame as PandasDataFrame
 
 from flypipe.utils import sparkleframe_is_active, get_logger
 
-if sparkleframe_is_active():
-    # if using sparkleframe activate, it will fail because they do not implement pyspark.pandas
-    from pandas import DataFrame as PandasApiDataFrame
+# Conditional PySpark imports
+try:
+    if sparkleframe_is_active():
+        # if using sparkleframe activate, it will fail because they do not implement pyspark.pandas
+        from pandas import DataFrame as PandasApiDataFrame
 
-    # if using sparkleframe activate, it will fail because they do not implement pyspark.sql.connect
-    from pyspark.sql.dataframe import DataFrame as PySparkConnectDataFrame
-else:
-    from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
-    from pyspark.sql.connect.dataframe import DataFrame as PySparkConnectDataFrame
+        # if using sparkleframe activate, it will fail because they do not implement pyspark.sql.connect
+        from pyspark.sql.dataframe import DataFrame as PySparkConnectDataFrame
+    else:
+        from pyspark.pandas.frame import DataFrame as PandasApiDataFrame
+        from pyspark.sql.connect.dataframe import DataFrame as PySparkConnectDataFrame
 
-
-from pyspark.sql import SparkSession
-from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
-from snowflake.snowpark.session import Session as SnowflakeSession
+    from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
+except ImportError:
+    # PySpark not installed - set to None for type checking
+    PandasApiDataFrame = None
+    PySparkConnectDataFrame = None
+    PySparkDataFrame = None
 
 from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.config import get_config
@@ -41,7 +49,7 @@ class RunContext:
     such as parameters, cache mode and inputs.
     """
 
-    session: Union[SnowflakeSession, SparkSession] = None
+    session: Union["SnowflakeSession", "SparkSession"] = None
     max_workers: int = 1
     provided_inputs: dict = None
     pandas_on_spark_use_pandas: bool = False

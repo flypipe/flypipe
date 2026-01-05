@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import re
 import sys
-from typing import List, Union
+from typing import List, Union, TYPE_CHECKING
 
-from snowflake.snowpark.session import Session as SnowflakeSession
-from pyspark.sql import SparkSession
+if TYPE_CHECKING:
+    from snowflake.snowpark.session import Session as SnowflakeSession
+    from pyspark.sql import SparkSession
 
 
 from flypipe.cache.cache import Cache
@@ -173,7 +176,7 @@ class Node(NodeDependenciesMixin):
 
     def run(
         self,
-        session: Union[SnowflakeSession, SparkSession] = None,
+        session: Union["SnowflakeSession", "SparkSession"] = None,
         max_workers: int = 1,
         inputs: dict = None,
         pandas_on_spark_use_pandas: bool = False,

@@ -11,13 +11,13 @@ This directory contains separate Docker environments for different Flypipe backe
 │   └── docker-compose.yaml
 ├── spark/              # PySpark environment (includes Spark cluster)
 │   ├── Dockerfile
-│   └── docker-compose.yaml
+│   ├── docker-compose.yaml
+│   ├── start.py        # IPython startup script (Spark-specific)
+│   ├── wait-for-it.sh  # Utility script for waiting on services
+│   └── logs/           # Spark logs directory
 ├── snowflake/          # Snowflake Snowpark environment
 │   ├── Dockerfile
 │   └── docker-compose.yaml
-├── logs/               # Shared logs directory
-├── wait-for-it.sh      # Shared utility script
-├── start.py            # Shared IPython startup script
 └── __init__.py
 ```
 

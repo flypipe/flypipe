@@ -1,7 +1,10 @@
-from typing import Union
+from __future__ import annotations
 
-from pyspark.sql import SparkSession
-from snowflake.snowpark.session import Session as SnowflakeSession
+from typing import Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyspark.sql import SparkSession
+    from snowflake.snowpark.session import Session as SnowflakeSession
 
 from flypipe.cache import CacheMode, Cache
 from flypipe.utils import get_logger
@@ -13,7 +16,7 @@ class CacheContext:
     def __init__(
         self,
         cache_mode: CacheMode = None,
-        session: Union[SnowflakeSession, SparkSession] = None,
+        session: Union["SnowflakeSession", "SparkSession"] = None,
         cache: Cache = None,
         debug: bool = False,
     ):

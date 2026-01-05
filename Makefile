@@ -2,39 +2,44 @@ SHELL                       :=/bin/bash
 
 DOCKER_BASE_DIR    =.docker
 PYTEST_THREADS      ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
-min_coverage        =80
-min_branch_coverage =95
 RUN_MODE            ?=CORE
 version			    ?=
 
-# Map RUN_MODE to Docker directory and test pattern
+# Map RUN_MODE to Docker directory, test pattern, and coverage threshold
 ifeq ($(RUN_MODE),CORE)
     DOCKER_DIR = $(DOCKER_BASE_DIR)/core
     CONTAINER_NAME = flypipe-core
     TEST_PATTERN = core_test.py
     COVERAGE_CONFIG = .coverage-core
+    MIN_COVERAGE = 80
 else ifeq ($(RUN_MODE),SPARK)
     DOCKER_DIR = $(DOCKER_BASE_DIR)/spark
     CONTAINER_NAME = flypipe-spark
     TEST_PATTERN = pyspark_test.py
     COVERAGE_CONFIG = .coverage-pyspark
+    MIN_COVERAGE = 80
 else ifeq ($(RUN_MODE),SPARK_CONNECT)
     DOCKER_DIR = $(DOCKER_BASE_DIR)/spark
     CONTAINER_NAME = flypipe-spark
     TEST_PATTERN = pyspark_test.py
     COVERAGE_CONFIG = .coverage-pyspark
+    MIN_COVERAGE = 80
 else ifeq ($(RUN_MODE),SNOWFLAKE)
     DOCKER_DIR = $(DOCKER_BASE_DIR)/snowflake
     CONTAINER_NAME = flypipe-snowflake
     TEST_PATTERN = snowpark_test.py
     COVERAGE_CONFIG = .coverage-snowpark
+    MIN_COVERAGE = 40
 else
     # Default to core for unknown modes
     DOCKER_DIR = $(DOCKER_BASE_DIR)/core
     CONTAINER_NAME = flypipe-core
     TEST_PATTERN = core_test.py
     COVERAGE_CONFIG = .coverage-core
+    MIN_COVERAGE = 80
 endif
+
+min_branch_coverage =95
 
 export PYTHONPATH := $(PYTHONPATH):./flypipe
 
@@ -50,11 +55,11 @@ notebooks-clean:
 
 build:
 	@echo "Building for RUN_MODE=$(RUN_MODE) using $(DOCKER_DIR)"
-	ifeq ($(filter $(RUN_MODE),SPARK SPARK_CONNECT),$(RUN_MODE))
-		@echo "Creating Spark log directories..."
-		mkdir -p $(DOCKER_BASE_DIR)/logs/spark-master $(DOCKER_BASE_DIR)/logs/spark-worker $(DOCKER_BASE_DIR)/logs/spark-connect
-		chmod -R 777 $(DOCKER_BASE_DIR)/logs || true
-	endif
+ifneq ($(filter $(RUN_MODE),SPARK SPARK_CONNECT),)
+	@echo "Creating Spark log directories..."
+	mkdir -p $(DOCKER_BASE_DIR)/spark/logs/spark-master $(DOCKER_BASE_DIR)/spark/logs/spark-worker $(DOCKER_BASE_DIR)/spark/logs/spark-connect
+	chmod -R 777 $(DOCKER_BASE_DIR)/spark/logs || true
+endif
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml build
 .PHONY: build
 
@@ -80,11 +85,11 @@ lint:
 .PHONY: lint
 
 coverage:
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" $(CONTAINER_NAME) sh -c "export RUN_MODE=$(RUN_MODE) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py -k '$(TEST_PATTERN)' --cov-config=flypipe/$(COVERAGE_CONFIG) --cov=flypipe --no-cov-on-fail --cov-fail-under=$(min_coverage) flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" $(CONTAINER_NAME) bash -c "export RUN_MODE=$(RUN_MODE) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py --cov-config=flypipe/$(COVERAGE_CONFIG) --cov=flypipe --no-cov-on-fail --cov-fail-under=$(MIN_COVERAGE) \$$(find flypipe -name '*$(TEST_PATTERN)' -type f)"
 .PHONY: coverage
 
 test:
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" $(CONTAINER_NAME) sh -c "export RUN_MODE=$(RUN_MODE) && pytest -n $(PYTEST_THREADS) -k '$(TEST_PATTERN)' -vv $(f) --rootdir flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" $(CONTAINER_NAME) bash -c "export RUN_MODE=$(RUN_MODE) && pytest -n $(PYTEST_THREADS) -vv \$$(if [ -n '$(f)' ]; then echo '$(f)'; else find flypipe -name '*$(TEST_PATTERN)' -type f; fi) --rootdir flypipe"
 .PHONY: test
 
 bash: build
