@@ -31,6 +31,13 @@ except ImportError:
     PySparkConnectDataFrame = None
     PySparkDataFrame = None
 
+# Conditional Snowpark imports
+try:
+    from snowflake.snowpark.dataframe import DataFrame as SnowparkDataFrame
+except ImportError:
+    # Snowpark not installed - set to None for type checking
+    SnowparkDataFrame = None
+
 from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.config import get_config
 from flypipe.node_result import NodeResult
@@ -104,6 +111,7 @@ class RunContext:
             PySparkDataFrame,
             PandasApiDataFrame,
             PySparkConnectDataFrame,
+            SnowparkDataFrame,
         ],
     ):
         self.node_results[from_node][to_node] = NodeResult(self.session, df, schema=None)
@@ -113,6 +121,7 @@ class RunContext:
         PySparkDataFrame,
         PandasApiDataFrame,
         PySparkConnectDataFrame,
+        SnowparkDataFrame,
     ]:
         return self.node_results[node][node].as_type(node.dataframe_type).get_df()
 
@@ -125,6 +134,7 @@ class RunContext:
             PySparkDataFrame,
             PandasApiDataFrame,
             PySparkConnectDataFrame,
+            SnowparkDataFrame,
         ],
     ):
         self.node_results[from_node][to_node] = NodeResult(
