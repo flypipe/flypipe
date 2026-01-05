@@ -152,4 +152,4 @@ tmp/
 /.docker/data/
 /flypipe/.coverage*
 .Trash-0
-/.docker/logs/
+/.docker/spark/logs/
