@@ -87,18 +87,20 @@ class TestDataFrameConverterPySpark:
     # Unsupported Conversions (PySpark -> Snowpark)
     # ========================================
 
-    def test_convert_pyspark_to_snowpark_raises_error(self, spark, pyspark_df, snowflake_session):
+    def test_convert_pyspark_to_snowpark_raises_error(self, spark, pyspark_df):
         """Test that converting PySpark to Snowpark raises UnsupportedConversionError"""
-        converter = DataFrameConverter(snowflake_session)
+        # Use None for session since the error is raised before session is used
+        converter = DataFrameConverter(None)
         with pytest.raises(UnsupportedConversionError) as exc_info:
             converter.convert(pyspark_df, DataFrameType.SNOWPARK)
         assert "PYSPARK to SNOWPARK" in str(exc_info.value)
 
     def test_convert_pandas_on_spark_to_snowpark_raises_error(
-        self, spark, pandas_on_spark_df, snowflake_session
+        self, spark, pandas_on_spark_df
     ):
         """Test that converting Pandas-on-Spark to Snowpark raises UnsupportedConversionError"""
-        converter = DataFrameConverter(snowflake_session)
+        # Use None for session since the error is raised before session is used
+        converter = DataFrameConverter(None)
         with pytest.raises(UnsupportedConversionError) as exc_info:
             converter.convert(pandas_on_spark_df, DataFrameType.SNOWPARK)
         assert "PANDAS_ON_SPARK to SNOWPARK" in str(exc_info.value)
