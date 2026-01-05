@@ -40,6 +40,10 @@ def node_cache():
     return t0
 
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
 class TestCacheContextCore:
     """Unit tests on the CacheContext class - Core functionality (Pandas only)"""
 

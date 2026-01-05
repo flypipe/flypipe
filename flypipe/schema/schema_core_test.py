@@ -1,9 +1,18 @@
+import os
+import pytest
+
 from flypipe import node
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String, Boolean
 
 
-class TestSchema:
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
+class TestSchemaCore:
+    """Tests for Schema - Core functionality"""
+
     def test_schema_are_equal(self):
         schema1 = Schema(Column("col1", String(), "desc"))
         schema2 = Schema(Column("col1", String(), "desc"))
@@ -71,3 +80,4 @@ class TestSchema:
         schema2 = Schema(Column("col1", String()))
 
         assert schema1 != schema2
+

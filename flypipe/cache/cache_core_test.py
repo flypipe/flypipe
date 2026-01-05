@@ -43,6 +43,10 @@ def cache():
     return GenericCache()
 
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
 class TestCacheCore:
     """Unit tests on the Cache class - Core functionality (Pandas only)"""
 

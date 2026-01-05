@@ -2,6 +2,12 @@ import os
 from contextlib import contextmanager
 
 
+def _get_default_date_format_mode():
+    """Lazy import to avoid circular dependency"""
+    from flypipe.schema.util import DateFormat
+    return DateFormat.PYSPARK.value
+
+
 class _Config:
     OPTIONS = {
         "catalog_count_box_tags": "bronze,silver,gold",
@@ -10,6 +16,10 @@ class _Config:
         "require_schema_description": False,
         "default_dependencies_preprocess_module": None,
         "default_dependencies_preprocess_function": None,
+        "default_date_format_mode": None,  # Will be set lazily
+    }
+    _LAZY_DEFAULTS = {
+        "default_date_format_mode": _get_default_date_format_mode,
     }
     VALID_OPTIONS = set(config_name for config_name in OPTIONS.keys())
     ACTIVE_CONFIGS = []
@@ -31,11 +41,19 @@ class _Config:
             )
         active_config = cls.get_active_config()
         if active_config:
-            return active_config.get_config_from_context_manager(config_name)
+            config_value = active_config.get_config_from_context_manager(config_name)
+            if config_value is not None:
+                return config_value
         environment_config = cls._get_config_from_environment_variables(config_name)
         if environment_config is not None:
             return environment_config
-        return cls.OPTIONS[config_name]
+        
+        # Get default value
+        default_value = cls.OPTIONS[config_name]
+        # If default is None and there's a lazy loader, call it
+        if default_value is None and config_name in cls._LAZY_DEFAULTS:
+            default_value = cls._LAZY_DEFAULTS[config_name]()
+        return default_value
 
     @classmethod
     def _get_config_from_environment_variables(cls, config_name):

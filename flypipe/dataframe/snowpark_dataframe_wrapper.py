@@ -100,8 +100,7 @@ class SnowparkDataFrameWrapper(DataFrameWrapper):
         else:
             # Get type name from Snowpark datatype
             type_name = dtype.typeName().lower()
-            print(f"Column: {target_column}, Type class: {type(dtype).__name__}, typeName: {type_name}, dtype: {dtype.simple_string()}  ")
-            try:   
+            try:
                 flypipe_type = self.DF_TYPE_TO_FLYPIPE_TYPE_MAP[type_name]
             except KeyError:
                 flypipe_type = Unknown()
@@ -117,14 +116,14 @@ class SnowparkDataFrameWrapper(DataFrameWrapper):
         self.df = self.df.with_column(column, self.df[column].cast(df_type))
 
     def _cast_column_date(self, column, flypipe_type):
-        # Snowpark uses to_date function
+        # Snowpark uses to_date function with Snowflake date format
         self.df = self.df.with_column(
-            column, F.to_date(F.col(column), flypipe_type.pyspark_format)
+            column, F.to_date(F.col(column), flypipe_type.snowflake_format)
         )
 
     def _cast_column_datetime(self, column, flypipe_type):
-        # Snowpark uses to_timestamp function
+        # Snowpark uses to_timestamp function with Snowflake date format
         self.df = self.df.with_column(
-            column, F.to_timestamp(F.col(column), flypipe_type.pyspark_format)
+            column, F.to_timestamp(F.col(column), flypipe_type.snowflake_format)
         )
 

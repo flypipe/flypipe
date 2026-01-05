@@ -38,9 +38,10 @@ class DataFrameConverter:
     def _convert_pandas_to_spark(self, df):
         """Convert Pandas DataFrame to PySpark DataFrame"""
         from pyspark.sql import SparkSession
+        from pyspark.sql.connect.session import SparkSession as SparkConnectSession
         from pyspark.sql.types import StructType, StructField, StringType
-        
-        if not isinstance(self.session, SparkSession):
+
+        if not isinstance(self.session, SparkSession) and not isinstance(self.session, SparkConnectSession):
             raise ValueError(
                 "PySpark SparkSession required to convert to PySpark DataFrame"
             )

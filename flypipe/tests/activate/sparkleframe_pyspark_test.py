@@ -1,4 +1,14 @@
-class TestSparkleFrame:
+import os
+import pytest
+
+
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") not in ["SPARK", "SPARK_CONNECT"],
+    reason="PySpark tests require RUN_MODE=SPARK or SPARK_CONNECT",
+)
+class TestSparkleFramePySpark:
+    """Tests for SparkleFrame activation - PySpark"""
+
     def test_activate_deactivate(self):
         from sparkleframe.activate import activate, deactivate
 
@@ -35,3 +45,4 @@ class TestSparkleFrame:
 
         df = my_node.run(spark)
         assert df.__module__ == "sparkleframe.polarsdf.dataframe"
+

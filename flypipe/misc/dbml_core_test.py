@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from flypipe import node
 from flypipe.cache import Cache
 from flypipe.misc.dbml import build_dbml, replace_dots_except_last
@@ -33,7 +35,13 @@ def assert_strings_equal_ignore_whitespace(str1, str2):
     ), "Strings are not equal (ignoring spaces, \\n and \\t)."
 
 
-class TestDBML:
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
+class TestDBMLCore:
+    """Tests for DBML - Core functionality"""
+
     def test_add_node_without_output(self):
         @node(type="pandas")
         def A():
@@ -686,3 +694,4 @@ class TestDBML:
         """
 
         assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
+

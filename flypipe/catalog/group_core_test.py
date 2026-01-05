@@ -1,4 +1,7 @@
 """Tests for the Group class"""
+import os
+import pytest
+
 from flypipe.catalog.group import Group
 
 
@@ -8,6 +11,10 @@ class MockNode:
         self.key = key
 
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
 class TestGroupCore:
     """Test suite for the Group class"""
 

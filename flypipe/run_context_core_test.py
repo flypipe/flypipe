@@ -1,4 +1,7 @@
+import os
 import pandas as pd
+import pytest
+
 from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.node import node
 from flypipe.run_context import RunContext
@@ -14,8 +17,12 @@ def t2(t1):
     return t1
 
 
-class TestRunContext:
-    """Tests on Nodes with pyspark type"""
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
+class TestRunContextCore:
+    """Tests on RunContext - Core functionality"""
 
     def test_get_dependency_preprocess_mode_defaults_to_active(self):
         run_context = RunContext()
@@ -39,3 +46,4 @@ class TestRunContext:
         assert (
             run_context.get_dependency_preprocess_mode(t2, t1) == PreprocessMode.DISABLE
         )
+

@@ -41,15 +41,15 @@ def Spark(table):
         tags=["datasource"],
         session_context=True,
     )
-    def spark_datasource(spark):
+    def spark_datasource(session):
         logger.warning(
             "WARNING: Spark datasource is DEPRECATED and will be removed in a future version."
         )
 
-        if spark is None:
+        if session is None:
             raise ValueError("Please provide a spark session, i.e. node.run(spark)")
 
-        return spark.table(table)
+        return session.table(table)
 
     spark_datasource.function.__name__ = table
 

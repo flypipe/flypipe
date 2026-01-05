@@ -64,6 +64,41 @@ See `FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE` description above
 **type** ==string==
 <br/>**default** `None`
 
+### FLYPIPE_DEFAULT_DATE_FORMAT_MODE
+
+Sets the default date format mode for `Date` and `DateTime` types when `format_mode` is not explicitly specified.
+
+Available options:
+- `"PYSPARK"` - Use PySpark date format (e.g., `yyyy-MM-dd`)
+- `"SNOWFLAKE"` - Use Snowflake date format (e.g., `YYYY-MM-DD`)
+- `"PYTHON"` - Use Python/Pandas date format (e.g., `%Y-%m-%d`)
+
+This is particularly useful when working primarily with a specific backend (PySpark or Snowflake) to avoid 
+specifying `format_mode` on every `Date` or `DateTime` type definition.
+
+**type** ==string==
+<br/>**default** `"PYSPARK"`
+
+**Example:**
+```py
+# Set via environment variable
+FLYPIPE_DEFAULT_DATE_FORMAT_MODE=SNOWFLAKE
+
+# Or via context manager
+from flypipe.config import config_context
+from flypipe.schema.types import Date
+from flypipe.schema.util import DateFormat
+
+# Using string value
+with config_context(default_date_format_mode="SNOWFLAKE"):
+    # This Date will use Snowflake format by default
+    date_field = Date(format="YYYY-MM-DD")
+
+# Or using enum value
+with config_context(default_date_format_mode=DateFormat.SNOWFLAKE.value):
+    date_field = Date(format="YYYY-MM-DD")
+```
+
 
 ## Catalog
 

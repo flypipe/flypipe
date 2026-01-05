@@ -6,6 +6,10 @@ import pytest
 from flypipe.config import get_config, config_context
 
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
 class TestConfigCore:
     """Tests for Config"""
 
@@ -61,3 +65,59 @@ class TestConfigCore:
 
     def test_get_config_default(self):
         assert not get_config("require_node_description")
+
+    def test_get_config_default_date_format_mode(self):
+        """Test that the default date format mode is PYSPARK"""
+        from flypipe.schema.util import DateFormat
+        
+        assert get_config("default_date_format_mode") == DateFormat.PYSPARK.value
+
+    def test_get_config_default_date_format_mode_by_environment(self):
+        """Test setting the default date format mode via environment variable"""
+        from flypipe.schema.util import DateFormat
+        
+        with self._set_environment_variable_for_test(
+            "FLYPIPE_DEFAULT_DATE_FORMAT_MODE", "SNOWFLAKE"
+        ):
+            assert get_config("default_date_format_mode") == "SNOWFLAKE"
+
+    def test_get_config_default_date_format_mode_by_context_manager(self):
+        """Test setting the default date format mode via context manager"""
+        from flypipe.schema.util import DateFormat
+        
+        with config_context(default_date_format_mode=DateFormat.PYTHON.value):
+            assert get_config("default_date_format_mode") == DateFormat.PYTHON.value
+
+    def test_date_uses_config_default(self):
+        """Test that Date class uses the configured default format mode"""
+        from flypipe.schema.types import Date
+        from flypipe.schema.util import DateFormat
+
+        # Default should be PYSPARK
+        date = Date()
+        assert date._pyspark_format == "yyyy-MM-dd"
+        assert date._snowflake_format is None
+        assert date._python_format is None
+
+    def test_date_uses_config_from_environment(self):
+        """Test that Date class uses format mode from environment variable"""
+        from flypipe.schema.types import Date
+
+        with self._set_environment_variable_for_test(
+            "FLYPIPE_DEFAULT_DATE_FORMAT_MODE", "SNOWFLAKE"
+        ):
+            date = Date(format="YYYY-MM-DD")
+            assert date._snowflake_format == "YYYY-MM-DD"
+            assert date._pyspark_format is None
+            assert date._python_format is None
+
+    def test_date_uses_config_from_context_manager(self):
+        """Test that Date class uses format mode from context manager"""
+        from flypipe.schema.types import Date
+        from flypipe.schema.util import DateFormat
+
+        with config_context(default_date_format_mode=DateFormat.PYTHON.value):
+            date = Date(format="%Y-%m-%d")
+            assert date._python_format == "%Y-%m-%d"
+            assert date._pyspark_format is None
+            assert date._snowflake_format is None

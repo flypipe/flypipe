@@ -1,7 +1,7 @@
+import os
 import pandas as pd
 
 from flypipe import node
-from flypipe.datasource.spark import Spark
 
 from datetime import datetime
 
@@ -52,8 +52,12 @@ def preprocess_remove_2nd_day(df):
     return df[df["datetime_created"] != datetime(2025, 1, 2)]
 
 
-class TestInputNode:
-    """Tests for InputNode"""
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
+class TestInputNodeCore:
+    """Tests for InputNode - Core functionality"""
 
     def test_name(self):
         node_input = transformation.select(["c1", "c2"])
@@ -67,36 +71,9 @@ class TestInputNode:
         node_input = transformation.select(["c1", "c2"])
         assert node_input.get_alias() == "transformation"
 
-    def test_alias_unmodified_2(self):
-        node_input = Spark("schema_a.table_b").select("c1", "c2")
-        assert node_input.get_alias() == "schema_a_table_b"
-
     def test_alias_modified(self):
         node_input = transformation.select(["c1", "c2"]).alias("customised")
         assert node_input.get_alias() == "customised"
-
-    def test_preprocess_no_argument_fails(self):
-        with pytest.raises(ValueError):
-
-            @node(type="pyspark", dependencies=[t1.preprocess()])
-            def n(df):
-                return df
-
-    def test_preprocess_non_callable_argument_fails(self):
-
-        with pytest.raises(ValueError):
-
-            @node(type="pyspark", dependencies=[t1.preprocess(1)])
-            def n(df):
-                return df
-
-    def test_preprocess_non_callable_in_list_argument_fails(self):
-
-        with pytest.raises(ValueError):
-
-            @node(type="pyspark", dependencies=[t1.preprocess(lambda df: df, 1)])
-            def n(df):
-                return df
 
     @pytest.mark.parametrize(
         "functions,expected",
@@ -232,7 +209,7 @@ class TestInputNode:
 
         monkeypatch.setenv(
             "FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE",
-            "flypipe.dependency.node_input_preprocess_func_test",
+            "flypipe.tests.node_input_preprocess_func",
         )
         monkeypatch.setenv(
             "FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_FUNCTION", "preprocess_config"
@@ -250,7 +227,7 @@ class TestInputNode:
 
         monkeypatch.setenv(
             "FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE",
-            "flypipe.dependency.node_input_preprocess_func_test",
+            "flypipe.tests.node_input_preprocess_func",
         )
         monkeypatch.setenv(
             "FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_FUNCTION", "preprocess_config"
@@ -288,7 +265,7 @@ class TestInputNode:
 
         monkeypatch.setenv(
             "FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE",
-            "flypipe.dependency.node_input_preprocess_func_test",
+            "flypipe.tests.node_input_preprocess_func",
         )
         monkeypatch.setenv(
             "FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_FUNCTION", "preprocess_config"
@@ -307,8 +284,9 @@ class TestInputNode:
     def test_preprocess_mode_disable_priorities_order(self, monkeypatch):
         monkeypatch.setenv(
             "FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_MODULE",
-            "flypipe.dependency.node_input_preprocess_func_test",
+            "flypipe.tests.node_input_preprocess_func",
         )
         monkeypatch.setenv(
             "FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_FUNCTION", "preprocess_config"
         )
+

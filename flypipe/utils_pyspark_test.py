@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import pytest
 
@@ -6,14 +7,18 @@ from flypipe.exceptions import (
     DataframeSchemasDoNotMatchError,
     DataframeTypeNotSupportedError,
 )
-
 from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
 
 
-class TestUtils:
-    """Tests on Utils"""
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") not in ["SPARK", "SPARK_CONNECT"],
+    reason="PySpark tests require RUN_MODE=SPARK or SPARK_CONNECT",
+)
+class TestUtilsPySpark:
+    """Tests on Utils - PySpark"""
 
     def test_assert_dataframes_equals(self, spark):
+        """Test assert_dataframes_equals with PySpark DataFrames"""
         df1 = spark.createDataFrame(
             pd.DataFrame(data={"col1": [1, 2], "col2": ["1a", "2a"]})
         )
@@ -47,6 +52,7 @@ class TestUtils:
             assert_dataframes_equals(df1, 2)
 
     def test_dataframe_type(self, spark):
+        """Test dataframe_type with PySpark and Pandas-on-Spark DataFrames"""
         df = pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"]})
         assert dataframe_type(df) == DataFrameType.PANDAS
 
@@ -58,3 +64,4 @@ class TestUtils:
 
         with pytest.raises(DataframeTypeNotSupportedError):
             dataframe_type(1)
+

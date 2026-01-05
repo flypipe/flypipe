@@ -1,4 +1,5 @@
 """Tests for DataFrameConverter - Core (Pandas-only) functionality"""
+import os
 import pandas as pd
 import pytest
 
@@ -11,6 +12,10 @@ def pandas_df():
     return pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"]})
 
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
 class TestDataFrameConverterCore:
     """Tests on DataFrameConverter - Core (Pandas-only) functionality"""
 

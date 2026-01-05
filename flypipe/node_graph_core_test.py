@@ -1,12 +1,18 @@
+import os
 import pandas as pd
+import pytest
 
 from flypipe.node import node
 from flypipe.node_graph import NodeGraph, RunStatus
 from flypipe.run_context import RunContext
 
 
-class TestNodeGraph:
-    """Tests for NodeGraph"""
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
+class TestNodeGraphCore:
+    """Tests for NodeGraph - Core functionality"""
 
     def test_build_graph(self):
         """
@@ -157,3 +163,4 @@ class TestNodeGraph:
             3: [t4.key],
             4: [t5.key],
         }
+

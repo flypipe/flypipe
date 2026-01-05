@@ -10,9 +10,14 @@ Any file ending with _test.py that doesn't match one of these suffixes is invali
 """
 import os
 from pathlib import Path
+import pytest
 
 
-class TestNamingConvention:
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
+class TestNamingConventionCore:
     """Verify that all test files follow the naming convention"""
 
     def test_all_test_files_follow_naming_convention(self):

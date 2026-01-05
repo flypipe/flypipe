@@ -1,4 +1,5 @@
 import inspect
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -56,6 +57,10 @@ def t3(t1):
     return t1
 
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
 class TestCatalogCore:
     """Tests for Catalog"""
 

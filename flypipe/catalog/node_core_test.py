@@ -1,9 +1,15 @@
+import os
 import pandas as pd
+import pytest
 
 from flypipe import node
 from flypipe.catalog.node import CatalogNode
 
 
+@pytest.mark.skipif(
+    os.environ.get("RUN_MODE") != "CORE",
+    reason="Core tests require RUN_MODE=CORE",
+)
 class TestNodeCore:
     def test__is_active(self):
         @node(type="pandas")
