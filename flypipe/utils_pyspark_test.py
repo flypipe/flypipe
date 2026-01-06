@@ -20,29 +20,36 @@ class TestUtilsPySpark:
 
     def test_assert_dataframes_equals(self, spark):
         """Test assert_dataframes_equals with PySpark DataFrames"""
-        df1 = spark.createDataFrame(
-            pd.DataFrame(data={"col1": [1, 2], "col2": ["1a", "2a"]})
-        )
-        df2 = spark.createDataFrame(
-            pd.DataFrame(data={"col1": [1, 2], "col2": ["1a", "2a"]})
-        )
+        df1 = spark.createDataFrame([
+            Row(col1=1, col2="1a"),
+            Row(col1=2, col2="2a")
+        ])
+        df2 = spark.createDataFrame([
+            Row(col1=1, col2="1a"),
+            Row(col1=2, col2="2a")
+        ])
         assert_dataframes_equals(df1, df2)
 
-        df2 = spark.createDataFrame(pd.DataFrame(data={"col1": [1, 2], "col2": [1, 2]}))
+        df2 = spark.createDataFrame([
+            Row(col1=1, col2=1),
+            Row(col1=2, col2=2)
+        ])
         with pytest.raises(DataframeSchemasDoNotMatchError):
             assert_dataframes_equals(df1, df2)
 
-        df2 = spark.createDataFrame(
-            pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"]})
-        )
+        df2 = spark.createDataFrame([
+            Row(col1=1, col2="1a"),
+            Row(col1=2, col2="2a"),
+            Row(col1=3, col2="3a")
+        ])
         with pytest.raises(DataframeDifferentDataError):
             assert_dataframes_equals(df1, df2)
 
-        df2 = spark.createDataFrame(
-            pd.DataFrame(
-                data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"], "col3": [1, 2, 3]}
-            )
-        )
+        df2 = spark.createDataFrame([
+            Row(col1=1, col2="1a", col3=1),
+            Row(col1=2, col2="2a", col3=2),
+            Row(col1=3, col2="3a", col3=3)
+        ])
         with pytest.raises(DataframeSchemasDoNotMatchError):
             assert_dataframes_equals(df1, df2)
 
@@ -57,7 +64,7 @@ class TestUtilsPySpark:
         df = pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"]})
         assert dataframe_type(df) == DataFrameType.PANDAS
 
-        df = spark.createDataFrame([Row(col1=1, col2="1a"), Row(col1=2, col2="2a"), Row(col1=3, col2="3a")])
+        df = spark.createDataFrame(data=[], schema="col1 integer")
         assert dataframe_type(df) == DataFrameType.PYSPARK
 
         df = df.pandas_api()

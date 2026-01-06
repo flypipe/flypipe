@@ -31,25 +31,44 @@ def sparkleframe_is_active() -> bool:
         return False
 
 
-# Conditional imports based on sparkleframe activation
+# PySpark imports - handle each separately for robustness
+sql = None
+ps = None
+sql_connect = None
+
 try:
     import pyspark.sql.dataframe as sql
-    import sparkleframe.polarsdf.dataframe as sparkle_dataframe
-
-    if sparkleframe_is_active():
-        # If using sparkleframe activate, it will fail because they do not implement pyspark.pandas
-        import pandas as ps
-        
-        # If using sparkleframe activate, it will fail because they do not implement pyspark.sql.connect
-        import pyspark.sql.dataframe as sql_connect
-    else:
-        import pyspark.pandas as ps
-        import pyspark.sql.connect.dataframe as sql_connect
 except ImportError:
-    # PySpark/Sparkleframe not installed - these will be None
-    ps = None
-    sql = None
-    sql_connect = None
+    pass
+
+if sparkleframe_is_active():
+    # If using sparkleframe activate, use pandas instead of pyspark.pandas
+    try:
+        import pandas as ps
+    except ImportError:
+        pass
+    
+    # If using sparkleframe, sql_connect refers to regular sql dataframe
+    try:
+        import pyspark.sql.dataframe as sql_connect
+    except ImportError:
+        pass
+else:
+    # Regular PySpark mode
+    try:
+        import pyspark.pandas as ps
+    except ImportError:
+        pass
+    
+    try:
+        import pyspark.sql.connect.dataframe as sql_connect
+    except ImportError:
+        pass
+
+# Sparkleframe is optional and independent
+try:
+    import sparkleframe.polarsdf.dataframe as sparkle_dataframe
+except ImportError:
     sparkle_dataframe = None
 
 # Snowpark imports (independent of PySpark)
@@ -133,6 +152,10 @@ def dataframe_type(df) -> DataFrameType:
     """
     # Avoid Circular Reference
     from flypipe.exceptions import DataframeTypeNotSupportedError
+    
+    # Get type string once for fallback checks
+    # (coverage instrumentation can break isinstance checks)
+    df_type_str = str(type(df))
 
     # Check Pandas first (always available)
     if isinstance(df, pd.DataFrame):
@@ -142,11 +165,21 @@ def dataframe_type(df) -> DataFrameType:
     if ps is not None and isinstance(df, ps.DataFrame):
         return DataFrameType.PANDAS_ON_SPARK
     
+    # Fallback: Check type string for Pandas-on-Spark
+    if "pyspark.pandas.frame.DataFrame" in df_type_str:
+        return DataFrameType.PANDAS_ON_SPARK
+    
     if (
         (sql is not None and isinstance(df, sql.DataFrame))
         or (sql_connect is not None and isinstance(df, sql_connect.DataFrame))
         or (sparkle_dataframe is not None and isinstance(df, sparkle_dataframe.DataFrame))
     ):
+        return DataFrameType.PYSPARK
+    
+    # Fallback: Check type string for PySpark DataFrames
+    if ("pyspark.sql.dataframe.DataFrame" in df_type_str 
+        or "pyspark.sql.connect.dataframe.DataFrame" in df_type_str
+        or "sparkleframe.polarsdf.dataframe.DataFrame" in df_type_str):
         return DataFrameType.PYSPARK
     
     # Check Snowpark types (if available)

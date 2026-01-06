@@ -24,7 +24,12 @@ class TestSparkleFramePySpark:
 
         from flypipe.tests.spark import build_spark
         spark = build_spark()
-        assert spark.__module__ == "pyspark.sql.session"
+        
+        # Check the expected module based on RUN_MODE
+        if os.environ.get("RUN_MODE") == "SPARK_CONNECT":
+            assert spark.__module__ == "pyspark.sql.connect.session"
+        else:
+            assert spark.__module__ == "pyspark.sql.session"
 
     def test_output_dataframe_is_sparkleframe_if_activated_environment(self):
         from sparkleframe.activate import activate
