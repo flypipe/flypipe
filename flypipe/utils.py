@@ -33,6 +33,9 @@ def sparkleframe_is_active() -> bool:
 
 # Conditional imports based on sparkleframe activation
 try:
+    import pyspark.sql.dataframe as sql
+    import sparkleframe.polarsdf.dataframe as sparkle_dataframe
+
     if sparkleframe_is_active():
         # If using sparkleframe activate, it will fail because they do not implement pyspark.pandas
         import pandas as ps
@@ -42,9 +45,6 @@ try:
     else:
         import pyspark.pandas as ps
         import pyspark.sql.connect.dataframe as sql_connect
-    
-    import pyspark.sql.dataframe as sql
-    import sparkleframe.polarsdf.dataframe as sparkle_dataframe
 except ImportError:
     # PySpark/Sparkleframe not installed - these will be None
     ps = None

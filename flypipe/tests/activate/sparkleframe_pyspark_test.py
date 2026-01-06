@@ -2,6 +2,8 @@ import os
 import pytest
 
 
+
+
 @pytest.mark.skipif(
     os.environ.get("RUN_MODE") not in ["SPARK", "SPARK_CONNECT"],
     reason="PySpark tests require RUN_MODE=SPARK or SPARK_CONNECT",
@@ -20,9 +22,8 @@ class TestSparkleFramePySpark:
 
         deactivate()
 
-        from pyspark.sql import SparkSession
-
-        spark = SparkSession.builder.getOrCreate()
+        from flypipe.tests.spark import build_spark
+        spark = build_spark()
         assert spark.__module__ == "pyspark.sql.session"
 
     def test_output_dataframe_is_sparkleframe_if_activated_environment(self):

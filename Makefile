@@ -85,7 +85,7 @@ lint:
 .PHONY: lint
 
 coverage:
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" $(CONTAINER_NAME) bash -c "export RUN_MODE=$(RUN_MODE) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py --cov-config=flypipe/$(COVERAGE_CONFIG) --cov=flypipe --no-cov-on-fail --cov-fail-under=$(MIN_COVERAGE) \$$(find flypipe -name '*$(TEST_PATTERN)' -type f)"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" $(CONTAINER_NAME) bash -c "export RUN_MODE=$(RUN_MODE) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py --override-ini='python_files=*$(TEST_PATTERN)' --cov-config=flypipe/$(COVERAGE_CONFIG) --cov=flypipe --no-cov-on-fail --cov-fail-under=$(MIN_COVERAGE) flypipe"
 .PHONY: coverage
 
 test:

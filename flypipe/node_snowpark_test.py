@@ -3,7 +3,6 @@ import os
 import pandas as pd
 import pytest
 from snowflake.snowpark import Session as SnowflakeSession
-from snowflake.snowpark.testing import assert_dataframe_equal
 
 from flypipe.node import node
 from flypipe.schema import Schema, Column

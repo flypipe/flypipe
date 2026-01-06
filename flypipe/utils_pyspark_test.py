@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import pytest
+from pyspark.sql import Row
 
 from flypipe.exceptions import (
     DataframeDifferentDataError,
@@ -56,7 +57,7 @@ class TestUtilsPySpark:
         df = pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"]})
         assert dataframe_type(df) == DataFrameType.PANDAS
 
-        df = spark.createDataFrame(df)
+        df = spark.createDataFrame([Row(col1=1, col2="1a"), Row(col1=2, col2="2a"), Row(col1=3, col2="3a")])
         assert dataframe_type(df) == DataFrameType.PYSPARK
 
         df = df.pandas_api()
