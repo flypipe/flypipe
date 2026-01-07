@@ -22,7 +22,6 @@ def spark(request):
 
     return build_spark()
 
-1
 @pytest.fixture(scope="function", autouse=False)
 def snowflake_session(request):
     """

@@ -64,7 +64,7 @@ class TestUtilsPySpark:
         df = pd.DataFrame(data={"col1": [1, 2, 3], "col2": ["1a", "2a", "3a"]})
         assert dataframe_type(df) == DataFrameType.PANDAS
 
-        df = spark.createDataFrame(data=[], schema="col1 integer")
+        df = spark.createDataFrame([Row(col1=1)])
         assert dataframe_type(df) == DataFrameType.PYSPARK
 
         df = df.pandas_api()

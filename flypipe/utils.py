@@ -164,22 +164,12 @@ def dataframe_type(df) -> DataFrameType:
     # Check PySpark types (if available)
     if ps is not None and isinstance(df, ps.DataFrame):
         return DataFrameType.PANDAS_ON_SPARK
-    
-    # Fallback: Check type string for Pandas-on-Spark
-    if "pyspark.pandas.frame.DataFrame" in df_type_str:
-        return DataFrameType.PANDAS_ON_SPARK
-    
+
     if (
         (sql is not None and isinstance(df, sql.DataFrame))
         or (sql_connect is not None and isinstance(df, sql_connect.DataFrame))
         or (sparkle_dataframe is not None and isinstance(df, sparkle_dataframe.DataFrame))
     ):
-        return DataFrameType.PYSPARK
-    
-    # Fallback: Check type string for PySpark DataFrames
-    if ("pyspark.sql.dataframe.DataFrame" in df_type_str 
-        or "pyspark.sql.connect.dataframe.DataFrame" in df_type_str
-        or "sparkleframe.polarsdf.dataframe.DataFrame" in df_type_str):
         return DataFrameType.PYSPARK
     
     # Check Snowpark types (if available)
