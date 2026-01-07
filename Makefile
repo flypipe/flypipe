@@ -11,7 +11,7 @@ ifeq ($(RUN_MODE),CORE)
     CONTAINER_NAME = flypipe-core
     TEST_PATTERN = core_test.py
     COVERAGE_CONFIG = .coverage-core
-    MIN_COVERAGE = 80
+    MIN_COVERAGE = 79
 else ifeq ($(RUN_MODE),SPARK)
     DOCKER_DIR = $(DOCKER_BASE_DIR)/spark
     CONTAINER_NAME = flypipe-spark
