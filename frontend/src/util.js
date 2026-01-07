@@ -479,13 +479,15 @@ const deleteEdge = (graph, edgeId) => {
 const getNodeTypeColorClass = (nodeType) => {
     switch (nodeType) {
         case "pyspark":
-            return "danger";
+            return "pyspark";
         case "pandas_on_spark":
-            return "primary";
+            return "pandas-on-spark";
         case "pandas":
-            return "success";
+            return "pandas";
         case "spark_sql":
-            return "info";
+            return "spark-sql";
+        case "snowpark":
+            return "snowpark";
         default:
             return "warning";
     }

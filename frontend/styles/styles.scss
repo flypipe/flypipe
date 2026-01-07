@@ -95,59 +95,87 @@ html {
     padding: 12px !important;
 }
 
-.node-danger {
+.node-pyspark {
     background-color: white;
-    color: map-get($theme-colors, "danger");
-    border: map-get($theme-colors, "danger");
+    color: #dc3545;
+    border: #dc3545;
     border-style: solid;
     transition: background-color 200ms ease-out 100ms,
         color 200ms ease-out 100ms;
 }
 
-.node-danger:hover {
-    background-color: map-get($theme-colors, "danger");
+.node-pyspark:hover {
+    background-color: #dc3545;
     color: white;
 }
 
-.node-primary {
+//.node-primary {
+//    background-color: white;
+//    color: map-get($theme-colors, "primary");
+//    border: map-get($theme-colors, "primary");
+//    border-style: solid;
+//    transition: background-color 200ms ease-out 100ms,
+//        color 200ms ease-out 100ms;
+//}
+//
+//.node-primary:hover {
+//    background-color: map-get($theme-colors, "primary");
+//    color: white;
+//}
+
+.node-pandas {
     background-color: white;
-    color: map-get($theme-colors, "primary");
-    border: map-get($theme-colors, "primary");
+    color: #130754;
+    border: #130754;
     border-style: solid;
     transition: background-color 200ms ease-out 100ms,
         color 200ms ease-out 100ms;
 }
 
-.node-primary:hover {
-    background-color: map-get($theme-colors, "primary");
+.node-pandas:hover {
+    background-color: #130754;
     color: white;
 }
 
-.node-success {
+.node-snowpark {
     background-color: white;
-    color: map-get($theme-colors, "success");
-    border: map-get($theme-colors, "success");
+    color: #0dcaf0;
+    border: #0dcaf0;
     border-style: solid;
     transition: background-color 200ms ease-out 100ms,
         color 200ms ease-out 100ms;
 }
 
-.node-success:hover {
-    background-color: map-get($theme-colors, "success");
+.node-snowpark:hover {
+    background-color: #0dcaf0;
     color: white;
 }
 
-.node-info {
+.node-pandas-on-spark {
     background-color: white;
-    color: map-get($theme-colors, "info");
-    border: map-get($theme-colors, "info");
+    color: orangered;
+    border: orangered;
     border-style: solid;
     transition: background-color 200ms ease-out 100ms,
         color 200ms ease-out 100ms;
 }
 
-.node-info:hover {
-    background-color: map-get($theme-colors, "info");
+.node-pandas-on-spark:hover {
+    background-color: orangered;
+    color: white;
+}
+
+.node-spark-sql {
+    background-color: white;
+    color: darkred;
+    border: darkred;
+    border-style: solid;
+    transition: background-color 200ms ease-out 100ms,
+        color 200ms ease-out 100ms;
+}
+
+.node-spark-sql:hover {
+    background-color: darkred;
     color: white;
 }
 
