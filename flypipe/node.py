@@ -58,7 +58,7 @@ class Node(NodeDependenciesMixin):
         self.node_type = NodeType.TRANSFORMATION
         if type not in self.ALLOWED_TYPES:
             raise ValueError(
-                f"type set to {type} but must be one of {self.ALLOWED_TYPES}"
+                f"type set to `{type}` but must be one of {self.ALLOWED_TYPES}"
             )
         self.type = type
 
