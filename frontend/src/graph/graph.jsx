@@ -151,7 +151,7 @@ const Graph = ({ initialNodes, nodeDefs, groupDefs, tagSuggestions }) => {
     );
 
     // Show/Hide Search Panel
-    const [showSearchPanel, setShowSearchPanel] = useState(true);
+    const [showSearchPanel, setShowSearchPanel] = useState(false);
     const toggleSearchPanel = useCallback(() => {
         setShowSearchPanel((prevShowSearchPanel) => !prevShowSearchPanel);
     }, [setShowSearchPanel]);

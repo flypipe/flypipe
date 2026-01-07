@@ -13,7 +13,6 @@ from flypipe.tests.pyspark_test import assert_pyspark_df_equal
 
 from flypipe.cache.cache import Cache
 from flypipe.config import config_context
-from flypipe.converter.dataframe import DataFrameConverter
 from flypipe.datasource.spark import Spark
 from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.node import node, Node
@@ -108,30 +107,11 @@ class TestNode:
         def t6(nonsense):
             return nonsense
 
-        assert_frame_equal(t2.run(parallel=False), df)
-        assert_frame_equal(t3.run(parallel=False), df)
-        assert_frame_equal(t4.run(parallel=False), df[["color", "fruit"]])
-        assert_frame_equal(t5.run(parallel=False), df[["color", "fruit"]])
-        assert_frame_equal(t6.run(parallel=False), df[["color", "fruit"]])
-
-    def test_conversion_after_output_column_filter(self, spark_view, mocker):
-        """
-        a) When processing the output of a node we only select columns which are requested by child nodes.
-        b) When processing a child node we convert all incoming input dataframes from parent nodes to the same type as
-        the child node.
-
-        We want to ensure that we do b) the filtering done in a) is already done. This is vital because sometimes the
-        original output of a node can be far bigger than the output with filtered columns, if the order of operations
-        is wrong and b) happens before a) it can be extremely inefficient.
-        """
-
-        @node(type="pandas", dependencies=[Spark("dummy_table1").select("c1")])
-        def t1(dummy_table1):
-            return dummy_table1
-
-        spy = mocker.spy(DataFrameConverter, "convert")
-        t1.run(spark_view, parallel=False)
-        assert spy.call_args.args[1].columns == ["c1"]
+        assert_frame_equal(t2.run(), df)
+        assert_frame_equal(t3.run(), df)
+        assert_frame_equal(t4.run(), df[["color", "fruit"]])
+        assert_frame_equal(t5.run(), df[["color", "fruit"]])
+        assert_frame_equal(t6.run(), df[["color", "fruit"]])
 
     def test_alias_run(self):
         """
@@ -150,7 +130,7 @@ class TestNode:
 
         # No assertions are required, if the alias doesn't work then t2 will crash when run as the argument signature
         # won't align with what it's expecting.
-        t2.run(parallel=False)
+        t2.run()
 
     @pytest.mark.parametrize(
         "extra_run_config,expected_df_type",
@@ -188,7 +168,7 @@ class TestNode:
             stub(t1, t2)
             return t1.merge(t2)
 
-        t3.run(spark_view, parallel=False, **extra_run_config)
+        t3.run(spark_view, **extra_run_config)
         assert dataframe_type(stub.call_args[0][0]) == expected_df_type
         assert dataframe_type(stub.call_args[0][1]) == expected_df_type
 
@@ -271,14 +251,14 @@ class TestNode:
 
             return t1
 
-        df = t3.run(parallel=False)
+        df = t3.run()
         assert df.loc[0, "c1_group1_t1"] == "t0 group_1_t1"
         assert df.loc[0, "c1_group2_t1"] == "t0 group_2_t1"
 
         t1_df = pd.DataFrame(data={"c1": ["t0 group_1_t1"]})
         t1_group2_df = pd.DataFrame(data={"c1": ["t0 group_2_t1"]})
 
-        df = t3.run(parallel=False, inputs={t1: t1_df, t1_group2: t1_group2_df})
+        df = t3.run(inputs={t1: t1_df, t1_group2: t1_group2_df})
 
         assert df.loc[0, "c1_group1_t1"] == "t0 group_1_t1"
         assert df.loc[0, "c1_group2_t1"] == "t0 group_2_t1"
@@ -299,8 +279,8 @@ class TestNode:
         def t2(t1):
             return t1
 
-        t1_output = t1.run(spark_view, parallel=False)
-        t2_output = t2.run(spark_view, parallel=False)
+        t1_output = t1.run(spark_view)
+        t2_output = t2.run(spark_view)
         assert isinstance(t1_output, ps.frame.DataFrame)
         assert isinstance(t2_output, pd.DataFrame)
 
@@ -354,7 +334,7 @@ class TestNode:
             assert t2.loc[0, "c3"] == "t2 set this value"
             return t2
 
-        t3.run(parallel=False)
+        t3.run()
 
     def test_adhoc_call(self, spark_view):
         """
@@ -418,7 +398,7 @@ class TestNode:
         df = pd.DataFrame({"c1": [1]})
         expected_df = pd.DataFrame({"c1": [2]})
 
-        assert_frame_equal(t2.run(inputs={t1: df}, parallel=False), expected_df)
+        assert_frame_equal(t2.run(inputs={t1: df}), expected_df)
 
     def test_run_skip_input_2(self):
         """
@@ -466,9 +446,7 @@ class TestNode:
         df = pd.DataFrame({"c1": [4, 5]})
         expected_df = pd.DataFrame({"c1": [4, 5, 6, 7]})
 
-        assert_frame_equal(
-            c.run(inputs={b: df}, parallel=False), expected_df, check_dtype=False
-        )
+        assert_frame_equal(c.run(inputs={b: df}), expected_df, check_dtype=False)
 
     def test_run_missing_column(self):
         """
@@ -488,7 +466,7 @@ class TestNode:
             return pd.DataFrame({"c1": ["Hello", "World"]})
 
         with pytest.raises(DataFrameMissingColumns):
-            t1.run(parallel=False)
+            t1.run()
 
     def test_node_description_from_docstring(self):
         """
@@ -591,7 +569,7 @@ class TestNode:
         def fruit_details(fruit_category, fruit_color, t1):
             return fruit_category.merge(fruit_color).merge(t1)
 
-        results = fruit_details.run(parallel=False)
+        results = fruit_details.run()
         assert_frame_equal(results, df[["category", "fruit", "color", "misc"]])
 
     def test_node_function_series(self):
@@ -625,7 +603,7 @@ class TestNode:
 
             return t3
 
-        assert_frame_equal(g3.run(parallel=False), pd.DataFrame({"c1": [3, 6, 9]}))
+        assert_frame_equal(g3.run(), pd.DataFrame({"c1": [3, 6, 9]}))
 
     def test_node_function_nested(self):
         """
@@ -679,7 +657,7 @@ class TestNode:
             assert t2.loc[0, "c1"] == 2
             return t1
 
-        t3.run(parallel=False)
+        t3.run()
 
     def test_run_isolated_dependencies_pandas_on_spark(self, spark_view):
         """
@@ -704,7 +682,7 @@ class TestNode:
             assert t2.loc[0, "c1"] == 2
             return t1
 
-        t3.run(parallel=False)
+        t3.run()
 
     def test_run_isolated_dependencies_spark(self, spark_view):
         """
@@ -731,7 +709,7 @@ class TestNode:
             assert t2.collect()[0].c1 == 2
             return t1
 
-        t3.run(parallel=False)
+        t3.run()
 
     def test_pandas_on_spark_use_pandas(self, spark_view):
         """
@@ -817,7 +795,7 @@ class TestNode:
 
             return t1
 
-        t3.run(spark_view, parallel=False)
+        t3.run(spark_view)
 
     def test_run_one_dependency_multiple_instances(self):
         """
@@ -839,7 +817,7 @@ class TestNode:
         def c(a, b):
             return a
 
-        c.run(parallel=False)
+        c.run()
 
     def test_node_parameters(self):
         @node(type="pandas")
@@ -990,7 +968,7 @@ class TestNode:
         def t5(t2, t3, t4):
             return pd.concat([t2, t3, t4]).reset_index(drop=True)
 
-        result = t5.run(parallel=True)
+        result = t5.run(max_workers=1)
         assert_frame_equal(result, pd.DataFrame({"c1": [4, 30, 9]}))
 
     def test_select(self):

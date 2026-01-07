@@ -86,7 +86,7 @@ class TestDataFrameConverter:
         def t2(df_t1):
             return df_t1
 
-        t2.run(spark, parallel=False)
+        t2.run(spark)
         warning_text = (
             "pyspark.errors.exceptions.base.PySparkValueError: "
             "[CANNOT_INFER_EMPTY_SCHEMA] Can not infer schema from empty Pandas Dataframe to "

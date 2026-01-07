@@ -15,6 +15,7 @@ class CatalogNode:
         self.node = node
         self.node_graph = node_graph
         self.predecessors = []
+        self.predecessors_as_static = []
         self.predecessor_columns = {}
 
         for input_node in node.input_nodes:
@@ -22,6 +23,9 @@ class CatalogNode:
             self.predecessor_columns[input_node.node.key] = (
                 input_node.selected_columns or []
             )
+
+            if input_node.static:
+                self.predecessors_as_static.append(input_node.node.key)
         self.successors = set()
 
     def register_successor(self, successor_node):
@@ -48,11 +52,16 @@ class CatalogNode:
             "output": self._get_schema(),
             "predecessors": self.predecessors,
             "predecessorColumns": self.predecessor_columns,
+            "predecessorsStatic": self.predecessors_as_static,
             "successors": sorted(list(self.successors)),
             "sourceCode": self._get_source_code(),
             "isActive": self._get_is_active(),
             "hasCache": self.node.cache is not None,
-            "cacheIsDisabled": node_run_context.cache_context.disabled
+            "cacheIsDisabled": not node_run_context.cache_context
+            or (
+                node_run_context.cache_context
+                and node_run_context.cache_context.disabled
+            )
             or node_run_context.exists_provided_input,
             "hasProvidedInput": node_run_context.exists_provided_input,
             "group": self.node.group,

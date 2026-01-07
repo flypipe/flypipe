@@ -150,9 +150,15 @@ const getPredecessorNodesAndEdges = (graph, nodeDefs, nodeKey) => {
     ];
 };
 
+const isStaticDependency = (sourceNode, targetNode) => {
+    return targetNode.data.predecessorsStatic.includes(sourceNode.data.nodeKey);
+};
+
 const getEdgeDef = (graph, source, target, linkedEdge = null) => {
     const targetNode = graph.getNode(linkedEdge ? linkedEdge.target : target);
     const sourceNode = graph.getNode(linkedEdge ? linkedEdge.source : source);
+    const predecessorIsStatic = isStaticDependency(sourceNode, targetNode);
+    const predecessorEdgeColor = "#ff0073";
     return {
         id: `${source}-${target}`,
         isNew: targetNode.data.isNew || false,
@@ -163,10 +169,16 @@ const getEdgeDef = (graph, source, target, linkedEdge = null) => {
             type: MarkerType.ArrowClosed,
             width: 15,
             height: 15,
+            ...(predecessorIsStatic && { color: predecessorEdgeColor }),
         },
+        ...(predecessorIsStatic && {
+            label: "static",
+            style: { stroke: predecessorEdgeColor },
+        }),
         ...(targetNode.data.isActive || {
             style: {
                 strokeDasharray: "5,5",
+                ...(predecessorIsStatic && { stroke: predecessorEdgeColor }),
             },
         }),
     };
@@ -177,6 +189,7 @@ const addOrReplaceEdge = (graph, edge) => {
     const otherEdges = edges.filter(
         ({ source, target }) => source !== edge.source || target !== edge.target
     );
+
     graph.setEdges([edge, ...otherEdges]);
 
     const nodes = graph.getNodes();
@@ -373,6 +386,7 @@ const getNewNodeDef = ({
     output,
     predecessors,
     predecessorColumns,
+    predecessorStatic,
     successors,
     sourceCode,
     isActive,
@@ -390,6 +404,7 @@ const getNewNodeDef = ({
     output: output || [],
     predecessors: predecessors || [],
     predecessorColumns: predecessorColumns || [],
+    predecessorStatic: predecessorStatic || [],
     successors: successors || [],
     sourceCode: sourceCode || "",
     isActive: isActive || true,
@@ -488,4 +503,5 @@ export {
     deleteNode,
     deleteEdge,
     getNodeTypeColorClass,
+    isStaticDependency,
 };

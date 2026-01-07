@@ -3,6 +3,10 @@ from typing import Union
 import pandas as pd
 from tabulate import tabulate
 
+from flypipe.utils import get_logger
+
+logger = get_logger()
+
 
 class DataframeTypeNotSupportedError(Exception):
     """Error raised if the dataframe type is not supported"""
@@ -47,7 +51,6 @@ class DataFrameMissingColumns(Exception):
     """
 
     def __init__(self, source_columns, selected_columns):
-
         # Columns found or difference case sensitive
         all_cols = []
         for selected_column in selected_columns:
@@ -99,6 +102,6 @@ class DataFrameMissingColumns(Exception):
             f"\n\n\n{tabulate(error_df, headers='keys', tablefmt='mixed_outline')}\n"
         )
 
-        print(msg_error)
+        logger.error(msg_error)
 
         super().__init__(msg_error)

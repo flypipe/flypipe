@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from flypipe.config import get_config, config_context, RunMode
+from flypipe.config import get_config, config_context
 
 
 class TestConfig:
@@ -60,4 +60,4 @@ class TestConfig:
             assert get_config("require_node_description") is True
 
     def test_get_config_default(self):
-        assert get_config("default_run_mode") == RunMode.SEQUENTIAL.value
+        assert not get_config("require_node_description")

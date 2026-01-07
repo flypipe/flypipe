@@ -33,7 +33,7 @@ class Schema:
             if pk:
                 col.reset_pk()
 
-    def set_parents(self, parent: "Node"):
+    def set_parent(self, parent: "Node"):
         for col in self.columns:
             col._set_parent(parent)
 

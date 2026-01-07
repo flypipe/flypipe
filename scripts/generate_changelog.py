@@ -48,11 +48,27 @@ def generate_changelog(to_branch: str=None):
 
 def save_changelog(issues, version):
     lines = ["Changelog\n=========\n"]
+
+    breaking_changes = {
+        "5.0.0": [
+            "\n\n<h3>Breaking Changes</h3>\n\n",
+            "- **Removed `parallel` argument from `node.run()`**: Use `max_workers` parameter instead to control parallel execution. Set `max_workers=1` for sequential execution or `max_workers=N` for parallel execution with N workers. You can also set `FLYPIPE_NODE_RUN_MAX_WORKERS` environment variable to configure this globally (defaults to `1`).\n\n",
+            "- **Removed `FLYPIPE_DEFAULT_RUN_MODE` config**: This config previously defined parallel or sequential execution mode. Now use `FLYPIPE_NODE_RUN_MAX_WORKERS` instead to control parallelism. Set it to `1` for sequential execution or `N` for parallel execution with N workers. This can be set globally via environment variable or passed directly to `node.run()` as the `max_workers` parameter.\n\n",
+            "- **Updated `Cache` class method signatures**: The `read()` and `write()` methods now include optional CDC (Change Data Capture) parameters:\n"
+            "\t- `read(from_node=None, to_node=None, *args, **kwargs)`: Added `from_node` and `to_node` parameters for CDC filtering\n"
+            "\t- `write(*args, df, upstream_nodes=None, to_node=None, datetime_started_transformation=None, **kwargs)`: Added `df`, `upstream_nodes`, `to_node`, and `datetime_started_transformation` parameters for CDC metadata tracking\n"
+            "\t- All custom cache implementations must update their method signatures to include these parameters, even if CDC functionality is not used (parameters can be ignored)\n",
+            "- **Added `create_cdc_table()` method to `Cache` class**: A new optional method for caches with CDC support. The base implementation is a no-op, so existing cache implementations will continue to work, but cache classes that support CDC should override this method to create their CDC metadata tables.\n\n"
+        ]
+    }
+
     issue_ids = sorted(list(issues.keys()), reverse=True)
     if issue_ids:
         version = '.'.join([str(v) for v in version])
+        breaking_changes_lines = breaking_changes.get(version, [])
+        breaking_changes_lines += ["<h3>Commits</h3>"] if breaking_changes_lines else []
         version = f'<h2><a href="https://github.com/flypipe/flypipe/tree/release/{version}" target="_blank" rel="noopener noreferrer">release/{version}</a></h2>'
-        lines += [version] + [f'* {issues[issue_id]}' for issue_id in issue_ids]
+        lines += [version] + breaking_changes_lines + [f'* {issues[issue_id]}' for issue_id in issue_ids]
 
     changelog_lines = get_changelog_latest_branch_release()
     lines = lines + (changelog_lines or [])

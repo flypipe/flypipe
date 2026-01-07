@@ -114,6 +114,7 @@ class TestCatalog:
                 "predecessorColumns": {
                     "flypipe_catalog_catalog_test_function_t1_t1": ["c2", "c3"]
                 },
+                "predecessorsStatic": [],
                 "output": [
                     {"column": "c2", "type": "String", "description": "c2 desc"},
                 ],
@@ -138,6 +139,7 @@ class TestCatalog:
                 "name": "t1",
                 "predecessors": [],
                 "predecessorColumns": {},
+                "predecessorsStatic": [],
                 "output": [
                     {"column": "c1", "type": "String", "description": "c1 desc"},
                     {"column": "c2", "type": "String", "description": "c2 desc"},
@@ -166,6 +168,7 @@ class TestCatalog:
                 "predecessorColumns": {
                     "flypipe_catalog_catalog_test_function_t1_t1": []
                 },
+                "predecessorsStatic": [],
                 "output": [],
                 "successors": [],
                 "tags": [{"id": "misc", "name": "misc"}],

@@ -19,6 +19,7 @@ nav:
     - Cache/Persist Data:
       - How it works?: notebooks/usage/cache.ipynb
       - Cache Handling Process: cache-flow.md
+      - CDC Cache: notebooks/usage/cdc-cache.ipynb
     - Dependencies Preprocessing:
       - How it works?: preprocessing-flow.md
       - Working Example: notebooks/usage/preprocess.ipynb

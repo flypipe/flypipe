@@ -78,7 +78,9 @@ class TestNodeGraph:
         assert graph.get_node(t1.key)["status"] == RunStatus.SKIP
         assert graph.get_node(t2.key)["status"] == RunStatus.ACTIVE
         assert graph.get_node(t3.key)["status"] == RunStatus.ACTIVE
-        assert graph.get_node(t4.key)["status"] == RunStatus.SKIP
+        assert (
+            graph.get_node(t4.key)["status"] == RunStatus.PROVIDED_INPUT
+        )  # Changed from SKIP
         assert graph.get_node(t5.key)["status"] == RunStatus.ACTIVE
         assert graph.get_node(t6.key)["status"] == RunStatus.ACTIVE
 
@@ -115,7 +117,9 @@ class TestNodeGraph:
         assert graph.get_node(t1.key)["status"] == RunStatus.SKIP
         assert graph.get_node(t2.key)["status"] == RunStatus.ACTIVE
         assert graph.get_node(t3.key)["status"] == RunStatus.ACTIVE
-        assert graph.get_node(t4.key)["status"] == RunStatus.SKIP
+        assert (
+            graph.get_node(t4.key)["status"] == RunStatus.PROVIDED_INPUT
+        )  # Changed from SKIP
         assert graph.get_node(t5.key)["status"] == RunStatus.ACTIVE
         assert graph.get_node(t6.key)["status"] == RunStatus.ACTIVE
 

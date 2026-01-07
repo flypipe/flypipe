@@ -1,10 +1,12 @@
-from copy import copy
 from dataclasses import dataclass, field
-from typing import Mapping, Union
+from typing import Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from flypipe.node import Node
 
 from pandas import DataFrame as PandasDataFrame
 
-from flypipe.utils import sparkleframe_is_active
+from flypipe.utils import sparkleframe_is_active, get_logger
 
 if sparkleframe_is_active():
     # if using sparkleframe activate, it will fail because they do not implement pyspark.pandas
@@ -21,9 +23,14 @@ from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame as PySparkDataFrame
 
 from flypipe.dependency.preprocess_mode import PreprocessMode
-from flypipe.config import get_config, RunMode
+from flypipe.config import get_config
 from flypipe.node_result import NodeResult
-from flypipe.schema import Schema
+
+
+class Autodict(dict):
+    def __missing__(self, key):
+        value = self[key] = type(self)()
+        return value
 
 
 @dataclass
@@ -34,20 +41,33 @@ class RunContext:
     """
 
     spark: SparkSession = None
-    parallel: bool = None
+    max_workers: int = 1
     provided_inputs: dict = None
     pandas_on_spark_use_pandas: bool = False
     parameters: dict = None
     cache_modes: dict = None
     dependencies_preprocess_modes: Union[dict, PreprocessMode] = None
-    node_results: Mapping[str, NodeResult] = field(init=False, default=None)
+    debug: bool = False
+    node_results: Autodict = field(init=False, default=None)
+
+    def copy(self):
+        return RunContext(
+            spark=self.spark,
+            max_workers=self.max_workers,
+            provided_inputs=self.provided_inputs,
+            pandas_on_spark_use_pandas=self.pandas_on_spark_use_pandas,
+            parameters=self.parameters,
+            cache_modes=self.cache_modes,
+            dependencies_preprocess_modes=self.dependencies_preprocess_modes,
+            debug=self.debug,
+        )
 
     def __post_init__(self):
-        self.parallel = (
-            get_config("default_run_mode") == RunMode.PARALLEL.value
-            if self.parallel is None
-            else self.parallel
-        )
+
+        # Configure logger based on debug flag
+        get_logger(enabled=self.debug)
+
+        self.max_workers = self.max_workers or int(get_config("node_run_max_workers"))
 
         self.provided_inputs = self.provided_inputs or {}
         self.pandas_on_spark_use_pandas = (
@@ -59,26 +79,66 @@ class RunContext:
         self.cache_modes = self.cache_modes or {}
 
         self.dependencies_preprocess_modes = self.dependencies_preprocess_modes or {}
-        self.node_results = {
-            node.key: NodeResult(self.spark, df, schema=None)
-            for node, df in self.provided_inputs.items()
-        }
 
-    def copy(self):
-        return copy(self)
+        self.node_results = Autodict()
+        # Initialize node results with provided inputs, it is necessary to do this here because the provided inputs are not available
+        # in the node results, and if a graph has only one node and the provided input is not a NodeResult, it will fail.
+        for node, df in self.provided_inputs.items():
+            self.node_results[node][node] = NodeResult(self.spark, df, schema=None)
 
-    def update_node_results(
+    def update_node_results_with_provided_input(
         self,
-        node_key: str,
+        from_node: "Node",
+        to_node: "Node",
         df: Union[
             PandasDataFrame,
             PySparkDataFrame,
             PandasApiDataFrame,
             PySparkConnectDataFrame,
         ],
-        schema: Schema = None,
     ):
-        self.node_results[node_key] = NodeResult(self.spark, df, schema=schema)
+        self.node_results[from_node][to_node] = NodeResult(self.spark, df, schema=None)
+
+    def get_graph_result(self, node: "Node") -> Union[
+        PandasDataFrame,
+        PySparkDataFrame,
+        PandasApiDataFrame,
+        PySparkConnectDataFrame,
+    ]:
+        return self.node_results[node][node].as_type(node.dataframe_type).get_df()
+
+    def update_node_results(
+        self,
+        from_node: "Node",
+        to_node: "Node",
+        df: Union[
+            PandasDataFrame,
+            PySparkDataFrame,
+            PandasApiDataFrame,
+            PySparkConnectDataFrame,
+        ],
+    ):
+        self.node_results[from_node][to_node] = NodeResult(
+            self.spark, df, schema=from_node.output_schema
+        )
+
+    def has_provided_input(self, node: "Node") -> bool:
+        """
+        Check if a provided input exists for the given node.
+
+        Parameters
+        ----------
+        node : Node
+            The provided input node
+        to_node : Node
+            The destination node
+
+        Returns
+        -------
+        bool
+            True if the node result exists, False otherwise
+        """
+        return node in self.provided_inputs
 
     @property
     def skipped_node_keys(self):

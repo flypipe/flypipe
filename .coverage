@@ -3,3 +3,4 @@ omit=
     # put your paths here
     flypipe/tests/*
     flypipe/examples/*
+    *_test.py

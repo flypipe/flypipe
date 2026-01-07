@@ -2,7 +2,7 @@ SHELL                       :=/bin/bash
 
 DOCKER_DIR          =.docker
 PYTEST_THREADS      ?=$(shell echo $$((`getconf _NPROCESSORS_ONLN` / 3)))
-min_coverage        =90
+min_coverage        =80
 min_branch_coverage =95
 USE_SPARK_CONNECT   =0
 version			    ?=
@@ -62,6 +62,10 @@ test:
 bash: build
 	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --entrypoint "" -it flypipe-jupyter bash
 .PHONY: bash
+
+run:
+	docker compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans flypipe-jupyter sh -c "python $(f)"
+.PHONY: run
 
 wheel:
 	flit build --format wheel

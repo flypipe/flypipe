@@ -57,8 +57,6 @@ export class Group {
         const otherNodes = nodes.filter(({ id }) => id !== this.groupId);
         const groupNodes = nodes.filter(({ id }) => group.data.nodes.has(id));
 
-        //console.log("----- GROUP", group.data.label, isMinimise, "-----");
-
         // All nodes within the group should be hidden if we are minimising and shown if maximising
         groupNodes.forEach((groupNode) => {
             groupNode.hidden = isMinimise;
@@ -79,7 +77,6 @@ export class Group {
                     source === group.id || target === group.id
             )
             .forEach((edge) => {
-                //console.log("");
                 const source_node = nodes.find(({ id }) => id === edge.source);
                 const source_node_is_group =
                     source_node.type === "flypipe-group";
@@ -98,18 +95,14 @@ export class Group {
                     ? getGroup(this.graph, target_node.data.group)
                     : null;
 
-                //console.log("Edge:", edge.source, "->", edge.target);
                 edge.hidden = true;
                 if (source_node_is_group && target_node_is_group) {
-                    //console.log("case 0", edge);
                     if (
                         source_group_node.data.isMinimised &&
                         target_group_node.data.isMinimised
                     ) {
-                        //console.log("case 0.1", edge);
                         edge.hidden = false;
                     } else {
-                        //console.log("case 0.2", edge);
                         edge.hidden = true;
 
                         if (
@@ -149,7 +142,6 @@ export class Group {
                                                         }
                                                     )
                                                     .forEach((edge) => {
-                                                        //console.log("case 0.2.1", edge);
                                                         edge.hidden = false;
                                                     });
                                             }
@@ -161,24 +153,18 @@ export class Group {
                     }
                 } else if (!source_node_is_group) {
                     if (target_group_node.data.isMinimised) {
-                        //console.log("case 1: source is node, target is group");
                         // show edge from non-group node to group node
                         if (source_group_node == null) {
-                            //console.log("case 1.1", edge);
                             edge.hidden = false;
                         } else if (source_group_node.data.isMinimised) {
                             if (target_group_node.data.isMinimised) {
-                                //console.log("case 1.2.1", edge);
                                 edge.hidden = true;
                             } else {
-                                //console.log("case 1.2.2", edge);
                                 edge.hidden = false;
                             }
                         } else if (target_group_node == null) {
-                            //console.log("case 1.3", edge);
                             edge.hidden = false;
                         } else if (target_group_node.data.isMinimised) {
-                            //console.log("case 1.4", edge);
                             edge.hidden = false;
                         }
 
@@ -200,7 +186,6 @@ export class Group {
                                                 );
                                             })
                                             .forEach((edge) => {
-                                                //console.log("case 1.5:", edge);
                                                 edge.hidden = true;
                                             });
                                     }
@@ -208,7 +193,6 @@ export class Group {
                             );
                         });
                     } else {
-                        //console.log("case 2: source is group, target group is maximised", edge);
                         // hide edge from non-group node to group node
                         edge.hidden = true;
 
@@ -243,7 +227,6 @@ export class Group {
                                                         }
                                                     )
                                                     .forEach((edge) => {
-                                                        //console.log("case 2.1 source node do not belong to a group:", source_group_node, edge);
                                                         edge.hidden = false;
                                                     });
                                             }
@@ -274,7 +257,6 @@ export class Group {
                                                 );
                                             })
                                             .forEach((edge) => {
-                                                //console.log("case 2.2 source node belong to a group:", edge);
                                                 edge.hidden = false;
                                             });
                                     }
@@ -283,30 +265,22 @@ export class Group {
                         }
                     }
                 } else {
-                    //console.log("case 3: source is group, target is node");
                     const target_node_is_visible = !target_node.hidden;
 
                     if (target_node_is_visible) {
-                        //console.log("case 3.1", edge);
                         edge.hidden = false;
                     } else {
-                        //console.log("case 3.2", edge);
                         edge.hidden = true;
                     }
 
                     if (source_group_node.data.isMinimised) {
-                        //console.log("case 3.3");
-
                         if (target_group_node != null) {
                             if (target_group_node.data.isMinimised) {
-                                //console.log("case 3.3.1", edge);
                                 edge.hidden = true;
                             } else {
-                                //console.log("case 3.3.2", edge);
                                 edge.hidden = false;
                             }
                         } else {
-                            //console.log("case 3.3.3", edge);
                             edge.hidden = false;
                         }
 
@@ -329,18 +303,14 @@ export class Group {
                                         );
                                     })
                                     .forEach((edge) => {
-                                        //console.log("case 3.3.4", edge);
                                         edge.hidden = true;
                                     });
                             }
                         });
                     } else {
-                        //console.log("case 4.1");
                         if (target_group_node != null) {
-                            //console.log("case 4.2", edge);
                             edge.hidden = true;
                         } else {
-                            //console.log("case 4.3", edge);
                             edge.hidden = true;
 
                             //show all edges from internal nodes of source group to target node
@@ -365,7 +335,6 @@ export class Group {
                                                 );
                                             })
                                             .forEach((edge) => {
-                                                //console.log("case 4.3.1", edge);
                                                 edge.hidden = false;
                                             });
                                     }

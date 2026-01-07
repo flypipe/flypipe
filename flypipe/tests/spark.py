@@ -6,8 +6,8 @@ from pyspark.sql import SparkSession
 os.environ["PYARROW_IGNORE_TIMEZONE"] = "1"
 
 
-def build_spark():
-    if os.environ.get("USE_SPARK_CONNECT") == "1":
+def build_spark(use_spark_connect: bool = False):
+    if os.environ.get("USE_SPARK_CONNECT") == "1" or use_spark_connect:
         print("Building spark session (spark_connect)")
 
         spark = (

@@ -1,8 +1,6 @@
-import logging
 import re
 import sys
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Union, Callable
+from typing import List, Union
 
 from pyspark.sql import SparkSession
 
@@ -10,18 +8,17 @@ from flypipe.cache.cache import Cache
 from flypipe.dependency.preprocess_mode import PreprocessMode
 from flypipe.config import get_config
 from flypipe.dependency.node_input import InputNode
-from flypipe.node_run_context import NodeRunContext
+from flypipe.node_dependencies_mixin import NodeDependenciesMixin
 from flypipe.node_type import NodeType
 from flypipe.run_context import RunContext
-from flypipe.run_status import RunStatus
-from flypipe.schema import Schema, Column
-from flypipe.schema.types import Unknown
-from flypipe.utils import DataFrameType
+from flypipe.schema import Schema
+from flypipe.utils import DataFrameType, get_logger
+from flypipe.runner import Runner
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
-class Node:
+class Node(NodeDependenciesMixin):
     """
     Central model for Flypipe. Should be used indirectly through the `node` decorator rather than directly referencing
     it.
@@ -87,53 +84,25 @@ class Node:
 
         if cache is not None and not isinstance(cache, Cache):
             raise TypeError("cache is not of type flypipe.cache.Cache")
+
         self.cache = cache
+
+        # FWe declare that this node as parent of the cache
+        if self.cache is not None:
+            self.cache.set_parent(self)
 
         self.output_schema = output
 
         # For each column if the schema, declare that this node is the parent for all of them
         # this for loop leaves columns aware of its owner to guide relationships definition
         if self.output_schema is not None:
-            self.output_schema.set_parents(self)
+            self.output_schema.set_parent(self)
 
     @property
     def output(self):
         schema = self.output_schema.copy()
         schema.reset(relationships=True, pk=True)
         return schema
-
-    def _get_input_nodes(self, dependencies):
-        input_nodes = []
-        input_node_keys = set()
-        input_node_alias = set()
-        if dependencies is None:
-            dependencies = []
-        for dependency in dependencies:
-            if dependency.key in input_node_keys:
-                raise ValueError(
-                    f"Illegal operation- node {self.__name__} is using the same node {dependency.__name__} more than "
-                    f"once"
-                )
-
-            if isinstance(dependency, Node):
-                input_node = InputNode(dependency)
-                input_nodes.append(input_node)
-            elif isinstance(dependency, InputNode):
-                input_node = dependency
-                input_nodes.append(input_node)
-            else:
-                raise ValueError(
-                    f"Expected all dependencies of node {self.__name__} to be of format node/node.alias(...)/node."
-                    f"select(...) but received {dependency} of type {type(dependency)}"
-                )
-
-            if input_node.get_alias() in input_node_alias:
-                raise ValueError(
-                    f"Illegal operation- node {self.__name__} has multiple nodes with the same name/alias"
-                )
-            input_node_keys.add(input_node.key)
-            input_node_alias.add(input_node.get_alias())
-        return input_nodes
 
     @property
     def __name__(self):
@@ -196,208 +165,138 @@ class Node:
 
         self.node_graph = NodeGraph(self, run_context=run_context)
 
-    def preprocess(self, *arg: Union[PreprocessMode, Callable]) -> InputNode:
-        return InputNode(self).set_preprocess(*arg)
-
-    def select(self, *columns):
-        return InputNode(self).select(*columns)
-
-    def alias(self, value):
-        return InputNode(self).alias(value)
-
-    def get_node_inputs(self, run_context: RunContext):
-        inputs = {}
-        for input_node in self.input_nodes:
-            inputs[input_node.get_alias()] = input_node.get_value(run_context, self)
-        return inputs
-
     def __call__(self, *args):
         return self.function(*args)
 
     def run(
         self,
         spark: SparkSession = None,
-        parallel: bool = None,
+        max_workers: int = 1,
         inputs: dict = None,
         pandas_on_spark_use_pandas: bool = False,
         parameters: dict = None,
         cache: dict = None,
         preprocess: Union[dict, PreprocessMode] = None,
+        debug: bool = False,
     ):
-        if not inputs:
-            inputs = {}
+        """
+        Execute the node and its upstream dependencies, returning the final result.
+
+        This method orchestrates the execution of the entire transformation graph from the
+        target node (self) backwards through its dependencies. It supports both sequential
+        and parallel execution, caching, CDC (Change Data Capture), and various preprocessing modes.
+
+        Parameters
+        ----------
+        spark : SparkSession, optional
+            The Spark session to use for Spark-based transformations. Required for nodes
+            that work with Spark DataFrames or execute Spark SQL queries (default: None).
+        max_workers : int, optional
+            Maximum number of parallel workers for concurrent node execution. If None,
+            defaults to 1 (sequential execution). When > 1, independent nodes in the graph
+            will be executed in parallel using ThreadPoolExecutor. The actual parallelism
+            is capped at `os.cpu_count() - 1` (default: 1).
+        inputs : dict, optional
+            Dictionary mapping Node objects to their pre-computed DataFrames or input parameters.
+            Nodes provided here will skip execution and use the supplied data instead. This is
+            useful for:
+            - Providing external data sources
+            - Testing specific subgraphs
+            - Incremental updates in CDC workflows
+            Format: {Node: DataFrame} or {Node: {"param1": value1, ...}} (default: None).
+        pandas_on_spark_use_pandas : bool, optional
+            When True, converts pandas-on-Spark DataFrames to regular pandas DataFrames.
+            This can improve performance for small datasets that fit in memory (default: False).
+        parameters : dict, optional
+            Dictionary mapping Node objects to their runtime parameters. These parameters
+            are passed to the node's transformation function, allowing dynamic behavior.
+            Format: {Node: {"param1": value1, "param2": value2, ...}} (default: None).
+        cache : dict, optional
+            Dictionary mapping Node objects to their CacheMode. Controls caching behavior
+            for specific nodes in the execution graph. Supported modes:
+            - CacheMode.MERGE: Incremental caching with CDC support
+            - CacheMode.OVERWRITE: Replace existing cache
+            - CacheMode.DISABLE: Skip caching for this run
+            Format: {Node: CacheMode} (default: None).
+        preprocess : Union[dict, PreprocessMode], optional
+            Controls preprocessing of upstream dependencies. Can be:
+            - PreprocessMode enum: Applied to all dependencies globally
+            - dict: Mapping {ParentNode: {DependencyNode: PreprocessMode}} for fine-grained control
+            Preprocessing includes column selection, type conversion, and format alignment
+            (default: None, which means PreprocessMode.ACTIVE).
+        debug : bool, optional
+            When True, enables debug logging in the Runner. Instead of using print statements,
+            the Runner will use logger.debug() for all execution logs, which can be controlled
+            via Python's logging configuration (default: False).
+
+        Returns
+        -------
+        DataFrame
+            The computed DataFrame from the target node, converted to the node's
+            configured dataframe_type (pandas, PySpark, or pandas-on-Spark).
+
+        Examples
+        --------
+        Basic execution:
+
+        >>> result = my_node.run(spark)
+
+        Parallel execution with 4 workers:
+
+        >>> result = my_node.run(spark, max_workers=4)
+
+        Providing input data and parameters:
+
+        >>> result = my_node.run(
+        ...     spark,
+        ...     inputs={source_node: external_df},
+        ...     parameters={transform_node: {"threshold": 0.5}}
+        ... )
+
+        Incremental CDC execution:
+
+        >>> result = my_node.run(
+        ...     spark,
+        ...     cache={node_a: CacheMode.MERGE, node_b: CacheMode.MERGE},
+        ...     inputs={source_node: new_rows_df}
+        ... )
+
+        Notes
+        -----
+        - The execution uses Runner, which builds a logical execution plan and executes
+          nodes level-by-level based on dependencies.
+        - Cached nodes with CacheMode.MERGE trigger CDC filtering for upstream dependencies,
+          processing only changed data.
+        - All intermediate results are stored in run_context.node_results for memoization.
+        - The method is thread-safe for parallel execution when max_workers > 1.
+        """
+        inputs = inputs or {}
 
         run_context = RunContext(
             spark=spark,
-            parallel=parallel,
+            max_workers=max_workers,
             provided_inputs=inputs,
             pandas_on_spark_use_pandas=pandas_on_spark_use_pandas,
             parameters=parameters,
             cache_modes=cache,
             dependencies_preprocess_modes=preprocess,
+            debug=debug,
         )
 
         self.create_graph(run_context)
         execution_graph = self.node_graph.get_execution_graph(run_context)
 
-        if run_context.parallel:
-            self._run_parallel(run_context, execution_graph)
-        else:
-            self._run_sequential(run_context, execution_graph)
+        runner = Runner(node_graph=execution_graph, run_context=run_context)
+
+        runner.run(target_node=self)
 
         end_node_name = self.node_graph.get_end_node_name(self.node_graph.graph)
         end_node = self.node_graph.get_transformation(end_node_name)
-        return (
-            run_context.node_results[end_node_name]
-            .as_type(end_node.dataframe_type)
-            .get_df()
-        )
+        return run_context.get_graph_result(end_node)
 
     @property
     def dataframe_type(self):
         return self.DATAFRAME_TYPE_MAP[self.type]
-
-    def _run_parallel(self, run_context: RunContext, execution_graph):
-        def execute(node):
-            self.process_transformation_with_cache(node, run_context)
-            return node["transformation"].key
-
-        logger.info("Starting parallel processing of node %s", node.__name__)
-        with ThreadPoolExecutor(
-            max_workers=get_config("node_run_max_workers")
-        ) as executor:
-            visited = set()
-            jobs = set()
-            initial_nodes_to_run = [
-                runnable_node
-                for runnable_node in execution_graph.get_runnable_transformations()
-                if runnable_node["transformation"].key not in run_context.node_results
-            ]
-            for runnable_node in initial_nodes_to_run:
-                logger.info(
-                    "Schedule parallelised execution of node %s",
-                    runnable_node["transformation"].__name__,
-                )
-                jobs.add(executor.submit(execute, runnable_node))
-                visited.add(runnable_node["transformation"].key)
-            while jobs:
-                to_remove = set()
-                for job in as_completed(jobs):
-                    # When we finish processing a node we remove it from the execution graph and check if there are any
-                    # new eligible nodes to be run.
-                    processed_node_key = job.result()
-                    to_remove.add(job)
-                    execution_graph.remove_node(processed_node_key)
-                    runnable_nodes = execution_graph.get_runnable_transformations()
-                    for runnable_node in runnable_nodes:
-                        node_key = runnable_node["transformation"].key
-                        if (
-                            node_key not in visited
-                            and node_key not in run_context.node_results
-                        ):
-                            logger.info(
-                                "Schedule parallelised execution of node %s",
-                                runnable_node["transformation"].__name__,
-                            )
-                            jobs.add(executor.submit(execute, runnable_node))
-                            visited.add(runnable_node["transformation"].key)
-                jobs = jobs - to_remove
-
-    def _run_sequential(self, run_context: RunContext, execution_graph):
-        while not execution_graph.is_empty():
-            runnable_nodes = execution_graph.get_runnable_transformations()
-            for runnable_node in runnable_nodes:
-
-                execution_graph.remove_node(runnable_node["transformation"].key)
-
-                if runnable_node["transformation"].key in run_context.node_results:
-                    continue
-
-                self.process_transformation_with_cache(runnable_node, run_context)
-
-    @classmethod
-    def _get_consolidated_output_schema(cls, output_schema, output_columns):
-        """
-        The output schema for a transformation is currently optional. If not provided, we create a simple one from the
-        set of columns selected by descendant nodes.
-        """
-        if output_schema:
-            schema = output_schema
-        elif output_columns is not None:
-            columns = []
-            for output_column in output_columns:
-                columns.append(Column(output_column, Unknown(), ""))
-            schema = Schema(columns)
-        else:
-            schema = None
-        return schema
-
-    def process_transformation_with_cache(self, runnable_node, run_context: RunContext):
-
-        result = None
-        node_transformation = runnable_node["transformation"]
-        ran_transformation = False
-
-        if (
-            runnable_node["status"] == RunStatus.CACHED
-            and runnable_node["node_run_context"].cache_context.exists_cache_to_load
-        ):
-            result = runnable_node["node_run_context"].cache_context.read()
-        else:
-            ran_transformation = True
-            dependency_values = runnable_node["transformation"].get_node_inputs(
-                run_context
-            )
-
-            result = node_transformation.process_transformation(
-                run_context.spark,
-                runnable_node["output_columns"],
-                runnable_node["node_run_context"],
-                **dependency_values,
-            )
-
-        run_context.update_node_results(
-            node_transformation.key,
-            result,
-            schema=self._get_consolidated_output_schema(
-                node_transformation.output_schema,
-                runnable_node["output_columns"],
-            ),
-        )
-
-        if ran_transformation:
-            # If cache exists, and the transformation has run, then save its cache
-            runnable_node["node_run_context"].cache_context.write(
-                run_context.node_results[node_transformation.key]
-                .as_type(node_transformation.dataframe_type)
-                .get_df()
-            )
-
-    def process_transformation(
-        self, spark, requested_columns: list, node_run_context: NodeRunContext, **inputs
-    ):
-        # TODO: apply output validation + rename function to transformation, select only necessary columns specified in
-        # self.dependencies_selected_columns
-        parameters = inputs
-        if self.spark_context:
-            parameters["spark"] = spark
-
-        if self.requested_columns:
-            parameters["requested_columns"] = requested_columns
-
-        if node_run_context.parameters:
-            parameters = {**parameters, **node_run_context.parameters}
-
-        result = self.function(**parameters)
-        if self.type == "spark_sql":
-            # Spark SQL functions only return the text of a SQL query, we will need to execute this command.
-            if not spark:
-                raise ValueError(
-                    "Unable to run spark_sql type node without spark being provided in the transformation.run call"
-                )
-            result = spark.sql(result)
-
-        return result
 
     def html(
         self,
@@ -407,15 +306,18 @@ class Node:
         pandas_on_spark_use_pandas=False,
         parameters=None,
         cache=None,
+        preprocess: Union[dict, PreprocessMode] = None,
+        debug: bool = False,
     ):
         """
         Retrieves html string of the graph to be executed.
 
         Parameters
         ----------
-        width : int, default None
-            viewport width in pixels
-        height : int, default 1000
+        spark : SparkSession, optional
+            The Spark session to use for Spark-based transformations. Required for nodes
+            that work with Spark DataFrames or execute Spark SQL queries (default: None).
+        height : int, default 700
             viewport height in pixels
         inputs : dict, default None
             dictionary where keys are Nodes and values dataframes, these dataframes will skip the nodes executions as
@@ -424,6 +326,23 @@ class Node:
             If True, convert and runs `pandas_on_spark` as `pandas`
         parameters : dict, default None
             dictionary dict(Node,dict(str,obj)) of parameters to be given to the nodes when executing them.
+        cache : dict, optional
+            Dictionary mapping Node objects to their CacheMode. Controls caching behavior
+            for specific nodes in the execution graph. Supported modes:
+            - CacheMode.MERGE: Incremental caching with CDC support
+            - CacheMode.OVERWRITE: Replace existing cache
+            - CacheMode.DISABLE: Skip caching for this run
+            Format: {Node: CacheMode} (default: None).
+        preprocess : Union[dict, PreprocessMode], optional
+            Controls preprocessing of upstream dependencies. Can be:
+            - PreprocessMode enum: Applied to all dependencies globally
+            - dict: Mapping {ParentNode: {DependencyNode: PreprocessMode}} for fine-grained control
+            Preprocessing includes column selection, type conversion, and format alignment
+            (default: None, which means PreprocessMode.ACTIVE).
+        debug : bool, optional
+            When True, enables debug logging in the Runner. Instead of using print statements,
+            the Runner will use logger.debug() for all execution logs, which can be controlled
+            via Python's logging configuration (default: False).
 
         Returns
         -------

@@ -1,8 +1,7 @@
-from typing import List
+from typing import List, Union
 
 import networkx as nx
 from networkx import DiGraph
-
 from flypipe.cache.cache_context import CacheContext
 from flypipe.node import Node
 from flypipe.node_function import NodeFunction
@@ -11,6 +10,12 @@ from flypipe.output_column_set import OutputColumnSet
 from flypipe.run_context import RunContext
 from flypipe.run_status import RunStatus
 from flypipe.utils import DataFrameType
+
+
+def get_node_key(node_or_key: Union[Node, str]):
+    if isinstance(node_or_key, Node):
+        return node_or_key.key
+    return node_or_key
 
 
 class NodeGraph:
@@ -46,6 +51,7 @@ class NodeGraph:
 
         frontier = [transformation]
         while frontier:
+
             current_transformation = frontier.pop()
 
             # We can not add current_transformation.cache now, as current_transformation can be node function
@@ -118,11 +124,18 @@ class NodeGraph:
 
         for node_key in graph.nodes:
             node = graph.nodes[node_key]
-            node["node_run_context"].cache_context = CacheContext(
-                spark=run_context.spark,
-                cache_mode=run_context.cache_modes.get(node["transformation"]),
-                cache=node["transformation"].cache,
-            )
+            # Only create cache context if the node has a cache
+            if node["transformation"].cache is None:
+                node["node_run_context"].cache_context = None
+            else:
+                cache_context = CacheContext(
+                    spark=run_context.spark,
+                    cache_mode=run_context.cache_modes.get(node["transformation"]),
+                    cache=node["transformation"].cache,
+                    debug=run_context.debug,
+                )
+
+                node["node_run_context"].cache_context = cache_context
 
         return graph
 
@@ -307,17 +320,25 @@ class NodeGraph:
 
         return graph
 
-    def get_node(self, name: str):
-        return self.graph.nodes[name]
+    def get_node(self, node_or_key: Union[Node, str]) -> dict:
+        return self.graph.nodes[get_node_key(node_or_key)]
 
     def get_edges(self):
         return self.graph.edges
 
-    def get_edge_data(self, source_node_name, target_node_name):
-        return self.graph.get_edge_data(source_node_name, target_node_name)
+    def get_edge_data(self, source_node_key, target_node_key):
+        return self.graph.get_edge_data(source_node_key, target_node_key)
 
-    def get_transformation(self, name: str) -> Node:
-        return self.get_node(name)["transformation"]
+    def get_transformation(self, key: str) -> Node:
+        return self.get_node(key)["transformation"]
+
+    def get_run_status(self, node_or_key: Union[Node, str]) -> CacheContext:
+        return self.get_node(get_node_key(node_or_key))["status"]
+
+    def get_cache_context(self, node_or_key: Union[Node, str]) -> CacheContext:
+        return self.get_node(get_node_key(node_or_key))[
+            "node_run_context"
+        ].cache_context
 
     def get_end_node_name(self, graph):
         for name in graph.nodes:
@@ -335,9 +356,12 @@ class NodeGraph:
         run_status = RunStatus.ACTIVE
 
         if node["node_run_context"].exists_provided_input:
-            run_status = RunStatus.SKIP
+            run_status = RunStatus.PROVIDED_INPUT
 
-        elif node["node_run_context"].cache_context.exists_cache_to_load:
+        elif (
+            node["node_run_context"].cache_context
+            and node["node_run_context"].cache_context.exists_cache_to_load
+        ):
             run_status = RunStatus.CACHED
 
         frontier = [(node_name, run_status)]
@@ -354,9 +378,12 @@ class NodeGraph:
                     ]
 
                     if ancestor_node_run_context.exists_provided_input:
-                        frontier.append((ancestor_name, RunStatus.SKIP))
+                        frontier.append((ancestor_name, RunStatus.PROVIDED_INPUT))
 
-                    elif ancestor_node_run_context.cache_context.exists_cache_to_load:
+                    elif (
+                        ancestor_node_run_context.cache_context
+                        and ancestor_node_run_context.cache_context.exists_cache_to_load
+                    ):
                         frontier.append((ancestor_name, RunStatus.CACHED))
 
                     else:
@@ -369,6 +396,18 @@ class NodeGraph:
                     if self.graph.nodes[ancestor_name]["status"] not in [
                         RunStatus.ACTIVE,
                         RunStatus.CACHED,
+                        RunStatus.PROVIDED_INPUT,
+                    ]:
+                        frontier.append((ancestor_name, RunStatus.SKIP))
+
+            elif descendent_status == RunStatus.PROVIDED_INPUT:
+                current_node["status"] = RunStatus.PROVIDED_INPUT
+
+                for ancestor_name in self.graph.predecessors(current_node_name):
+                    if self.graph.nodes[ancestor_name]["status"] not in [
+                        RunStatus.ACTIVE,
+                        RunStatus.CACHED,
+                        RunStatus.PROVIDED_INPUT,
                     ]:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
@@ -379,6 +418,7 @@ class NodeGraph:
                     if self.graph.nodes[ancestor_name]["status"] not in [
                         RunStatus.ACTIVE,
                         RunStatus.CACHED,
+                        RunStatus.PROVIDED_INPUT,
                     ]:
                         frontier.append((ancestor_name, RunStatus.SKIP))
 
@@ -386,13 +426,68 @@ class NodeGraph:
             if self.graph.nodes[n]["status"] in [RunStatus.UNKNOWN]:
                 raise RuntimeError(f"Run status for node {n} is {RunStatus.UNKNOWN}")
 
-    def get_dependency_map(self):
-        dependencies = {}
-        for node in self.graph.nodes:
-            dependencies[node] = set()
-        for source, destination in self.graph.edges:
-            dependencies[destination].add(source)
-        return dependencies
+    def get_first_cached_predecessors(
+        self, node_or_key: Union[Node, str]
+    ) -> List["Node"]:
+        """
+        Get the first cached predecessors of a node by traversing upstream.
+
+        This method traverses the graph upstream from the given node and returns
+        the first predecessors that have a cache. It stops traversing a branch
+        once a cached node is found.
+
+        Parameters
+        ----------
+        node_key : str
+            The key of the node to find cached predecessors for
+
+        Returns
+        -------
+        List[Node]
+            A list of Node objects (transformations) that are the first cached
+            predecessors found when traversing upstream
+
+        Example
+        -------
+        Graph: A(cached) -> B -> C -> D(cached) -> E
+
+        For node E:
+        - Returns [D] (D is cached, so we stop there)
+
+        For node C:
+        - Returns [A] (traverse B, then find A which is cached)
+
+        For node D:
+        - Returns [A] (traverse C, traverse B, then find A which is cached)
+        """
+        cached_predecessors = []
+        visited = set()
+
+        def traverse_upstream(current_key):
+            """Recursively traverse upstream to find cached predecessors"""
+            if current_key in visited:
+                return
+            visited.add(current_key)
+
+            # Get all direct predecessors
+            predecessors = list(self.graph.predecessors(current_key))
+            for pred_key in predecessors:
+                # Check if this predecessor has a cache
+                cache_context = self.get_cache_context(pred_key)
+
+                if cache_context:
+                    # Found a cached predecessor, add it and stop traversing this branch
+                    transformation = self.get_transformation(pred_key)
+                    if transformation not in cached_predecessors:
+                        cached_predecessors.append(transformation)
+                else:
+                    # No cache, continue traversing upstream
+                    traverse_upstream(pred_key)
+
+        # Start traversing from the given node
+        traverse_upstream(get_node_key(node_or_key))
+
+        return cached_predecessors
 
     def get_nodes_depth(self):
         """
@@ -427,23 +522,6 @@ class NodeGraph:
         max_depth = max(nodes_depth.keys())
 
         return {-1 * k + max_depth + 1: v for k, v in nodes_depth.items()}
-
-    def get_runnable_transformations(self) -> List[Node]:
-        candidate_node_names = [
-            node_name
-            for node_name in self.graph
-            if self.graph.in_degree(node_name) == 0
-        ]
-        runnable_node_names = filter(
-            lambda node_name: self.graph.nodes[node_name]["status"]
-            in [RunStatus.ACTIVE, RunStatus.CACHED],
-            candidate_node_names,
-        )
-        runnable_nodes = [self.get_node(node_name) for node_name in runnable_node_names]
-        return runnable_nodes
-
-    def is_empty(self):
-        return nx.number_of_nodes(self.graph) == 0
 
     def get_execution_graph(self, run_context: RunContext):
         """

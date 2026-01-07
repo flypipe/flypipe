@@ -3,9 +3,17 @@ import re
 from flypipe.node import node
 from flypipe.node_type import NodeType
 
+from flypipe.utils import get_logger
+
+logger = get_logger()
+
 
 def Spark(table):
     """Creates a flypipe node that loads a Spark table
+
+    .. deprecated::
+        This datasource is deprecated and will be removed in a future version.
+        Please use alternative methods for loading Spark tables.
 
     Attributes:
         table (str): name of the spark table table
@@ -34,6 +42,10 @@ def Spark(table):
         spark_context=True,
     )
     def spark_datasource(spark):
+        logger.warning(
+            "WARNING: Spark datasource is DEPRECATED and will be removed in a future version."
+        )
+
         if spark is None:
             raise ValueError("Please provide a spark session, i.e. node.run(spark)")
 
