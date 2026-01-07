@@ -117,8 +117,8 @@ pr-check: black lint
 	make coverage RUN_MODE=SPARK
 	make coverage RUN_MODE=SPARK_CONNECT
 	make coverage RUN_MODE=SNOWFLAKE
-	make test RUN_MODE=SPARK f=flypipe/tests/activate/sparkleframe_test.py
-	make test RUN_MODE=SPARK_CONNECT f=flypipe/tests/activate/sparkleframe_test.py
+	make test RUN_MODE=SPARK f=flypipe/tests/activate/sparkleframe_pyspark_test.py
+	make test RUN_MODE=SPARK_CONNECT f=flypipe/tests/activate/sparkleframe_pyspark_test.py
 	pytest scripts/*_test.py
 .PHONY: pr-check
 
