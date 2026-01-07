@@ -1,17 +1,11 @@
-from abc import ABC, abstractmethod
-from typing import Callable, Union, Optional
+from __future__ import annotations
+from typing import TYPE_CHECKING, Callable, Union, Optional
 
-# Optional imports for type hints
-try:
+if TYPE_CHECKING:
     from pyspark.sql import SparkSession
-except ImportError:
-    SparkSession = None
-
-try:
     from snowflake.snowpark.session import Session as SnowflakeSession
-except ImportError:
-    SnowflakeSession = None
 
+from abc import ABC, abstractmethod
 from flypipe.schema.types import Type
 from flypipe.utils import dataframe_type, DataFrameType
 
