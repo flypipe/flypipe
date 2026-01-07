@@ -32,7 +32,7 @@ class TestSparkleFramePySpark:
             assert spark.__module__ == "pyspark.sql.session"
 
     def test_output_dataframe_is_sparkleframe_if_activated_environment(self):
-        from sparkleframe.activate import activate
+        from sparkleframe.activate import activate, deactivate
 
         activate()
 
@@ -51,4 +51,5 @@ class TestSparkleFramePySpark:
 
         df = my_node.run(spark)
         assert df.__module__ == "sparkleframe.polarsdf.dataframe"
+        deactivate()
 

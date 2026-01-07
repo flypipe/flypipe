@@ -11,10 +11,10 @@ import pandas as pd
 def sparkleframe_is_active() -> bool:
     """
     Check if sparkleframe activation is enabled.
-    
+
     Sparkleframe is a Polars-based implementation of the PySpark API.
     When active, it replaces PySpark's implementation with Polars underneath.
-    
+
     Returns
     -------
     bool
@@ -23,7 +23,7 @@ def sparkleframe_is_active() -> bool:
     """
     try:
         from pyspark.sql import SparkSession
-        
+
         spark_session_module = SparkSession.__module__.split(".")[0]
         return spark_session_module == "sparkleframe"
     except ImportError:
@@ -47,7 +47,7 @@ if sparkleframe_is_active():
         import pandas as ps
     except ImportError:
         pass
-    
+
     # If using sparkleframe, sql_connect refers to regular sql dataframe
     try:
         import pyspark.sql.dataframe as sql_connect
@@ -59,7 +59,7 @@ else:
         import pyspark.pandas as ps
     except ImportError:
         pass
-    
+
     try:
         import pyspark.sql.connect.dataframe as sql_connect
     except ImportError:
@@ -90,7 +90,6 @@ class DataFrameType(Enum):
 
 
 def assert_schemas_are_equals(df1, df2) -> None:
-
     # Avoid Circular Reference
     from flypipe.exceptions import DataframeSchemasDoNotMatchError
 
@@ -110,7 +109,6 @@ def assert_schemas_are_equals(df1, df2) -> None:
 
 
 def assert_dataframes_equals(df1, df2) -> None:
-
     # Avoid Circular Reference
     from flypipe.exceptions import DataframeDifferentDataError
 
@@ -134,17 +132,17 @@ def assert_dataframes_equals(df1, df2) -> None:
 def dataframe_type(df) -> DataFrameType:
     """
     Determine the type of DataFrame.
-    
+
     Parameters
     ----------
     df : DataFrame
         A DataFrame object from any supported library
-    
+
     Returns
     -------
     DataFrameType
         The type of the DataFrame
-    
+
     Raises
     ------
     DataframeTypeNotSupportedError
@@ -152,7 +150,7 @@ def dataframe_type(df) -> DataFrameType:
     """
     # Avoid Circular Reference
     from flypipe.exceptions import DataframeTypeNotSupportedError
-    
+
     # Get type string once for fallback checks
     # (coverage instrumentation can break isinstance checks)
     df_type_str = str(type(df))
@@ -160,33 +158,33 @@ def dataframe_type(df) -> DataFrameType:
     # Check Pandas first (always available)
     if isinstance(df, pd.DataFrame):
         return DataFrameType.PANDAS
-    
+
     # Check PySpark types (if available)
     if ps is not None and isinstance(df, ps.DataFrame):
         return DataFrameType.PANDAS_ON_SPARK
 
     if (
-        (sql is not None and isinstance(df, sql.DataFrame))
-        or (sql_connect is not None and isinstance(df, sql_connect.DataFrame))
-        or (sparkle_dataframe is not None and isinstance(df, sparkle_dataframe.DataFrame))
+            (sql is not None and isinstance(df, sql.DataFrame))
+            or (sql_connect is not None and isinstance(df, sql_connect.DataFrame))
+            or (sparkle_dataframe is not None and isinstance(df, sparkle_dataframe.DataFrame))
     ):
         return DataFrameType.PYSPARK
-    
+
     # Check Snowpark types (if available)
     if snowpark_dataframe is not None and isinstance(df, snowpark_dataframe.DataFrame):
         return DataFrameType.SNOWPARK
-    
+
     # Provide helpful error messages for missing dependencies
     error_msg = f"Unsupported DataFrame type: {type(df)}"
-    
+
     # Check if it might be a PySpark DataFrame without PySpark installed
     if "pyspark" in str(type(df)).lower():
         error_msg += "\n\nPySpark is not installed. Install it with: pip install flypipe[spark]"
-    
+
     # Check if it might be a Snowpark DataFrame without Snowflake installed
     elif "snowpark" in str(type(df)).lower():
         error_msg += "\n\nSnowflake Snowpark is not installed. Install it with: pip install flypipe[snowflake]"
-    
+
     raise DataframeTypeNotSupportedError(error_msg)
 
 
@@ -253,9 +251,9 @@ class ColoredFormatter(logging.Formatter):
 
 
 def get_logger(
-    logger_name: str = "Flypipe",
-    log_level: int = logging.DEBUG,
-    enabled: bool = True,
+        logger_name: str = "Flypipe",
+        log_level: int = logging.DEBUG,
+        enabled: bool = True,
 ) -> logging.Logger:
     """
     Get a named logger, configuring it lazily on first use.

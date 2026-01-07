@@ -78,4 +78,7 @@ jobs:
         run: make coverage RUN_MODE=SNOWFLAKE
 
       - name: Run unit tests using Sparkleframe Activate
-        run: make test f=flypipe/tests/activate/sparkleframe_test.py RUN_MODE=SPARK
+        run: make test f=flypipe/tests/activate/sparkleframe_pyspark_test.py RUN_MODE=SPARK
+
+      - name: Run unit tests using Sparkleframe Activate with Spark Connect
+        run: make test f=flypipe/tests/activate/sparkleframe_pyspark_test.py RUN_MODE=SPARK_CONNECT

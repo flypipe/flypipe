@@ -85,11 +85,11 @@ lint:
 .PHONY: lint
 
 coverage:
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" $(CONTAINER_NAME) bash -c "export RUN_MODE=$(RUN_MODE) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_test.py --override-ini='python_files=*$(TEST_PATTERN)' --cov-config=flypipe/$(COVERAGE_CONFIG) --cov=flypipe --no-cov-on-fail --cov-fail-under=$(MIN_COVERAGE) flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" $(CONTAINER_NAME) bash -c "export RUN_MODE=$(RUN_MODE) && pytest --rootdir flypipe -n $(PYTEST_THREADS) --ignore=/flypipe/tests/activate/sparkleframe_pyspark_test.py --override-ini='python_files=*$(TEST_PATTERN)' --cov-config=flypipe/$(COVERAGE_CONFIG) --cov=flypipe --no-cov-on-fail --cov-fail-under=$(MIN_COVERAGE) flypipe"
 .PHONY: coverage
 
 test:
-	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" $(CONTAINER_NAME) bash -c "export RUN_MODE=$(RUN_MODE) && pytest -n $(PYTEST_THREADS) -vv \$$(if [ -n '$(f)' ]; then echo '$(f)'; else find flypipe -name '*$(TEST_PATTERN)' -type f; fi) --rootdir flypipe"
+	docker-compose -f $(DOCKER_DIR)/docker-compose.yaml run --remove-orphans --entrypoint "" $(CONTAINER_NAME) bash -c "export RUN_MODE=$(RUN_MODE) && pytest -n $(PYTEST_THREADS) -vv --override-ini='python_files=*$(TEST_PATTERN)' \$$(if [ -n '$(f)' ]; then echo '$(f)'; else find flypipe -name '*$(TEST_PATTERN)' -type f; fi) --rootdir flypipe"
 .PHONY: test
 
 bash: build
