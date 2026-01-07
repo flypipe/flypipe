@@ -1,4 +1,5 @@
 """Tests for DataFrameConverter - Snowpark functionality"""
+
 import os
 import pandas as pd
 import pytest
@@ -24,7 +25,9 @@ class TestDataFrameConverterSnowpark:
 
     def test_convert_pandas_to_snowpark(self, snowflake_session, pandas_df):
         """Test converting Pandas DataFrame to Snowpark DataFrame"""
-        df = DataFrameConverter(snowflake_session).convert(pandas_df, DataFrameType.SNOWPARK)
+        df = DataFrameConverter(snowflake_session).convert(
+            pandas_df, DataFrameType.SNOWPARK
+        )
         # Compare by converting back to pandas
         result_pandas = df.to_pandas()
         assert_dataframes_equals(result_pandas, pandas_df)
@@ -36,14 +39,18 @@ class TestDataFrameConverterSnowpark:
     def test_convert_snowpark_to_pandas(self, snowflake_session, pandas_df):
         """Test converting Snowpark DataFrame to Pandas DataFrame"""
         snowpark_df = snowflake_session.create_dataframe(pandas_df)
-        df = DataFrameConverter(snowflake_session).convert(snowpark_df, DataFrameType.PANDAS)
+        df = DataFrameConverter(snowflake_session).convert(
+            snowpark_df, DataFrameType.PANDAS
+        )
         assert_dataframes_equals(df, pandas_df)
 
     # ========================================
     # Unsupported Conversions (Snowpark <-> PySpark)
     # ========================================
 
-    def test_convert_snowpark_to_pyspark_raises_error(self, snowflake_session, pandas_df):
+    def test_convert_snowpark_to_pyspark_raises_error(
+        self, snowflake_session, pandas_df
+    ):
         """Test that converting Snowpark to PySpark raises UnsupportedConversionError"""
         snowpark_df = snowflake_session.create_dataframe(pandas_df)
         # Use None for session since the error is raised before session is used
@@ -75,4 +82,3 @@ class TestDataFrameConverterSnowpark:
         with pytest.raises(ValueError) as exc_info:
             converter.convert(pandas_df, DataFrameType.SNOWPARK)
         assert "Snowflake session required" in str(exc_info.value)
-

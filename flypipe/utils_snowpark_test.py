@@ -2,11 +2,7 @@ import os
 import pandas as pd
 import pytest
 
-from flypipe.exceptions import (
-    DataframeDifferentDataError,
-    DataframeSchemasDoNotMatchError,
-    DataframeTypeNotSupportedError,
-)
+from flypipe.exceptions import DataframeTypeNotSupportedError
 from flypipe.utils import assert_dataframes_equals, DataFrameType, dataframe_type
 
 
@@ -19,7 +15,7 @@ class TestUtilsSnowpark:
 
     def test_assert_dataframes_equals(self, snowflake_session):
         """Test assert_dataframes_equals with Snowpark DataFrames
-        
+
         Note: Full schema validation is not yet implemented for Snowpark DataFrames.
         This test verifies basic equality checking only.
         """
@@ -46,4 +42,3 @@ class TestUtilsSnowpark:
 
         with pytest.raises(DataframeTypeNotSupportedError):
             dataframe_type(1)
-

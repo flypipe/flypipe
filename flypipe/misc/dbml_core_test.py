@@ -694,4 +694,3 @@ class TestDBMLCore:
         """
 
         assert_strings_equal_ignore_whitespace(dbml, expected_dbml)
-

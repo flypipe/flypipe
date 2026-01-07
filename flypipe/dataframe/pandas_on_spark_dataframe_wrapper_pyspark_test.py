@@ -1,4 +1,5 @@
 """Tests for PandasOnSparkDataFrameWrapper - PySpark functionality"""
+
 import os
 import pandas as pd
 import pytest
@@ -9,7 +10,9 @@ from pyspark.sql.types import (
     BooleanType,
 )
 
-from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import PandasOnSparkDataFrameWrapper
+from flypipe.dataframe.pandas_on_spark_dataframe_wrapper import (
+    PandasOnSparkDataFrameWrapper,
+)
 from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.schema.types import (
     Boolean,
@@ -99,4 +102,3 @@ class TestPandasOnSparkDataFrameWrapperPySpark:
         df_wrapper = PandasOnSparkDataFrameWrapper.get_instance(spark, df)
 
         assert isinstance(df_wrapper.get_column_flypipe_type("c1"), Boolean)
-

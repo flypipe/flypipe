@@ -17,8 +17,13 @@ RUN node -v
 RUN npm install -g @softwaretechnik/dbml-renderer
 RUN npm install -g dbdocs
 
-COPY ./requirements-dev.txt .
-RUN pip install -r requirements-dev.txt
+COPY ./requirements-dev-pyspark.txt .
+RUN pip install -r requirements-dev-pyspark.txt
+
+COPY ./requirements-dev-snowpark.txt .
+RUN pip install -r requirements-dev-snowpark.txt
+
+
 
 COPY ./flypipe /flypipe
 

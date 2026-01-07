@@ -109,4 +109,5 @@ class DataFrameMissingColumns(Exception):
 
 class UnsupportedConversionError(Exception):
     """Exception raised when a direct conversion between dataframe types is not supported."""
+
     pass

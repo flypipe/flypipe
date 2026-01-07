@@ -73,4 +73,3 @@ class TestCacheSnowpark:
         assert spy_writter.call_count == 0
         assert spy_reader.call_count == 1
         assert spy_exists.call_count == 1
-

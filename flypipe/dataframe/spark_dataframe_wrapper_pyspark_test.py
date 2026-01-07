@@ -1,4 +1,5 @@
 """Tests for SparkDataFrameWrapper - PySpark functionality"""
+
 import os
 import pytest
 from pyspark.sql.types import (
@@ -163,4 +164,3 @@ class TestSparkDataFrameWrapperPySpark:
         # TODO: this is broken
         # assert_frame_equal(
         #     df_wrapper.df.toPandas(), pd.DataFrame({'col1': [None, 999.11, 1.23, None]}, dtype=np.dtype('O')))
-

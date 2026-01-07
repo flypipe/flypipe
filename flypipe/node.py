@@ -35,7 +35,7 @@ class Node(NodeDependenciesMixin):
         "pandas": DataFrameType.PANDAS,
         "pandas_on_spark": DataFrameType.PANDAS_ON_SPARK,
         "spark_sql": DataFrameType.PYSPARK,
-        "snowpark": DataFrameType.SNOWPARK
+        "snowpark": DataFrameType.SNOWPARK,
     }
 
     def __init__(
@@ -308,10 +308,10 @@ class Node(NodeDependenciesMixin):
 
     def html(
         self,
-        session: Union[SnowflakeSession, SparkSession]=None,
-        height: int=700,
+        session: Union[SnowflakeSession, SparkSession] = None,
+        height: int = 700,
         inputs=None,
-        pandas_on_spark_use_pandas: bool=False,
+        pandas_on_spark_use_pandas: bool = False,
         parameters=None,
         cache=None,
         preprocess: Union[dict, PreprocessMode] = None,

@@ -1,5 +1,5 @@
 """Tests for PandasDataFrameWrapper - Core functionality"""
-import datetime
+
 import os
 
 import numpy as np
@@ -15,8 +15,6 @@ from flypipe.schema.types import (
     Date,
     DateTime,
     Integer,
-    Float,
-    String,
 )
 
 
@@ -129,7 +127,9 @@ class TestPandasDataFrameWrapperCore:
         )
 
     def test_cast_column_integer(self):
-        df_wrapper = PandasDataFrameWrapper.get_instance(None, pd.DataFrame({"c1": [1.1]}))
+        df_wrapper = PandasDataFrameWrapper.get_instance(
+            None, pd.DataFrame({"c1": [1.1]})
+        )
         df_wrapper.cast_column("c1", Integer())
         assert df_wrapper.df.loc[0]["c1"] == 1
         assert df_wrapper.df.dtypes["c1"] == pd.Int64Dtype()
@@ -211,4 +211,3 @@ class TestPandasDataFrameWrapperCore:
                 dtype=np.dtype("O"),
             ),
         )
-

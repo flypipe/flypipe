@@ -171,14 +171,13 @@ class TestNodeSnowpark:
 
     def test_conversion_to_pandas(self, snowflake_session):
         """Test conversion from Snowpark to Pandas"""
+
         @node(
             type="snowpark",
             output=Schema([Column("C1", Decimal(10, 2))]),
         )
         def t1():
-            return snowflake_session.create_dataframe(
-                pd.DataFrame({"C1": [1]})
-            )
+            return snowflake_session.create_dataframe(pd.DataFrame({"C1": [1]}))
 
         @node(
             type="pandas",
@@ -193,6 +192,7 @@ class TestNodeSnowpark:
 
     def test_duplicated_output_columns(self, snowflake_session):
         """Test handling of duplicated output columns"""
+
         @node(
             type="snowpark",
             output=Schema([Column("C1", String()), Column("C2", String())]),
@@ -236,9 +236,7 @@ class TestNodeSnowpark:
             assert len(n["output_columns"]) == len(set(n["output_columns"]))
 
         df = t4.run(snowflake_session)
-        expected_df = snowflake_session.create_dataframe(
-            pd.DataFrame({"C2": ["2"]})
-        )
+        expected_df = snowflake_session.create_dataframe(pd.DataFrame({"C2": ["2"]}))
 
         # Compare DataFrames
         result_collected = sorted(df.collect(), key=lambda row: row.C2)
@@ -300,4 +298,3 @@ class TestNodeSnowpark:
             return snowflake_session.create_dataframe(t2_pd)
 
         t3.run(snowflake_session)
-

@@ -42,7 +42,7 @@ class _Config:
         environment_config = cls._get_config_from_environment_variables(config_name)
         if environment_config is not None:
             return environment_config
-        
+
         # For date/datetime format, derive from current style if not explicitly overridden
         if config_name in ("default_date_format", "default_datetime_format"):
             # Check if the format was explicitly set (not in context or env, we already checked those)
@@ -51,12 +51,12 @@ class _Config:
             # Convert string to DateFormat enum if needed
             if isinstance(style, str):
                 style = DateFormat(style)
-            
+
             if config_name == "default_date_format":
                 return style.date_format()
             else:  # default_datetime_format
                 return style.datetime_format()
-        
+
         # Get default value
         return cls.OPTIONS[config_name]
 

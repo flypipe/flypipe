@@ -1,4 +1,5 @@
 """Tests for PandasDataFrameWrapper - Snowpark functionality"""
+
 import datetime
 import os
 
@@ -47,6 +48,7 @@ class TestPandasDataFrameWrapperSnowpark:
 
     def test_empty_dataframe(self, snowflake_session):
         """Test that empty DataFrames are handled correctly"""
+
         @node(
             type="pandas",
             output=Schema([Column("c1", Boolean())]),
@@ -55,4 +57,3 @@ class TestPandasDataFrameWrapperSnowpark:
             return pd.DataFrame(columns=["c1"])
 
         t1.run(snowflake_session)
-

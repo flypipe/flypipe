@@ -4,13 +4,13 @@ from uuid import uuid4
 import pandas as pd
 import pytest
 
-from flypipe.cache import CacheMode
 from flypipe.cache.cache import Cache
 from flypipe.cache.cache_context import CacheContext
 
 
 class GenericCache(Cache):
     """Generic Pandas-based cache for testing"""
+
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 
@@ -32,6 +32,7 @@ class GenericCache(Cache):
 
 class GenericCacheSpark(Cache):
     """Generic PySpark-compatible cache for testing"""
+
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 
@@ -89,4 +90,3 @@ class TestCacheContextPySpark:
         cache_context = CacheContext(cache=GenericCacheSpark())
         with pytest.raises(TypeError):
             cache_context.exists()
-

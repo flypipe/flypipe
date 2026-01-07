@@ -602,6 +602,7 @@ class TestNodePySpark:
 
     def test_dataframes_are_isolated_from_nodes(self, spark_view):
         """Test that dataframes are isolated between nodes"""
+
         @node(
             type="pyspark",
             output=Schema([Column("c1", String()), Column("c2", String())]),
@@ -651,4 +652,3 @@ class TestNodePySpark:
             return spark_view.createDataFrame(t2)
 
         t3.run(spark_view)
-

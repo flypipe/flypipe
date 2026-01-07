@@ -8,7 +8,7 @@ os.environ["PYARROW_IGNORE_TIMEZONE"] = "1"
 
 def build_spark():
     run_mode = os.environ.get("RUN_MODE", "CORE")
-    
+
     if run_mode == "SPARK_CONNECT":
         print("Building spark session (spark_connect)")
 

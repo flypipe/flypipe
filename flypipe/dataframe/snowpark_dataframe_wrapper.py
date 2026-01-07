@@ -126,4 +126,3 @@ class SnowparkDataFrameWrapper(DataFrameWrapper):
         self.df = self.df.with_column(
             column, F.to_timestamp(F.col(column), flypipe_type.snowflake_format)
         )
-

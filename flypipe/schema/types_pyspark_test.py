@@ -80,4 +80,3 @@ class TestDatePySpark:
         expected_python_format = "%d/%m/%Y"
         result = Date.convert_pyspark_to_python_datetime_format(pyspark_format)
         assert result == expected_python_format
-

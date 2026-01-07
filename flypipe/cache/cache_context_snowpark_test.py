@@ -4,13 +4,13 @@ from uuid import uuid4
 import pandas as pd
 import pytest
 
-from flypipe.cache import CacheMode
 from flypipe.cache.cache import Cache
 from flypipe.cache.cache_context import CacheContext
 
 
 class GenericCache(Cache):
     """Generic Pandas-based cache for testing"""
+
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 
@@ -32,6 +32,7 @@ class GenericCache(Cache):
 
 class GenericCacheSnowpark(Cache):
     """Generic Snowpark-compatible cache for testing"""
+
     def __init__(self):
         self.table_name = f"test_cache_{str(uuid4()).replace('-', '_')}"
 
@@ -68,7 +69,9 @@ class TestCacheContextSnowpark:
 
     def test_write_read_with_session(self, snowflake_session):
         """Test write/read/exists operations with Snowpark cache"""
-        cache_context = CacheContext(session=snowflake_session, cache=GenericCacheSnowpark())
+        cache_context = CacheContext(
+            session=snowflake_session, cache=GenericCacheSnowpark()
+        )
         cache_context.write(pd.DataFrame(data={"col1": [1]}))
         cache_context.read()
         cache_context.exists()
@@ -82,7 +85,9 @@ class TestCacheContextSnowpark:
 
     def test_exists_with_session(self, snowflake_session):
         """Test exists() method with Snowpark cache"""
-        cache_context = CacheContext(session=snowflake_session, cache=GenericCacheSnowpark())
+        cache_context = CacheContext(
+            session=snowflake_session, cache=GenericCacheSnowpark()
+        )
         cache_context.exists()
 
     def test_exists_incompatible_cache(self, snowflake_session):
@@ -96,4 +101,3 @@ class TestCacheContextSnowpark:
         cache_context = CacheContext(cache=GenericCacheSnowpark())
         with pytest.raises(TypeError):
             cache_context.exists()
-

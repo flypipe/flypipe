@@ -221,4 +221,3 @@ class TestNodeFunctionCore:
         end_node = execution_graph.get_node(end_node_name)["transformation"]
         assert t1.output_schema is None
         assert end_node.output_schema is not None
-

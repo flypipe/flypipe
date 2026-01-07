@@ -46,8 +46,10 @@ class Column:
         description: str = "",
         pk: bool = False,
     ):
-        from flypipe.config import get_config  # Local import to avoid circular dependency
-        
+        from flypipe.config import (
+            get_config,
+        )  # Local import to avoid circular dependency
+
         self.name = name
         self.type = type
         if not description and get_config("require_schema_description"):

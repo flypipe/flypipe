@@ -198,4 +198,3 @@ class TestSparkDataSourcePySpark:
             spark_view.createDataFrame(schema=("c0", "c1"), data=[(0, 1)]),
             check_dtype=False,
         )
-

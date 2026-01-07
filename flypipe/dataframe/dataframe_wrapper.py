@@ -19,13 +19,17 @@ class DataFrameWrapper(ABC):
     DF_TYPE = None
     FLYPIPE_TYPE_TO_DF_TYPE_MAP = {}
 
-    def __init__(self, session: Optional[Union["SnowflakeSession", "SparkSession"]], df):
+    def __init__(
+        self, session: Optional[Union["SnowflakeSession", "SparkSession"]], df
+    ):
         self.session = session
         self.spark = session  # Keep for backward compatibility
         self.df = df
 
     @classmethod
-    def get_instance(cls, session: Optional[Union["SnowflakeSession", "SparkSession"]], df):
+    def get_instance(
+        cls, session: Optional[Union["SnowflakeSession", "SparkSession"]], df
+    ):
         # We need to do imports of the various df types within the function to avoid circular imports as they in turn
         # import dataframe_wrapper
         df_type = dataframe_type(df)

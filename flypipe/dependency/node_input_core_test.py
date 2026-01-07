@@ -289,4 +289,3 @@ class TestInputNodeCore:
         monkeypatch.setenv(
             "FLYPIPE_DEFAULT_DEPENDENCIES_PREPROCESS_FUNCTION", "preprocess_config"
         )
-

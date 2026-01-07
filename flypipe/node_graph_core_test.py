@@ -163,4 +163,3 @@ class TestNodeGraphCore:
             3: [t4.key],
             4: [t5.key],
         }
-

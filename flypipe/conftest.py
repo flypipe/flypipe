@@ -22,6 +22,7 @@ def spark(request):
 
     return build_spark()
 
+
 @pytest.fixture(scope="function", autouse=False)
 def snowflake_session(request):
     """
@@ -29,11 +30,11 @@ def snowflake_session(request):
     Uses local testing mode for tests.
     """
     from snowflake.snowpark import Session
-    
+
     # Create local testing session
-    session = Session.builder.config('local_testing', True).create()
-    
+    session = Session.builder.config("local_testing", True).create()
+
     yield session
-    
+
     # Cleanup
     session.close()

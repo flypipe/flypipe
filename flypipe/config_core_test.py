@@ -69,7 +69,7 @@ class TestConfigCore:
     def test_get_config_default_date_format_style(self):
         """Test that the default date format style is PYSPARK"""
         from flypipe.schema.util import DateFormat
-        
+
         assert get_config("default_date_format_style") == DateFormat.PYSPARK.value
 
     def test_get_config_default_date_format(self):
@@ -82,8 +82,6 @@ class TestConfigCore:
 
     def test_get_config_default_date_format_style_by_environment(self):
         """Test setting the default date format style via environment variable"""
-        from flypipe.schema.util import DateFormat
-        
         with self._set_environment_variable_for_test(
             "FLYPIPE_DEFAULT_DATE_FORMAT_STYLE", "SNOWFLAKE"
         ):
@@ -99,14 +97,13 @@ class TestConfigCore:
     def test_get_config_default_date_format_style_by_context_manager(self):
         """Test setting the default date format style via context manager"""
         from flypipe.schema.util import DateFormat
-        
+
         with config_context(default_date_format_style=DateFormat.PYTHON.value):
             assert get_config("default_date_format_style") == DateFormat.PYTHON.value
 
     def test_date_uses_config_default(self):
         """Test that Date class uses the configured default format style"""
         from flypipe.schema.types import Date
-        from flypipe.schema.util import DateFormat
 
         # Default should be PYSPARK
         date = Date()

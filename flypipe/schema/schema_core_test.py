@@ -80,4 +80,3 @@ class TestSchemaCore:
         schema2 = Schema(Column("col1", String()))
 
         assert schema1 != schema2
-

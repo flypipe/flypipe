@@ -43,7 +43,11 @@ class NodeRunContext:
 
     parameters: dict = None
     provided_input: Union[
-        PandasDataFrame, PySparkDataFrame, PandasApiDataFrame, PySparkConnectDataFrame, SnowparkDataFrame
+        PandasDataFrame,
+        PySparkDataFrame,
+        PandasApiDataFrame,
+        PySparkConnectDataFrame,
+        SnowparkDataFrame,
     ] = None
     cache_context: CacheContext = None
 

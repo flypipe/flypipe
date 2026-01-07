@@ -1,4 +1,5 @@
 """Tests for DataFrameWrapper - Core functionality"""
+
 import os
 import numpy as np
 import pytest
@@ -69,4 +70,3 @@ class TestDataFrameWrapperCore:
             str(ex.value)
             == "Unable to cast to flypipe type String- no dataframe type registered"
         )
-

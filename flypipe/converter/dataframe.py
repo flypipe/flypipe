@@ -20,7 +20,7 @@ class DataFrameConverter:
     ----------
     session : Union[snowflake.snowpark.session.Session, pyspark.sql.SparkSession], default None
         The session to use for dataframe conversions (Snowflake or Spark)
-    
+
     Notes
     -----
     Direct conversions are supported for:
@@ -28,7 +28,7 @@ class DataFrameConverter:
     - Pandas <-> Pandas-on-Spark
     - Pandas <-> Snowpark
     - Pandas-on-Spark <-> PySpark
-    
+
     Conversions between PySpark and Snowpark require going through Pandas as an intermediate step.
     """
 
@@ -41,7 +41,9 @@ class DataFrameConverter:
         from pyspark.sql.connect.session import SparkSession as SparkConnectSession
         from pyspark.sql.types import StructType, StructField, StringType
 
-        if not isinstance(self.session, SparkSession) and not isinstance(self.session, SparkConnectSession):
+        if not isinstance(self.session, SparkSession) and not isinstance(
+            self.session, SparkConnectSession
+        ):
             raise ValueError(
                 "PySpark SparkSession required to convert to PySpark DataFrame"
             )
@@ -61,7 +63,7 @@ class DataFrameConverter:
     def _convert_pandas_to_snowpark(self, df):
         """Convert Pandas DataFrame to Snowpark DataFrame"""
         from snowflake.snowpark.session import Session as SnowflakeSession
-        
+
         if not isinstance(self.session, SnowflakeSession):
             raise ValueError(
                 "Snowflake session required to convert to Snowpark DataFrame"
@@ -75,7 +77,7 @@ class DataFrameConverter:
     def _convert_snowpark_to_spark(self, df):
         """
         Convert Snowpark DataFrame to PySpark DataFrame.
-        
+
         Raises
         ------
         UnsupportedConversionError
@@ -88,7 +90,7 @@ class DataFrameConverter:
     def _convert_snowpark_to_pandas_on_spark(self, df):
         """
         Convert Snowpark DataFrame to Pandas-on-Spark DataFrame.
-        
+
         Raises
         ------
         UnsupportedConversionError
@@ -101,7 +103,7 @@ class DataFrameConverter:
     def _convert_spark_to_snowpark(self, df):
         """
         Convert PySpark DataFrame to Snowpark DataFrame.
-        
+
         Raises
         ------
         UnsupportedConversionError
@@ -115,7 +117,7 @@ class DataFrameConverter:
     def _convert_pandas_on_spark_to_snowpark(self, df):
         """
         Convert Pandas-on-Spark DataFrame to Snowpark DataFrame.
-        
+
         Raises
         ------
         UnsupportedConversionError
@@ -160,7 +162,7 @@ class DataFrameConverter:
         -------
         lambda function
             the function to do the conversion
-            
+
         Raises
         ------
         UnsupportedConversionError
@@ -168,13 +170,19 @@ class DataFrameConverter:
         """
         # Pandas conversions
         pandas_to_spark = lambda df: self._convert_pandas_to_spark(df)
-        pandas_to_pandas_on_spark = lambda df: self._convert_pandas_to_pandas_on_spark(df)
+        pandas_to_pandas_on_spark = lambda df: self._convert_pandas_to_pandas_on_spark(
+            df
+        )
         pandas_to_snowpark = lambda df: self._convert_pandas_to_snowpark(df)
 
         # Pandas-on-Spark conversions
-        pandas_on_spark_to_pandas = lambda df: self._convert_pandas_on_spark_to_pandas(df)
+        pandas_on_spark_to_pandas = lambda df: self._convert_pandas_on_spark_to_pandas(
+            df
+        )
         pandas_on_spark_to_spark = lambda df: self._convert_pandas_on_spark_to_spark(df)
-        pandas_on_spark_to_snowpark = lambda df: self._convert_pandas_on_spark_to_snowpark(df)
+        pandas_on_spark_to_snowpark = (
+            lambda df: self._convert_pandas_on_spark_to_snowpark(df)
+        )
 
         # PySpark conversions
         spark_to_pandas = lambda df: self._convert_spark_to_pandas(df)
@@ -184,7 +192,9 @@ class DataFrameConverter:
         # Snowpark conversions
         snowpark_to_pandas = lambda df: self._convert_snowpark_to_pandas(df)
         snowpark_to_spark = lambda df: self._convert_snowpark_to_spark(df)
-        snowpark_to_pandas_on_spark = lambda df: self._convert_snowpark_to_pandas_on_spark(df)
+        snowpark_to_pandas_on_spark = (
+            lambda df: self._convert_snowpark_to_pandas_on_spark(df)
+        )
 
         conversion_map = {
             DataFrameType.PANDAS: {
@@ -211,7 +221,7 @@ class DataFrameConverter:
 
         if from_type not in conversion_map:
             raise ValueError(f"Unknown source dataframe type: {from_type}")
-        
+
         if to_type not in conversion_map[from_type]:
             raise ValueError(
                 f"No conversion path defined from {from_type} to {to_type}"

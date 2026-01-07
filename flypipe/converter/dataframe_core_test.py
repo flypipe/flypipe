@@ -1,4 +1,5 @@
 """Tests for DataFrameConverter - Core (Pandas-only) functionality"""
+
 import os
 import pandas as pd
 import pytest
@@ -23,4 +24,3 @@ class TestDataFrameConverterCore:
         """Test that Pandas to Pandas conversion returns the same DataFrame"""
         df = DataFrameConverter().convert(pandas_df, DataFrameType.PANDAS)
         assert_dataframes_equals(df, pandas_df)
-

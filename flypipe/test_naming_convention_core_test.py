@@ -8,6 +8,7 @@ Test files must end with one of:
 
 Any file ending with _test.py that doesn't match one of these suffixes is invalid.
 """
+
 import os
 from pathlib import Path
 import pytest
@@ -24,17 +25,19 @@ class TestNamingConventionCore:
         """Ensure all *_test.py files end with core_test.py, pyspark_test.py, or snowpark_test.py"""
         # Get the flypipe directory (parent of this test file)
         flypipe_dir = Path(__file__).parent
-        
+
         # Valid test file suffixes
         valid_suffixes = ["core_test.py", "pyspark_test.py", "snowpark_test.py"]
-        
+
         # Find all Python files that look like tests
         invalid_test_files = []
-        
+
         for root, dirs, files in os.walk(flypipe_dir):
             # Skip __pycache__ and .pytest_cache directories
-            dirs[:] = [d for d in dirs if d not in ["__pycache__", ".pytest_cache", ".git"]]
-            
+            dirs[:] = [
+                d for d in dirs if d not in ["__pycache__", ".pytest_cache", ".git"]
+            ]
+
             for file in files:
                 # Check if it's a test file (ends with _test.py)
                 if file.endswith("_test.py"):
@@ -44,7 +47,7 @@ class TestNamingConventionCore:
                             os.path.join(root, file), flypipe_dir
                         )
                         invalid_test_files.append(relative_path)
-        
+
         # Assert that no invalid test files were found
         if invalid_test_files:
             error_message = (
@@ -54,13 +57,12 @@ class TestNamingConventionCore:
             )
             for file in sorted(invalid_test_files):
                 error_message += f"  - {file}\n"
-            
+
             error_message += (
                 "\nPlease rename these files to include the appropriate suffix:\n"
                 "  - *_core_test.py for backend-agnostic tests\n"
                 "  - *_pyspark_test.py for PySpark-specific tests\n"
                 "  - *_snowpark_test.py for Snowpark-specific tests\n"
             )
-            
-            assert False, error_message
 
+            assert False, error_message

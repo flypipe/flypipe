@@ -46,4 +46,3 @@ class TestRunContextCore:
         assert (
             run_context.get_dependency_preprocess_mode(t2, t1) == PreprocessMode.DISABLE
         )
-

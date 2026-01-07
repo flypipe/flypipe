@@ -62,7 +62,7 @@ class CDCSnowflakeManagerCache(Cache):
 
         # Build full table name for data
         self.full_table_name = f"{schema}.{table}"
-        
+
         # Build full table name for CDC metadata
         self.full_cdc_table_name = f"{schema}.{cdc_table}"
 
@@ -167,9 +167,7 @@ class CDCSnowflakeManagerCache(Cache):
 
             # Build join expression based on merge keys
             # Example: (target["ID"] == df["ID"]) & (target["KEY2"] == df["KEY2"])
-            join_conditions = [
-                target_table[key] == df[key] for key in self.merge_keys
-            ]
+            join_conditions = [target_table[key] == df[key] for key in self.merge_keys]
             join_expr = join_conditions[0]
             for condition in join_conditions[1:]:
                 join_expr = join_expr & condition
@@ -214,7 +212,7 @@ class CDCSnowflakeManagerCache(Cache):
         except Exception:
             # Table doesn't exist or can't be accessed
             exists = False
-            
+
         logger.debug(
             f"         🔍 CDCSnowflakeManagerCache.exists() called for '{self.full_table_name}': {exists}"
         )
@@ -255,7 +253,7 @@ class CDCSnowflakeManagerCache(Cache):
         try:
             session.table(self.full_cdc_table_name).limit(1).collect()
             cdc_table_exists = True
-        except:
+        except:  # noqa: E722
             pass
 
         if not cdc_table_exists:
@@ -284,9 +282,9 @@ class CDCSnowflakeManagerCache(Cache):
         logger.debug(f"              📊 Last processed: {last_timestamp}")
 
         # Convert pandas Timestamp to Snowflake literal if needed
-        if hasattr(last_timestamp, 'to_pydatetime'):
+        if hasattr(last_timestamp, "to_pydatetime"):
             last_timestamp = last_timestamp.to_pydatetime()
-        
+
         filtered_df = df.filter(F.col("CDC_DATETIME_UPDATED") > F.lit(last_timestamp))
         row_count = filtered_df.count()
         total_count = df.count()
@@ -307,18 +305,25 @@ class CDCSnowflakeManagerCache(Cache):
         try:
             session.table(self.full_cdc_table_name).limit(1).collect()
             # Table exists, do nothing
-        except:
+        except:  # noqa: E722
             # Table doesn't exist, create it
             try:
                 # Create empty dataframe with explicit schema
-                from snowflake.snowpark.types import StructType, StructField, StringType, TimestampType
-                
-                schema = StructType([
-                    StructField("SOURCE", StringType()),
-                    StructField("DESTINATION", StringType()),
-                    StructField("CDC_DATETIME_UPDATED", TimestampType()),
-                ])
-                
+                from snowflake.snowpark.types import (
+                    StructType,
+                    StructField,
+                    StringType,
+                    TimestampType,
+                )
+
+                schema = StructType(
+                    [
+                        StructField("SOURCE", StringType()),
+                        StructField("DESTINATION", StringType()),
+                        StructField("CDC_DATETIME_UPDATED", TimestampType()),
+                    ]
+                )
+
                 empty_cdc_df = session.create_dataframe(
                     [],
                     schema=schema,
@@ -330,7 +335,7 @@ class CDCSnowflakeManagerCache(Cache):
                 # Table might have been created by another thread, check again
                 try:
                     session.table(self.full_cdc_table_name).limit(1).collect()
-                except:
+                except:  # noqa: E722
                     raise e
 
     def _write_cdc_metadata(self, session, upstream_node, to_node, timestamp):
@@ -354,7 +359,7 @@ class CDCSnowflakeManagerCache(Cache):
         logger.debug(
             f"          ✍️  Writing CDC: {upstream_node.__name__} -> {to_node.__name__}"
         )
-        
+
         # Create CDC metadata entry
         cdc_entry = {
             "SOURCE": upstream_node.__name__,
@@ -376,7 +381,6 @@ class CDCSnowflakeManagerCache(Cache):
             existing_cdc = session.table(self.full_cdc_table_name)
             combined = existing_cdc.union_all(new_cdc_df)
             combined.write.mode("overwrite").save_as_table(self.full_cdc_table_name)
-        except:
+        except:  # noqa: E722
             # Table might not exist yet, create it
             new_cdc_df.write.mode("overwrite").save_as_table(self.full_cdc_table_name)
-

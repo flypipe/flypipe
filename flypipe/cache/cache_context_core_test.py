@@ -12,6 +12,7 @@ from flypipe.node import node
 
 class GenericCache(Cache):
     """Generic Pandas-based cache for testing"""
+
     def __init__(self):
         self.cache_csv = f"{str(uuid4())}.csv"
 

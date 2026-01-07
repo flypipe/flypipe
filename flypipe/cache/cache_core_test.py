@@ -96,7 +96,7 @@ class TestCacheCore:
         df = t1.run()
         assert sorted(list(df.columns)) == ["col1"]
 
-    def test_cache(self, cache, mocker):
+    def test_cache_writes_on_first_run_and_reads_on_second_run(self, cache, mocker):
         @node(
             type="pandas",
             cache=cache,

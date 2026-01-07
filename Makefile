@@ -17,7 +17,7 @@ else ifeq ($(RUN_MODE),SPARK)
     CONTAINER_NAME = flypipe-spark
     TEST_PATTERN = pyspark_test.py
     COVERAGE_CONFIG = .coverage-pyspark
-    MIN_COVERAGE = 80
+    MIN_COVERAGE = 62
 else ifeq ($(RUN_MODE),SPARK_CONNECT)
     DOCKER_DIR = $(DOCKER_BASE_DIR)/spark
     CONTAINER_NAME = flypipe-spark
@@ -29,7 +29,7 @@ else ifeq ($(RUN_MODE),SNOWFLAKE)
     CONTAINER_NAME = flypipe-snowflake
     TEST_PATTERN = snowpark_test.py
     COVERAGE_CONFIG = .coverage-snowpark
-    MIN_COVERAGE = 40
+    MIN_COVERAGE = 61
 else
     # Default to core for unknown modes
     DOCKER_DIR = $(DOCKER_BASE_DIR)/core

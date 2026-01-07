@@ -151,10 +151,6 @@ def dataframe_type(df) -> DataFrameType:
     # Avoid Circular Reference
     from flypipe.exceptions import DataframeTypeNotSupportedError
 
-    # Get type string once for fallback checks
-    # (coverage instrumentation can break isinstance checks)
-    df_type_str = str(type(df))
-
     # Check Pandas first (always available)
     if isinstance(df, pd.DataFrame):
         return DataFrameType.PANDAS
@@ -164,9 +160,12 @@ def dataframe_type(df) -> DataFrameType:
         return DataFrameType.PANDAS_ON_SPARK
 
     if (
-            (sql is not None and isinstance(df, sql.DataFrame))
-            or (sql_connect is not None and isinstance(df, sql_connect.DataFrame))
-            or (sparkle_dataframe is not None and isinstance(df, sparkle_dataframe.DataFrame))
+        (sql is not None and isinstance(df, sql.DataFrame))
+        or (sql_connect is not None and isinstance(df, sql_connect.DataFrame))
+        or (
+            sparkle_dataframe is not None
+            and isinstance(df, sparkle_dataframe.DataFrame)
+        )
     ):
         return DataFrameType.PYSPARK
 
@@ -179,7 +178,9 @@ def dataframe_type(df) -> DataFrameType:
 
     # Check if it might be a PySpark DataFrame without PySpark installed
     if "pyspark" in str(type(df)).lower():
-        error_msg += "\n\nPySpark is not installed. Install it with: pip install flypipe[spark]"
+        error_msg += (
+            "\n\nPySpark is not installed. Install it with: pip install flypipe[spark]"
+        )
 
     # Check if it might be a Snowpark DataFrame without Snowflake installed
     elif "snowpark" in str(type(df)).lower():
@@ -251,9 +252,9 @@ class ColoredFormatter(logging.Formatter):
 
 
 def get_logger(
-        logger_name: str = "Flypipe",
-        log_level: int = logging.DEBUG,
-        enabled: bool = True,
+    logger_name: str = "Flypipe",
+    log_level: int = logging.DEBUG,
+    enabled: bool = True,
 ) -> logging.Logger:
     """
     Get a named logger, configuring it lazily on first use.

@@ -157,7 +157,7 @@ class Date(Type):
             Defaults to FLYPIPE_DEFAULT_DATE_FORMAT_STYLE config (PYSPARK by default).
         """
         from flypipe.config import get_config
-        
+
         # Get default format mode from config if not specified
         if format_mode is None:
             format_mode_str = get_config("default_date_format_style")
@@ -170,14 +170,14 @@ class Date(Type):
         elif isinstance(format_mode, str):
             # Convert string to DateFormat enum if a string was passed
             format_mode = DateFormat(format_mode)
-        
+
         # Get default format from config if not specified
         if format is None:
             format = format_mode.date_format()
-        
+
         # Store the original format mode to give it preference when converting
         self._original_format_mode = format_mode
-        
+
         if format_mode == DateFormat.PYSPARK:
             self._pyspark_format = format
             self._python_format = None
@@ -213,11 +213,17 @@ class Date(Type):
     def python_format(self):
         if not self._python_format:
             # Prefer converting from the original format mode
-            if self._original_format_mode == DateFormat.PYSPARK and self._pyspark_format:
+            if (
+                self._original_format_mode == DateFormat.PYSPARK
+                and self._pyspark_format
+            ):
                 self._python_format = self.convert_pyspark_to_python_datetime_format(
                     self.pyspark_format
                 )
-            elif self._original_format_mode == DateFormat.SNOWFLAKE and self._snowflake_format:
+            elif (
+                self._original_format_mode == DateFormat.SNOWFLAKE
+                and self._snowflake_format
+            ):
                 self._python_format = self.convert_snowflake_to_python_datetime_format(
                     self.snowflake_format
                 )
@@ -306,7 +312,15 @@ class Date(Type):
                 # Handle multi-character symbols like HH24, HH12, YYYY, TZH:TZM, etc.
                 # Try to match the longest possible symbol first (up to 7 chars for TZH:TZM)
                 matched = False
-                for length in [7, 6, 5, 4, 3, 2, 1]:  # Try lengths from longest to shortest
+                for length in [
+                    7,
+                    6,
+                    5,
+                    4,
+                    3,
+                    2,
+                    1,
+                ]:  # Try lengths from longest to shortest
                     if len(snowflake_format) >= length:
                         symbol = snowflake_format[:length]
                         if symbol in cls.SNOWFLAKE_PYTHON_DATETIME_SYMBOL_MAP:
@@ -347,7 +361,7 @@ class DateTime(Date):
             Defaults to FLYPIPE_DEFAULT_DATE_FORMAT_STYLE config (PYSPARK by default).
         """
         from flypipe.config import get_config
-        
+
         # Get default format mode from config if not specified
         if format_mode is None:
             format_mode_str = get_config("default_date_format_style")
@@ -360,9 +374,9 @@ class DateTime(Date):
         elif isinstance(format_mode, str):
             # Convert string to DateFormat enum if a string was passed
             format_mode = DateFormat(format_mode)
-        
+
         # Get default format from config if not specified
         if format is None:
             format = format_mode.datetime_format()
-        
+
         super().__init__(format=format, format_mode=format_mode)

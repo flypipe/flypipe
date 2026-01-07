@@ -28,4 +28,3 @@ class TestUtilsCore:
 
         with pytest.raises(DataframeTypeNotSupportedError):
             dataframe_type(None)
-

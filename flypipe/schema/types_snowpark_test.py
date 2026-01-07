@@ -10,7 +10,7 @@ from flypipe.schema.types import Date
 )
 class TestDateSnowpark:
     """Tests for Date flypipe type - Snowpark
-    
+
     Tests Snowflake-specific date format conversions.
     Reference: https://docs.snowflake.com/en/sql-reference/date-time-input-output
     """
@@ -24,7 +24,10 @@ class TestDateSnowpark:
             ("%B", "MMMM"),
             ("%m", "MM"),
             ("%a", "DY"),
-            ("%A", "DY"),  # Snowflake doesn't distinguish between abbreviated and full day names
+            (
+                "%A",
+                "DY",
+            ),  # Snowflake doesn't distinguish between abbreviated and full day names
             ("%d", "DD"),
             ("%H", "HH24"),
             ("%I", "HH12"),
@@ -63,7 +66,7 @@ class TestDateSnowpark:
         # %w (weekday as decimal) is not supported
         with pytest.raises(ValueError):
             Date.convert_python_to_snowflake_datetime_format("%w")
-        
+
         # %j (day of year) is not supported in Snowflake
         with pytest.raises(ValueError):
             Date.convert_python_to_snowflake_datetime_format("%j")
@@ -123,4 +126,3 @@ class TestDateSnowpark:
         expected_python_format = "%Y-%m-%d %H:%M:%S %z"
         result = Date.convert_snowflake_to_python_datetime_format(snowflake_format)
         assert result == expected_python_format
-

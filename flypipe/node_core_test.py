@@ -9,7 +9,7 @@ from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.node import node, Node
 from flypipe.node_function import node_function
 from flypipe.schema import Schema, Column
-from flypipe.schema.types import String, Decimal, Integer
+from flypipe.schema.types import String, Integer
 
 
 @pytest.mark.skipif(
@@ -717,4 +717,3 @@ class TestNodeCore:
         @node(type="pandas", cache=MyCache())
         def t1():
             return pd.DataFrame(data={"col1": [1]})
-

@@ -1,4 +1,5 @@
 """Tests for DataFrameWrapper - PySpark functionality"""
+
 import os
 import pandas as pd
 import pytest
@@ -63,16 +64,15 @@ class TestDataFrameWrapperPySpark:
             df = spark.createDataFrame(**data)
             if type == "pandas_api":
                 df = df.pandas_api()
-        
+
         df_wrapper = DataFrameWrapper.get_instance(spark, df)
         df_wrapper2 = df_wrapper.select_columns("col1")
-        
+
         # Assert it returns a new instance
         assert df_wrapper2 is not df_wrapper
-        
+
         # Assert the new wrapper has only the selected column
         assert list(df_wrapper2.df.columns) == ["col1"]
-        
+
         # Assert the original wrapper is untouched (still has all columns)
         assert list(df_wrapper.df.columns) == ["col1", "col2"]
-

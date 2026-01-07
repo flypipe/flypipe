@@ -1,4 +1,5 @@
 """Tests for DataFrameConverter - PySpark functionality"""
+
 import os
 import pandas as pd
 import pytest
@@ -109,7 +110,9 @@ class TestDataFrameConverterPySpark:
     # Session Type Validation
     # ========================================
 
-    def test_convert_pandas_to_pyspark_without_spark_session_raises_error(self, pandas_df):
+    def test_convert_pandas_to_pyspark_without_spark_session_raises_error(
+        self, pandas_df
+    ):
         """Test that converting Pandas to PySpark without a SparkSession raises ValueError"""
         converter = DataFrameConverter()  # No session provided
         with pytest.raises(ValueError) as exc_info:
@@ -127,12 +130,12 @@ class TestDataFrameConverterPySpark:
     def test_empty_dataframe_to_spark(self, spark, node_type):
         """
         Test that empty DataFrames can be converted from Pandas to PySpark/Pandas-on-Spark.
-        
+
         This test verifies that the conversion handles empty DataFrames without crashing
         and logs an appropriate warning.
         """
         from unittest.mock import patch
-        
+
         @node(
             type="pandas",
             output=Schema([Column("c1", Boolean())]),
@@ -151,10 +154,10 @@ class TestDataFrameConverterPySpark:
         # Mock the logger to capture the warning
         with patch("flypipe.converter.dataframe.logger.warning") as mock_warning:
             result = t2.run(spark)
-            
+
             # Verify we got a result back
             assert result is not None
-            
+
             # Verify the warning was logged
             expected_warning = (
                 "pyspark.errors.exceptions.base.PySparkValueError: [CANNOT_INFER_EMPTY_SCHEMA] Can not infer "
@@ -162,4 +165,3 @@ class TestDataFrameConverterPySpark:
                 "StringType() for all columns"
             )
             mock_warning.assert_called_once_with(expected_warning)
-

@@ -1,4 +1,5 @@
 """Tests for PandasDataFrameWrapper - PySpark functionality"""
+
 import datetime
 import os
 
@@ -47,6 +48,7 @@ class TestPandasDataFrameWrapperPySpark:
 
     def test_empty_dataframe(self, spark):
         """Test that empty DataFrames are handled correctly"""
+
         @node(
             type="pandas",
             output=Schema([Column("c1", Boolean())]),
@@ -55,4 +57,3 @@ class TestPandasDataFrameWrapperPySpark:
             return pd.DataFrame(columns=["c1"])
 
         t1.run(spark)
-

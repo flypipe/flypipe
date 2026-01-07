@@ -114,7 +114,9 @@ class RunContext:
             SnowparkDataFrame,
         ],
     ):
-        self.node_results[from_node][to_node] = NodeResult(self.session, df, schema=None)
+        self.node_results[from_node][to_node] = NodeResult(
+            self.session, df, schema=None
+        )
 
     def get_graph_result(self, node: "Node") -> Union[
         PandasDataFrame,

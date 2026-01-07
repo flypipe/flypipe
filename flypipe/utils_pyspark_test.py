@@ -20,36 +20,27 @@ class TestUtilsPySpark:
 
     def test_assert_dataframes_equals(self, spark):
         """Test assert_dataframes_equals with PySpark DataFrames"""
-        df1 = spark.createDataFrame([
-            Row(col1=1, col2="1a"),
-            Row(col1=2, col2="2a")
-        ])
-        df2 = spark.createDataFrame([
-            Row(col1=1, col2="1a"),
-            Row(col1=2, col2="2a")
-        ])
+        df1 = spark.createDataFrame([Row(col1=1, col2="1a"), Row(col1=2, col2="2a")])
+        df2 = spark.createDataFrame([Row(col1=1, col2="1a"), Row(col1=2, col2="2a")])
         assert_dataframes_equals(df1, df2)
 
-        df2 = spark.createDataFrame([
-            Row(col1=1, col2=1),
-            Row(col1=2, col2=2)
-        ])
+        df2 = spark.createDataFrame([Row(col1=1, col2=1), Row(col1=2, col2=2)])
         with pytest.raises(DataframeSchemasDoNotMatchError):
             assert_dataframes_equals(df1, df2)
 
-        df2 = spark.createDataFrame([
-            Row(col1=1, col2="1a"),
-            Row(col1=2, col2="2a"),
-            Row(col1=3, col2="3a")
-        ])
+        df2 = spark.createDataFrame(
+            [Row(col1=1, col2="1a"), Row(col1=2, col2="2a"), Row(col1=3, col2="3a")]
+        )
         with pytest.raises(DataframeDifferentDataError):
             assert_dataframes_equals(df1, df2)
 
-        df2 = spark.createDataFrame([
-            Row(col1=1, col2="1a", col3=1),
-            Row(col1=2, col2="2a", col3=2),
-            Row(col1=3, col2="3a", col3=3)
-        ])
+        df2 = spark.createDataFrame(
+            [
+                Row(col1=1, col2="1a", col3=1),
+                Row(col1=2, col2="2a", col3=2),
+                Row(col1=3, col2="3a", col3=3),
+            ]
+        )
         with pytest.raises(DataframeSchemasDoNotMatchError):
             assert_dataframes_equals(df1, df2)
 
@@ -72,4 +63,3 @@ class TestUtilsPySpark:
 
         with pytest.raises(DataframeTypeNotSupportedError):
             dataframe_type(1)
-

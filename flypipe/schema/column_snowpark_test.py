@@ -20,7 +20,9 @@ class TestColumnSnowpark:
             translation_table = str.maketrans(dict(zip(old_chars, new_chars)))
             return s.translate(translation_table)
 
-        @node(type="snowpark", output=Schema(Column("NODE_1_ID", String(), "node_1 id")))
+        @node(
+            type="snowpark", output=Schema(Column("NODE_1_ID", String(), "node_1 id"))
+        )
         def node_1():
             return None
 
@@ -65,4 +67,3 @@ class TestColumnSnowpark:
                         node_3.NODE_2_ID N:1 (relates) node_2.NODE_2_ID
                 PK: False"""
         assert replace_chars(str(col)) == replace_chars(col_expected)
-

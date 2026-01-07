@@ -76,4 +76,3 @@ class TestInputNodePySpark:
             @node(type="pyspark", dependencies=[t1.preprocess(lambda df: df, 1)])
             def n(df):
                 return df
-

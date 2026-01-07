@@ -8,7 +8,6 @@ from flypipe.cache import CacheMode
 from flypipe.tests.cdc_snowflake_manager_cache import CDCSnowflakeManagerCache
 
 
-
 @pytest.mark.skipif(
     os.environ.get("RUN_MODE") != "SNOWFLAKE",
     reason="Snowpark tests require RUN_MODE=SNOWFLAKE",
@@ -274,7 +273,9 @@ class TestRunnerSnowflake:
 
         # ===== Second run with 2 NEW records (ids 4-5) using MERGE mode =====
         print("\n" + "=" * 80)
-        print("🔄 RUN 2: Incremental load with 2 NEW records (ids 4-5) using MERGE mode")
+        print(
+            "🔄 RUN 2: Incremental load with 2 NEW records (ids 4-5) using MERGE mode"
+        )
         print("=" * 80 + "\n")
 
         resultA2 = A.run(
@@ -313,9 +314,13 @@ class TestRunnerSnowflake:
         print("expected_cache_b2:")
         print(expected_cache_b2.sort("ID").to_pandas())
 
-        result_cache_b2_rows = result_cache_b2.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
+        result_cache_b2_rows = (
+            result_cache_b2.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
+        )
         expected_cache_b2_rows = expected_cache_b2.sort("ID").collect()
-        assert result_cache_b2_rows == expected_cache_b2_rows, "Cache B merge results don't match"
+        assert (
+            result_cache_b2_rows == expected_cache_b2_rows
+        ), "Cache B merge results don't match"
 
         print("\n" + "=" * 80)
         print("✅ TEST COMPLETE: All runs validated successfully!")
@@ -400,7 +405,9 @@ class TestRunnerSnowflake:
         print(cache_b_contents.sort("ID").to_pandas())
 
         # Verify B's cache now has 2 rows
-        assert cache_b_contents.count() == 2, f"Expected 2 rows in B's cache, got {cache_b_contents.count()}"
+        assert (
+            cache_b_contents.count() == 2
+        ), f"Expected 2 rows in B's cache, got {cache_b_contents.count()}"
 
         # ===== Second Run: A should get ALL data from B (no CDC filtering) =====
         print("\n" + "=" * 80)
@@ -430,7 +437,9 @@ class TestRunnerSnowflake:
 
         result2_rows = result2.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
         expected_result_rows = expected_result.sort("ID").collect()
-        assert result2_rows == expected_result_rows, "Run 2 results don't match expected"
+        assert (
+            result2_rows == expected_result_rows
+        ), "Run 2 results don't match expected"
 
         print("\n" + "=" * 80)
         print("✅ TEST COMPLETE: Static node skipped CDC filtering in both runs!")
@@ -527,7 +536,9 @@ class TestRunnerSnowflake:
         print("result_cache_c:")
         print(result_cache_c.drop("CDC_DATETIME_UPDATED").sort("ID").to_pandas())
 
-        result_cache_c_rows = result_cache_c.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
+        result_cache_c_rows = (
+            result_cache_c.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
+        )
         expectedC_rows = expectedC.sort("ID").collect()
         assert result_cache_c_rows == expectedC_rows, "Cache C doesn't match"
 
@@ -540,20 +551,26 @@ class TestRunnerSnowflake:
         print("result_cache_b:")
         print(result_cache_b.drop("CDC_DATETIME_UPDATED").sort("ID").to_pandas())
 
-        result_cache_b_rows = result_cache_b.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
+        result_cache_b_rows = (
+            result_cache_b.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
+        )
         expectedB_rows = expectedB.sort("ID").collect()
         assert result_cache_b_rows == expectedB_rows, "Cache B doesn't match"
 
         # Assert cache_a.read() returns correct data (same as resultA)
         result_cache_a = cache_a.read(snowflake_session)
-        result_cache_a_rows = result_cache_a.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
+        result_cache_a_rows = (
+            result_cache_a.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
+        )
         assert result_cache_a_rows == expectedA_rows, "Cache A doesn't match"
 
         # Assert CDC metadata for C (should have C -> B)
         cdc_metadata_c = snowflake_session.table(cache_c.full_cdc_table_name)
         cdc_metadata_c_count = cdc_metadata_c.count()
         print(f"CDC metadata count for C: {cdc_metadata_c_count}")
-        assert cdc_metadata_c_count == 2, f"Expected 2 CDC entries for C, got {cdc_metadata_c_count}"
+        assert (
+            cdc_metadata_c_count == 2
+        ), f"Expected 2 CDC entries for C, got {cdc_metadata_c_count}"
 
         # Assert CDC metadata for B (should have C -> B and B -> A)
         cdc_metadata_b = snowflake_session.table(cache_b.full_cdc_table_name)
@@ -567,14 +584,13 @@ class TestRunnerSnowflake:
 
         print("cdc_metadata_b:")
         print(cdc_metadata_b.select("SOURCE", "DESTINATION").to_pandas())
-        
+
         cdc_b_rows = sorted(
             cdc_metadata_b.select("SOURCE", "DESTINATION").collect(),
-            key=lambda r: (r["SOURCE"], r["DESTINATION"])
+            key=lambda r: (r["SOURCE"], r["DESTINATION"]),
         )
         expected_b_rows = sorted(
-            expected_cdc_b.collect(),
-            key=lambda r: (r["SOURCE"], r["DESTINATION"])
+            expected_cdc_b.collect(), key=lambda r: (r["SOURCE"], r["DESTINATION"])
         )
         assert cdc_b_rows == expected_b_rows, "CDC metadata B doesn't match"
 
@@ -674,20 +690,26 @@ class TestRunnerSnowflake:
             [(1, 10), (2, 20), (3, 30)], schema=["ID", "VALUE"]
         )
 
-        result_cache_d_rows = result_cache_d.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
+        result_cache_d_rows = (
+            result_cache_d.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
+        )
         expectedD_rows = expectedD.sort("ID").collect()
         assert result_cache_d_rows == expectedD_rows, "Cache D doesn't match"
 
         # Assert cache_a.read() returns correct data (same as resultA)
         result_cache_a = cache_a.read(snowflake_session)
-        result_cache_a_rows = result_cache_a.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
+        result_cache_a_rows = (
+            result_cache_a.drop("CDC_DATETIME_UPDATED").sort("ID").collect()
+        )
         assert result_cache_a_rows == expectedA_rows, "Cache A doesn't match"
 
         # Assert CDC metadata for D (should have D -> A entry)
         cdc_metadata = snowflake_session.table(cache_d.full_cdc_table_name)
         cdc_metadata_count = cdc_metadata.count()
         print(f"CDC metadata count: {cdc_metadata_count}")
-        assert cdc_metadata_count == 1, f"Expected 1 CDC entry for D -> A, got {cdc_metadata_count}"
+        assert (
+            cdc_metadata_count == 1
+        ), f"Expected 1 CDC entry for D -> A, got {cdc_metadata_count}"
 
         # Assert CDC metadata for A (should have D -> A)
         expected_cdc = snowflake_session.create_dataframe(
@@ -820,4 +842,3 @@ class TestRunnerSnowflake:
             "✅ TEST COMPLETE: A executed successfully using cached B and C without running D!"
         )
         print("=" * 80 + "\n")
-

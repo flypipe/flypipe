@@ -245,4 +245,3 @@ class TestColumnCore:
         assert not t3.output_schema.get("t1c1").relationships
         assert isinstance(t3.output.t1c1.set_pk(True), Column)
         assert t3.output.t1c1.set_pk(True).pk
-

@@ -117,4 +117,3 @@ class TestNodeGraphCore:
             {"name": "c1", "type": "Unknown", "description": ""},
             {"name": "c3", "type": "Unknown", "description": ""},
         ]
-

@@ -65,4 +65,3 @@ class TestColumnPySpark:
                         node_3.node_2_id N:1 (relates) node_2.node_2_id
                 PK: False"""
         assert replace_chars(str(col)) == replace_chars(col_expected)
-

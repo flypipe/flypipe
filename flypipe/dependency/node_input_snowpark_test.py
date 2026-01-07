@@ -71,4 +71,3 @@ class TestInputNodeSnowpark:
             @node(type="snowpark", dependencies=[t1.preprocess(lambda df: df, 1)])
             def n(df):
                 return df
-
