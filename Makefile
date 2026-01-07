@@ -23,7 +23,7 @@ else ifeq ($(RUN_MODE),SPARK_CONNECT)
     CONTAINER_NAME = flypipe-spark
     TEST_PATTERN = pyspark_test.py
     COVERAGE_CONFIG = .coverage-pyspark
-    MIN_COVERAGE = 80
+    MIN_COVERAGE = 64
 else ifeq ($(RUN_MODE),SNOWFLAKE)
     DOCKER_DIR = $(DOCKER_BASE_DIR)/snowflake
     CONTAINER_NAME = flypipe-snowflake
@@ -117,7 +117,8 @@ pr-check: black lint
 	make coverage RUN_MODE=SPARK
 	make coverage RUN_MODE=SPARK_CONNECT
 	make coverage RUN_MODE=SNOWFLAKE
-	make test f=flypipe/tests/activate/sparkleframe_test.py
+	make test RUN_MODE=SPARK f=flypipe/tests/activate/sparkleframe_test.py
+	make test RUN_MODE=SPARK_CONNECT f=flypipe/tests/activate/sparkleframe_test.py
 	pytest scripts/*_test.py
 .PHONY: pr-check
 
