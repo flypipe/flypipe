@@ -52,6 +52,7 @@ export const EditNode = ({
         { value: "pandas_on_spark", label: "Pandas on Spark" },
         { value: "pyspark", label: "PySpark" },
         { value: "spark_sql", label: "Spark SQL" },
+        { value: "snowpark", label: "Snowpark" },
         { value: "pandas", label: "Pandas" },
     ];
 
