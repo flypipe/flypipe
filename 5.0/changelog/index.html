@@ -1240,29 +1240,15 @@
 
 <h1 id="changelog">Changelog</h1>
 <h2><a href="https://github.com/flypipe/flypipe/tree/release/5.0.0" target="_blank" rel="noopener noreferrer">release/5.0.0</a></h2>
-
 <h3>Breaking Changes</h3>
-
 <ul>
 <li>
-<p><strong>Removed <code>parallel</code> argument from <code>node.run()</code></strong>: Use <code>max_workers</code> parameter instead to control parallel execution. Set <code>max_workers=1</code> for sequential execution or <code>max_workers=N</code> for parallel execution with N workers. You can also set <code>FLYPIPE_NODE_RUN_MAX_WORKERS</code> environment variable to configure this globally (defaults to <code>1</code>).</p>
+<p><strong>Removed <code>parallel</code> argument from <code>node.run()</code></strong>: Use <code>max_workers</code> parameter instead to control parallel execution. Set <code>max_workers=1</code> for sequential execution or <code>max_workers=N</code> for parallel execution with N workers. You can also set <code>FLYPIPE_NODE_RUN_MAX_WORKERS</code> environment variable to configure this globally (defaults to <code>1</code>).- <strong>Removed <code>FLYPIPE_DEFAULT_RUN_MODE</code> config</strong>: This config previously defined parallel or sequential execution mode. Now use <code>FLYPIPE_NODE_RUN_MAX_WORKERS</code> instead to control parallelism. Set it to <code>1</code> for sequential execution or <code>N</code> for parallel execution with N workers. This can be set globally via environment variable or passed directly to <code>node.run()</code> as the <code>max_workers</code> parameter.- <strong>Updated <code>Cache</code> class method signatures</strong>: The <code>read()</code> and <code>write()</code> methods now include optional CDC (Change Data Capture) parameters:   - <code>read(from_node=None, to_node=None, *args, **kwargs)</code>: Added <code>from_node</code> and <code>to_node</code> parameters for CDC filtering   - <code>write(*args, df, upstream_nodes=None, to_node=None, datetime_started_transformation=None, **kwargs)</code>: Added <code>df</code>, <code>upstream_nodes</code>, <code>to_node</code>, and <code>datetime_started_transformation</code> parameters for CDC metadata tracking    - All custom cache implementations must update their method signatures to include these parameters, even if CDC functionality is not used (parameters can be ignored)- <strong>Added <code>create_cdc_table()</code> method to <code>Cache</code> class</strong>: A new optional method for caches with CDC support. The base implementation is a no-op, so existing cache implementations will continue to work, but cache classes that support CDC should override this method to create their CDC metadata tables.
+<h3>Commits</h3></p>
 </li>
 <li>
-<p><strong>Removed <code>FLYPIPE_DEFAULT_RUN_MODE</code> config</strong>: This config previously defined parallel or sequential execution mode. Now use <code>FLYPIPE_NODE_RUN_MAX_WORKERS</code> instead to control parallelism. Set it to <code>1</code> for sequential execution or <code>N</code> for parallel execution with N workers. This can be set globally via environment variable or passed directly to <code>node.run()</code> as the <code>max_workers</code> parameter.</p>
+<p><a href="https://github.com/flypipe/flypipe/issues/209" target="_blank" rel="noopener noreferrer">209 🚀 Feature Request: Implement CDC Cache in Flypipe</a></p>
 </li>
-<li>
-<p><strong>Updated <code>Cache</code> class method signatures</strong>: The <code>read()</code> and <code>write()</code> methods now include optional CDC (Change Data Capture) parameters:</p>
-<ul>
-<li><code>read(from_node=None, to_node=None, *args, **kwargs)</code>: Added <code>from_node</code> and <code>to_node</code> parameters for CDC filtering</li>
-<li><code>write(*args, df, upstream_nodes=None, to_node=None, datetime_started_transformation=None, **kwargs)</code>: Added <code>df</code>, <code>upstream_nodes</code>, <code>to_node</code>, and <code>datetime_started_transformation</code> parameters for CDC metadata tracking</li>
-<li>All custom cache implementations must update their method signatures to include these parameters, even if CDC functionality is not used (parameters can be ignored)</li>
-</ul>
-</li>
-<li><strong>Added <code>create_cdc_table()</code> method to <code>Cache</code> class</strong>: A new optional method for caches with CDC support. The base implementation is a no-op, so existing cache implementations will continue to work, but cache classes that support CDC should override this method to create their CDC metadata tables.</li>
-</ul>
-<h3>Commits</h3>
-<ul>
-<li><a href="https://github.com/flypipe/flypipe/issues/209" target="_blank" rel="noopener noreferrer">209 🚀 Feature Request: Implement CDC Cache in Flypipe</a></li>
 </ul>
 <h2><a href="https://github.com/flypipe/flypipe/tree/release/4.3.6" target="_blank" rel="noopener noreferrer">release/4.3.6</a></h2>
 
