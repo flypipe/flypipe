@@ -32,7 +32,9 @@ class PandasOnSparkDataFrameWrapper(SparkDataFrameWrapper):
 
     def _cast_column(self, column, flypipe_type, df_type):
         spark_df = self.df.to_spark()
-        spark_df = spark_df.withColumn(column, spark_df[column].cast(df_type))
+        col = spark_df[column]
+        result = self._try_cast_col(col, column, df_type)
+        spark_df = spark_df.withColumn(column, result)
         self.df = spark_df.pandas_api()
 
     def _cast_column_decimal(self, column, flypipe_type):
@@ -40,19 +42,31 @@ class PandasOnSparkDataFrameWrapper(SparkDataFrameWrapper):
         df_type = DecimalType(
             precision=flypipe_type.precision, scale=flypipe_type.scale
         )
-        spark_df = spark_df.withColumn(column, spark_df[column].cast(df_type))
+        col = spark_df[column]
+        result = self._try_cast_col(col, column, df_type)
+        spark_df = spark_df.withColumn(column, result)
         self.df = spark_df.pandas_api()
 
     def _cast_column_date(self, column, flypipe_type):
         spark_df = self.df.to_spark()
-        spark_df = spark_df.withColumn(
-            column, F.to_date(F.col(column), flypipe_type.python_format)
+        date_col = F.col(column)
+        fmt = flypipe_type.pyspark_format
+        result = (
+            F.try_to_date(date_col, fmt)
+            if hasattr(F, "try_to_date")
+            else F.to_date(date_col, fmt)
         )
+        spark_df = spark_df.withColumn(column, result)
         self.df = spark_df.pandas_api()
 
     def _cast_column_datetime(self, column, flypipe_type):
         spark_df = self.df.to_spark()
-        spark_df = spark_df.withColumn(
-            column, F.to_date(F.col(column), flypipe_type.python_format)
+        ts_col = F.col(column)
+        fmt = flypipe_type.pyspark_format
+        result = (
+            F.try_to_timestamp(ts_col, fmt)
+            if hasattr(F, "try_to_timestamp")
+            else F.to_timestamp(ts_col, fmt)
         )
+        spark_df = spark_df.withColumn(column, result)
         self.df = spark_df.pandas_api()

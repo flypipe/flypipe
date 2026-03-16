@@ -1,36 +1,36 @@
 import pyspark.sql.functions as F
 from pyspark.sql.types import (
+    BinaryType,
     BooleanType,
     ByteType,
-    BinaryType,
-    IntegerType,
-    ShortType,
-    LongType,
-    FloatType,
-    DoubleType,
-    StringType,
-    DecimalType,
     DateType,
+    DecimalType,
+    DoubleType,
+    FloatType,
+    IntegerType,
+    LongType,
+    ShortType,
+    StringType,
     TimestampType,
 )
 
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.schema.types import (
-    Type,
+    Binary,
     Boolean,
     Byte,
-    Binary,
-    Integer,
-    Short,
-    Long,
-    Float,
-    Double,
-    String,
-    Unknown,
     Date,
     DateTime,
     Decimal,
+    Double,
+    Float,
+    Integer,
+    Long,
+    Short,
+    String,
+    Type,
+    Unknown,
 )
 from flypipe.utils import DataFrameType
 
@@ -102,20 +102,40 @@ class SparkDataFrameWrapper(DataFrameWrapper):
         return flypipe_type
 
     def _cast_column(self, column: str, flypipe_type: Type, df_type):
-        self.df = self.df.withColumn(column, self.df[column].cast(df_type))
+        col = self.df[column]
+        result = self._try_cast_col(col, column, df_type)
+        self.df = self.df.withColumn(column, result)
+
+    def _try_cast_col(self, col, column: str, df_type):
+        """Use try_cast (null on error). Uses Column.try_cast on Spark 4+, F.expr on Spark 3.x."""
+        try_cast_method = getattr(col, "try_cast", None)
+        if callable(try_cast_method):
+            return try_cast_method(df_type)
+        type_str = df_type.simpleString()
+        return F.expr(f"try_cast(`{column}` AS {type_str})")
 
     def _cast_column_decimal(self, column, flypipe_type):
         df_type = DecimalType(
             precision=flypipe_type.precision, scale=flypipe_type.scale
         )
-        self.df = self.df.withColumn(column, self.df[column].cast(df_type))
+        col = self.df[column]
+        result = self._try_cast_col(col, column, df_type)
+        self.df = self.df.withColumn(column, result)
 
     def _cast_column_date(self, column, flypipe_type):
-        self.df = self.df.withColumn(
-            column, F.to_date(F.col(column), flypipe_type.pyspark_format)
-        )
+        date_col = F.col(column)
+        fmt = flypipe_type.pyspark_format
+        if hasattr(F, "try_to_date"):
+            result = F.try_to_date(date_col, fmt)
+        else:
+            result = F.to_date(date_col, fmt)
+        self.df = self.df.withColumn(column, result)
 
     def _cast_column_datetime(self, column, flypipe_type):
-        self.df = self.df.withColumn(
-            column, F.to_timestamp(F.col(column), flypipe_type.pyspark_format)
-        )
+        ts_col = F.col(column)
+        fmt = flypipe_type.pyspark_format
+        if hasattr(F, "try_to_timestamp"):
+            result = F.try_to_timestamp(ts_col, fmt)
+        else:
+            result = F.to_timestamp(ts_col, fmt)
+        self.df = self.df.withColumn(column, result)

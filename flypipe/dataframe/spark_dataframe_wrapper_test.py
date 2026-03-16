@@ -1,38 +1,38 @@
 import pytest
 from pyspark.sql.types import (
-    StructType,
-    StructField,
+    BinaryType,
     BooleanType,
     ByteType,
-    BinaryType,
-    IntegerType,
-    ShortType,
-    LongType,
-    FloatType,
-    DoubleType,
-    StringType,
-    DecimalType,
-    TimestampType,
     DateType,
+    DecimalType,
+    DoubleType,
+    FloatType,
+    IntegerType,
+    LongType,
+    ShortType,
+    StringType,
+    StructField,
+    StructType,
+    TimestampType,
 )
-from flypipe.tests.pyspark_test import assert_pyspark_df_equal
 
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from flypipe.exceptions import DataFrameMissingColumns
 from flypipe.schema.types import (
-    Boolean,
-    Decimal,
-    Byte,
     Binary,
-    Integer,
-    Short,
-    Long,
-    Float,
-    Double,
-    String,
-    DateTime,
+    Boolean,
+    Byte,
     Date,
+    DateTime,
+    Decimal,
+    Double,
+    Float,
+    Integer,
+    Long,
+    Short,
+    String,
 )
+from flypipe.tests.pyspark_test import assert_pyspark_df_equal
 
 
 class TestSparkDataFrameWrapper:
@@ -151,3 +151,31 @@ class TestSparkDataFrameWrapper:
         # TODO: this is broken
         # assert_frame_equal(
         #     df_wrapper.df.toPandas(), pd.DataFrame({'col1': [None, 999.11, 1.23, None]}, dtype=np.dtype('O')))
+
+    def test_cast_column_with_column_object(self, spark):
+        """cast_column accepts Column object (e.g. from node output schema)."""
+        df = spark.createDataFrame(schema=("col1",), data=[(1,), (0,), (None,)])
+        df_wrapper = DataFrameWrapper.get_instance(spark, df)
+        df_wrapper.cast_column("col1", Boolean())
+        assert df_wrapper.df.dtypes[0] == ("col1", "boolean")
+
+    def test_cast_column_try_cast_returns_null_on_invalid(self, spark):
+        """Invalid cast values become NULL via try_cast (Flypipe always uses try_cast)."""
+        df = spark.createDataFrame(schema=("col1",), data=[("123",), ("abc",), (None,)])
+        df_wrapper = DataFrameWrapper.get_instance(spark, df)
+        df_wrapper.cast_column("col1", Long())
+        rows = [row.col1 for row in df_wrapper.df.collect()]
+        assert rows[0] == 123
+        assert rows[1] is None  # "abc" cannot cast to Long, try_cast returns NULL
+        assert rows[2] is None
+
+    def test_cast_column_with_spaces_in_name(self, spark):
+        """Columns with spaces in name work with try_cast (F.expr fallback on Spark 3.x)."""
+        schema = StructType([StructField("col name", StringType())])
+        df = spark.createDataFrame(schema=schema, data=[("123",), ("456",), (None,)])
+        df_wrapper = DataFrameWrapper.get_instance(spark, df)
+        df_wrapper.cast_column("col name", Long())
+        rows = [row["col name"] for row in df_wrapper.df.collect()]
+        assert rows[0] == 123
+        assert rows[1] == 456
+        assert rows[2] is None
