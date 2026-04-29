@@ -78,10 +78,21 @@ class InputNode:
                 self.node, root_node, result.get_df()
             )
 
-        elif cache_context and run_status in [
-            RunStatus.CACHED,
-            RunStatus.ACTIVE,  # RunStatus.ACTIVE means it is a Cached node with CacheMode.MERGE
-        ]:
+        elif (
+            cache_context
+            and not cache_context.disabled
+            and run_status
+            in [
+                RunStatus.CACHED,
+                RunStatus.ACTIVE,  # RunStatus.ACTIVE means it is a Cached node with CacheMode.MERGE
+            ]
+        ):
+            # When ``CacheMode.DISABLE`` is set on a node that has a cache, the
+            # runner executes the function body and stores the result in
+            # ``run_context.node_results`` (it does NOT write to cache). The
+            # consumer must therefore use that in-memory result via the ``try``
+            # block below — calling ``cache_context.read()`` would raise
+            # ``RuntimeError("Cache disabled, cannot read")``.
             result = cache_context.read(
                 from_node=self.node, to_node=root_node, is_static=self.static
             )
