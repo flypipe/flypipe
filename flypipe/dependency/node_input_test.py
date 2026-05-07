@@ -1,15 +1,20 @@
-import pandas as pd
-
-from flypipe import node
-from flypipe.datasource.spark import Spark
-
 from datetime import datetime
+from unittest.mock import MagicMock
 
+import pandas as pd
 import pytest
 from pandas._testing import assert_frame_equal
 
+from flypipe import node
+from flypipe.cache import CacheMode
+from flypipe.cache.cache import Cache
+from flypipe.cache.cache_context import CacheContext
+from flypipe.datasource.spark import Spark
+from flypipe.dependency.node_input import InputNode
 from flypipe.mode import PreprocessMode
-from flypipe.schema import Schema, Column
+from flypipe.run_context import RunContext
+from flypipe.run_status import RunStatus
+from flypipe.schema import Column, Schema
 from flypipe.schema.types import DateTime, Integer
 
 
@@ -303,6 +308,108 @@ class TestInputNode:
 
         df = n.run()
         assert_frame_equal(df, get_df())
+
+    @pytest.mark.parametrize("run_status", [RunStatus.ACTIVE, RunStatus.CACHED])
+    def test_get_value_uses_in_memory_result_when_cache_disabled(
+        self, mocker, run_status: RunStatus
+    ) -> None:
+        """
+        With CacheMode.DISABLE, the runner stores results in node_results only;
+        InputNode must not call CacheContext.read() (it raises when disabled).
+        """
+
+        class _StubCache(Cache):
+            def read(
+                self,
+                from_node=None,
+                to_node=None,
+                is_static: bool = False,
+            ) -> pd.DataFrame:
+                raise AssertionError("cache read should not be used when disabled")
+
+            def write(self, *args, **kwargs) -> None:
+                pass
+
+            def exists(self, *args, **kwargs) -> bool:
+                return True
+
+        @node(type="pandas", cache=_StubCache())
+        def upstream_dep():
+            return pd.DataFrame({"c1": [0]})
+
+        @node(type="pandas", dependencies=[upstream_dep])
+        def downstream(d):
+            return d
+
+        cache_context = CacheContext(
+            cache_mode=CacheMode.DISABLE,
+            cache=upstream_dep.cache,
+        )
+        read_spy = mocker.spy(cache_context, "read")
+        node_graph = MagicMock()
+        node_graph.get_cache_context.return_value = cache_context
+        node_graph.get_run_status.return_value = run_status
+
+        expected = pd.DataFrame({"c1": [1, 2]})
+        run_context = RunContext()
+        run_context.update_node_results(upstream_dep, downstream, expected)
+
+        input_node = InputNode(upstream_dep)
+        input_node.set_parent_node(downstream)
+        out = input_node.get_value(run_context, node_graph, downstream)
+        assert_frame_equal(out, expected, check_dtype=False)
+        read_spy.assert_not_called()
+
+    def test_run_with_upstream_cache_disabled_does_not_read_node_cache(
+        self, mocker, tmp_path
+    ) -> None:
+        """
+        Integration: full ``run(cache={upstream: DISABLE})`` must not call the
+        upstream node's ``Cache.read`` (in-memory result only).
+        """
+        csv_path = tmp_path / "cache.csv"
+
+        class _PandasFileCache(Cache):
+            def read(
+                self,
+                from_node=None,
+                to_node=None,
+                is_static: bool = False,
+            ) -> pd.DataFrame:
+                return pd.read_csv(csv_path)
+
+            def write(
+                self,
+                *args,
+                df,
+                upstream_nodes=None,
+                to_node=None,
+                datetime_started_transformation=None,
+                **kwargs,
+            ) -> None:
+                df.to_csv(csv_path, index=False)
+
+            def exists(self, *args, **kwargs) -> bool:
+                return csv_path.is_file()
+
+        shared_cache = _PandasFileCache()
+
+        @node(type="pandas", cache=shared_cache)
+        def upstream_node():
+            return pd.DataFrame({"c1": [1, 2]})
+
+        @node(type="pandas", dependencies=[upstream_node])
+        def consumer(upstream_node):
+            return upstream_node
+
+        read_spy = mocker.spy(shared_cache, "read")
+        out = consumer.run(cache={upstream_node: CacheMode.DISABLE})
+        read_spy.assert_not_called()
+        assert_frame_equal(
+            out.reset_index(drop=True),
+            pd.DataFrame({"c1": [1, 2]}),
+            check_dtype=False,
+        )
 
     def test_preprocess_mode_disable_priorities_order(self, monkeypatch):
         monkeypatch.setenv(
