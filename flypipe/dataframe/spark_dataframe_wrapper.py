@@ -135,7 +135,10 @@ class SparkDataFrameWrapper(DataFrameWrapper):
         ts_col = F.col(column)
         fmt = flypipe_type.pyspark_format
         if hasattr(F, "try_to_timestamp"):
-            result = F.try_to_timestamp(ts_col, fmt)
+            # try_to_timestamp's `format` parameter is typed `ColumnOrName`, so a
+            # raw Python str gets resolved as a column reference. Wrap in F.lit
+            # to pass it as a string literal.
+            result = F.try_to_timestamp(ts_col, F.lit(fmt))
         else:
             result = F.to_timestamp(ts_col, fmt)
         self.df = self.df.withColumn(column, result)
