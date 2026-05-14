@@ -1,3 +1,6 @@
+from copy import deepcopy
+from datetime import datetime
+
 import pytest
 from pyspark.sql.types import (
     BinaryType,
@@ -16,8 +19,10 @@ from pyspark.sql.types import (
     TimestampType,
 )
 
+from flypipe import node
 from flypipe.dataframe.dataframe_wrapper import DataFrameWrapper
 from flypipe.exceptions import DataFrameMissingColumns
+from flypipe.schema import Column, Schema
 from flypipe.schema.types import (
     Binary,
     Boolean,
@@ -179,3 +184,51 @@ class TestSparkDataFrameWrapper:
         assert rows[0] == 123
         assert rows[1] == 456
         assert rows[2] is None
+
+    def test_cast_column_datetime_string_to_timestamp(self, spark):
+        """Regression test for issue #218.
+
+        When a node returns a String column but declares it as DateTime() in
+        the output schema, `_cast_column_datetime` must parse the string into
+        a TimestampType using the schema's format pattern.
+
+        Previously, `F.try_to_timestamp(col, fmt)` was called with `fmt` as a
+        Python str. Since try_to_timestamp's `format` parameter is typed
+        `ColumnOrName` (PySpark 3.4+, default in PySpark 4), Spark resolved
+        the string as a column reference and raised
+        AnalysisException: [UNRESOLVED_COLUMN.WITH_SUGGESTION]. The fix wraps
+        the format in `F.lit(...)` to pass it as a string literal.
+        """
+        input_schema = StructType(
+            [
+                StructField("id", StringType(), True),
+                StructField("ts", StringType(), True),
+            ]
+        )
+
+        output_schema = StructType(
+            [
+                StructField("id", StringType(), True),
+                StructField("ts", TimestampType(), True),
+            ]
+        )
+
+        input_data = [("a", "2024-01-01 00:00:00")]
+        expected_data = [("a", datetime(2024, 1, 1, 0, 0, 0))]
+
+        df_input = spark.createDataFrame(deepcopy(input_data), input_schema)
+        df_expected = spark.createDataFrame(deepcopy(expected_data), output_schema)
+
+        @node(
+            type="pyspark",
+            output=Schema(
+                [
+                    Column("id", String(), "id column"),
+                    Column("ts", DateTime(), "timestamp column"),
+                ]
+            ),
+        )
+        def t1():
+            return df_input
+
+        assert_pyspark_df_equal(t1.run(spark), df_expected)
