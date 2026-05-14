@@ -70,7 +70,7 @@ class TestDBML:
             type="pandas",
             output=Schema(
                 Column("node_b_col1", String(), "description node_b_col1").one_to_one(
-                    A.output.node_a_col1
+                    A.ref.node_a_col1
                 )
             ),
         )
@@ -81,7 +81,7 @@ class TestDBML:
             type="pandas",
             output=Schema(
                 Column("node_c_col1", String(), "description node_c_col1").one_to_one(
-                    B.output.node_b_col1, "has"
+                    B.ref.node_b_col1, "has"
                 )
             ),
         )
@@ -127,7 +127,7 @@ class TestDBML:
             type="pandas",
             output=Schema(
                 Column("node_b_col1", String(), "description node_b_col1").one_to_one(
-                    A.output.node_a_col1
+                    A.ref.node_a_col1
                 )
             ),
         )
@@ -145,7 +145,7 @@ class TestDBML:
             type="pandas",
             output=Schema(
                 Column("node_d_col1", String(), "description node_d_col1").one_to_one(
-                    C.output.node_c_col1
+                    C.ref.node_c_col1
                 )
             ),
         )
@@ -213,8 +213,8 @@ class TestDBML:
             ],
             output=Schema(
                 Column("node_b_col1", String(), "description node_b_col1")
-                .one_to_one(C.output.node_c_col1)
-                .one_to_one(D.output.node_d_col1)
+                .one_to_one(C.ref.node_c_col1)
+                .one_to_one(D.ref.node_d_col1)
             ),
         )
         def B(**dfs):
@@ -274,8 +274,8 @@ class TestDBML:
             ],
             output=Schema(
                 Column("node_b_col1", String(), "description node_b_col1")
-                .one_to_one(C.output.node_c_col1)
-                .one_to_one(D.output.node_d_col1)
+                .one_to_one(C.ref.node_c_col1)
+                .one_to_one(D.ref.node_d_col1)
             ),
         )
         def B(**dfs):
@@ -327,8 +327,8 @@ class TestDBML:
             ],
             output=Schema(
                 Column("node_b_col1", String(), "description node_b_col1")
-                .one_to_one(C.output.node_c_col1)
-                .one_to_one(D.output.node_d_col1)
+                .one_to_one(C.ref.node_c_col1)
+                .one_to_one(D.ref.node_d_col1)
             ),
         )
         def B(**dfs):
@@ -389,9 +389,9 @@ class TestDBML:
             ],
             output=Schema(
                 Column("node_b_col1", String(), "description node_b_col1")
-                .one_to_one(C.output.node_c_col1)
-                .one_to_one(D.output.node_d_col1)
-                .one_to_one(E.output.node_e_col1)
+                .one_to_one(C.ref.node_c_col1)
+                .one_to_one(D.ref.node_d_col1)
+                .one_to_one(E.ref.node_e_col1)
             ),
         )
         def B(**dfs):
@@ -430,7 +430,7 @@ class TestDBML:
             type="pandas",
             output=Schema(
                 Column("node_b_col1", String(), "description node_b_col1").one_to_one(
-                    A.output.node_a_col1
+                    A.ref.node_a_col1
                 )
             ),
         )
@@ -475,7 +475,7 @@ class TestDBML:
             type="pandas",
             output=Schema(
                 Column("node_b_col1", String(), "description node_b_col1").one_to_one(
-                    C.output.node_c_col1
+                    C.ref.node_c_col1
                 )
             ),
         )
@@ -522,7 +522,7 @@ class TestDBML:
             description="this is node B",
             output=Schema(
                 Column("node_b_col1", String(), "description node_b_col1").one_to_one(
-                    C.output.node_c_col1, "has"
+                    C.ref.node_c_col1, "has"
                 )
             ),
         )
@@ -565,7 +565,7 @@ class TestDBML:
             type="pandas",
             output=Schema(
                 Column("node_b_col1", String(), "description node_b_col1").one_to_one(
-                    A.output.node_a_col1
+                    A.ref.node_a_col1
                 )
             ),
         )
@@ -633,7 +633,7 @@ class TestDBML:
             description="this is node B",
             output=Schema(
                 Column("node_b_col1", String(), "description node_b_col1").one_to_one(
-                    C.output.node_c_col1, "has"
+                    C.ref.node_c_col1, "has"
                 )
             ),
         )
