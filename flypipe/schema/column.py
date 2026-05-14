@@ -66,6 +66,11 @@ class Column:
 
         self.pk = pk
 
+        # Provenance marker set by ``Node.output`` / ``Node.ref`` so consumers can
+        # reject the wrong intent at the call site (see ``Schema.__init__`` and
+        # ``Column._add_relationship``). ``None`` for bare or raw-schema columns.
+        self._view = None
+
     def __repr__(self):
         foreign_key = []
         for dest, relationship in self.relationships.items():
@@ -137,6 +142,16 @@ class Column:
         relationship_type: RelationshipType,
         description: str = None,
     ):
+        if getattr(other, "_view", None) == "output":
+            parent_name = (
+                other.parent.__name__ if other.parent is not None else "<parent>"
+            )
+            raise ValueError(
+                f"Relationship target {parent_name}.{other.name} was passed via "
+                f"`.output`, which strips the parent's `pk` flag. Use `.ref` "
+                f"instead so foreign-key validation can see the target's `pk`:\n"
+                f"    .{relationship_type.name.lower()}({parent_name}.ref.{other.name}, ...)"
+            )
         if self.get_foreign_key(other) is not None:
             raise ValueError(
                 f"Multiple relationships have been set for the same column {self.name}"
@@ -159,7 +174,7 @@ class Column:
             output=Schema(
                 ...
                 Column("col_name", String(), "description)
-                .many_to_one(another_node.output.col, "relationship description")
+                .many_to_one(another_node.ref.col, "relationship description")
                 ...
             )
         )
@@ -184,7 +199,7 @@ class Column:
             output=Schema(
                 ...
                 Column("col_name", String(), "description)
-                .one_to_many(another_node.output.col, "relationship description")
+                .one_to_many(another_node.ref.col, "relationship description")
                 ...
             )
         )
@@ -210,7 +225,7 @@ class Column:
             output=Schema(
                 ...
                 Column("col_name", String(), "description)
-                .many_to_many(another_node.output.col, "relationship description")
+                .many_to_many(another_node.ref.col, "relationship description")
                 ...
             )
         )
@@ -236,7 +251,7 @@ class Column:
             output=Schema(
                 ...
                 Column("col_name", String(), "description)
-                .one_to_one(another_node.output.col, "relationship description")
+                .one_to_one(another_node.ref.col, "relationship description")
                 ...
             )
         )

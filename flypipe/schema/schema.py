@@ -23,6 +23,17 @@ class Schema:
         )
         """
         for col in self.columns:
+            if getattr(col, "_view", None) == "ref":
+                parent_name = (
+                    col.parent.__name__ if col.parent is not None else "<parent>"
+                )
+                raise ValueError(
+                    f"Column {col.name!r} was passed to Schema(...) via "
+                    f"`{parent_name}.ref.{col.name}`, which is reserved for "
+                    f"foreign-key targets (preserves the parent's `pk` flag). "
+                    f"Use `.output` for column-spec inheritance:\n"
+                    f"    Schema({parent_name}.output.{col.name}, ...)"
+                )
             setattr(self, col.name, col)
 
     def reset(self, *, relationships=True, pk=True):

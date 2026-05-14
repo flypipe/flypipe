@@ -37,8 +37,8 @@ class TestSchema:
         def f():
             pass
 
-        schema1 = Schema(Column("col1", String(), "desc").many_to_one(f.output.col1))
-        schema2 = Schema(Column("col1", String(), "desc").many_to_one(f.output.col1))
+        schema1 = Schema(Column("col1", String(), "desc").many_to_one(f.ref.col1))
+        schema2 = Schema(Column("col1", String(), "desc").many_to_one(f.ref.col1))
         assert schema1 == schema2
 
     def test_schema_are_different_with_different_relationships(self):
@@ -46,17 +46,17 @@ class TestSchema:
         def f():
             pass
 
-        schema1 = Schema(Column("col1", String(), "desc").many_to_one(f.output.col1))
-        schema2 = Schema(Column("col1", String(), "desc").one_to_many(f.output.col1))
+        schema1 = Schema(Column("col1", String(), "desc").many_to_one(f.ref.col1))
+        schema2 = Schema(Column("col1", String(), "desc").one_to_many(f.ref.col1))
         assert schema1 != schema2
 
-        schema1 = Schema(Column("col1", String(), "desc").many_to_one(f.output.col1))
+        schema1 = Schema(Column("col1", String(), "desc").many_to_one(f.ref.col1))
         schema2 = Schema(
-            Column("col1", String(), "desc").many_to_one(f.output.col1, "has")
+            Column("col1", String(), "desc").many_to_one(f.ref.col1, "has")
         )
         assert schema1 != schema2
 
-        schema1 = Schema(Column("col1", String(), "desc").many_to_one(f.output.col1))
+        schema1 = Schema(Column("col1", String(), "desc").many_to_one(f.ref.col1))
         schema2 = Schema(Column("col1", String(), "desc"))
         assert schema1 != schema2
 

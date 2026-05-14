@@ -21,10 +21,10 @@ To document the relationships between nodes or tables, you can declare them as f
 @node(
     ...
     output=Schema(
-        Column("col_name", String(), "description)
+        Column("col_name", String(), "description")
 
         # declare the relationship with other nodes output columns
-        .one_to_many(another_node.output.col, "relationship description")
+        .one_to_many(another_node.ref.col, "relationship description")
     )
 def my_node(...):
     ...
@@ -37,6 +37,56 @@ The possible relationships are `.one_to_one(...)`, `.one_to_many(...)`, `.many_t
 !!! warning "Important"
     **Relationships are solely for documentation purposes**; they do not enforce any constraints at runtime.
     Therefore, not documenting relationships has no impact on execution.
+
+## `node.output` vs `node.ref` — which to use where
+
+A `Node` exposes two views over its output schema. Each view is reserved for
+exactly one use case and **flypipe will raise** if you use the wrong one:
+
+* **`node.output`** — for **column-spec inheritance**, i.e. embedding a
+  parent column into a downstream `Schema`:
+
+    ``` py
+    @node(
+        ...
+        output=Schema(
+            parent.output.zip_code,   # reuse name/type/description from parent
+        )
+    )
+    def child(...):
+        ...
+    ```
+
+    The returned column has the parent's `pk` flag and outbound foreign keys
+    stripped, so the child node doesn't accidentally inherit the parent's
+    identity or its FKs.
+
+    Passing `parent.output.<col>` as a relationship target raises `ValueError`.
+
+* **`node.ref`** — for **foreign-key targets**, i.e. when you are pointing
+  *at* a column on another node:
+
+    ``` py
+    @node(
+        ...
+        output=Schema(
+            Column("person_id", String(), "person id")
+                .many_to_one(person.ref.person_id, "person fk"),
+        )
+    )
+    def person_event(...):
+        ...
+    ```
+
+    The returned column has its outbound foreign keys stripped (a relationship
+    target carries no FKs of its own) but its `pk` flag is **preserved**, so
+    downstream tooling (validators, ERD/DBML emitters, lineage tools) can verify
+    that the FK actually points at a primary-key column on the parent.
+
+    Passing `parent.ref.<col>` to `Schema(...)` raises `ValueError`.
+
+Rule of thumb: use `.output` when you are *absorbing* a column, and `.ref`
+when you are *referencing* one.
 
 
 

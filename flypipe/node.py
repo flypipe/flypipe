@@ -100,8 +100,47 @@ class Node(NodeDependenciesMixin):
 
     @property
     def output(self):
+        """Schema view for column-spec inheritance.
+
+        Returns a copy of ``output_schema`` with both outbound relationships
+        and the ``pk`` flag stripped. Use this when embedding a parent
+        column into a downstream ``Schema`` (e.g. ``Schema(parent.output.col)``)
+        so the new node does not accidentally inherit the parent's identity
+        or its foreign keys.
+
+        Columns returned here are stamped with ``_view = "output"`` so that
+        passing one as a relationship target (e.g. ``.many_to_one(...)``) raises
+        — use :pyattr:`ref` for that case so the target's ``pk`` flag is
+        preserved for validation.
+        """
         schema = self.output_schema.copy()
         schema.reset(relationships=True, pk=True)
+        for col in schema.columns:
+            col._view = "output"
+        return schema
+
+    @property
+    def ref(self):
+        """Schema view for foreign-key targets.
+
+        Returns a copy of ``output_schema`` with outbound relationships
+        stripped (a relationship target carries no FKs of its own) but with
+        the ``pk`` flag preserved, so downstream tooling can verify that an
+        FK actually points at a primary-key column on the parent node.
+
+        Intended use::
+
+            Column("person_id", String(), "...")
+                .many_to_one(person.ref.person_id, "person_id FK")
+
+        Columns returned here are stamped with ``_view = "ref"`` so that
+        embedding one in a ``Schema(...)`` raises — use :pyattr:`output` for
+        column-spec inheritance.
+        """
+        schema = self.output_schema.copy()
+        schema.reset(relationships=True, pk=False)
+        for col in schema.columns:
+            col._view = "ref"
         return schema
 
     @property
