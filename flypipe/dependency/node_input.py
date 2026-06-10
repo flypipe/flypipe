@@ -197,10 +197,12 @@ class InputNode:
         # periods are not valid argument names so let's replace them with underscores.
         return self.__name__.replace(".", "_").replace("<", "").replace(">", "")
 
-    def copy(self):
+    def copy(self, _memo: dict = None):
         # It's necessary to access protected fields to do a deep copy
         # Note: Don't copy _parent_node to avoid infinite recursion
-        input_node_copy = InputNode(self.node.copy(), self._parent_node)
+        # The wrapper is copied per reference (it carries per-reference state);
+        # only the wrapped node is memoized via ``_memo`` (see Node.copy).
+        input_node_copy = InputNode(self.node.copy(_memo), self._parent_node)
         input_node_copy._selected_columns = self._selected_columns
         input_node_copy._alias = self._alias
         input_node_copy._preprocess = self._preprocess.copy()

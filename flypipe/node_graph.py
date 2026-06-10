@@ -50,9 +50,19 @@ class NodeGraph:
         graph = nx.DiGraph()
 
         frontier = [transformation]
+        # Standard graph-traversal visited set, by object identity: process
+        # each node object once so the walk costs O(nodes + edges) instead of
+        # one visit per path. Edges are added while processing each dependent,
+        # so skipping an already visited node loses no edges. id() (not key) so
+        # distinct same-key objects keep the last-wins add_node semantics.
+        visited = set()
         while frontier:
 
             current_transformation = frontier.pop()
+
+            if id(current_transformation) in visited:
+                continue
+            visited.add(id(current_transformation))
 
             # We can not add current_transformation.cache now, as current_transformation can be node function
             # so we have to expand node functions and later add cache context to node run context

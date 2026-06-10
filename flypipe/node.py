@@ -410,15 +410,25 @@ class Node(NodeDependenciesMixin):
     def __hash__(self):
         return hash(self.key)
 
-    def copy(self):
-        # Note this is a DEEP copy and will copy all ancestor nodes by extension
+    def copy(self, _memo: dict = None):
+        # Deep copy of this node and all its ancestors, using the same memo
+        # pattern as copy.deepcopy (https://docs.python.org/3/library/copy.html):
+        # ``_memo`` maps id(node) -> copy so each object is copied once per
+        # copying pass, keeping the cost proportional to the DAG size instead of
+        # the number of paths through it. Keyed by id() (not node key) so that
+        # distinct objects sharing a key are still copied separately, preserving
+        # the last-wins semantics of the graph assembly.
+        if _memo is None:
+            _memo = {}
+        if id(self) in _memo:
+            return _memo[id(self)]
         node = Node(
             self.function,
             self.type,
             group=self.group,
             description=self.description,
             tags=list(self.tags),
-            dependencies=[input_node.copy() for input_node in self.input_nodes],
+            dependencies=[input_node.copy(_memo) for input_node in self.input_nodes],
             output=None if self.output_schema is None else self.output_schema.copy(),
             spark_context=self.spark_context,
             requested_columns=self.requested_columns,
@@ -428,6 +438,7 @@ class Node(NodeDependenciesMixin):
         # Accessing protected members in a deep copy method is necessary
         node._key = self._key
         node.node_type = self.node_type
+        _memo[id(self)] = node
         return node
 
 
