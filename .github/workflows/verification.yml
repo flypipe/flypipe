@@ -46,11 +46,25 @@ jobs:
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
         id: extract_branch
 
+      # Fork PRs have no origin/$GITHUB_HEAD_REF on the base repo; refs/pull/N/head always points at the PR tip.
+      - name: Resolve git ref for version and changelog
+        id: version_git_ref
+        shell: bash
+        run: |
+          event="${{ github.event_name }}"
+          pr_number="${{ github.event.pull_request.number }}"
+          if { [ "$event" = "pull_request" ] || [ "$event" = "workflow_call" ]; } && [ -n "$pr_number" ]; then
+            git fetch origin "+refs/pull/${pr_number}/head:refs/heads/ci-pr-head"
+            echo "ref=ci-pr-head" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=origin/${{ steps.extract_branch.outputs.branch }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Package version number (preview)
         run: |
-          python scripts/calculate_version.py origin/${{ steps.extract_branch.outputs.branch }}
+          python scripts/calculate_version.py ${{ steps.version_git_ref.outputs.ref }}
       - name: Changelog (preview)
-        run: python scripts/generate_changelog.py origin/${{ steps.extract_branch.outputs.branch }}
+        run: python scripts/generate_changelog.py ${{ steps.version_git_ref.outputs.ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
