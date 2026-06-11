@@ -1034,3 +1034,48 @@ class TestNode:
         @node(type="pandas", cache=MyCache())
         def t1():
             return pd.DataFrame(data={"col1": [1]})
+
+    def test_copy_preserves_shared_ancestor_identity(self):
+        """
+        Node.copy memoizes per copying pass: an ancestor shared by two branches of a
+        diamond must come out of the copy as a single shared object (not one duplicate
+        per path), while the InputNode wrappers stay distinct, keeping their per-edge
+        state (selected columns). Separate copy passes remain fully independent.
+        """
+
+        @node(type="pandas")
+        def head():
+            return pd.DataFrame(data={"c1": [1], "c2": [2]})
+
+        @node(type="pandas", dependencies=[head.select("c1")])
+        def left(head):
+            return head
+
+        @node(type="pandas", dependencies=[head.select("c2")])
+        def right(head):
+            return head
+
+        @node(type="pandas", dependencies=[left.select("c1"), right.select("c2")])
+        def tail(left, right):
+            return left
+
+        tail_copy = tail.copy()
+        left_copy, right_copy = (
+            input_node.node for input_node in tail_copy.input_nodes
+        )
+
+        # The wrappers are per-edge: distinct objects, per-edge state preserved
+        assert left_copy.input_nodes[0] is not right_copy.input_nodes[0]
+        assert left_copy.input_nodes[0].selected_columns == ["c1"]
+        assert right_copy.input_nodes[0].selected_columns == ["c2"]
+
+        # The shared ancestor is copied exactly once and shared between branches
+        assert left_copy.input_nodes[0].node is right_copy.input_nodes[0].node
+        assert left_copy.input_nodes[0].node is not head
+
+        # A second copy pass is fully independent from the first
+        tail_copy2 = tail.copy()
+        assert (
+            tail_copy2.input_nodes[0].node.input_nodes[0].node
+            is not left_copy.input_nodes[0].node
+        )

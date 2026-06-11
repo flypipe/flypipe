@@ -50,9 +50,17 @@ class NodeGraph:
         graph = nx.DiGraph()
 
         frontier = [transformation]
+        # Visited tracking is by object identity, mirroring Node.copy's memoization: the
+        # DAG must be walked once per node object, not once per root->node path (which is
+        # exponential on diamond-heavy graphs), while distinct objects sharing a key are
+        # still each processed, preserving last-wins semantics.
+        visited = set()
         while frontier:
 
             current_transformation = frontier.pop()
+            if id(current_transformation) in visited:
+                continue
+            visited.add(id(current_transformation))
 
             # We can not add current_transformation.cache now, as current_transformation can be node function
             # so we have to expand node functions and later add cache context to node run context
@@ -368,6 +376,14 @@ class NodeGraph:
         while len(frontier) != 0:
             current_node_name, descendent_status = frontier.pop()
             current_node = self.graph.nodes[current_node_name]
+
+            # A pop that would re-stamp the status a node already has pushes work
+            # identical to its first processing: skip it. Without this, nodes are
+            # re-processed once per root->node path, which is exponential on
+            # diamond-heavy graphs. Status upgrades (e.g. SKIP -> ACTIVE through a
+            # diamond) still process fully because the stamp differs.
+            if current_node["status"] == descendent_status:
+                continue
 
             if descendent_status == RunStatus.ACTIVE:
                 current_node["status"] = RunStatus.ACTIVE
