@@ -135,6 +135,12 @@ dmypy.json
 # Pycharm ide files
 .idea
 
+# VSCode ide files
+.vscode/
+
+# macOS files
+.DS_Store
+
 #flypipe files
 /dist/
 /data/
