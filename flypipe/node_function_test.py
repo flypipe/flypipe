@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from flypipe.node import node
-from flypipe.node_function import node_function
+from flypipe.node_function import NodeFunction, node_function
 from flypipe.run_context import RunContext
 from flypipe.schema import Schema, Column
 from flypipe.schema.types import String
@@ -196,6 +196,56 @@ class TestNodeFunction:
 
         end_node = execution_graph.get_node(end_node_name)["transformation"]
         assert t1.output_schema == end_node.output_schema
+
+    def test_copy_memoizes_shared_node_function_dependency(self):
+        """
+        NodeFunction overrides Node.copy, so it must accept and thread the _memo
+        parameter: InputNode.copy passes _memo positionally to self.node.copy
+        whenever a node function sits in the dependency graph. A node function
+        shared by two branches of a diamond must come out of the copy as a single
+        shared object (not one duplicate per path), and its own node_dependencies
+        must go through the same memo so ancestors reachable both through and
+        around the node function stay shared too.
+        """
+
+        @node(type="pandas")
+        def t1():
+            return pd.DataFrame({"c1": [1]})
+
+        @node_function(node_dependencies=[t1])
+        def func():
+            @node(type="pandas", dependencies=[t1])
+            def internal(t1):
+                return t1
+
+            return internal
+
+        @node(type="pandas", dependencies=[func])
+        def left(func):
+            return func
+
+        @node(type="pandas", dependencies=[func])
+        def right(func):
+            return func
+
+        @node(type="pandas", dependencies=[left, right, t1])
+        def tail(left, right, t1):
+            return left
+
+        tail_copy = tail.copy()
+        left_copy, right_copy, t1_input_copy = (
+            input_node.node for input_node in tail_copy.input_nodes
+        )
+
+        func_copy = left_copy.input_nodes[0].node
+        assert isinstance(func_copy, NodeFunction)
+        assert func_copy is not func
+        assert right_copy.input_nodes[0].node is func_copy
+
+        # The node function's dependencies are threaded through the same memo, so
+        # t1 reached through func and t1 reached directly are the same copy
+        assert func_copy.node_dependencies[0] is not t1
+        assert func_copy.node_dependencies[0] is t1_input_copy
 
     def test_node_function_output_is_none_but_return_node_has_output(self):
         col1 = Column("col1", String(), "test")

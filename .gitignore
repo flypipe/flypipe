@@ -88,6 +88,9 @@ ipython_config.py
 # pyenv
 .python-version
 
+# asdf / mise version manager
+.tool-versions
+
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
 #   However, in case of collaboration, if having platform-specific dependencies or dependencies
@@ -134,6 +137,12 @@ dmypy.json
 
 # Pycharm ide files
 .idea
+
+# VSCode ide files
+.vscode/
+
+# macOS files
+.DS_Store
 
 #flypipe files
 /dist/

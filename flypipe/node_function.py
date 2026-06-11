@@ -90,17 +90,24 @@ class NodeFunction(Node):
 
         return [node.copy() for node in list(nodes)]
 
-    def copy(self):
+    def copy(self, _memo: dict = None):
+        # See Node.copy: ``_memo`` maps id(node) -> copy so shared dependencies are
+        # copied once per copying pass instead of once per path through the DAG.
+        if _memo is None:
+            _memo = {}
+        if id(self) in _memo:
+            return _memo[id(self)]
         node_function = NodeFunction(
             self.function,
             node_dependencies=[
-                dependency.copy() for dependency in self.node_dependencies
+                dependency.copy(_memo) for dependency in self.node_dependencies
             ],
             requested_columns=self.requested_columns,
             output=self.output_schema,
         )
 
         node_function._key = self._key
+        _memo[id(self)] = node_function
         return node_function
 
 
