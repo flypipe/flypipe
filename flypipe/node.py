@@ -306,7 +306,10 @@ class Node(NodeDependenciesMixin):
           nodes level-by-level based on dependencies.
         - Cached nodes with CacheMode.MERGE trigger CDC filtering for upstream dependencies,
           processing only changed data.
-        - All intermediate results are stored in run_context.node_results for memoization.
+        - Intermediate results are stored in run_context.node_results and freed as soon
+          as all downstream consumers have run, keeping only the in-flight working set
+          in memory. This also applies inside the recursive sub-runs that
+          CacheMode.MERGE nodes trigger (each run tracks its consumers independently).
         - The method is thread-safe for parallel execution when max_workers > 1.
         """
         inputs = inputs or {}
