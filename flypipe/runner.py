@@ -427,6 +427,11 @@ class Runner:
                     logger.debug(
                         f"{'*'*26} Finished Node '{node_name}' MERGE mode {'*'*26}\n"
                     )
+                    # The sub-run above has computed this node and written its
+                    # merged result to the cache. We therefore skip storing a
+                    # result here: this node's successors will load it by
+                    # reading the cache in get_node_inputs (InputNode.get_value),
+                    # not from run_context.node_results.
                     return
 
             # Normal ACTIVE node - get dependencies and execute
