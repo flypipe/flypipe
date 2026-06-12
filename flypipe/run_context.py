@@ -105,7 +105,16 @@ class RunContext:
         PandasApiDataFrame,
         PySparkConnectDataFrame,
     ]:
-        return self.node_results[node][node].as_type(node.dataframe_type).get_df()
+        """Return the run's final dataframe and release its stored NodeResult.
+
+        This is the last read of the run (called once, as ``Node.run`` returns),
+        so after it node_results holds no results at all -- only the returned
+        dataframe stays alive, not the NodeResult wrapper (which may also hold
+        a pre-conversion copy in the node's storage type).
+        """
+        result = self.node_results[node][node].as_type(node.dataframe_type).get_df()
+        self.release_node_result(node, node)
+        return result
 
     def update_node_results(
         self,
@@ -121,6 +130,23 @@ class RunContext:
         self.node_results[from_node][to_node] = NodeResult(
             self.spark, df, schema=from_node.output_schema
         )
+
+    def release_node_result(self, from_node: "Node", to_node: "Node"):
+        """Drop a stored node result so its dataframe can be garbage-collected
+        mid-run, once every downstream consumer has read it.
+
+        Uses ``dict.get``/``pop`` rather than item access so the ``Autodict``
+        does not auto-create empty entries for already-released nodes. The
+        outer ``node_results[from_node]`` entry is deliberately left in place
+        even when emptied: a concurrent CacheMode.MERGE sub-run may be
+        re-populating it under its own target key (``Autodict`` does a
+        get-then-set, so deleting the inner dict between those two steps would
+        silently drop the sub-run's write).
+        """
+        consumers = self.node_results.get(from_node)
+        if consumers is None:
+            return
+        consumers.pop(to_node, None)
 
     def has_provided_input(self, node: "Node") -> bool:
         """

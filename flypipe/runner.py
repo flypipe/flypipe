@@ -38,6 +38,46 @@ class Runner:
         self.node_graph = node_graph
         self.run_context = run_context
 
+        # _pending_consumers drives a mid-run memory optimisation. For each
+        # in-flight run() invocation (keyed by its target node, since
+        # CacheMode.MERGE re-enters run() with the merge node as a new target)
+        # it maps each node of that run's execution plan to the number of its
+        # direct downstream consumers that have not run yet. Whenever a node
+        # finishes, _release_consumed_parents decrements the counter of each of
+        # its parents; a counter reaching zero means no future node of that run
+        # will ever read the parent's result (results are stored and read keyed
+        # by the run's target, so concurrent runs never share entries), so its
+        # dataframe is freed from run_context.node_results immediately instead
+        # of being held until the run ends. The target node is exempt (its
+        # result is the run's return value).
+        self._pending_consumers = {}
+
+    def _release_consumed_parents(self, node: "Node", target_node: "Node"):
+        """Free the stored results of ``node``'s parents whose every consumer
+        of run(``target_node``) has now run.
+
+        A node reads all of its parents before it returns, so this is called
+        right after a node completes. Because a parent is only released once
+        its LAST consumer has fully finished, no consumer can still be reading
+        it -- and a run's counters are only ever mutated by the single thread
+        executing that run's level loop (a MERGE sub-run has its own target,
+        hence its own counters), so no locking is required even when
+        ``max_workers > 1``.
+        """
+        pending = self._pending_consumers.get(target_node.key)
+        if pending is None:
+            return
+        for parent_key in self.node_graph.graph.predecessors(node.key):
+            if parent_key not in pending:
+                continue  # parent is not part of this run's execution plan
+            pending[parent_key] -= 1
+            if pending[parent_key] > 0:
+                continue  # at least one consumer of this parent hasn't run yet
+            parent = self.node_graph.get_transformation(parent_key)
+            if parent == target_node:
+                continue  # never free the run's return value
+            self.run_context.release_node_result(parent, target_node)
+
     def create_execution_plan(self, target_node: "Node") -> List[List[str]]:
         """
         Create a logical execution plan with levels.
@@ -161,12 +201,32 @@ class Runner:
         # Create execution plan
         execution_plan = self.create_execution_plan(target_node)
 
+        # Count, per node, how many consumers will read it within THIS run's
+        # plan (edges to nodes outside the plan never run, so they must not be
+        # counted or the counters would never reach zero).
+        plan_nodes = {node_key for level in execution_plan for node_key in level}
+        self._pending_consumers[target_node.key] = {
+            node_key: sum(
+                1
+                for successor in self.node_graph.graph.successors(node_key)
+                if successor in plan_nodes
+            )
+            for node_key in plan_nodes
+        }
+
         # Execute level by level
         for level_idx, level in enumerate(execution_plan):
             logger.debug(f"\n🛠️ Executing Level {level_idx} ({len(level)} nodes)")
             logger.debug(f"{'-'*60}")
 
             self._execute_level(level, target_node, process_merge, max_workers)
+
+        if not process_merge:
+            # This is a CacheMode.MERGE sub-run: its target's result was only
+            # needed to write the merged cache, which has happened by now --
+            # consumers in the parent run re-read it from the cache.
+            self.run_context.release_node_result(target_node, target_node)
+        self._pending_consumers.pop(target_node.key, None)
 
         logger.debug("\n✅  Runner: Execution completed 👍")
         logger.debug(f"{'='*60}")
@@ -215,6 +275,7 @@ class Runner:
                 node = self.node_graph.get_transformation(node_key)
                 logger.debug(f"    ▶️ Executing {node.__name__}")
                 self._process_single_node(node, target_node, process_merge)
+                self._release_consumed_parents(node, target_node)
         else:
             # Multiple nodes, execute in parallel
             logger.debug(
@@ -240,10 +301,12 @@ class Runner:
                 # Wait for all nodes to complete
                 for future in as_completed(future_to_node):
                     node_key = future_to_node[future]
-                    node_name = self.node_graph.get_transformation(node_key).__name__
+                    node = self.node_graph.get_transformation(node_key)
+                    node_name = node.__name__
                     try:
                         future.result()
                         logger.debug(f"    ✅ {node_name} completed successfully")
+                        self._release_consumed_parents(node, target_node)
                     except Exception as e:
                         logger.debug(f"    ❌ {node_name} failed with error: {e}")
                         raise
@@ -364,6 +427,11 @@ class Runner:
                     logger.debug(
                         f"{'*'*26} Finished Node '{node_name}' MERGE mode {'*'*26}\n"
                     )
+                    # The sub-run above has computed this node and written its
+                    # merged result to the cache. We therefore skip storing a
+                    # result here: this node's successors will load it by
+                    # reading the cache in get_node_inputs (InputNode.get_value),
+                    # not from run_context.node_results.
                     return
 
             # Normal ACTIVE node - get dependencies and execute
