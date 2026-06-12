@@ -424,6 +424,59 @@ class Node(NodeDependenciesMixin):
             _memo = {}
         if id(self) in _memo:
             return _memo[id(self)]
+        # Ancestors are copied iteratively, predecessors before the nodes that
+        # consume them (an explicit post-order traversal), rather than by
+        # recursive descent: recursion costs ~3 stack frames per ancestor level
+        # (copy -> InputNode.copy -> copy), so a chain a few hundred nodes deep
+        # would overflow Python's recursion limit. Once every predecessor of a
+        # node is in _memo, _copy_node builds its copy without descending
+        # further.
+        stack = [self]
+        expanding = set()  # ids of nodes whose predecessors are still being copied
+        while stack:
+            current = stack[-1]
+            if id(current) in _memo:
+                stack.pop()
+                expanding.discard(id(current))
+                continue
+            pending = [
+                predecessor
+                for predecessor in current._predecessor_nodes()
+                if id(predecessor) not in _memo
+            ]
+            if pending:
+                # In a DAG a node only resurfaces once everything it pushed has
+                # been copied, so pending predecessors on a second surfacing
+                # mean this node is its own ancestor (a cycle). The recursive
+                # code failed fast on this (RecursionError); without the check
+                # the loop would hang.
+                if id(current) in expanding:
+                    raise ValueError(
+                        f"Dependency cycle detected while copying node {current.__name__}"
+                    )
+                expanding.add(id(current))
+                # reversed so the LIFO stack copies sibling predecessors left
+                # to right (input_nodes order), matching the recursive code's
+                # construction-time side-effect order (e.g. validation errors
+                # surface for the same node).
+                stack.extend(reversed(pending))
+                continue
+            stack.pop()
+            expanding.discard(id(current))
+            _memo[id(current)] = current._copy_node(_memo)
+        return _memo[id(self)]
+
+    def _predecessor_nodes(self):
+        # This node's direct predecessors (the upstream nodes it consumes),
+        # unwrapped from their per-edge InputNode wrappers. NodeFunction
+        # overrides this (its predecessors are bare nodes), letting copy()
+        # traverse mixed graphs polymorphically.
+        return [input_node.node for input_node in self.input_nodes]
+
+    def _copy_node(self, _memo: dict):
+        # Copies this single node. Every ancestor is already in _memo (guaranteed
+        # by the predecessors-first traversal in copy()), so the InputNode.copy
+        # calls below resolve from the memo without recursing.
         node = Node(
             self.function,
             self.type,
@@ -440,7 +493,6 @@ class Node(NodeDependenciesMixin):
         # Accessing protected members in a deep copy method is necessary
         node._key = self._key
         node.node_type = self.node_type
-        _memo[id(self)] = node
         return node
 
 

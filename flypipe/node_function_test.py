@@ -247,6 +247,42 @@ class TestNodeFunction:
         assert func_copy.node_dependencies[0] is not t1
         assert func_copy.node_dependencies[0] is t1_input_copy
 
+    def test_copy_deep_chain_does_not_hit_recursion_limit(self):
+        """
+        NodeFunction shares Node.copy's explicit-stack traversal, so a chain of
+        node functions far deeper than recursive descent allows (it overflowed
+        Python's default recursion limit at a few hundred levels) must copy
+        successfully and preserve the whole chain.
+        """
+        depth = 2000
+
+        @node(type="pandas")
+        def seed():
+            return pd.DataFrame({"c1": [1]})
+
+        chain = [seed]
+        for i in range(1, depth):
+            prev = chain[-1]
+
+            def func():
+                return None
+
+            func.__name__ = f"f_{i}"
+            chain.append(node_function(node_dependencies=[prev])(func))
+
+        tail_copy = chain[-1].copy()
+
+        length = 0
+        current = tail_copy
+        while isinstance(current, NodeFunction):
+            length += 1
+            assert current.key == chain[depth - length].key
+            assert current is not chain[depth - length]
+            current = current.node_dependencies[0]
+        assert length == depth - 1  # every node-function link survived the copy
+        assert current.key == seed.key
+        assert current is not seed
+
     def test_node_function_output_is_none_but_return_node_has_output(self):
         col1 = Column("col1", String(), "test")
 

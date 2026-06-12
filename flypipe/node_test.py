@@ -1079,3 +1079,41 @@ class TestNode:
             tail_copy2.input_nodes[0].node.input_nodes[0].node
             is not left_copy.input_nodes[0].node
         )
+
+    def test_copy_deep_chain_does_not_hit_recursion_limit(self):
+        """
+        Node.copy walks ancestors with an explicit stack, so it must handle
+        serial chains far deeper than recursive descent allows (which cost ~3
+        stack frames per dependency level and so overflowed Python's default
+        recursion limit of 1000 at ~330 nodes), and the copy must preserve the
+        whole chain.
+        """
+        depth = 2000
+
+        @node(type="pandas")
+        def head():
+            return pd.DataFrame(data={"c1": [1]})
+
+        chain = [head]
+        for i in range(1, depth):
+
+            def transformation(df):
+                return df
+
+            transformation.__name__ = f"n_{i}"
+            chain.append(
+                node(type="pandas", dependencies=[chain[-1].alias("df")])(
+                    transformation
+                )
+            )
+
+        tail_copy = chain[-1].copy()
+
+        # Walk the copy from tail to head: every link survived, in order, and
+        # every node is a fresh object.
+        current = tail_copy
+        for original in reversed(chain):
+            assert current.key == original.key
+            assert current is not original
+            current = current.input_nodes[0].node if current.input_nodes else None
+        assert current is None
