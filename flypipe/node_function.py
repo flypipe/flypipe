@@ -90,13 +90,15 @@ class NodeFunction(Node):
 
         return [node.copy() for node in list(nodes)]
 
-    def copy(self, _memo: dict = None):
-        # See Node.copy: ``_memo`` maps id(node) -> copy so shared dependencies are
-        # copied once per copying pass instead of once per path through the DAG.
-        if _memo is None:
-            _memo = {}
-        if id(self) in _memo:
-            return _memo[id(self)]
+    def _predecessor_nodes(self):
+        # See Node._predecessor_nodes: a node function's predecessors
+        # (node_dependencies) are bare nodes, not InputNode wrappers.
+        return self.node_dependencies
+
+    def _copy_node(self, _memo: dict):
+        # See Node._copy_node: copy() (inherited from Node) has already copied
+        # every dependency into ``_memo``, so the copy calls below resolve from
+        # the memo without recursing.
         node_function = NodeFunction(
             self.function,
             node_dependencies=[
@@ -107,7 +109,6 @@ class NodeFunction(Node):
         )
 
         node_function._key = self._key
-        _memo[id(self)] = node_function
         return node_function
 
 
